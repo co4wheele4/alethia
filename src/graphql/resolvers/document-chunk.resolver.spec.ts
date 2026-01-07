@@ -96,7 +96,8 @@ describe('DocumentChunkResolver', () => {
 
   describe('documentChunk', () => {
     it('should return a document chunk by id', async () => {
-      const findUniqueMock = prismaService.documentChunk.findUnique as jest.Mock;
+      const findUniqueMock = prismaService.documentChunk
+        .findUnique as jest.Mock;
       findUniqueMock.mockResolvedValue(
         mockChunk as unknown as typeof mockChunk,
       );
@@ -110,7 +111,8 @@ describe('DocumentChunkResolver', () => {
     });
 
     it('should return null when chunk not found', async () => {
-      const findUniqueMock = prismaService.documentChunk.findUnique as jest.Mock;
+      const findUniqueMock = prismaService.documentChunk
+        .findUnique as jest.Mock;
       findUniqueMock.mockResolvedValue(null);
 
       const result = await resolver.documentChunk('non-existent');
@@ -226,7 +228,10 @@ describe('DocumentChunkResolver', () => {
       const findUniqueMock = prismaService.document.findUnique as jest.Mock;
       findUniqueMock.mockResolvedValue(null);
 
-      const chunkWithNullDocument = { ...mockChunk, documentId: 'non-existent' };
+      const chunkWithNullDocument = {
+        ...mockChunk,
+        documentId: 'non-existent',
+      };
       const result = await resolver.document(chunkWithNullDocument);
 
       expect(result).toBeNull();
@@ -326,7 +331,9 @@ describe('DocumentChunkResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const documentChunkResolver = module.get<DocumentChunkResolver>(DocumentChunkResolver);
+    const documentChunkResolver = module.get<DocumentChunkResolver>(
+      DocumentChunkResolver,
+    );
     expect(documentChunkResolver).toBeDefined();
 
     await app.close();

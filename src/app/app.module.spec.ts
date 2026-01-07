@@ -18,4 +18,3 @@ describe('AppModule', () => {
     expect(module).toBeInstanceOf(TestingModule);
   });
 });
-

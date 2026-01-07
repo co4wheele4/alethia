@@ -1,5 +1,9 @@
 // test/e2e/resolvers/entity.resolver.e2e-spec.ts
-import { setupTestApp, teardownTestApp, TestContext } from '../../helpers/test-setup';
+import {
+  setupTestApp,
+  teardownTestApp,
+  TestContext,
+} from '../../helpers/test-setup';
 import { graphqlRequest } from '../../helpers/graphql-request';
 
 describe('EntityResolver (e2e)', () => {
@@ -21,7 +25,9 @@ describe('EntityResolver (e2e)', () => {
 
     beforeAll(async () => {
       // Create entities for testing
-      const entity1Res = await graphqlRequest(context.app, `
+      const entity1Res = await graphqlRequest(
+        context.app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
@@ -29,51 +35,65 @@ describe('EntityResolver (e2e)', () => {
             type
           }
         }
-      `, {
-        data: { name: 'Entity ResolveField Test', type: 'TestType' },
-      });
+      `,
+        {
+          data: { name: 'Entity ResolveField Test', type: 'TestType' },
+        },
+      );
       entityId = entity1Res.body?.data?.createEntity?.id;
 
-      const entity2Res = await graphqlRequest(context.app, `
+      const entity2Res = await graphqlRequest(
+        context.app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: 'Entity 2', type: 'TestType' },
-      });
+      `,
+        {
+          data: { name: 'Entity 2', type: 'TestType' },
+        },
+      );
       entity2Id = entity2Res.body?.data?.createEntity?.id;
 
       // Create a mention for the entity
-      const mentionRes = await graphqlRequest(context.app, `
+      const mentionRes = await graphqlRequest(
+        context.app,
+        `
         mutation CreateEntityMention($data: CreateEntityMentionInput!) {
           createEntityMention(data: $data) {
             id
           }
         }
-      `, {
-        data: {
-          entityId: entityId,
-          chunkId: context.testData.chunk.id,
+      `,
+        {
+          data: {
+            entityId: entityId,
+            chunkId: context.testData.chunk.id,
+          },
         },
-      });
+      );
       mentionId = mentionRes.body?.data?.createEntityMention?.id;
 
       // Create a relationship (outgoing from entity1, incoming to entity2)
-      const relRes = await graphqlRequest(context.app, `
+      const relRes = await graphqlRequest(
+        context.app,
+        `
         mutation CreateEntityRelationship($data: CreateEntityRelationshipInput!) {
           createEntityRelationship(data: $data) {
             id
           }
         }
-      `, {
-        data: {
-          fromEntity: entityId,
-          toEntity: entity2Id,
-          relation: 'related_to',
+      `,
+        {
+          data: {
+            fromEntity: entityId,
+            toEntity: entity2Id,
+            relation: 'related_to',
+          },
         },
-      });
+      );
       relationshipId = relRes.body?.data?.createEntityRelationship?.id;
     });
 
@@ -175,4 +195,3 @@ describe('EntityResolver (e2e)', () => {
     });
   });
 });
-

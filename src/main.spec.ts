@@ -28,7 +28,7 @@ describe('main.ts', () => {
       useGlobalFilters: jest.fn().mockReturnThis(),
     };
     (NestFactory.create as jest.Mock).mockResolvedValue(mockApp);
-    
+
     // Ensure PORT is not set (use default)
     delete process.env.PORT;
   });
@@ -45,7 +45,7 @@ describe('main.ts', () => {
   it('should bootstrap the application', async () => {
     // Dynamically import main to execute bootstrap
     await import('./main');
-    
+
     // Wait for async operations to complete
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -59,8 +59,9 @@ describe('main.ts', () => {
       expect.stringContaining('NestJS app running on http://localhost:3000'),
     );
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('GraphQL Playground: http://localhost:3000/graphql'),
+      expect.stringContaining(
+        'GraphQL Playground: http://localhost:3000/graphql',
+      ),
     );
   });
 });
-

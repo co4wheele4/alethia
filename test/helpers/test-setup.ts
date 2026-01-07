@@ -47,4 +47,3 @@ export async function teardownTestApp(context: TestContext): Promise<void> {
   await context.prisma.$disconnect();
   await context.app.close();
 }
-

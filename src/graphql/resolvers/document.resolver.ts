@@ -55,7 +55,9 @@ export class DocumentResolver {
   async user(@Parent() document: Document) {
     // Access userId from the database field, not the GraphQL field
     const documentWithUserId = document as unknown as { userId: string };
-    return this.prisma.user.findUnique({ where: { id: documentWithUserId.userId } });
+    return this.prisma.user.findUnique({
+      where: { id: documentWithUserId.userId },
+    });
   }
 
   @ResolveField(() => [DocumentChunk])

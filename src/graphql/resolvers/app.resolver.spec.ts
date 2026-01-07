@@ -96,7 +96,8 @@ describe('AppResolver', () => {
         createdAt: new Date(),
       };
 
-      const getEmbeddingResultMock = openAIService.getEmbeddingResult as jest.Mock;
+      const getEmbeddingResultMock =
+        openAIService.getEmbeddingResult as jest.Mock;
       const createMock = prismaService.aiQuery.create as jest.Mock;
       getEmbeddingResultMock.mockResolvedValue(mockAnswer);
       createMock.mockResolvedValue(

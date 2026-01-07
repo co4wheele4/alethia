@@ -77,7 +77,9 @@ describe('UserResolver', () => {
   describe('users', () => {
     it('should return an array of users', async () => {
       const mockUsers = [mockUser];
-      (prismaService.user.findMany as jest.Mock).mockResolvedValue(mockUsers as any);
+      (prismaService.user.findMany as jest.Mock).mockResolvedValue(
+        mockUsers as any,
+      );
 
       const result = await resolver.users();
 
@@ -105,7 +107,9 @@ describe('UserResolver', () => {
 
   describe('user', () => {
     it('should return a user by id', async () => {
-      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(mockUser as any);
+      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(
+        mockUser as any,
+      );
 
       const result = await resolver.user('1');
 
@@ -127,9 +131,14 @@ describe('UserResolver', () => {
   describe('createUser', () => {
     it('should create a new user', async () => {
       const newUser = { ...mockUser, email: 'new@example.com' };
-      (prismaService.user.create as jest.Mock).mockResolvedValue(newUser as any);
+      (prismaService.user.create as jest.Mock).mockResolvedValue(
+        newUser as any,
+      );
 
-      const result = await resolver.createUser({ email: 'new@example.com', name: 'New User' });
+      const result = await resolver.createUser({
+        email: 'new@example.com',
+        name: 'New User',
+      });
 
       expect(result).toEqual(newUser);
       expect(prismaService.user.create).toHaveBeenCalledWith({
@@ -139,7 +148,9 @@ describe('UserResolver', () => {
 
     it('should create user without name', async () => {
       const newUser = { ...mockUser, email: 'new@example.com', name: null };
-      (prismaService.user.create as jest.Mock).mockResolvedValue(newUser as any);
+      (prismaService.user.create as jest.Mock).mockResolvedValue(
+        newUser as any,
+      );
 
       const result = await resolver.createUser({ email: 'new@example.com' });
 
@@ -151,9 +162,14 @@ describe('UserResolver', () => {
 
     it('should create user with null name explicitly', async () => {
       const newUser = { ...mockUser, email: 'new@example.com', name: null };
-      (prismaService.user.create as jest.Mock).mockResolvedValue(newUser as any);
+      (prismaService.user.create as jest.Mock).mockResolvedValue(
+        newUser as any,
+      );
 
-      const result = await resolver.createUser({ email: 'new@example.com', name: null as any });
+      const result = await resolver.createUser({
+        email: 'new@example.com',
+        name: null as any,
+      });
 
       expect(result).toEqual(newUser);
       expect(prismaService.user.create).toHaveBeenCalledWith({
@@ -165,9 +181,9 @@ describe('UserResolver', () => {
       const error = new Error('Unique constraint failed on email');
       (prismaService.user.create as jest.Mock).mockRejectedValue(error);
 
-      await expect(resolver.createUser({ email: 'existing@example.com' })).rejects.toThrow(
-        'Unique constraint failed on email',
-      );
+      await expect(
+        resolver.createUser({ email: 'existing@example.com' }),
+      ).rejects.toThrow('Unique constraint failed on email');
     });
   });
 
@@ -178,7 +194,9 @@ describe('UserResolver', () => {
         email: 'updated@example.com',
         name: 'Updated Name',
       };
-      (prismaService.user.update as jest.Mock).mockResolvedValue(updatedUser as any);
+      (prismaService.user.update as jest.Mock).mockResolvedValue(
+        updatedUser as any,
+      );
 
       const result = await resolver.updateUser({
         id: '1',
@@ -195,9 +213,14 @@ describe('UserResolver', () => {
 
     it('should update only email', async () => {
       const updatedUser = { ...mockUser, email: 'updated@example.com' };
-      (prismaService.user.update as jest.Mock).mockResolvedValue(updatedUser as any);
+      (prismaService.user.update as jest.Mock).mockResolvedValue(
+        updatedUser as any,
+      );
 
-      const result = await resolver.updateUser({ id: '1', email: 'updated@example.com' });
+      const result = await resolver.updateUser({
+        id: '1',
+        email: 'updated@example.com',
+      });
 
       expect(result).toEqual(updatedUser);
       expect(prismaService.user.update).toHaveBeenCalledWith({
@@ -208,9 +231,14 @@ describe('UserResolver', () => {
 
     it('should update only name', async () => {
       const updatedUser = { ...mockUser, name: 'Updated Name' };
-      (prismaService.user.update as jest.Mock).mockResolvedValue(updatedUser as any);
+      (prismaService.user.update as jest.Mock).mockResolvedValue(
+        updatedUser as any,
+      );
 
-      const result = await resolver.updateUser({ id: '1', name: 'Updated Name' });
+      const result = await resolver.updateUser({
+        id: '1',
+        name: 'Updated Name',
+      });
 
       expect(result).toEqual(updatedUser);
       expect(prismaService.user.update).toHaveBeenCalledWith({
@@ -221,9 +249,15 @@ describe('UserResolver', () => {
 
     it('should update with null email', async () => {
       const updatedUser = { ...mockUser, email: null };
-      (prismaService.user.update as jest.Mock).mockResolvedValue(updatedUser as any);
+      (prismaService.user.update as jest.Mock).mockResolvedValue(
+        updatedUser as any,
+      );
 
-      const result = await resolver.updateUser({ id: '1', email: null as any, name: 'Updated Name' });
+      const result = await resolver.updateUser({
+        id: '1',
+        email: null as any,
+        name: 'Updated Name',
+      });
 
       expect(result).toEqual(updatedUser);
       expect(prismaService.user.update).toHaveBeenCalledWith({
@@ -234,9 +268,15 @@ describe('UserResolver', () => {
 
     it('should update with null name', async () => {
       const updatedUser = { ...mockUser, name: null };
-      (prismaService.user.update as jest.Mock).mockResolvedValue(updatedUser as any);
+      (prismaService.user.update as jest.Mock).mockResolvedValue(
+        updatedUser as any,
+      );
 
-      const result = await resolver.updateUser({ id: '1', email: 'test@example.com', name: null as any });
+      const result = await resolver.updateUser({
+        id: '1',
+        email: 'test@example.com',
+        name: null as any,
+      });
 
       expect(result).toEqual(updatedUser);
       expect(prismaService.user.update).toHaveBeenCalledWith({
@@ -247,7 +287,9 @@ describe('UserResolver', () => {
 
     it('should update with both fields undefined', async () => {
       const updatedUser = { ...mockUser };
-      (prismaService.user.update as jest.Mock).mockResolvedValue(updatedUser as any);
+      (prismaService.user.update as jest.Mock).mockResolvedValue(
+        updatedUser as any,
+      );
 
       const result = await resolver.updateUser({ id: '1' });
 
@@ -262,24 +304,26 @@ describe('UserResolver', () => {
       const error = new Error('User not found');
       (prismaService.user.update as jest.Mock).mockRejectedValue(error);
 
-      await expect(resolver.updateUser({ id: '999', email: 'new@example.com' })).rejects.toThrow(
-        'User not found',
-      );
+      await expect(
+        resolver.updateUser({ id: '999', email: 'new@example.com' }),
+      ).rejects.toThrow('User not found');
     });
 
     it('should handle duplicate email constraint errors', async () => {
       const error = new Error('Unique constraint failed on email');
       (prismaService.user.update as jest.Mock).mockRejectedValue(error);
 
-      await expect(resolver.updateUser({ id: '1', email: 'existing@example.com' })).rejects.toThrow(
-        'Unique constraint failed on email',
-      );
+      await expect(
+        resolver.updateUser({ id: '1', email: 'existing@example.com' }),
+      ).rejects.toThrow('Unique constraint failed on email');
     });
   });
 
   describe('deleteUser', () => {
     it('should delete a user', async () => {
-      (prismaService.user.delete as jest.Mock).mockResolvedValue(mockUser as any);
+      (prismaService.user.delete as jest.Mock).mockResolvedValue(
+        mockUser as any,
+      );
 
       const result = await resolver.deleteUser('1');
 
@@ -293,7 +337,9 @@ describe('UserResolver', () => {
       const error = new Error('User not found');
       (prismaService.user.delete as jest.Mock).mockRejectedValue(error);
 
-      await expect(resolver.deleteUser('999')).rejects.toThrow('User not found');
+      await expect(resolver.deleteUser('999')).rejects.toThrow(
+        'User not found',
+      );
     });
   });
 
@@ -306,7 +352,9 @@ describe('UserResolver', () => {
       const mockFindUnique = {
         lessons: jest.fn().mockResolvedValue(mockLessons),
       };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(mockFindUnique);
+      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
+        mockFindUnique,
+      );
 
       const result = await resolver.lessons(mockUser);
 
@@ -321,7 +369,9 @@ describe('UserResolver', () => {
       const mockFindUnique = {
         lessons: jest.fn().mockResolvedValue([]),
       };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(mockFindUnique);
+      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
+        mockFindUnique,
+      );
 
       const result = await resolver.lessons(mockUser);
 
@@ -334,9 +384,13 @@ describe('UserResolver', () => {
       const mockFindUnique = {
         lessons: jest.fn().mockRejectedValue(error),
       };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(mockFindUnique);
+      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
+        mockFindUnique,
+      );
 
-      await expect(resolver.lessons(mockUser)).rejects.toThrow('Database error');
+      await expect(resolver.lessons(mockUser)).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 
@@ -349,7 +403,9 @@ describe('UserResolver', () => {
       const mockFindUnique = {
         documents: jest.fn().mockResolvedValue(mockDocuments),
       };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(mockFindUnique);
+      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
+        mockFindUnique,
+      );
 
       const result = await resolver.documents(mockUser);
 
@@ -364,7 +420,9 @@ describe('UserResolver', () => {
       const mockFindUnique = {
         documents: jest.fn().mockResolvedValue([]),
       };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(mockFindUnique);
+      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
+        mockFindUnique,
+      );
 
       const result = await resolver.documents(mockUser);
 
@@ -377,9 +435,13 @@ describe('UserResolver', () => {
       const mockFindUnique = {
         documents: jest.fn().mockRejectedValue(error),
       };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(mockFindUnique);
+      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
+        mockFindUnique,
+      );
 
-      await expect(resolver.documents(mockUser)).rejects.toThrow('Database error');
+      await expect(resolver.documents(mockUser)).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 
@@ -392,7 +454,9 @@ describe('UserResolver', () => {
       const mockFindUnique = {
         aiQueries: jest.fn().mockResolvedValue(mockAiQueries),
       };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(mockFindUnique);
+      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
+        mockFindUnique,
+      );
 
       const result = await resolver.aiQueries(mockUser);
 
@@ -407,7 +471,9 @@ describe('UserResolver', () => {
       const mockFindUnique = {
         aiQueries: jest.fn().mockResolvedValue([]),
       };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(mockFindUnique);
+      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
+        mockFindUnique,
+      );
 
       const result = await resolver.aiQueries(mockUser);
 
@@ -420,9 +486,13 @@ describe('UserResolver', () => {
       const mockFindUnique = {
         aiQueries: jest.fn().mockRejectedValue(error),
       };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(mockFindUnique);
+      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
+        mockFindUnique,
+      );
 
-      await expect(resolver.aiQueries(mockUser)).rejects.toThrow('Database error');
+      await expect(resolver.aiQueries(mockUser)).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 
@@ -445,10 +515,10 @@ describe('UserResolver', () => {
 
     const app = module.createNestApplication();
     await app.init();
-    
+
     const userResolver = module.get<UserResolver>(UserResolver);
     expect(userResolver).toBeDefined();
-    
+
     await app.close();
   });
 });

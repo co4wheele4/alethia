@@ -10,7 +10,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, _password: string): Promise<any> {
     // Note: This is a placeholder. You'll need to add a password field to the User model
     // For now, this is a basic implementation structure
     const user = await this.prisma.user.findUnique({
@@ -46,4 +46,3 @@ export class AuthService {
     }
   }
 }
-

@@ -22,8 +22,7 @@ export class HttpExceptionFilter
     // For HTTP, return proper response
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const status =
-      exception.getStatus() || HttpStatus.INTERNAL_SERVER_ERROR;
+    const status = exception.getStatus() || HttpStatus.INTERNAL_SERVER_ERROR;
     const exceptionResponse = exception.getResponse();
 
     response.status(status).json({
@@ -35,4 +34,3 @@ export class HttpExceptionFilter
     });
   }
 }
-

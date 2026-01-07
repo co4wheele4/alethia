@@ -70,4 +70,3 @@ export class PrismaExceptionFilter
     return error;
   }
 }
-

@@ -1,5 +1,9 @@
 // test/e2e/resolvers/ai-query.resolver.e2e-spec.ts
-import { setupTestApp, teardownTestApp, TestContext } from '../../helpers/test-setup';
+import {
+  setupTestApp,
+  teardownTestApp,
+  TestContext,
+} from '../../helpers/test-setup';
 import { graphqlRequest } from '../../helpers/graphql-request';
 
 describe('AiQueryResolver (e2e)', () => {
@@ -19,7 +23,9 @@ describe('AiQueryResolver (e2e)', () => {
 
     beforeAll(async () => {
       // Create an AI query
-      const queryRes = await graphqlRequest(context.app, `
+      const queryRes = await graphqlRequest(
+        context.app,
+        `
         mutation AskAi($userId: String!, $query: String!) {
           askAi(userId: $userId, query: $query) {
             id
@@ -28,10 +34,12 @@ describe('AiQueryResolver (e2e)', () => {
             }
           }
         }
-      `, {
-        userId: context.testData.user.id,
-        query: 'Test query for ResolveField testing',
-      });
+      `,
+        {
+          userId: context.testData.user.id,
+          query: 'Test query for ResolveField testing',
+        },
+      );
       aiQueryId = queryRes.body?.data?.askAi?.query?.id;
       resultId = queryRes.body?.data?.askAi?.id;
     });
@@ -62,7 +70,9 @@ describe('AiQueryResolver (e2e)', () => {
       expect(res.body?.data?.aiQuery).toBeDefined();
       expect(res.body?.data?.aiQuery?.user).toBeDefined();
       expect(res.body?.data?.aiQuery?.user?.id).toBe(context.testData.user.id);
-      expect(res.body?.data?.aiQuery?.user?.email).toBe(context.testData.user.email);
+      expect(res.body?.data?.aiQuery?.user?.email).toBe(
+        context.testData.user.email,
+      );
       expect(res.body?.data?.aiQuery?.user?.documents).toBeInstanceOf(Array);
       expect(res.body?.data?.aiQuery?.user?.lessons).toBeInstanceOf(Array);
     });
@@ -103,16 +113,20 @@ describe('AiQueryResolver (e2e)', () => {
 
     beforeAll(async () => {
       // Create an AI query result
-      const queryRes = await graphqlRequest(context.app, `
+      const queryRes = await graphqlRequest(
+        context.app,
+        `
         mutation AskAi($userId: String!, $query: String!) {
           askAi(userId: $userId, query: $query) {
             id
           }
         }
-      `, {
-        userId: context.testData.user.id,
-        query: 'Test query for direct result query',
-      });
+      `,
+        {
+          userId: context.testData.user.id,
+          query: 'Test query for direct result query',
+        },
+      );
       resultId = queryRes.body?.data?.askAi?.id;
     });
 
@@ -146,7 +160,9 @@ describe('AiQueryResolver (e2e)', () => {
       expect(res.body?.data?.aiQueryResult?.score).toBeDefined();
       expect(res.body?.data?.aiQueryResult?.query).toBeDefined();
       expect(res.body?.data?.aiQueryResult?.query?.user).toBeDefined();
-      expect(res.body?.data?.aiQueryResult?.query?.results).toBeInstanceOf(Array);
+      expect(res.body?.data?.aiQueryResult?.query?.results).toBeInstanceOf(
+        Array,
+      );
     });
 
     it('should return null for non-existent aiQueryResult', async () => {
@@ -157,11 +173,12 @@ describe('AiQueryResolver (e2e)', () => {
           }
         }
       `;
-      const res = await graphqlRequest(context.app, query, { id: 'non-existent-id' });
+      const res = await graphqlRequest(context.app, query, {
+        id: 'non-existent-id',
+      });
 
       expect(res.status).toBe(200);
       expect(res.body?.data?.aiQueryResult).toBeNull();
     });
   });
 });
-

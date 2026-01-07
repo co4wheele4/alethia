@@ -1,5 +1,9 @@
 // test/e2e/cross-cutting/validation-edge-cases.e2e-spec.ts
-import { setupTestApp, teardownTestApp, TestContext } from '../../helpers/test-setup';
+import {
+  setupTestApp,
+  teardownTestApp,
+  TestContext,
+} from '../../helpers/test-setup';
 import { graphqlRequest } from '../../helpers/graphql-request';
 
 describe('Validation Edge Cases (e2e)', () => {
@@ -16,17 +20,21 @@ describe('Validation Edge Cases (e2e)', () => {
   describe('Empty and Null Input Edge Cases', () => {
     it('should handle empty string inputs appropriately', async () => {
       // Test with empty title
-      const res = await graphqlRequest(context.app, `
+      const res = await graphqlRequest(
+        context.app,
+        `
         mutation CreateLesson($title: String!, $userId: String!) {
           createLesson(title: $title, userId: $userId) {
             id
             title
           }
         }
-      `, {
-        title: '',
-        userId: context.testData.user.id,
-      });
+      `,
+        {
+          title: '',
+          userId: context.testData.user.id,
+        },
+      );
 
       expect(res.status).toBe(200);
       // Should either create with empty title or return error
@@ -36,7 +44,9 @@ describe('Validation Edge Cases (e2e)', () => {
     it('should handle very long string inputs', async () => {
       const longString = 'A'.repeat(10000);
 
-      const res = await graphqlRequest(context.app, `
+      const res = await graphqlRequest(
+        context.app,
+        `
         mutation CreateLesson($title: String!, $userId: String!, $content: String) {
           createLesson(title: $title, userId: $userId, content: $content) {
             id
@@ -44,18 +54,22 @@ describe('Validation Edge Cases (e2e)', () => {
             content
           }
         }
-      `, {
-        title: 'Long Content Test',
-        userId: context.testData.user.id,
-        content: longString,
-      });
+      `,
+        {
+          title: 'Long Content Test',
+          userId: context.testData.user.id,
+          content: longString,
+        },
+      );
 
       expect(res.status).toBe(200);
       expect(res.body?.data?.createLesson || res.body?.errors).toBeDefined();
     });
 
     it('should handle null optional parameters correctly', async () => {
-      const res = await graphqlRequest(context.app, `
+      const res = await graphqlRequest(
+        context.app,
+        `
         mutation CreateUser($email: String!, $name: String) {
           createUser(data: { email: $email, name: $name }) {
             id
@@ -63,10 +77,12 @@ describe('Validation Edge Cases (e2e)', () => {
             name
           }
         }
-      `, {
-        email: `null-test-${Date.now()}@example.com`,
-        name: null,
-      });
+      `,
+        {
+          email: `null-test-${Date.now()}@example.com`,
+          name: null,
+        },
+      );
 
       expect(res.status).toBe(200);
       expect(res.body?.data?.createUser).toBeDefined();
@@ -76,17 +92,21 @@ describe('Validation Edge Cases (e2e)', () => {
 
   describe('Embedding Array Edge Cases', () => {
     it('should handle empty embedding array', async () => {
-      const res = await graphqlRequest(context.app, `
+      const res = await graphqlRequest(
+        context.app,
+        `
         mutation CreateEmbedding($chunkId: String!, $values: [Float!]!) {
           createEmbedding(chunkId: $chunkId, values: $values) {
             id
             values
           }
         }
-      `, {
-        chunkId: context.testData.chunk.id,
-        values: [],
-      });
+      `,
+        {
+          chunkId: context.testData.chunk.id,
+          values: [],
+        },
+      );
 
       expect(res.status).toBe(200);
       // Should either create with empty array or return validation error
@@ -97,17 +117,21 @@ describe('Validation Edge Cases (e2e)', () => {
       // Create an array with 1536 values (typical embedding size)
       const largeArray = Array.from({ length: 1536 }, () => Math.random());
 
-      const res = await graphqlRequest(context.app, `
+      const res = await graphqlRequest(
+        context.app,
+        `
         mutation CreateEmbedding($chunkId: String!, $values: [Float!]!) {
           createEmbedding(chunkId: $chunkId, values: $values) {
             id
             values
           }
         }
-      `, {
-        chunkId: context.testData.chunk.id,
-        values: largeArray,
-      });
+      `,
+        {
+          chunkId: context.testData.chunk.id,
+          values: largeArray,
+        },
+      );
 
       expect(res.status).toBe(200);
       expect(res.body?.data?.createEmbedding || res.body?.errors).toBeDefined();
@@ -117,4 +141,3 @@ describe('Validation Edge Cases (e2e)', () => {
     });
   });
 });
-

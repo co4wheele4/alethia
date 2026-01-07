@@ -68,7 +68,9 @@ describe('LessonResolver', () => {
   describe('lessons', () => {
     it('should return an array of lessons', async () => {
       const mockLessons = [mockLesson];
-      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue(mockLessons as any);
+      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue(
+        mockLessons as any,
+      );
 
       const result = await resolver.lessons();
 
@@ -95,7 +97,9 @@ describe('LessonResolver', () => {
 
   describe('lesson', () => {
     it('should return a lesson by id', async () => {
-      (prismaService.lesson.findUnique as jest.Mock).mockResolvedValue(mockLesson as any);
+      (prismaService.lesson.findUnique as jest.Mock).mockResolvedValue(
+        mockLesson as any,
+      );
 
       const result = await resolver.lesson('lesson-1');
 
@@ -117,7 +121,9 @@ describe('LessonResolver', () => {
   describe('lessonsByUser', () => {
     it('should return lessons for a specific user', async () => {
       const mockLessons = [mockLesson];
-      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue(mockLessons as any);
+      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue(
+        mockLessons as any,
+      );
 
       const result = await resolver.lessonsByUser('user-1');
 
@@ -131,7 +137,9 @@ describe('LessonResolver', () => {
   describe('createLesson', () => {
     it('should create a new lesson', async () => {
       const newLesson = { ...mockLesson, title: 'New Lesson' };
-      (prismaService.lesson.create as jest.Mock).mockResolvedValue(newLesson as any);
+      (prismaService.lesson.create as jest.Mock).mockResolvedValue(
+        newLesson as any,
+      );
 
       const result = await resolver.createLesson(
         'New Lesson',
@@ -147,7 +155,9 @@ describe('LessonResolver', () => {
 
     it('should create lesson without content', async () => {
       const newLesson = { ...mockLesson, content: null };
-      (prismaService.lesson.create as jest.Mock).mockResolvedValue(newLesson as any);
+      (prismaService.lesson.create as jest.Mock).mockResolvedValue(
+        newLesson as any,
+      );
 
       const result = await resolver.createLesson('New Lesson', 'user-1');
 
@@ -165,7 +175,9 @@ describe('LessonResolver', () => {
         title: 'Updated Title',
         content: 'Updated content',
       };
-      (prismaService.lesson.update as jest.Mock).mockResolvedValue(updatedLesson as any);
+      (prismaService.lesson.update as jest.Mock).mockResolvedValue(
+        updatedLesson as any,
+      );
 
       const result = await resolver.updateLesson(
         'lesson-1',
@@ -182,7 +194,9 @@ describe('LessonResolver', () => {
 
     it('should update only title', async () => {
       const updatedLesson = { ...mockLesson, title: 'Updated Title' };
-      (prismaService.lesson.update as jest.Mock).mockResolvedValue(updatedLesson as any);
+      (prismaService.lesson.update as jest.Mock).mockResolvedValue(
+        updatedLesson as any,
+      );
 
       const result = await resolver.updateLesson('lesson-1', 'Updated Title');
 
@@ -195,7 +209,9 @@ describe('LessonResolver', () => {
 
     it('should update only content', async () => {
       const updatedLesson = { ...mockLesson, content: 'Updated content' };
-      (prismaService.lesson.update as jest.Mock).mockResolvedValue(updatedLesson as any);
+      (prismaService.lesson.update as jest.Mock).mockResolvedValue(
+        updatedLesson as any,
+      );
 
       const result = await resolver.updateLesson(
         'lesson-1',
@@ -222,7 +238,9 @@ describe('LessonResolver', () => {
 
   describe('deleteLesson', () => {
     it('should delete a lesson', async () => {
-      (prismaService.lesson.delete as jest.Mock).mockResolvedValue(mockLesson as any);
+      (prismaService.lesson.delete as jest.Mock).mockResolvedValue(
+        mockLesson as any,
+      );
 
       const result = await resolver.deleteLesson('lesson-1');
 
@@ -235,7 +253,9 @@ describe('LessonResolver', () => {
 
   describe('user', () => {
     it('should resolve user field', async () => {
-      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(mockUser as any);
+      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(
+        mockUser as any,
+      );
 
       // Mock lesson with userId from database field
       const lessonWithUserId = { ...mockLesson, userId: mockUser.id } as any;

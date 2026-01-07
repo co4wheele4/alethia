@@ -47,7 +47,7 @@ export class AiQueryResolver {
     // Validate skip and take values
     const validatedSkip = Math.max(0, skip ?? 0);
     const validatedTake = Math.max(0, take ?? 20);
-    
+
     return this.prisma.aiQuery.findMany({
       skip: validatedSkip,
       take: validatedTake,

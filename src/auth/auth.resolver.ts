@@ -1,6 +1,5 @@
 import { Resolver, Mutation, Args } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
-import { CreateUserInput } from '@inputs/user.input';
 
 @Resolver()
 export class AuthResolver {
@@ -16,4 +15,3 @@ export class AuthResolver {
     return result.access_token;
   }
 }
-

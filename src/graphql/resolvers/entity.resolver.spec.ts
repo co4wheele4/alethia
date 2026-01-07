@@ -64,7 +64,9 @@ describe('EntityResolver', () => {
   describe('entities', () => {
     it('should return an array of entities', async () => {
       const mockEntities = [mockEntity];
-      (prismaService.entity.findMany as jest.Mock).mockResolvedValue(mockEntities as any);
+      (prismaService.entity.findMany as jest.Mock).mockResolvedValue(
+        mockEntities as any,
+      );
 
       const result = await resolver.entities();
 
@@ -83,7 +85,9 @@ describe('EntityResolver', () => {
 
   describe('entity', () => {
     it('should return an entity by id', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(mockEntity as any);
+      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(
+        mockEntity as any,
+      );
 
       const result = await resolver.entity('entity-1');
 
@@ -145,9 +149,9 @@ describe('EntityResolver', () => {
           to: {} as Entity,
         },
       ];
-      (prismaService.entityRelationship.findMany as jest.Mock).mockResolvedValue(
-        mockRelationships as any,
-      );
+      (
+        prismaService.entityRelationship.findMany as jest.Mock
+      ).mockResolvedValue(mockRelationships as any);
 
       const result = await resolver.outgoing(mockEntity);
 
@@ -158,7 +162,9 @@ describe('EntityResolver', () => {
     });
 
     it('should return empty array when entity has no outgoing relationships', async () => {
-      (prismaService.entityRelationship.findMany as jest.Mock).mockResolvedValue([]);
+      (
+        prismaService.entityRelationship.findMany as jest.Mock
+      ).mockResolvedValue([]);
 
       const result = await resolver.outgoing(mockEntity);
 
@@ -179,9 +185,9 @@ describe('EntityResolver', () => {
           to: mockEntity,
         },
       ];
-      (prismaService.entityRelationship.findMany as jest.Mock).mockResolvedValue(
-        mockRelationships as any,
-      );
+      (
+        prismaService.entityRelationship.findMany as jest.Mock
+      ).mockResolvedValue(mockRelationships as any);
 
       const result = await resolver.incoming(mockEntity);
 
@@ -192,7 +198,9 @@ describe('EntityResolver', () => {
     });
 
     it('should return empty array when entity has no incoming relationships', async () => {
-      (prismaService.entityRelationship.findMany as jest.Mock).mockResolvedValue([]);
+      (
+        prismaService.entityRelationship.findMany as jest.Mock
+      ).mockResolvedValue([]);
 
       const result = await resolver.incoming(mockEntity);
 
@@ -210,7 +218,9 @@ describe('EntityResolver', () => {
         type: 'Organization',
       };
       const newEntity = { ...mockEntity, ...input };
-      (prismaService.entity.create as jest.Mock).mockResolvedValue(newEntity as any);
+      (prismaService.entity.create as jest.Mock).mockResolvedValue(
+        newEntity as any,
+      );
 
       const result = await resolver.createEntity(input);
 
@@ -227,7 +237,9 @@ describe('EntityResolver', () => {
         type: 'UpdatedType',
       };
       const updatedEntity = { ...mockEntity, ...input };
-      (prismaService.entity.update as jest.Mock).mockResolvedValue(updatedEntity as any);
+      (prismaService.entity.update as jest.Mock).mockResolvedValue(
+        updatedEntity as any,
+      );
 
       const result = await resolver.updateEntity(input);
 
@@ -241,7 +253,9 @@ describe('EntityResolver', () => {
 
   describe('deleteEntity', () => {
     it('should delete an entity', async () => {
-      (prismaService.entity.delete as jest.Mock).mockResolvedValue(mockEntity as any);
+      (prismaService.entity.delete as jest.Mock).mockResolvedValue(
+        mockEntity as any,
+      );
 
       const result = await resolver.deleteEntity('entity-1');
 

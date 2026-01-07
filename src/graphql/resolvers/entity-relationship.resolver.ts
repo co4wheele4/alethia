@@ -32,14 +32,18 @@ export class EntityRelationshipResolver {
   async from(@Parent() rel: EntityRelationship) {
     // Access fromEntity from the database field, not the GraphQL field
     const relWithFromEntity = rel as unknown as { fromEntity: string };
-    return this.prisma.entity.findUnique({ where: { id: relWithFromEntity.fromEntity } });
+    return this.prisma.entity.findUnique({
+      where: { id: relWithFromEntity.fromEntity },
+    });
   }
 
   @ResolveField(() => Entity)
   async to(@Parent() rel: EntityRelationship) {
     // Access toEntity from the database field, not the GraphQL field
     const relWithToEntity = rel as unknown as { toEntity: string };
-    return this.prisma.entity.findUnique({ where: { id: relWithToEntity.toEntity } });
+    return this.prisma.entity.findUnique({
+      where: { id: relWithToEntity.toEntity },
+    });
   }
 
   // ------------------

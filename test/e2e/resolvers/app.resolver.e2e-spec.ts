@@ -1,5 +1,9 @@
 // test/e2e/resolvers/app.resolver.e2e-spec.ts
-import { setupTestApp, teardownTestApp, TestContext } from '../../helpers/test-setup';
+import {
+  setupTestApp,
+  teardownTestApp,
+  TestContext,
+} from '../../helpers/test-setup';
 import { graphqlRequest } from '../../helpers/graphql-request';
 
 describe('AppResolver (e2e)', () => {
@@ -57,4 +61,3 @@ describe('AppResolver (e2e)', () => {
     });
   });
 });
-

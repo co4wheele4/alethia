@@ -1,4 +1,11 @@
-import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Query,
+  Resolver,
+  ResolveField,
+  Parent,
+} from '@nestjs/graphql';
 import { User } from '@models/user.model';
 import { PrismaService } from '@prisma/prisma.service';
 import { Lesson } from '@models/lesson.model';

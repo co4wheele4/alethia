@@ -114,7 +114,9 @@ describe('EntityMentionResolver', () => {
     });
 
     it('should return null when mention not found', async () => {
-      (prismaService.entityMention.findUnique as jest.Mock).mockResolvedValue(null);
+      (prismaService.entityMention.findUnique as jest.Mock).mockResolvedValue(
+        null,
+      );
 
       const result = await resolver.entityMention('non-existent');
 
@@ -124,10 +126,15 @@ describe('EntityMentionResolver', () => {
 
   describe('entity', () => {
     it('should resolve entity field', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(mockEntity as any);
+      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(
+        mockEntity as any,
+      );
 
       // Mock mention with entityId from database field
-      const mentionWithEntityId = { ...mockEntityMention, entityId: mockEntity.id } as any;
+      const mentionWithEntityId = {
+        ...mockEntityMention,
+        entityId: mockEntity.id,
+      } as any;
       const result = await resolver.entity(mentionWithEntityId);
 
       expect(result).toEqual(mockEntity);
@@ -140,7 +147,10 @@ describe('EntityMentionResolver', () => {
       (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(null);
 
       // Mock mention with entityId from database field
-      const mentionWithEntityId = { ...mockEntityMention, entityId: 'non-existent' } as any;
+      const mentionWithEntityId = {
+        ...mockEntityMention,
+        entityId: 'non-existent',
+      } as any;
       const result = await resolver.entity(mentionWithEntityId);
 
       expect(result).toBeNull();
@@ -157,7 +167,10 @@ describe('EntityMentionResolver', () => {
       );
 
       // Mock mention with chunkId from database field
-      const mentionWithChunkId = { ...mockEntityMention, chunkId: mockChunk.id } as any;
+      const mentionWithChunkId = {
+        ...mockEntityMention,
+        chunkId: mockChunk.id,
+      } as any;
       const result = await resolver.chunk(mentionWithChunkId);
 
       expect(result).toEqual(mockChunk);
@@ -167,10 +180,15 @@ describe('EntityMentionResolver', () => {
     });
 
     it('should handle null chunk', async () => {
-      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue(null);
+      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue(
+        null,
+      );
 
       // Mock mention with chunkId from database field
-      const mentionWithChunkId = { ...mockEntityMention, chunkId: 'non-existent' } as any;
+      const mentionWithChunkId = {
+        ...mockEntityMention,
+        chunkId: 'non-existent',
+      } as any;
       const result = await resolver.chunk(mentionWithChunkId);
 
       expect(result).toBeNull();
@@ -256,7 +274,9 @@ describe('EntityMentionResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const entityMentionResolver = module.get<EntityMentionResolver>(EntityMentionResolver);
+    const entityMentionResolver = module.get<EntityMentionResolver>(
+      EntityMentionResolver,
+    );
     expect(entityMentionResolver).toBeDefined();
 
     await app.close();

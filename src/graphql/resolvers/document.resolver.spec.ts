@@ -183,7 +183,9 @@ describe('DocumentResolver', () => {
 
     it('should handle undefined title', async () => {
       const updateMock = prismaService.document.update as jest.Mock;
-      updateMock.mockResolvedValue(mockDocument as unknown as typeof mockDocument);
+      updateMock.mockResolvedValue(
+        mockDocument as unknown as typeof mockDocument,
+      );
 
       const result = await resolver.updateDocument('doc-1', undefined);
 
@@ -217,7 +219,10 @@ describe('DocumentResolver', () => {
       findUniqueMock.mockResolvedValue(mockUser as unknown as typeof mockUser);
 
       // Mock document with userId from database field
-      const documentWithUserId = { ...mockDocument, userId: mockUser.id } as any;
+      const documentWithUserId = {
+        ...mockDocument,
+        userId: mockUser.id,
+      } as any;
       const result = await resolver.user(documentWithUserId);
 
       expect(result).toEqual(mockUser);
@@ -231,7 +236,10 @@ describe('DocumentResolver', () => {
       findUniqueMock.mockResolvedValue(null);
 
       // Mock document with userId from database field
-      const documentWithUserId = { ...mockDocument, userId: 'non-existent' } as any;
+      const documentWithUserId = {
+        ...mockDocument,
+        userId: 'non-existent',
+      } as any;
       const result = await resolver.user(documentWithUserId);
 
       expect(result).toBeNull();

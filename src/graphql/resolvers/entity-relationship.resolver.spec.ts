@@ -81,9 +81,9 @@ describe('EntityRelationshipResolver', () => {
   describe('entityRelationships', () => {
     it('should return an array of entity relationships', async () => {
       const mockRelationships = [mockRelationship];
-      (prismaService.entityRelationship.findMany as jest.Mock).mockResolvedValue(
-        mockRelationships as any,
-      );
+      (
+        prismaService.entityRelationship.findMany as jest.Mock
+      ).mockResolvedValue(mockRelationships as any);
 
       const result = await resolver.entityRelationships();
 
@@ -92,7 +92,9 @@ describe('EntityRelationshipResolver', () => {
     });
 
     it('should return empty array when no relationships exist', async () => {
-      (prismaService.entityRelationship.findMany as jest.Mock).mockResolvedValue([]);
+      (
+        prismaService.entityRelationship.findMany as jest.Mock
+      ).mockResolvedValue([]);
 
       const result = await resolver.entityRelationships();
 
@@ -102,9 +104,9 @@ describe('EntityRelationshipResolver', () => {
 
   describe('entityRelationship', () => {
     it('should return an entity relationship by id', async () => {
-      (prismaService.entityRelationship.findUnique as jest.Mock).mockResolvedValue(
-        mockRelationship as any,
-      );
+      (
+        prismaService.entityRelationship.findUnique as jest.Mock
+      ).mockResolvedValue(mockRelationship as any);
 
       const result = await resolver.entityRelationship('rel-1');
 
@@ -115,7 +117,9 @@ describe('EntityRelationshipResolver', () => {
     });
 
     it('should return null when relationship not found', async () => {
-      (prismaService.entityRelationship.findUnique as jest.Mock).mockResolvedValue(null);
+      (
+        prismaService.entityRelationship.findUnique as jest.Mock
+      ).mockResolvedValue(null);
 
       const result = await resolver.entityRelationship('non-existent');
 
@@ -125,10 +129,15 @@ describe('EntityRelationshipResolver', () => {
 
   describe('from', () => {
     it('should resolve from entity field', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(mockFromEntity as any);
+      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(
+        mockFromEntity as any,
+      );
 
       // Mock relationship with fromEntity from database field
-      const relationshipWithFromEntity = { ...mockRelationship, fromEntity: mockFromEntity.id } as any;
+      const relationshipWithFromEntity = {
+        ...mockRelationship,
+        fromEntity: mockFromEntity.id,
+      } as any;
       const result = await resolver.from(relationshipWithFromEntity);
 
       expect(result).toEqual(mockFromEntity);
@@ -141,7 +150,10 @@ describe('EntityRelationshipResolver', () => {
       (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(null);
 
       // Mock relationship with fromEntity from database field
-      const relationshipWithFromEntity = { ...mockRelationship, fromEntity: 'non-existent' } as any;
+      const relationshipWithFromEntity = {
+        ...mockRelationship,
+        fromEntity: 'non-existent',
+      } as any;
       const result = await resolver.from(relationshipWithFromEntity);
 
       expect(result).toBeNull();
@@ -153,10 +165,15 @@ describe('EntityRelationshipResolver', () => {
 
   describe('to', () => {
     it('should resolve to entity field', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(mockToEntity as any);
+      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(
+        mockToEntity as any,
+      );
 
       // Mock relationship with toEntity from database field
-      const relationshipWithToEntity = { ...mockRelationship, toEntity: mockToEntity.id } as any;
+      const relationshipWithToEntity = {
+        ...mockRelationship,
+        toEntity: mockToEntity.id,
+      } as any;
       const result = await resolver.to(relationshipWithToEntity);
 
       expect(result).toEqual(mockToEntity);
@@ -169,7 +186,10 @@ describe('EntityRelationshipResolver', () => {
       (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(null);
 
       // Mock relationship with toEntity from database field
-      const relationshipWithToEntity = { ...mockRelationship, toEntity: 'non-existent' } as any;
+      const relationshipWithToEntity = {
+        ...mockRelationship,
+        toEntity: 'non-existent',
+      } as any;
       const result = await resolver.to(relationshipWithToEntity);
 
       expect(result).toBeNull();
@@ -261,7 +281,9 @@ describe('EntityRelationshipResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const entityRelationshipResolver = module.get<EntityRelationshipResolver>(EntityRelationshipResolver);
+    const entityRelationshipResolver = module.get<EntityRelationshipResolver>(
+      EntityRelationshipResolver,
+    );
     expect(entityRelationshipResolver).toBeDefined();
 
     await app.close();

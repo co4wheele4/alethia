@@ -36,10 +36,7 @@ async function bootstrap() {
   );
 
   // Global exception filters
-  app.useGlobalFilters(
-    new PrismaExceptionFilter(),
-    new HttpExceptionFilter(),
-  );
+  app.useGlobalFilters(new PrismaExceptionFilter(), new HttpExceptionFilter());
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

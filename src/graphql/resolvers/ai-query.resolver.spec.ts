@@ -325,10 +325,10 @@ describe('AiQueryResolver', () => {
 
     const app = module.createNestApplication();
     await app.init();
-    
+
     const aiQueryResolver = module.get<AiQueryResolver>(AiQueryResolver);
     expect(aiQueryResolver).toBeDefined();
-    
+
     await app.close();
   });
 });
@@ -424,7 +424,8 @@ describe('AiQueryResultResolver', () => {
 
   describe('aiQueryResult', () => {
     it('should return an ai query result by id', async () => {
-      const findUniqueMock = prismaService.aiQueryResult.findUnique as jest.Mock;
+      const findUniqueMock = prismaService.aiQueryResult
+        .findUnique as jest.Mock;
       findUniqueMock.mockResolvedValue(
         mockAiQueryResult as unknown as typeof mockAiQueryResult,
       );
@@ -438,7 +439,8 @@ describe('AiQueryResultResolver', () => {
     });
 
     it('should return null when result not found', async () => {
-      const findUniqueMock = prismaService.aiQueryResult.findUnique as jest.Mock;
+      const findUniqueMock = prismaService.aiQueryResult
+        .findUnique as jest.Mock;
       findUniqueMock.mockResolvedValue(null);
 
       const result = await resolver.aiQueryResult('non-existent');
@@ -485,10 +487,12 @@ describe('AiQueryResultResolver', () => {
 
     const app = module.createNestApplication();
     await app.init();
-    
-    const resultResolver = module.get<AiQueryResultResolver>(AiQueryResultResolver);
+
+    const resultResolver = module.get<AiQueryResultResolver>(
+      AiQueryResultResolver,
+    );
     expect(resultResolver).toBeDefined();
-    
+
     await app.close();
   });
 });

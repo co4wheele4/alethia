@@ -433,16 +433,20 @@ describe('GraphQL API (e2e)', () => {
 
       it('should update lesson', async () => {
         if (!createdLessonId) {
-          const createRes = await graphqlRequest(app, `
+          const createRes = await graphqlRequest(
+            app,
+            `
             mutation CreateLesson($title: String!, $userId: String!) {
               createLesson(title: $title, userId: $userId) {
                 id
               }
             }
-          `, {
-            title: 'Update Test',
-            userId: testData.user.id,
-          });
+          `,
+            {
+              title: 'Update Test',
+              userId: testData.user.id,
+            },
+          );
           createdLessonId = createRes.body?.data?.createLesson?.id;
         }
 
@@ -468,16 +472,20 @@ describe('GraphQL API (e2e)', () => {
       });
 
       it('should delete lesson', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateLesson($title: String!, $userId: String!) {
             createLesson(title: $title, userId: $userId) {
               id
             }
           }
-        `, {
-          title: 'Delete Test',
-          userId: testData.user.id,
-        });
+        `,
+          {
+            title: 'Delete Test',
+            userId: testData.user.id,
+          },
+        );
         const lessonIdToDelete = createRes.body?.data?.createLesson?.id;
 
         const mutation = `
@@ -598,16 +606,20 @@ describe('GraphQL API (e2e)', () => {
 
       it('should update document', async () => {
         if (!createdDocumentId) {
-          const createRes = await graphqlRequest(app, `
+          const createRes = await graphqlRequest(
+            app,
+            `
             mutation CreateDocument($title: String!, $userId: String!) {
               createDocument(title: $title, userId: $userId) {
                 id
               }
             }
-          `, {
-            title: 'Update Test',
-            userId: testData.user.id,
-          });
+          `,
+            {
+              title: 'Update Test',
+              userId: testData.user.id,
+            },
+          );
           createdDocumentId = createRes.body?.data?.createDocument?.id;
         }
 
@@ -631,16 +643,20 @@ describe('GraphQL API (e2e)', () => {
       });
 
       it('should delete document', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateDocument($title: String!, $userId: String!) {
             createDocument(title: $title, userId: $userId) {
               id
             }
           }
-        `, {
-          title: 'Delete Test',
-          userId: testData.user.id,
-        });
+        `,
+          {
+            title: 'Delete Test',
+            userId: testData.user.id,
+          },
+        );
         const documentIdToDelete = createRes.body?.data?.createDocument?.id;
 
         const mutation = `
@@ -781,23 +797,29 @@ describe('GraphQL API (e2e)', () => {
 
         expect(res.status).toBe(200);
         expect(res.body?.data?.createChunk).toBeDefined();
-        expect(res.body?.data?.createChunk?.chunkIndex).toBe(variables.chunkIndex);
+        expect(res.body?.data?.createChunk?.chunkIndex).toBe(
+          variables.chunkIndex,
+        );
         createdChunkId = res.body?.data?.createChunk?.id;
       });
 
       it('should update document chunk', async () => {
         if (!createdChunkId) {
-          const createRes = await graphqlRequest(app, `
+          const createRes = await graphqlRequest(
+            app,
+            `
             mutation CreateChunk($documentId: String!, $chunkIndex: Int!, $content: String!) {
               createChunk(documentId: $documentId, chunkIndex: $chunkIndex, content: $content) {
                 id
               }
             }
-          `, {
-            documentId: testData.document.id,
-            chunkIndex: 2,
-            content: 'Update Test',
-          });
+          `,
+            {
+              documentId: testData.document.id,
+              chunkIndex: 2,
+              content: 'Update Test',
+            },
+          );
           createdChunkId = createRes.body?.data?.createChunk?.id;
         }
 
@@ -821,17 +843,21 @@ describe('GraphQL API (e2e)', () => {
       });
 
       it('should delete document chunk', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateChunk($documentId: String!, $chunkIndex: Int!, $content: String!) {
             createChunk(documentId: $documentId, chunkIndex: $chunkIndex, content: $content) {
               id
             }
           }
-        `, {
-          documentId: testData.document.id,
-          chunkIndex: 999,
-          content: 'Delete Test',
-        });
+        `,
+          {
+            documentId: testData.document.id,
+            chunkIndex: 999,
+            content: 'Delete Test',
+          },
+        );
         const chunkIdToDelete = createRes.body?.data?.createChunk?.id;
 
         const mutation = `
@@ -998,22 +1024,28 @@ describe('GraphQL API (e2e)', () => {
 
         expect(res.status).toBe(200);
         expect(res.body?.data?.createEmbedding).toBeDefined();
-        expect(res.body?.data?.createEmbedding?.values).toEqual(variables.values);
+        expect(res.body?.data?.createEmbedding?.values).toEqual(
+          variables.values,
+        );
         createdEmbeddingId = res.body?.data?.createEmbedding?.id;
       });
 
       it('should update embedding', async () => {
         if (!createdEmbeddingId) {
-          const createRes = await graphqlRequest(app, `
+          const createRes = await graphqlRequest(
+            app,
+            `
             mutation CreateEmbedding($chunkId: String!, $values: [Float!]!) {
               createEmbedding(chunkId: $chunkId, values: $values) {
                 id
               }
             }
-          `, {
-            chunkId: testData.chunk.id,
-            values: [0.1, 0.2],
-          });
+          `,
+            {
+              chunkId: testData.chunk.id,
+              values: [0.1, 0.2],
+            },
+          );
           createdEmbeddingId = createRes.body?.data?.createEmbedding?.id;
         }
 
@@ -1033,20 +1065,26 @@ describe('GraphQL API (e2e)', () => {
 
         expect(res.status).toBe(200);
         expect(res.body?.data?.updateEmbedding).toBeDefined();
-        expect(res.body?.data?.updateEmbedding?.values).toEqual(variables.values);
+        expect(res.body?.data?.updateEmbedding?.values).toEqual(
+          variables.values,
+        );
       });
 
       it('should delete embedding', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEmbedding($chunkId: String!, $values: [Float!]!) {
             createEmbedding(chunkId: $chunkId, values: $values) {
               id
             }
           }
-        `, {
-          chunkId: testData.chunk.id,
-          values: [0.1],
-        });
+        `,
+          {
+            chunkId: testData.chunk.id,
+            values: [0.1],
+          },
+        );
         const embeddingIdToDelete = createRes.body?.data?.createEmbedding?.id;
 
         const mutation = `
@@ -1067,16 +1105,20 @@ describe('GraphQL API (e2e)', () => {
 
     describe('ResolveFields', () => {
       it('should resolve embedding chunk', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEmbedding($chunkId: String!, $values: [Float!]!) {
             createEmbedding(chunkId: $chunkId, values: $values) {
               id
             }
           }
-        `, {
-          chunkId: testData.chunk.id,
-          values: [0.1, 0.2],
-        });
+        `,
+          {
+            chunkId: testData.chunk.id,
+            values: [0.1, 0.2],
+          },
+        );
         const embeddingId = createRes.body?.data?.createEmbedding?.id;
 
         const query = `
@@ -1166,15 +1208,19 @@ describe('GraphQL API (e2e)', () => {
 
       it('should update entity', async () => {
         if (!createdEntityId) {
-          const createRes = await graphqlRequest(app, `
+          const createRes = await graphqlRequest(
+            app,
+            `
             mutation CreateEntity($data: CreateEntityInput!) {
               createEntity(data: $data) {
                 id
               }
             }
-          `, {
-            data: { name: 'Update Test', type: 'Type' },
-          });
+          `,
+            {
+              data: { name: 'Update Test', type: 'Type' },
+            },
+          );
           createdEntityId = createRes.body?.data?.createEntity?.id;
         }
 
@@ -1202,15 +1248,19 @@ describe('GraphQL API (e2e)', () => {
       });
 
       it('should delete entity', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEntity($data: CreateEntityInput!) {
             createEntity(data: $data) {
               id
             }
           }
-        `, {
-          data: { name: 'Delete Test', type: 'Type' },
-        });
+        `,
+          {
+            data: { name: 'Delete Test', type: 'Type' },
+          },
+        );
         const entityIdToDelete = createRes.body?.data?.createEntity?.id;
 
         const mutation = `
@@ -1299,28 +1349,36 @@ describe('GraphQL API (e2e)', () => {
 
     beforeAll(async () => {
       // Create test entity and chunk for mentions
-      const entityRes = await graphqlRequest(app, `
+      const entityRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: 'Mention Entity', type: 'Type' },
-      });
+      `,
+        {
+          data: { name: 'Mention Entity', type: 'Type' },
+        },
+      );
       entityForMention = entityRes.body?.data?.createEntity?.id;
 
-      const chunkRes = await graphqlRequest(app, `
+      const chunkRes = await graphqlRequest(
+        app,
+        `
         mutation CreateChunk($documentId: String!, $chunkIndex: Int!, $content: String!) {
           createChunk(documentId: $documentId, chunkIndex: $chunkIndex, content: $content) {
             id
           }
         }
-      `, {
-        documentId: testData.document.id,
-        chunkIndex: 100,
-        content: 'Mention Chunk',
-      });
+      `,
+        {
+          documentId: testData.document.id,
+          chunkIndex: 100,
+          content: 'Mention Chunk',
+        },
+      );
       chunkForMention = chunkRes.body?.data?.createChunk?.id;
     });
 
@@ -1394,31 +1452,39 @@ describe('GraphQL API (e2e)', () => {
 
       it('should update entity mention', async () => {
         if (!createdMentionId) {
-          const createRes = await graphqlRequest(app, `
+          const createRes = await graphqlRequest(
+            app,
+            `
             mutation CreateEntityMention($data: CreateEntityMentionInput!) {
               createEntityMention(data: $data) {
                 id
               }
             }
-          `, {
-            data: {
-              entityId: entityForMention,
-              chunkId: chunkForMention,
+          `,
+            {
+              data: {
+                entityId: entityForMention,
+                chunkId: chunkForMention,
+              },
             },
-          });
+          );
           createdMentionId = createRes.body?.data?.createEntityMention?.id;
         }
 
         // Create another entity and chunk for update
-        const newEntityRes = await graphqlRequest(app, `
+        const newEntityRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEntity($data: CreateEntityInput!) {
             createEntity(data: $data) {
               id
             }
           }
-        `, {
-          data: { name: 'Updated Entity', type: 'Type' },
-        });
+        `,
+          {
+            data: { name: 'Updated Entity', type: 'Type' },
+          },
+        );
         const newEntityId = newEntityRes.body?.data?.createEntity?.id;
 
         const mutation = `
@@ -1442,18 +1508,22 @@ describe('GraphQL API (e2e)', () => {
       });
 
       it('should delete entity mention', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEntityMention($data: CreateEntityMentionInput!) {
             createEntityMention(data: $data) {
               id
             }
           }
-        `, {
-          data: {
-            entityId: entityForMention,
-            chunkId: chunkForMention,
+        `,
+          {
+            data: {
+              entityId: entityForMention,
+              chunkId: chunkForMention,
+            },
           },
-        });
+        );
         const mentionIdToDelete = createRes.body?.data?.createEntityMention?.id;
 
         const mutation = `
@@ -1474,18 +1544,22 @@ describe('GraphQL API (e2e)', () => {
 
     describe('ResolveFields', () => {
       it('should resolve entity mention entity', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEntityMention($data: CreateEntityMentionInput!) {
             createEntityMention(data: $data) {
               id
             }
           }
-        `, {
-          data: {
-            entityId: entityForMention,
-            chunkId: chunkForMention,
+        `,
+          {
+            data: {
+              entityId: entityForMention,
+              chunkId: chunkForMention,
+            },
           },
-        });
+        );
         const mentionId = createRes.body?.data?.createEntityMention?.id;
 
         const query = `
@@ -1507,18 +1581,22 @@ describe('GraphQL API (e2e)', () => {
       });
 
       it('should resolve entity mention chunk', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEntityMention($data: CreateEntityMentionInput!) {
             createEntityMention(data: $data) {
               id
             }
           }
-        `, {
-          data: {
-            entityId: entityForMention,
-            chunkId: chunkForMention,
+        `,
+          {
+            data: {
+              entityId: entityForMention,
+              chunkId: chunkForMention,
+            },
           },
-        });
+        );
         const mentionId = createRes.body?.data?.createEntityMention?.id;
 
         const query = `
@@ -1548,26 +1626,34 @@ describe('GraphQL API (e2e)', () => {
     let toEntityId: string;
 
     beforeAll(async () => {
-      const fromRes = await graphqlRequest(app, `
+      const fromRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: 'From Entity', type: 'Type' },
-      });
+      `,
+        {
+          data: { name: 'From Entity', type: 'Type' },
+        },
+      );
       fromEntityId = fromRes.body?.data?.createEntity?.id;
 
-      const toRes = await graphqlRequest(app, `
+      const toRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: 'To Entity', type: 'Type' },
-      });
+      `,
+        {
+          data: { name: 'To Entity', type: 'Type' },
+        },
+      );
       toEntityId = toRes.body?.data?.createEntity?.id;
     });
 
@@ -1603,7 +1689,8 @@ describe('GraphQL API (e2e)', () => {
             relation: 'test-relation',
           },
         });
-        const relationshipId = createRes.body?.data?.createEntityRelationship?.id;
+        const relationshipId =
+          createRes.body?.data?.createEntityRelationship?.id;
 
         const query = `
           query GetEntityRelationship($id: String!) {
@@ -1641,26 +1728,33 @@ describe('GraphQL API (e2e)', () => {
 
         expect(res.status).toBe(200);
         expect(res.body?.data?.createEntityRelationship).toBeDefined();
-        expect(res.body?.data?.createEntityRelationship?.relation).toBe(variables.data.relation);
+        expect(res.body?.data?.createEntityRelationship?.relation).toBe(
+          variables.data.relation,
+        );
         createdRelationshipId = res.body?.data?.createEntityRelationship?.id;
       });
 
       it('should update entity relationship', async () => {
         if (!createdRelationshipId) {
-          const createRes = await graphqlRequest(app, `
+          const createRes = await graphqlRequest(
+            app,
+            `
             mutation CreateEntityRelationship($data: CreateEntityRelationshipInput!) {
               createEntityRelationship(data: $data) {
                 id
               }
             }
-          `, {
-            data: {
-              fromEntity: fromEntityId,
-              toEntity: toEntityId,
-              relation: 'works_with',
+          `,
+            {
+              data: {
+                fromEntity: fromEntityId,
+                toEntity: toEntityId,
+                relation: 'works_with',
+              },
             },
-          });
-          createdRelationshipId = createRes.body?.data?.createEntityRelationship?.id;
+          );
+          createdRelationshipId =
+            createRes.body?.data?.createEntityRelationship?.id;
         }
 
         const mutation = `
@@ -1683,24 +1777,31 @@ describe('GraphQL API (e2e)', () => {
 
         expect(res.status).toBe(200);
         expect(res.body?.data?.updateEntityRelationship).toBeDefined();
-        expect(res.body?.data?.updateEntityRelationship?.relation).toBe(variables.data.relation);
+        expect(res.body?.data?.updateEntityRelationship?.relation).toBe(
+          variables.data.relation,
+        );
       });
 
       it('should delete entity relationship', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEntityRelationship($data: CreateEntityRelationshipInput!) {
             createEntityRelationship(data: $data) {
               id
             }
           }
-        `, {
-          data: {
-            fromEntity: fromEntityId,
-            toEntity: toEntityId,
-            relation: 'delete-test',
+        `,
+          {
+            data: {
+              fromEntity: fromEntityId,
+              toEntity: toEntityId,
+              relation: 'delete-test',
+            },
           },
-        });
-        const relationshipIdToDelete = createRes.body?.data?.createEntityRelationship?.id;
+        );
+        const relationshipIdToDelete =
+          createRes.body?.data?.createEntityRelationship?.id;
 
         const mutation = `
           mutation DeleteEntityRelationship($id: String!) {
@@ -1720,20 +1821,25 @@ describe('GraphQL API (e2e)', () => {
 
     describe('ResolveFields', () => {
       it('should resolve relationship from entity', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEntityRelationship($data: CreateEntityRelationshipInput!) {
             createEntityRelationship(data: $data) {
               id
             }
           }
-        `, {
-          data: {
-            fromEntity: fromEntityId,
-            toEntity: toEntityId,
-            relation: 'resolve-test',
+        `,
+          {
+            data: {
+              fromEntity: fromEntityId,
+              toEntity: toEntityId,
+              relation: 'resolve-test',
+            },
           },
-        });
-        const relationshipId = createRes.body?.data?.createEntityRelationship?.id;
+        );
+        const relationshipId =
+          createRes.body?.data?.createEntityRelationship?.id;
 
         const query = `
           query GetEntityRelationshipWithFrom($id: String!) {
@@ -1754,20 +1860,25 @@ describe('GraphQL API (e2e)', () => {
       });
 
       it('should resolve relationship to entity', async () => {
-        const createRes = await graphqlRequest(app, `
+        const createRes = await graphqlRequest(
+          app,
+          `
           mutation CreateEntityRelationship($data: CreateEntityRelationshipInput!) {
             createEntityRelationship(data: $data) {
               id
             }
           }
-        `, {
-          data: {
-            fromEntity: fromEntityId,
-            toEntity: toEntityId,
-            relation: 'resolve-to-test',
+        `,
+          {
+            data: {
+              fromEntity: fromEntityId,
+              toEntity: toEntityId,
+              relation: 'resolve-to-test',
+            },
           },
-        });
-        const relationshipId = createRes.body?.data?.createEntityRelationship?.id;
+        );
+        const relationshipId =
+          createRes.body?.data?.createEntityRelationship?.id;
 
         const query = `
           query GetEntityRelationshipWithTo($id: String!) {
@@ -1983,7 +2094,9 @@ describe('GraphQL API (e2e)', () => {
     describe('ResolveFields', () => {
       it('should resolve AI query user', async () => {
         // First get an AI query
-        const queriesRes = await graphqlRequest(app, `
+        const queriesRes = await graphqlRequest(
+          app,
+          `
           query {
             aiQueries {
               id
@@ -1993,7 +2106,8 @@ describe('GraphQL API (e2e)', () => {
               }
             }
           }
-        `);
+        `,
+        );
 
         expect(queriesRes.status).toBe(200);
         const firstQuery = queriesRes.body?.data?.aiQueries?.[0];
@@ -2003,7 +2117,9 @@ describe('GraphQL API (e2e)', () => {
       });
 
       it('should resolve AI query results', async () => {
-        const queriesRes = await graphqlRequest(app, `
+        const queriesRes = await graphqlRequest(
+          app,
+          `
           query {
             aiQueries {
               id
@@ -2013,7 +2129,8 @@ describe('GraphQL API (e2e)', () => {
               }
             }
           }
-        `);
+        `,
+        );
 
         expect(queriesRes.status).toBe(200);
         const firstQuery = queriesRes.body?.data?.aiQueries?.[0];
@@ -2024,16 +2141,20 @@ describe('GraphQL API (e2e)', () => {
 
       it('should resolve AI query result query', async () => {
         if (!createdResultId) {
-          const createRes = await graphqlRequest(app, `
+          const createRes = await graphqlRequest(
+            app,
+            `
             mutation AskAi($userId: String!, $query: String!) {
               askAi(userId: $userId, query: $query) {
                 id
               }
             }
-          `, {
-            userId: testData.user.id,
-            query: 'Test for resolve',
-          });
+          `,
+            {
+              userId: testData.user.id,
+              query: 'Test for resolve',
+            },
+          );
           createdResultId = createRes.body?.data?.askAi?.id;
         }
 
@@ -2307,15 +2428,19 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle empty arrays for relationships', async () => {
       // Create a new user with no documents
-      const createUserRes = await graphqlRequest(app, `
+      const createUserRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
           }
         }
-      `, {
-        email: `empty-test-${Date.now()}@example.com`,
-      });
+      `,
+        {
+          email: `empty-test-${Date.now()}@example.com`,
+        },
+      );
       const newUserId = createUserRes.body?.data?.createUser?.id;
 
       const query = `
@@ -2337,24 +2462,32 @@ describe('GraphQL API (e2e)', () => {
 
     it('should fail to create user with duplicate email', async () => {
       const email = `duplicate-${Date.now()}@example.com`;
-      
+
       // Create first user
-      await graphqlRequest(app, `
+      await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
           }
         }
-      `, { email });
+      `,
+        { email },
+      );
 
       // Try to create duplicate
-      const res = await graphqlRequest(app, `
+      const res = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
           }
         }
-      `, { email });
+      `,
+        { email },
+      );
 
       expect(res.status).toBe(200);
       expect(res.body?.errors).toBeDefined();
@@ -2399,28 +2532,36 @@ describe('GraphQL API (e2e)', () => {
     it('should fail to create entity with duplicate name and type', async () => {
       const entityName = `Duplicate Entity ${Date.now()}`;
       const entityType = 'TestType';
-      
+
       // Create first entity
-      await graphqlRequest(app, `
+      await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: entityName, type: entityType },
-      });
+      `,
+        {
+          data: { name: entityName, type: entityType },
+        },
+      );
 
       // Try to create duplicate
-      const res = await graphqlRequest(app, `
+      const res = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: entityName, type: entityType },
-      });
+      `,
+        {
+          data: { name: entityName, type: entityType },
+        },
+      );
 
       expect(res.status).toBe(200);
       expect(res.body?.errors).toBeDefined();
@@ -2429,18 +2570,22 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle entity with no mentions, outgoing, or incoming relationships', async () => {
       // Create a new entity
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { 
-          name: `Isolated Entity ${Date.now()}`, 
-          type: 'IsolatedType' 
+      `,
+        {
+          data: {
+            name: `Isolated Entity ${Date.now()}`,
+            type: 'IsolatedType',
+          },
         },
-      });
+      );
       const entityId = createRes.body?.data?.createEntity?.id;
 
       const query = `
@@ -2470,7 +2615,9 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle AI query results field resolution', async () => {
       // Create an AI query via askAi (which creates a result)
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation AskAi($userId: String!, $query: String!) {
           askAi(userId: $userId, query: $query) {
             id
@@ -2479,11 +2626,13 @@ describe('GraphQL API (e2e)', () => {
             }
           }
         }
-      `, {
-        userId: testData.user.id,
-        query: 'Test query for results',
-      });
-      
+      `,
+        {
+          userId: testData.user.id,
+          query: 'Test query for results',
+        },
+      );
+
       const queryId = createRes.body?.data?.askAi?.query?.id;
 
       const query = `
@@ -2508,16 +2657,20 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle document with no chunks', async () => {
       // Create a new document
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateDocument($userId: String!, $title: String!) {
           createDocument(userId: $userId, title: $title) {
             id
           }
         }
-      `, {
-        userId: testData.user.id,
-        title: `Empty Document ${Date.now()}`,
-      });
+      `,
+        {
+          userId: testData.user.id,
+          title: `Empty Document ${Date.now()}`,
+        },
+      );
       const documentId = createRes.body?.data?.createDocument?.id;
 
       const query = `
@@ -2539,17 +2692,21 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle chunk with no embeddings and no mentions', async () => {
       // Create a new chunk
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateChunk($documentId: String!, $chunkIndex: Int!, $content: String!) {
           createChunk(documentId: $documentId, chunkIndex: $chunkIndex, content: $content) {
             id
           }
         }
-      `, {
-        documentId: testData.document.id,
-        chunkIndex: 999,
-        content: 'Empty chunk',
-      });
+      `,
+        {
+          documentId: testData.document.id,
+          chunkIndex: 999,
+          content: 'Empty chunk',
+        },
+      );
       const chunkId = createRes.body?.data?.createChunk?.id;
 
       const query = `
@@ -2575,15 +2732,19 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle user with no lessons, documents, or aiQueries', async () => {
       // Create a new user
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
           }
         }
-      `, {
-        email: `empty-user-${Date.now()}@example.com`,
-      });
+      `,
+        {
+          email: `empty-user-${Date.now()}@example.com`,
+        },
+      );
       const userId = createRes.body?.data?.createUser?.id;
 
       const query = `
@@ -2613,7 +2774,9 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle update with all fields undefined', async () => {
       // Create a user first
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
@@ -2621,9 +2784,11 @@ describe('GraphQL API (e2e)', () => {
             name
           }
         }
-      `, {
-        email: `update-test-${Date.now()}@example.com`,
-      });
+      `,
+        {
+          email: `update-test-${Date.now()}@example.com`,
+        },
+      );
       const userId = createRes.body?.data?.createUser?.id;
       const originalEmail = createRes.body?.data?.createUser?.email;
 
@@ -2647,7 +2812,9 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle entity update with partial fields', async () => {
       // Create an entity first
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
@@ -2655,12 +2822,14 @@ describe('GraphQL API (e2e)', () => {
             type
           }
         }
-      `, {
-        data: { 
-          name: `Partial Update Entity ${Date.now()}`, 
-          type: 'OriginalType' 
+      `,
+        {
+          data: {
+            name: `Partial Update Entity ${Date.now()}`,
+            type: 'OriginalType',
+          },
         },
-      });
+      );
       const entityId = createRes.body?.data?.createEntity?.id;
       const originalName = createRes.body?.data?.createEntity?.name;
 
@@ -2744,30 +2913,38 @@ describe('GraphQL API (e2e)', () => {
 
     it('should fail to create duplicate chunk index for same document', async () => {
       // Create first chunk
-      const createRes = await graphqlRequest(app, `
+      await graphqlRequest(
+        app,
+        `
         mutation CreateChunk($documentId: String!, $chunkIndex: Int!, $content: String!) {
           createChunk(documentId: $documentId, chunkIndex: $chunkIndex, content: $content) {
             id
           }
         }
-      `, {
-        documentId: testData.document.id,
-        chunkIndex: 999,
-        content: 'First chunk',
-      });
+      `,
+        {
+          documentId: testData.document.id,
+          chunkIndex: 999,
+          content: 'First chunk',
+        },
+      );
 
       // Try to create duplicate
-      const res = await graphqlRequest(app, `
+      const res = await graphqlRequest(
+        app,
+        `
         mutation CreateChunk($documentId: String!, $chunkIndex: Int!, $content: String!) {
           createChunk(documentId: $documentId, chunkIndex: $chunkIndex, content: $content) {
             id
           }
         }
-      `, {
-        documentId: testData.document.id,
-        chunkIndex: 999,
-        content: 'Duplicate chunk',
-      });
+      `,
+        {
+          documentId: testData.document.id,
+          chunkIndex: 999,
+          content: 'Duplicate chunk',
+        },
+      );
 
       expect(res.status).toBe(200);
       expect(res.body?.errors).toBeDefined();
@@ -3004,7 +3181,9 @@ describe('GraphQL API (e2e)', () => {
   // ==================== PARTIAL UPDATE TESTS ====================
   describe('Partial Update Tests', () => {
     it('should update user with only email', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!, $name: String!) {
           createUser(data: { email: $email, name: $name }) {
             id
@@ -3012,10 +3191,12 @@ describe('GraphQL API (e2e)', () => {
             name
           }
         }
-      `, {
-        email: `partial-update-${Date.now()}@example.com`,
-        name: 'Original Name',
-      });
+      `,
+        {
+          email: `partial-update-${Date.now()}@example.com`,
+          name: 'Original Name',
+        },
+      );
       const userId = createRes.body?.data?.createUser?.id;
 
       const mutation = `
@@ -3039,7 +3220,9 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should update user with only name', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
@@ -3047,9 +3230,11 @@ describe('GraphQL API (e2e)', () => {
             name
           }
         }
-      `, {
-        email: `partial-name-${Date.now()}@example.com`,
-      });
+      `,
+        {
+          email: `partial-name-${Date.now()}@example.com`,
+        },
+      );
       const userId = createRes.body?.data?.createUser?.id;
 
       const mutation = `
@@ -3072,7 +3257,9 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should update lesson with only title', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateLesson($title: String!, $userId: String!, $content: String!) {
           createLesson(title: $title, userId: $userId, content: $content) {
             id
@@ -3080,11 +3267,13 @@ describe('GraphQL API (e2e)', () => {
             content
           }
         }
-      `, {
-        title: 'Original Title',
-        userId: testData.user.id,
-        content: 'Original Content',
-      });
+      `,
+        {
+          title: 'Original Title',
+          userId: testData.user.id,
+          content: 'Original Content',
+        },
+      );
       const lessonId = createRes.body?.data?.createLesson?.id;
 
       const mutation = `
@@ -3107,7 +3296,9 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should update lesson with only content', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateLesson($title: String!, $userId: String!) {
           createLesson(title: $title, userId: $userId) {
             id
@@ -3115,10 +3306,12 @@ describe('GraphQL API (e2e)', () => {
             content
           }
         }
-      `, {
-        title: 'Original Title',
-        userId: testData.user.id,
-      });
+      `,
+        {
+          title: 'Original Title',
+          userId: testData.user.id,
+        },
+      );
       const lessonId = createRes.body?.data?.createLesson?.id;
 
       const mutation = `
@@ -3136,22 +3329,28 @@ describe('GraphQL API (e2e)', () => {
       });
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.updateLesson?.content).toBe('Updated Content Only');
+      expect(res.body?.data?.updateLesson?.content).toBe(
+        'Updated Content Only',
+      );
       expect(res.body?.data?.updateLesson?.title).toBe('Original Title');
     });
 
     it('should update document with only title', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateDocument($title: String!, $userId: String!) {
           createDocument(title: $title, userId: $userId) {
             id
             title
           }
         }
-      `, {
-        title: 'Original Title',
-        userId: testData.user.id,
-      });
+      `,
+        {
+          title: 'Original Title',
+          userId: testData.user.id,
+        },
+      );
       const documentId = createRes.body?.data?.createDocument?.id;
 
       const mutation = `
@@ -3172,7 +3371,9 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should update entity with partial data', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
@@ -3180,12 +3381,14 @@ describe('GraphQL API (e2e)', () => {
             type
           }
         }
-      `, {
-        data: {
-          name: 'Original Name',
-          type: 'OriginalType',
+      `,
+        {
+          data: {
+            name: 'Original Name',
+            type: 'OriginalType',
+          },
         },
-      });
+      );
       const entityId = createRes.body?.data?.createEntity?.id;
 
       const mutation = `
@@ -3343,15 +3546,19 @@ describe('GraphQL API (e2e)', () => {
   // ==================== RELATIONSHIP EDGE CASES ====================
   describe('Relationship Edge Cases', () => {
     it('should handle user with no lessons', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
           }
         }
-      `, {
-        email: `no-lessons-${Date.now()}@example.com`,
-      });
+      `,
+        {
+          email: `no-lessons-${Date.now()}@example.com`,
+        },
+      );
       const userId = createRes.body?.data?.createUser?.id;
 
       const query = `
@@ -3371,15 +3578,19 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should handle user with no documents', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
           }
         }
-      `, {
-        email: `no-docs-${Date.now()}@example.com`,
-      });
+      `,
+        {
+          email: `no-docs-${Date.now()}@example.com`,
+        },
+      );
       const userId = createRes.body?.data?.createUser?.id;
 
       const query = `
@@ -3399,15 +3610,19 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should handle user with no AI queries', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
           }
         }
-      `, {
-        email: `no-queries-${Date.now()}@example.com`,
-      });
+      `,
+        {
+          email: `no-queries-${Date.now()}@example.com`,
+        },
+      );
       const userId = createRes.body?.data?.createUser?.id;
 
       const query = `
@@ -3427,16 +3642,20 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should handle document with no chunks', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateDocument($title: String!, $userId: String!) {
           createDocument(title: $title, userId: $userId) {
             id
           }
         }
-      `, {
-        title: 'Document with no chunks',
-        userId: testData.user.id,
-      });
+      `,
+        {
+          title: 'Document with no chunks',
+          userId: testData.user.id,
+        },
+      );
       const documentId = createRes.body?.data?.createDocument?.id;
 
       const query = `
@@ -3456,17 +3675,21 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should handle chunk with no embeddings', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateChunk($documentId: String!, $chunkIndex: Int!, $content: String!) {
           createChunk(documentId: $documentId, chunkIndex: $chunkIndex, content: $content) {
             id
           }
         }
-      `, {
-        documentId: testData.document.id,
-        chunkIndex: 888,
-        content: 'Chunk with no embeddings',
-      });
+      `,
+        {
+          documentId: testData.document.id,
+          chunkIndex: 888,
+          content: 'Chunk with no embeddings',
+        },
+      );
       const chunkId = createRes.body?.data?.createChunk?.id;
 
       const query = `
@@ -3486,17 +3709,21 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should handle chunk with no mentions', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateChunk($documentId: String!, $chunkIndex: Int!, $content: String!) {
           createChunk(documentId: $documentId, chunkIndex: $chunkIndex, content: $content) {
             id
           }
         }
-      `, {
-        documentId: testData.document.id,
-        chunkIndex: 777,
-        content: 'Chunk with no mentions',
-      });
+      `,
+        {
+          documentId: testData.document.id,
+          chunkIndex: 777,
+          content: 'Chunk with no mentions',
+        },
+      );
       const chunkId = createRes.body?.data?.createChunk?.id;
 
       const query = `
@@ -3516,18 +3743,22 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should handle entity with no mentions', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: {
-          name: 'Entity with no mentions',
-          type: 'Type',
+      `,
+        {
+          data: {
+            name: 'Entity with no mentions',
+            type: 'Type',
+          },
         },
-      });
+      );
       const entityId = createRes.body?.data?.createEntity?.id;
 
       const query = `
@@ -3547,18 +3778,22 @@ describe('GraphQL API (e2e)', () => {
     });
 
     it('should handle entity with no relationships', async () => {
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: {
-          name: 'Entity with no relationships',
-          type: 'Type',
+      `,
+        {
+          data: {
+            name: 'Entity with no relationships',
+            type: 'Type',
+          },
         },
-      });
+      );
       const entityId = createRes.body?.data?.createEntity?.id;
 
       const query = `
@@ -3906,29 +4141,37 @@ describe('GraphQL API (e2e)', () => {
   describe('Ordering and Sorting', () => {
     it('should return AI queries ordered by createdAt descending', async () => {
       // Create multiple queries with delays to ensure different timestamps
-      await graphqlRequest(app, `
+      await graphqlRequest(
+        app,
+        `
         mutation AskAi($userId: String!, $query: String!) {
           askAi(userId: $userId, query: $query) {
             id
           }
         }
-      `, {
-        userId: testData.user.id,
-        query: 'First query',
-      });
+      `,
+        {
+          userId: testData.user.id,
+          query: 'First query',
+        },
+      );
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      await graphqlRequest(app, `
+      await graphqlRequest(
+        app,
+        `
         mutation AskAi($userId: String!, $query: String!) {
           askAi(userId: $userId, query: $query) {
             id
           }
         }
-      `, {
-        userId: testData.user.id,
-        query: 'Second query',
-      });
+      `,
+        {
+          userId: testData.user.id,
+          query: 'Second query',
+        },
+      );
 
       const query = `
         query {
@@ -3948,7 +4191,9 @@ describe('GraphQL API (e2e)', () => {
         const queries = res.body.data.aiQueries;
         const firstDate = new Date(queries[0].createdAt);
         const secondDate = new Date(queries[1].createdAt);
-        expect(firstDate.getTime()).toBeGreaterThanOrEqual(secondDate.getTime());
+        expect(firstDate.getTime()).toBeGreaterThanOrEqual(
+          secondDate.getTime(),
+        );
       }
     });
 
@@ -3968,7 +4213,10 @@ describe('GraphQL API (e2e)', () => {
       expect(res.body?.data?.aiQueryResults).toBeInstanceOf(Array);
       // Note: createdAt field is not exposed in AiQueryResult GraphQL model
       // The resolver already orders by createdAt descending, so we just verify results exist
-      if (res.body?.data?.aiQueryResults && res.body.data.aiQueryResults.length >= 2) {
+      if (
+        res.body?.data?.aiQueryResults &&
+        res.body.data.aiQueryResults.length >= 2
+      ) {
         const results = res.body.data.aiQueryResults;
         expect(results[0].id).toBeDefined();
         expect(results[1].id).toBeDefined();
@@ -3980,69 +4228,91 @@ describe('GraphQL API (e2e)', () => {
   describe('Data Integrity', () => {
     it('should maintain referential integrity when deleting user with related data', async () => {
       // Create a user with related data
-      const createUserRes = await graphqlRequest(app, `
+      const createUserRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
           }
         }
-      `, {
-        email: `integrity-test-${Date.now()}@example.com`,
-      });
+      `,
+        {
+          email: `integrity-test-${Date.now()}@example.com`,
+        },
+      );
       const userId = createUserRes.body?.data?.createUser?.id;
 
       // Create related data
-      await graphqlRequest(app, `
+      await graphqlRequest(
+        app,
+        `
         mutation CreateLesson($title: String!, $userId: String!) {
           createLesson(title: $title, userId: $userId) {
             id
           }
         }
-      `, {
-        title: 'Test Lesson',
-        userId: userId,
-      });
+      `,
+        {
+          title: 'Test Lesson',
+          userId: userId,
+        },
+      );
 
-      await graphqlRequest(app, `
+      await graphqlRequest(
+        app,
+        `
         mutation CreateDocument($title: String!, $userId: String!) {
           createDocument(title: $title, userId: $userId) {
             id
           }
         }
-      `, {
-        title: 'Test Document',
-        userId: userId,
-      });
+      `,
+        {
+          title: 'Test Document',
+          userId: userId,
+        },
+      );
 
       // Delete the user
       // Note: This will fail due to foreign key constraints (user has related lessons/documents)
       // This test verifies that foreign key constraints are enforced
-      const deleteRes = await graphqlRequest(app, `
+      const deleteRes = await graphqlRequest(
+        app,
+        `
         mutation DeleteUser($id: String!) {
           deleteUser(id: $id) {
             id
           }
         }
-      `, {
-        id: userId,
-      });
+      `,
+        {
+          id: userId,
+        },
+      );
 
       expect(deleteRes.status).toBe(200);
       // Should have an error due to foreign key constraint
-      expect(deleteRes.body?.errors || deleteRes.body?.data?.deleteUser).toBeDefined();
+      expect(
+        deleteRes.body?.errors || deleteRes.body?.data?.deleteUser,
+      ).toBeDefined();
       if (deleteRes.body?.errors) {
         expect(deleteRes.body.errors.length).toBeGreaterThan(0);
       } else {
         // If delete succeeded (shouldn't happen with FK constraints), verify user is deleted
-        const getUserRes = await graphqlRequest(app, `
+        const getUserRes = await graphqlRequest(
+          app,
+          `
           query GetUser($id: String!) {
             user(id: $id) {
               id
             }
           }
-        `, {
-          id: userId,
-        });
+        `,
+          {
+            id: userId,
+          },
+        );
 
         expect(getUserRes.status).toBe(200);
         expect(getUserRes.body?.data?.user).toBeNull();
@@ -4051,60 +4321,78 @@ describe('GraphQL API (e2e)', () => {
 
     it('should maintain referential integrity when deleting document with chunks', async () => {
       // Create a document with chunks
-      const createDocRes = await graphqlRequest(app, `
+      const createDocRes = await graphqlRequest(
+        app,
+        `
         mutation CreateDocument($title: String!, $userId: String!) {
           createDocument(title: $title, userId: $userId) {
             id
           }
         }
-      `, {
-        title: 'Document with chunks',
-        userId: testData.user.id,
-      });
+      `,
+        {
+          title: 'Document with chunks',
+          userId: testData.user.id,
+        },
+      );
       const documentId = createDocRes.body?.data?.createDocument?.id;
 
       // Create chunks
-      await graphqlRequest(app, `
+      await graphqlRequest(
+        app,
+        `
         mutation CreateChunk($documentId: String!, $chunkIndex: Int!, $content: String!) {
           createChunk(documentId: $documentId, chunkIndex: $chunkIndex, content: $content) {
             id
           }
         }
-      `, {
-        documentId: documentId,
-        chunkIndex: 0,
-        content: 'Chunk 1',
-      });
+      `,
+        {
+          documentId: documentId,
+          chunkIndex: 0,
+          content: 'Chunk 1',
+        },
+      );
 
       // Delete the document
       // Note: This will fail due to foreign key constraints (document has related chunks)
       // This test verifies that foreign key constraints are enforced
-      const deleteRes = await graphqlRequest(app, `
+      const deleteRes = await graphqlRequest(
+        app,
+        `
         mutation DeleteDocument($id: String!) {
           deleteDocument(id: $id) {
             id
           }
         }
-      `, {
-        id: documentId,
-      });
+      `,
+        {
+          id: documentId,
+        },
+      );
 
       expect(deleteRes.status).toBe(200);
       // Should have an error due to foreign key constraint
-      expect(deleteRes.body?.errors || deleteRes.body?.data?.deleteDocument).toBeDefined();
+      expect(
+        deleteRes.body?.errors || deleteRes.body?.data?.deleteDocument,
+      ).toBeDefined();
       if (deleteRes.body?.errors) {
         expect(deleteRes.body.errors.length).toBeGreaterThan(0);
       } else {
         // If delete succeeded (shouldn't happen with FK constraints), verify document is deleted
-        const getDocRes = await graphqlRequest(app, `
+        const getDocRes = await graphqlRequest(
+          app,
+          `
           query GetDocument($id: String!) {
             document(id: $id) {
               id
             }
           }
-        `, {
-          id: documentId,
-        });
+        `,
+          {
+            id: documentId,
+          },
+        );
 
         expect(getDocRes.status).toBe(200);
         expect(getDocRes.body?.data?.document).toBeNull();
@@ -4113,30 +4401,40 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle entity relationship bidirectional integrity', async () => {
       // Create two entities
-      const entity1Res = await graphqlRequest(app, `
+      const entity1Res = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: `Entity 1 ${Date.now()}`, type: 'Type1' },
-      });
+      `,
+        {
+          data: { name: `Entity 1 ${Date.now()}`, type: 'Type1' },
+        },
+      );
       const entity1Id = entity1Res.body?.data?.createEntity?.id;
 
-      const entity2Res = await graphqlRequest(app, `
+      const entity2Res = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: `Entity 2 ${Date.now()}`, type: 'Type2' },
-      });
+      `,
+        {
+          data: { name: `Entity 2 ${Date.now()}`, type: 'Type2' },
+        },
+      );
       const entity2Id = entity2Res.body?.data?.createEntity?.id;
 
       // Create relationship
-      const relRes = await graphqlRequest(app, `
+      const relRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntityRelationship($data: CreateEntityRelationshipInput!) {
           createEntityRelationship(data: $data) {
             id
@@ -4148,21 +4446,29 @@ describe('GraphQL API (e2e)', () => {
             }
           }
         }
-      `, {
-        data: {
-          fromEntity: entity1Id,
-          toEntity: entity2Id,
-          relation: 'RELATED_TO',
+      `,
+        {
+          data: {
+            fromEntity: entity1Id,
+            toEntity: entity2Id,
+            relation: 'RELATED_TO',
+          },
         },
-      });
+      );
 
       expect(relRes.status).toBe(200);
       expect(relRes.body?.data?.createEntityRelationship).toBeDefined();
-      expect(relRes.body?.data?.createEntityRelationship?.from?.id).toBe(entity1Id);
-      expect(relRes.body?.data?.createEntityRelationship?.to?.id).toBe(entity2Id);
+      expect(relRes.body?.data?.createEntityRelationship?.from?.id).toBe(
+        entity1Id,
+      );
+      expect(relRes.body?.data?.createEntityRelationship?.to?.id).toBe(
+        entity2Id,
+      );
 
       // Verify relationship appears in both entities
-      const entity1Query = await graphqlRequest(app, `
+      const entity1Query = await graphqlRequest(
+        app,
+        `
         query GetEntity($id: String!) {
           entity(id: $id) {
             id
@@ -4174,9 +4480,13 @@ describe('GraphQL API (e2e)', () => {
             }
           }
         }
-      `, { id: entity1Id });
+      `,
+        { id: entity1Id },
+      );
 
-      const entity2Query = await graphqlRequest(app, `
+      const entity2Query = await graphqlRequest(
+        app,
+        `
         query GetEntity($id: String!) {
           entity(id: $id) {
             id
@@ -4188,10 +4498,16 @@ describe('GraphQL API (e2e)', () => {
             }
           }
         }
-      `, { id: entity2Id });
+      `,
+        { id: entity2Id },
+      );
 
-      expect(entity1Query.body?.data?.entity?.outgoing?.length).toBeGreaterThan(0);
-      expect(entity2Query.body?.data?.entity?.incoming?.length).toBeGreaterThan(0);
+      expect(entity1Query.body?.data?.entity?.outgoing?.length).toBeGreaterThan(
+        0,
+      );
+      expect(entity2Query.body?.data?.entity?.incoming?.length).toBeGreaterThan(
+        0,
+      );
     });
   });
 
@@ -4279,41 +4595,53 @@ describe('GraphQL API (e2e)', () => {
   describe('Batch Operations', () => {
     it('should handle multiple sequential mutations', async () => {
       const email = `batch-test-${Date.now()}@example.com`;
-      
+
       // Create user
-      const userRes = await graphqlRequest(app, `
+      const userRes = await graphqlRequest(
+        app,
+        `
         mutation CreateUser($email: String!) {
           createUser(data: { email: $email }) {
             id
           }
         }
-      `, { email });
+      `,
+        { email },
+      );
       const userId = userRes.body?.data?.createUser?.id;
 
       // Create lesson
-      const lessonRes = await graphqlRequest(app, `
+      const lessonRes = await graphqlRequest(
+        app,
+        `
         mutation CreateLesson($title: String!, $userId: String!) {
           createLesson(title: $title, userId: $userId) {
             id
           }
         }
-      `, {
-        title: 'Batch Lesson',
-        userId: userId,
-      });
+      `,
+        {
+          title: 'Batch Lesson',
+          userId: userId,
+        },
+      );
       const lessonId = lessonRes.body?.data?.createLesson?.id;
 
       // Create document
-      const docRes = await graphqlRequest(app, `
+      const docRes = await graphqlRequest(
+        app,
+        `
         mutation CreateDocument($title: String!, $userId: String!) {
           createDocument(title: $title, userId: $userId) {
             id
           }
         }
-      `, {
-        title: 'Batch Document',
-        userId: userId,
-      });
+      `,
+        {
+          title: 'Batch Document',
+          userId: userId,
+        },
+      );
       const docId = docRes.body?.data?.createDocument?.id;
 
       // Verify all were created
@@ -4345,7 +4673,9 @@ describe('GraphQL API (e2e)', () => {
 
     it('should handle multiple updates in sequence', async () => {
       // Create entity
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
@@ -4353,13 +4683,17 @@ describe('GraphQL API (e2e)', () => {
             type
           }
         }
-      `, {
-        data: { name: 'Original Name', type: 'OriginalType' },
-      });
+      `,
+        {
+          data: { name: 'Original Name', type: 'OriginalType' },
+        },
+      );
       const entityId = createRes.body?.data?.createEntity?.id;
 
       // First update
-      const update1Res = await graphqlRequest(app, `
+      const update1Res = await graphqlRequest(
+        app,
+        `
         mutation UpdateEntity($data: UpdateEntityInput!) {
           updateEntity(data: $data) {
             id
@@ -4367,12 +4701,16 @@ describe('GraphQL API (e2e)', () => {
             type
           }
         }
-      `, {
-        data: { id: entityId, name: 'Updated Name 1', type: 'OriginalType' },
-      });
+      `,
+        {
+          data: { id: entityId, name: 'Updated Name 1', type: 'OriginalType' },
+        },
+      );
 
       // Second update
-      const update2Res = await graphqlRequest(app, `
+      const update2Res = await graphqlRequest(
+        app,
+        `
         mutation UpdateEntity($data: UpdateEntityInput!) {
           updateEntity(data: $data) {
             id
@@ -4380,9 +4718,11 @@ describe('GraphQL API (e2e)', () => {
             type
           }
         }
-      `, {
-        data: { id: entityId, name: 'Updated Name 1', type: 'Updated Type' },
-      });
+      `,
+        {
+          data: { id: entityId, name: 'Updated Name 1', type: 'Updated Type' },
+        },
+      );
 
       expect(update1Res.body?.data?.updateEntity?.name).toBe('Updated Name 1');
       expect(update2Res.body?.data?.updateEntity?.type).toBe('Updated Type');
@@ -4492,7 +4832,9 @@ describe('GraphQL API (e2e)', () => {
           }
         }
       `;
-      const res = await graphqlRequest(app, query, { id: testData.document.id });
+      const res = await graphqlRequest(app, query, {
+        id: testData.document.id,
+      });
 
       expect(res.status).toBe(200);
       expect(res.body?.data?.document).toBeDefined();
@@ -4554,7 +4896,9 @@ describe('GraphQL API (e2e)', () => {
 
     it('should fetch AI query with all nested relationships', async () => {
       // First create an AI query with results
-      const createRes = await graphqlRequest(app, `
+      const createRes = await graphqlRequest(
+        app,
+        `
         mutation AskAi($userId: String!, $query: String!) {
           askAi(userId: $userId, query: $query) {
             id
@@ -4563,11 +4907,12 @@ describe('GraphQL API (e2e)', () => {
             }
           }
         }
-      `, {
-        userId: testData.user.id,
-        query: 'Complex nested query test',
-      });
-      const resultId = createRes.body?.data?.askAi?.id;
+      `,
+        {
+          userId: testData.user.id,
+          query: 'Complex nested query test',
+        },
+      );
       const queryId = createRes.body?.data?.askAi?.query?.id;
 
       const query = `
@@ -4598,41 +4943,53 @@ describe('GraphQL API (e2e)', () => {
 
     it('should fetch multiple entities with relationships', async () => {
       // Create two entities and a relationship
-      const entity1Res = await graphqlRequest(app, `
+      const entity1Res = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: 'Entity 1', type: 'Type' },
-      });
+      `,
+        {
+          data: { name: 'Entity 1', type: 'Type' },
+        },
+      );
       const entity1Id = entity1Res.body?.data?.createEntity?.id;
 
-      const entity2Res = await graphqlRequest(app, `
+      const entity2Res = await graphqlRequest(
+        app,
+        `
         mutation CreateEntity($data: CreateEntityInput!) {
           createEntity(data: $data) {
             id
           }
         }
-      `, {
-        data: { name: 'Entity 2', type: 'Type' },
-      });
+      `,
+        {
+          data: { name: 'Entity 2', type: 'Type' },
+        },
+      );
       const entity2Id = entity2Res.body?.data?.createEntity?.id;
 
-      await graphqlRequest(app, `
+      await graphqlRequest(
+        app,
+        `
         mutation CreateEntityRelationship($data: CreateEntityRelationshipInput!) {
           createEntityRelationship(data: $data) {
             id
           }
         }
-      `, {
-        data: {
-          fromEntity: entity1Id,
-          toEntity: entity2Id,
-          relation: 'related_to',
+      `,
+        {
+          data: {
+            fromEntity: entity1Id,
+            toEntity: entity2Id,
+            relation: 'related_to',
+          },
         },
-      });
+      );
 
       const query = `
         query GetEntitiesWithRelationships {

@@ -59,6 +59,8 @@ export class LessonResolver {
   async user(@Parent() lesson: Lesson) {
     // Access userId from the database field, not the GraphQL field
     const lessonWithUserId = lesson as unknown as { userId: string };
-    return this.prisma.user.findUnique({ where: { id: lessonWithUserId.userId } });
+    return this.prisma.user.findUnique({
+      where: { id: lessonWithUserId.userId },
+    });
   }
 }

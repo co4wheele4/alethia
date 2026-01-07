@@ -21,4 +21,3 @@ export const graphqlRequest = async (
     .set('Content-Type', 'application/json')
     .send({ query, variables })) as unknown as GraphQLResponse;
 };
-

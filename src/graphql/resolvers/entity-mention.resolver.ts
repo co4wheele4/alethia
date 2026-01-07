@@ -33,7 +33,9 @@ export class EntityMentionResolver {
   async entity(@Parent() mention: EntityMention) {
     // Access entityId from the database field, not the GraphQL field
     const mentionWithEntityId = mention as unknown as { entityId: string };
-    return this.prisma.entity.findUnique({ where: { id: mentionWithEntityId.entityId } });
+    return this.prisma.entity.findUnique({
+      where: { id: mentionWithEntityId.entityId },
+    });
   }
 
   @ResolveField(() => DocumentChunk)

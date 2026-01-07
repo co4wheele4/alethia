@@ -262,14 +262,18 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
 
       // Verify records exist and can be queried
       const user = await prisma.user.findUnique({ where: { id: userId } });
-      const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
+      const lesson = await prisma.lesson.findUnique({
+        where: { id: lessonId },
+      });
       const document = await prisma.document.findUnique({
         where: { id: documentId },
       });
       const chunk = await prisma.documentChunk.findUnique({
         where: { id: chunkId },
       });
-      const entity = await prisma.entity.findUnique({ where: { id: entityId } });
+      const entity = await prisma.entity.findUnique({
+        where: { id: entityId },
+      });
 
       expect(user).toBeDefined();
       expect(lesson).toBeDefined();
@@ -279,4 +283,3 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
     });
   });
 });
-

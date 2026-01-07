@@ -68,7 +68,6 @@ describe('EmbeddingResolver', () => {
   });
 
   it('should have correct GraphQL decorators on embedding query', () => {
-    const metadata = Reflect.getMetadata('graphql:resolver_type', EmbeddingResolver.prototype.embedding);
     expect(resolver.embedding).toBeDefined();
   });
 
@@ -101,10 +100,10 @@ describe('EmbeddingResolver', () => {
 
     const app = module.createNestApplication();
     await app.init();
-    
+
     const embeddingResolver = module.get<EmbeddingResolver>(EmbeddingResolver);
     expect(embeddingResolver).toBeDefined();
-    
+
     await app.close();
   });
 
@@ -247,7 +246,9 @@ describe('EmbeddingResolver', () => {
     });
 
     it('should handle large values array', async () => {
-      const values = Array(1536).fill(0).map((_, i) => i * 0.001);
+      const values = Array(1536)
+        .fill(0)
+        .map((_, i) => i * 0.001);
       const createMock = prismaService.embedding.create as jest.Mock;
       const largeEmbedding = { ...mockEmbedding, values };
       createMock.mockResolvedValue(
@@ -294,7 +295,9 @@ describe('EmbeddingResolver', () => {
 
     it('should handle undefined values', async () => {
       const updateMock = prismaService.embedding.update as jest.Mock;
-      updateMock.mockResolvedValue(mockEmbedding as unknown as typeof mockEmbedding);
+      updateMock.mockResolvedValue(
+        mockEmbedding as unknown as typeof mockEmbedding,
+      );
 
       const result = await resolver.updateEmbedding('embedding-1', undefined);
 
@@ -307,7 +310,9 @@ describe('EmbeddingResolver', () => {
 
     it('should handle null values', async () => {
       const updateMock = prismaService.embedding.update as jest.Mock;
-      updateMock.mockResolvedValue(mockEmbedding as unknown as typeof mockEmbedding);
+      updateMock.mockResolvedValue(
+        mockEmbedding as unknown as typeof mockEmbedding,
+      );
 
       const result = await resolver.updateEmbedding('embedding-1', null as any);
 
@@ -375,13 +380,17 @@ describe('EmbeddingResolver', () => {
 
   describe('chunk', () => {
     it('should resolve chunk field', async () => {
-      const findUniqueMock = prismaService.documentChunk.findUnique as jest.Mock;
+      const findUniqueMock = prismaService.documentChunk
+        .findUnique as jest.Mock;
       findUniqueMock.mockResolvedValue(
         mockChunk as unknown as typeof mockChunk,
       );
 
       // Mock embedding with chunkId from database field
-      const embeddingWithChunkId = { ...mockEmbedding, chunkId: mockChunk.id } as any;
+      const embeddingWithChunkId = {
+        ...mockEmbedding,
+        chunkId: mockChunk.id,
+      } as any;
       const result = await resolver.chunk(embeddingWithChunkId);
 
       expect(result).toEqual(mockChunk);
@@ -391,11 +400,15 @@ describe('EmbeddingResolver', () => {
     });
 
     it('should handle null chunk', async () => {
-      const findUniqueMock = prismaService.documentChunk.findUnique as jest.Mock;
+      const findUniqueMock = prismaService.documentChunk
+        .findUnique as jest.Mock;
       findUniqueMock.mockResolvedValue(null);
 
       // Mock embedding with chunkId from database field
-      const embeddingWithChunkId = { ...mockEmbedding, chunkId: 'non-existent' } as any;
+      const embeddingWithChunkId = {
+        ...mockEmbedding,
+        chunkId: 'non-existent',
+      } as any;
       const result = await resolver.chunk(embeddingWithChunkId);
 
       expect(result).toBeNull();
@@ -405,7 +418,8 @@ describe('EmbeddingResolver', () => {
     });
 
     it('should handle database errors', async () => {
-      const findUniqueMock = prismaService.documentChunk.findUnique as jest.Mock;
+      const findUniqueMock = prismaService.documentChunk
+        .findUnique as jest.Mock;
       const error = new Error('Database error');
       findUniqueMock.mockRejectedValue(error);
 

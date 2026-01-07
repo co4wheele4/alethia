@@ -1,5 +1,9 @@
 // test/e2e/cross-cutting/pagination-edge-cases.e2e-spec.ts
-import { setupTestApp, teardownTestApp, TestContext } from '../../helpers/test-setup';
+import {
+  setupTestApp,
+  teardownTestApp,
+  TestContext,
+} from '../../helpers/test-setup';
 import { graphqlRequest } from '../../helpers/graphql-request';
 
 describe('Pagination Edge Cases (e2e)', () => {
@@ -7,19 +11,23 @@ describe('Pagination Edge Cases (e2e)', () => {
 
   beforeAll(async () => {
     context = await setupTestApp();
-    
+
     // Create multiple AI queries for pagination testing
     for (let i = 0; i < 5; i++) {
-      await graphqlRequest(context.app, `
+      await graphqlRequest(
+        context.app,
+        `
         mutation AskAi($userId: String!, $query: String!) {
           askAi(userId: $userId, query: $query) {
             id
           }
         }
-      `, {
-        userId: context.testData.user.id,
-        query: `Pagination test query ${i}`,
-      });
+      `,
+        {
+          userId: context.testData.user.id,
+          query: `Pagination test query ${i}`,
+        },
+      );
     }
   });
 
@@ -52,7 +60,10 @@ describe('Pagination Edge Cases (e2e)', () => {
         }
       }
     `;
-    const res = await graphqlRequest(context.app, query, { skip: 1000000, take: 10 });
+    const res = await graphqlRequest(context.app, query, {
+      skip: 1000000,
+      take: 10,
+    });
 
     expect(res.status).toBe(200);
     expect(res.body?.data?.aiQueriesPaged).toBeInstanceOf(Array);
@@ -68,11 +79,13 @@ describe('Pagination Edge Cases (e2e)', () => {
         }
       }
     `;
-    const res = await graphqlRequest(context.app, query, { skip: 0, take: 1000000 });
+    const res = await graphqlRequest(context.app, query, {
+      skip: 0,
+      take: 1000000,
+    });
 
     expect(res.status).toBe(200);
     expect(res.body?.data?.aiQueriesPaged).toBeInstanceOf(Array);
     // Should return all available records, not crash
   });
 });
-
