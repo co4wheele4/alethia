@@ -7,6 +7,7 @@ import { GraphQLThrottlerGuard } from '../common/guards/graphql-throttler.guard'
 import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { Request, Response } from 'express';
 
 import { validate } from '../config/env.validation';
 import { PrismaService } from '@prisma/prisma.service';
@@ -50,7 +51,10 @@ import { AuthModule } from '../auth/auth.module';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
-      context: ({ req, res }: { req: any; res: any }) => ({ req, res }),
+      context: ({ req, res }: { req: Request; res: Response }) => ({
+        req,
+        res,
+      }),
       formatError: (error) => {
         return {
           message: error.message,

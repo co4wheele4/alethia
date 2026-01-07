@@ -34,7 +34,8 @@ describe('Partial Updates (e2e)', () => {
           email: `update-null-test-${Date.now()}@example.com`,
         },
       );
-      const userId = createRes.body?.data?.createUser?.id;
+      const userId = (createRes.body?.data as { createUser?: { id?: string } })
+        ?.createUser?.id;
 
       // Try to update with all null fields
       const updateRes = await graphqlRequest(
@@ -58,7 +59,8 @@ describe('Partial Updates (e2e)', () => {
       expect(updateRes.status).toBe(200);
       // Should either update (keeping existing values) or return error
       expect(
-        updateRes.body?.data?.updateUser || updateRes.body?.errors,
+        (updateRes.body?.data as { updateUser?: unknown })?.updateUser ||
+          updateRes.body?.errors,
       ).toBeDefined();
     });
 
@@ -79,7 +81,9 @@ describe('Partial Updates (e2e)', () => {
           userId: context.testData.user.id,
         },
       );
-      const lessonId = createRes.body?.data?.createLesson?.id;
+      const lessonId = (
+        createRes.body?.data as { createLesson?: { id?: string } }
+      )?.createLesson?.id;
 
       // Try to update with empty string
       const updateRes = await graphqlRequest(
@@ -100,7 +104,8 @@ describe('Partial Updates (e2e)', () => {
 
       expect(updateRes.status).toBe(200);
       expect(
-        updateRes.body?.data?.updateLesson || updateRes.body?.errors,
+        (updateRes.body?.data as { updateLesson?: unknown })?.updateLesson ||
+          updateRes.body?.errors,
       ).toBeDefined();
     });
   });

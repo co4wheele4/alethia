@@ -1902,7 +1902,6 @@ describe('GraphQL API (e2e)', () => {
 
   // ==================== AI QUERY RESOLVER ====================
   describe('AiQueryResolver', () => {
-    let createdQueryId: string;
     let createdResultId: string;
 
     describe('Queries', () => {
@@ -1936,7 +1935,8 @@ describe('GraphQL API (e2e)', () => {
         });
         // Note: askAi returns AiQueryResult, not AiQuery
         // We need to fetch the query through the result
-        const resultId = createRes.body?.data?.askAi?.id;
+        expect(createRes.status).toBe(200);
+        expect(createRes.body?.data?.askAi?.id).toBeDefined();
 
         // Get the query through aiQueryResults
         const resultsQuery = `
@@ -5048,7 +5048,7 @@ describe('GraphQL API (e2e)', () => {
       expect(entityRelationshipResolver).toBeDefined();
 
       // Call resolver methods directly
-      await appResolver.hello();
+      appResolver.hello();
       await userResolver.users();
       await aiQueryResolver.aiQueries();
       await lessonResolver.lessons();

@@ -33,8 +33,12 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.users).toBeInstanceOf(Array);
-      expect(res.body?.data?.users?.length).toBeGreaterThan(0);
+      expect((res.body?.data as { users?: unknown[] })?.users).toBeInstanceOf(
+        Array,
+      );
+      expect(
+        (res.body?.data as { users?: unknown[] })?.users?.length,
+      ).toBeGreaterThan(0);
     });
 
     it('should fetch user by id', async () => {
@@ -51,9 +55,10 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.user).toBeDefined();
-      expect(res.body?.data?.user?.id).toBe(context.testData.user.id);
-      expect(res.body?.data?.user?.email).toBe(context.testData.user.email);
+      const data = res.body?.data as { user?: { id?: string; email?: string } };
+      expect(data?.user).toBeDefined();
+      expect(data?.user?.id).toBe(context.testData.user.id);
+      expect(data?.user?.email).toBe(context.testData.user.email);
     });
 
     it('should return null for non-existent user', async () => {
@@ -69,7 +74,8 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.user).toBeNull();
+      const data = res.body?.data as { user?: null };
+      expect(data?.user).toBeNull();
     });
   });
 
@@ -92,10 +98,13 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, mutation, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.createUser).toBeDefined();
-      expect(res.body?.data?.createUser?.email).toBe(variables.email);
-      expect(res.body?.data?.createUser?.name).toBe(variables.name);
-      createdUserId = res.body?.data?.createUser?.id;
+      const data = res.body?.data as {
+        createUser?: { id?: string; email?: string; name?: string };
+      };
+      expect(data?.createUser).toBeDefined();
+      expect(data?.createUser?.email).toBe(variables.email);
+      expect(data?.createUser?.name).toBe(variables.name);
+      createdUserId = data?.createUser?.id || '';
     });
 
     it('should create user without name', async () => {
@@ -114,8 +123,11 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, mutation, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.createUser).toBeDefined();
-      expect(res.body?.data?.createUser?.email).toBe(variables.email);
+      const data = res.body?.data as {
+        createUser?: { id?: string; email?: string; name?: string };
+      };
+      expect(data?.createUser).toBeDefined();
+      expect(data?.createUser?.email).toBe(variables.email);
     });
 
     it('should update user', async () => {
@@ -131,7 +143,10 @@ describe('UserResolver (e2e)', () => {
         const createRes = await graphqlRequest(context.app, createMutation, {
           email: `update-test-${Date.now()}@example.com`,
         });
-        createdUserId = createRes.body?.data?.createUser?.id;
+        const createData = createRes.body?.data as {
+          createUser?: { id?: string };
+        };
+        createdUserId = createData?.createUser?.id || '';
       }
 
       const mutation = `
@@ -151,9 +166,12 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, mutation, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.updateUser).toBeDefined();
-      expect(res.body?.data?.updateUser?.email).toBe(variables.email);
-      expect(res.body?.data?.updateUser?.name).toBe(variables.name);
+      const data = res.body?.data as {
+        updateUser?: { id?: string; email?: string; name?: string };
+      };
+      expect(data?.updateUser).toBeDefined();
+      expect(data?.updateUser?.email).toBe(variables.email);
+      expect(data?.updateUser?.name).toBe(variables.name);
     });
 
     it('should delete user', async () => {
@@ -168,7 +186,10 @@ describe('UserResolver (e2e)', () => {
       const createRes = await graphqlRequest(context.app, createMutation, {
         email: `delete-test-${Date.now()}@example.com`,
       });
-      const userIdToDelete = createRes.body?.data?.createUser?.id;
+      const createData = createRes.body?.data as {
+        createUser?: { id?: string };
+      };
+      const userIdToDelete = createData?.createUser?.id || '';
 
       const mutation = `
         mutation DeleteUser($id: String!) {
@@ -182,8 +203,11 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, mutation, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.deleteUser).toBeDefined();
-      expect(res.body?.data?.deleteUser?.id).toBe(userIdToDelete);
+      const data = res.body?.data as {
+        deleteUser?: { id?: string; email?: string };
+      };
+      expect(data?.deleteUser).toBeDefined();
+      expect(data?.deleteUser?.id).toBe(userIdToDelete);
     });
   });
 
@@ -205,8 +229,11 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.user).toBeDefined();
-      expect(res.body?.data?.user?.documents).toBeInstanceOf(Array);
+      const data = res.body?.data as {
+        user?: { id?: string; email?: string; documents?: unknown[] };
+      };
+      expect(data?.user).toBeDefined();
+      expect(data?.user?.documents).toBeInstanceOf(Array);
     });
 
     it('should resolve user lessons', async () => {
@@ -225,8 +252,11 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.user).toBeDefined();
-      expect(res.body?.data?.user?.lessons).toBeInstanceOf(Array);
+      const data = res.body?.data as {
+        user?: { id?: string; lessons?: unknown[] };
+      };
+      expect(data?.user).toBeDefined();
+      expect(data?.user?.lessons).toBeInstanceOf(Array);
     });
 
     it('should resolve user aiQueries', async () => {
@@ -245,8 +275,11 @@ describe('UserResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.user).toBeDefined();
-      expect(res.body?.data?.user?.aiQueries).toBeInstanceOf(Array);
+      const data = res.body?.data as {
+        user?: { id?: string; aiQueries?: unknown[] };
+      };
+      expect(data?.user).toBeDefined();
+      expect(data?.user?.aiQueries).toBeInstanceOf(Array);
     });
   });
 });

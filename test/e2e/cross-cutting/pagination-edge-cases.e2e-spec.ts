@@ -47,7 +47,9 @@ describe('Pagination Edge Cases (e2e)', () => {
     const res = await graphqlRequest(context.app, query, { skip: 0, take: 0 });
 
     expect(res.status).toBe(200);
-    expect(res.body?.data?.aiQueriesPaged).toBeInstanceOf(Array);
+    expect(
+      (res.body?.data as { aiQueriesPaged?: unknown[] })?.aiQueriesPaged,
+    ).toBeInstanceOf(Array);
     // With take=0, should return empty array or handle gracefully
   });
 
@@ -66,8 +68,13 @@ describe('Pagination Edge Cases (e2e)', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(res.body?.data?.aiQueriesPaged).toBeInstanceOf(Array);
-    expect(res.body?.data?.aiQueriesPaged?.length).toBe(0);
+    expect(
+      (res.body?.data as { aiQueriesPaged?: unknown[] })?.aiQueriesPaged,
+    ).toBeInstanceOf(Array);
+    expect(
+      (res.body?.data as { aiQueriesPaged?: unknown[] })?.aiQueriesPaged
+        ?.length,
+    ).toBe(0);
   });
 
   it('should handle pagination with very large take value', async () => {
@@ -85,7 +92,9 @@ describe('Pagination Edge Cases (e2e)', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(res.body?.data?.aiQueriesPaged).toBeInstanceOf(Array);
+    expect(
+      (res.body?.data as { aiQueriesPaged?: unknown[] })?.aiQueriesPaged,
+    ).toBeInstanceOf(Array);
     // Should return all available records, not crash
   });
 });

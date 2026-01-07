@@ -11,7 +11,7 @@ export class AuthResolver {
     @Args('password') password: string,
   ) {
     const user = await this.authService.validateUser(email, password);
-    const result = await this.authService.login(user);
+    const result = this.authService.login(user);
     return result.access_token;
   }
 }

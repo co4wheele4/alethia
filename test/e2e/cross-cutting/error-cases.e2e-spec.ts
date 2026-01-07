@@ -36,7 +36,9 @@ describe('Error Cases (e2e)', () => {
       );
 
       expect(create1Res.status).toBe(200);
-      expect(create1Res.body?.data?.createUser).toBeDefined();
+      expect(
+        (create1Res.body?.data as { createUser?: unknown })?.createUser,
+      ).toBeDefined();
 
       // Try to create second user with same email
       const create2Res = await graphqlRequest(
@@ -55,7 +57,8 @@ describe('Error Cases (e2e)', () => {
       expect(create2Res.status).toBe(200);
       // Should have an error
       expect(
-        create2Res.body?.errors || create2Res.body?.data?.createUser,
+        create2Res.body?.errors ||
+          (create2Res.body?.data as { createUser?: unknown })?.createUser,
       ).toBeDefined();
       if (create2Res.body?.errors) {
         expect(create2Res.body.errors.length).toBeGreaterThan(0);
@@ -84,7 +87,9 @@ describe('Error Cases (e2e)', () => {
       );
 
       expect(create1Res.status).toBe(200);
-      expect(create1Res.body?.data?.createEntity).toBeDefined();
+      expect(
+        (create1Res.body?.data as { createEntity?: unknown })?.createEntity,
+      ).toBeDefined();
 
       // Try to create second entity with same name and type
       const create2Res = await graphqlRequest(
@@ -106,7 +111,8 @@ describe('Error Cases (e2e)', () => {
       expect(create2Res.status).toBe(200);
       // Should have an error
       expect(
-        create2Res.body?.errors || create2Res.body?.data?.createEntity,
+        create2Res.body?.errors ||
+          (create2Res.body?.data as { createEntity?: unknown })?.createEntity,
       ).toBeDefined();
       if (create2Res.body?.errors) {
         expect(create2Res.body.errors.length).toBeGreaterThan(0);
@@ -134,7 +140,9 @@ describe('Error Cases (e2e)', () => {
       );
 
       expect(create1Res.status).toBe(200);
-      expect(create1Res.body?.data?.createLesson).toBeDefined();
+      expect(
+        (create1Res.body?.data as { createLesson?: unknown })?.createLesson,
+      ).toBeDefined();
 
       // Try to create second lesson with same title and userId
       const create2Res = await graphqlRequest(
@@ -156,7 +164,8 @@ describe('Error Cases (e2e)', () => {
       expect(create2Res.status).toBe(200);
       // Should have an error
       expect(
-        create2Res.body?.errors || create2Res.body?.data?.createLesson,
+        create2Res.body?.errors ||
+          (create2Res.body?.data as { createLesson?: unknown })?.createLesson,
       ).toBeDefined();
       if (create2Res.body?.errors) {
         expect(create2Res.body.errors.length).toBeGreaterThan(0);
@@ -185,7 +194,9 @@ describe('Error Cases (e2e)', () => {
       );
 
       expect(create1Res.status).toBe(200);
-      expect(create1Res.body?.data?.createChunk).toBeDefined();
+      expect(
+        (create1Res.body?.data as { createChunk?: unknown })?.createChunk,
+      ).toBeDefined();
 
       // Try to create second chunk with same documentId and chunkIndex
       const create2Res = await graphqlRequest(
@@ -208,7 +219,8 @@ describe('Error Cases (e2e)', () => {
       expect(create2Res.status).toBe(200);
       // Should have an error
       expect(
-        create2Res.body?.errors || create2Res.body?.data?.createChunk,
+        create2Res.body?.errors ||
+          (create2Res.body?.data as { createChunk?: unknown })?.createChunk,
       ).toBeDefined();
       if (create2Res.body?.errors) {
         expect(create2Res.body.errors.length).toBeGreaterThan(0);
@@ -236,7 +248,10 @@ describe('Error Cases (e2e)', () => {
 
       expect(res.status).toBe(200);
       // Should have an error due to foreign key constraint
-      expect(res.body?.errors || res.body?.data?.createLesson).toBeDefined();
+      expect(
+        res.body?.errors ||
+          (res.body?.data as { createLesson?: unknown })?.createLesson,
+      ).toBeDefined();
       if (res.body?.errors) {
         expect(res.body.errors.length).toBeGreaterThan(0);
       }
@@ -261,7 +276,10 @@ describe('Error Cases (e2e)', () => {
 
       expect(res.status).toBe(200);
       // Should have an error due to foreign key constraint
-      expect(res.body?.errors || res.body?.data?.createDocument).toBeDefined();
+      expect(
+        res.body?.errors ||
+          (res.body?.data as { createDocument?: unknown })?.createDocument,
+      ).toBeDefined();
       if (res.body?.errors) {
         expect(res.body.errors.length).toBeGreaterThan(0);
       }
@@ -287,7 +305,10 @@ describe('Error Cases (e2e)', () => {
 
       expect(res.status).toBe(200);
       // Should have an error due to foreign key constraint
-      expect(res.body?.errors || res.body?.data?.createChunk).toBeDefined();
+      expect(
+        res.body?.errors ||
+          (res.body?.data as { createChunk?: unknown })?.createChunk,
+      ).toBeDefined();
       if (res.body?.errors) {
         expect(res.body.errors.length).toBeGreaterThan(0);
       }
@@ -312,7 +333,10 @@ describe('Error Cases (e2e)', () => {
 
       expect(res.status).toBe(200);
       // Should have an error due to foreign key constraint
-      expect(res.body?.errors || res.body?.data?.createEmbedding).toBeDefined();
+      expect(
+        res.body?.errors ||
+          (res.body?.data as { createEmbedding?: unknown })?.createEmbedding,
+      ).toBeDefined();
       if (res.body?.errors) {
         expect(res.body.errors.length).toBeGreaterThan(0);
       }
@@ -339,7 +363,9 @@ describe('Error Cases (e2e)', () => {
       expect(res.status).toBe(200);
       // Should have an error due to foreign key constraint
       expect(
-        res.body?.errors || res.body?.data?.createEntityMention,
+        res.body?.errors ||
+          (res.body?.data as { createEntityMention?: unknown })
+            ?.createEntityMention,
       ).toBeDefined();
       if (res.body?.errors) {
         expect(res.body.errors.length).toBeGreaterThan(0);
@@ -368,7 +394,9 @@ describe('Error Cases (e2e)', () => {
       expect(res.status).toBe(200);
       // Should have an error due to foreign key constraint
       expect(
-        res.body?.errors || res.body?.data?.createEntityRelationship,
+        res.body?.errors ||
+          (res.body?.data as { createEntityRelationship?: unknown })
+            ?.createEntityRelationship,
       ).toBeDefined();
       if (res.body?.errors) {
         expect(res.body.errors.length).toBeGreaterThan(0);
@@ -395,7 +423,7 @@ describe('Error Cases (e2e)', () => {
 
       expect(res.status).toBe(200);
       // Should return null for invalid UUID
-      expect(res.body?.data?.user).toBeNull();
+      expect((res.body?.data as { user?: unknown })?.user).toBeNull();
     });
 
     it('should handle querying with special characters in ID', async () => {
@@ -418,7 +446,7 @@ describe('Error Cases (e2e)', () => {
       // Should return null or handle gracefully (either null user or GraphQL validation error)
       expect(res.body?.data || res.body?.errors).toBeDefined();
       if (res.body?.data) {
-        expect(res.body.data.user).toBeNull();
+        expect((res.body.data as { user?: unknown }).user).toBeNull();
       }
     });
   });

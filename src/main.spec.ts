@@ -10,14 +10,24 @@ jest.mock('@nestjs/core', () => ({
 
 // Mock helmet
 jest.mock('helmet', () => {
-  return jest.fn(() => (req: any, res: any, next: any) => next());
+  return jest.fn(
+    () => (_req: unknown, _res: unknown, next: () => void) => next(),
+  );
 });
 
 // Mock console.log
 const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
 
+interface MockApp {
+  listen: jest.Mock;
+  use: jest.Mock;
+  enableCors: jest.Mock;
+  useGlobalPipes: jest.Mock;
+  useGlobalFilters: jest.Mock;
+}
+
 describe('main.ts', () => {
-  let mockApp: any;
+  let mockApp: MockApp;
 
   beforeEach(() => {
     mockApp = {

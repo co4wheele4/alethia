@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@prisma/prisma.service';
+import { User } from '@prisma/client';
 // import * as bcrypt from 'bcrypt'; // TODO: Add when password field is added to User model
 
 @Injectable()
@@ -10,7 +11,8 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, _password: string): Promise<any> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async validateUser(email: string, _password: string): Promise<User> {
     // Note: This is a placeholder. You'll need to add a password field to the User model
     // For now, this is a basic implementation structure
     const user = await this.prisma.user.findUnique({
@@ -30,7 +32,7 @@ export class AuthService {
     return user;
   }
 
-  async login(user: any) {
+  login(user: User) {
     const payload = { email: user.email, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
@@ -38,7 +40,12 @@ export class AuthService {
     };
   }
 
-  async validateToken(token: string) {
+  validateToken(token: string): {
+    email: string;
+    sub: string;
+    iat?: number;
+    exp?: number;
+  } {
     try {
       return this.jwtService.verify(token);
     } catch {

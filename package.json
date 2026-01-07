@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "nest build",
+    "ci": "npm run lint && npx prisma validate && npm run test && npm run test:e2e",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "seed": "ts-node --esm prisma/seed.ts",
     "start": "nest start",

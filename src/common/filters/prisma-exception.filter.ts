@@ -9,6 +9,12 @@ import {
 } from '@nestjs/common';
 import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Request, Response } from 'express';
+
+interface GraphQLContext {
+  req: Request;
+  res?: Response;
+}
 
 @Catch(PrismaClientKnownRequestError)
 export class PrismaExceptionFilter
@@ -16,13 +22,13 @@ export class PrismaExceptionFilter
 {
   catch(exception: PrismaClientKnownRequestError, host: ArgumentsHost) {
     const gqlHost = GqlArgumentsHost.create(host);
-    const ctx = gqlHost.getContext();
+    const ctx = gqlHost.getContext<GraphQLContext>();
 
     let error: Error;
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
 
     switch (exception.code) {
-      case 'P2002':
+      case 'P2002': {
         // Unique constraint violation
         const target = exception.meta?.target as string[] | undefined;
         const field = target?.[0] || 'field';
@@ -31,6 +37,7 @@ export class PrismaExceptionFilter
         );
         status = HttpStatus.CONFLICT;
         break;
+      }
 
       case 'P2003':
         // Foreign key constraint violation

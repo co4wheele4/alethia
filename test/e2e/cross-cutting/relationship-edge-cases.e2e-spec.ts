@@ -33,7 +33,8 @@ describe('Relationship Edge Cases (e2e)', () => {
           email: `cascade-test-${Date.now()}@example.com`,
         },
       );
-      const userId = userRes.body?.data?.createUser?.id;
+      const userId = (userRes.body?.data as { createUser?: { id?: string } })
+        ?.createUser?.id;
 
       // Create a lesson for this user
       await graphqlRequest(
@@ -69,7 +70,8 @@ describe('Relationship Edge Cases (e2e)', () => {
       expect(deleteRes.status).toBe(200);
       // Should either delete user (and cascade delete lessons) or return error
       expect(
-        deleteRes.body?.data?.deleteUser || deleteRes.body?.errors,
+        (deleteRes.body?.data as { deleteUser?: unknown })?.deleteUser ||
+          deleteRes.body?.errors,
       ).toBeDefined();
     });
 
@@ -89,7 +91,8 @@ describe('Relationship Edge Cases (e2e)', () => {
           userId: context.testData.user.id,
         },
       );
-      const docId = docRes.body?.data?.createDocument?.id;
+      const docId = (docRes.body?.data as { createDocument?: { id?: string } })
+        ?.createDocument?.id;
 
       // Create chunks for this document
       await graphqlRequest(
@@ -126,7 +129,8 @@ describe('Relationship Edge Cases (e2e)', () => {
       expect(deleteRes.status).toBe(200);
       // Should either delete document (and cascade delete chunks) or return error
       expect(
-        deleteRes.body?.data?.deleteDocument || deleteRes.body?.errors,
+        (deleteRes.body?.data as { deleteDocument?: unknown })
+          ?.deleteDocument || deleteRes.body?.errors,
       ).toBeDefined();
     });
   });

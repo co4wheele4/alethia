@@ -38,7 +38,8 @@ describe('Validation Edge Cases (e2e)', () => {
 
       expect(res.status).toBe(200);
       // Should either create with empty title or return error
-      expect(res.body?.data?.createLesson || res.body?.errors).toBeDefined();
+      const data = res.body?.data as { createLesson?: unknown };
+      expect(data?.createLesson || res.body?.errors).toBeDefined();
     });
 
     it('should handle very long string inputs', async () => {
@@ -63,7 +64,8 @@ describe('Validation Edge Cases (e2e)', () => {
       );
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.createLesson || res.body?.errors).toBeDefined();
+      const data = res.body?.data as { createLesson?: unknown };
+      expect(data?.createLesson || res.body?.errors).toBeDefined();
     });
 
     it('should handle null optional parameters correctly', async () => {
@@ -85,8 +87,11 @@ describe('Validation Edge Cases (e2e)', () => {
       );
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.createUser).toBeDefined();
-      expect(res.body?.data?.createUser?.name).toBeNull();
+      const data = res.body?.data as {
+        createUser?: { id?: string; email?: string; name?: string | null };
+      };
+      expect(data?.createUser).toBeDefined();
+      expect(data?.createUser?.name).toBeNull();
     });
   });
 
@@ -110,7 +115,8 @@ describe('Validation Edge Cases (e2e)', () => {
 
       expect(res.status).toBe(200);
       // Should either create with empty array or return validation error
-      expect(res.body?.data?.createEmbedding || res.body?.errors).toBeDefined();
+      const data = res.body?.data as { createEmbedding?: unknown };
+      expect(data?.createEmbedding || res.body?.errors).toBeDefined();
     });
 
     it('should handle very large embedding array', async () => {
@@ -134,9 +140,12 @@ describe('Validation Edge Cases (e2e)', () => {
       );
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.createEmbedding || res.body?.errors).toBeDefined();
-      if (res.body?.data?.createEmbedding) {
-        expect(res.body.data.createEmbedding.values).toHaveLength(1536);
+      const data = res.body?.data as {
+        createEmbedding?: { id?: string; values?: number[] };
+      };
+      expect(data?.createEmbedding || res.body?.errors).toBeDefined();
+      if (data?.createEmbedding) {
+        expect(data.createEmbedding.values).toHaveLength(1536);
       }
     });
   });

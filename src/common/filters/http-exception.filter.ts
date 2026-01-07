@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
+import { Response } from 'express';
 
 @Catch(HttpException)
 export class HttpExceptionFilter
@@ -21,7 +22,7 @@ export class HttpExceptionFilter
 
     // For HTTP, return proper response
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
+    const response = ctx.getResponse<Response>();
     const status = exception.getStatus() || HttpStatus.INTERNAL_SERVER_ERROR;
     const exceptionResponse = exception.getResponse();
 
@@ -29,7 +30,7 @@ export class HttpExceptionFilter
       statusCode: status,
       timestamp: new Date().toISOString(),
       ...(typeof exceptionResponse === 'object'
-        ? exceptionResponse
+        ? (exceptionResponse as Record<string, unknown>)
         : { message: exceptionResponse }),
     });
   }

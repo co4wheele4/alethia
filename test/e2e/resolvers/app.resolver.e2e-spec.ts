@@ -23,7 +23,9 @@ describe('AppResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.hello).toBe('Hello, Aletheia!');
+      expect((res.body?.data as { hello?: string })?.hello).toBe(
+        'Hello, Aletheia!',
+      );
     });
 
     it('should fetch lessons', async () => {
@@ -39,7 +41,9 @@ describe('AppResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.lessons).toBeInstanceOf(Array);
+      expect(
+        (res.body?.data as { lessons?: unknown[] })?.lessons,
+      ).toBeInstanceOf(Array);
     });
   });
 
@@ -57,7 +61,7 @@ describe('AppResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, mutation, variables);
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.askAI).toBeDefined();
+      expect((res.body?.data as { askAI?: unknown })?.askAI).toBeDefined();
     });
   });
 });

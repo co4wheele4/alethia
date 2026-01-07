@@ -40,7 +40,10 @@ describe('EntityResolver (e2e)', () => {
           data: { name: 'Entity ResolveField Test', type: 'TestType' },
         },
       );
-      entityId = entity1Res.body?.data?.createEntity?.id;
+      const entity1Data = entity1Res.body?.data as {
+        createEntity?: { id?: string };
+      };
+      entityId = entity1Data?.createEntity?.id || '';
 
       const entity2Res = await graphqlRequest(
         context.app,
@@ -55,7 +58,10 @@ describe('EntityResolver (e2e)', () => {
           data: { name: 'Entity 2', type: 'TestType' },
         },
       );
-      entity2Id = entity2Res.body?.data?.createEntity?.id;
+      const entity2Data = entity2Res.body?.data as {
+        createEntity?: { id?: string };
+      };
+      entity2Id = entity2Data?.createEntity?.id || '';
 
       // Create a mention for the entity
       const mentionRes = await graphqlRequest(
@@ -74,7 +80,10 @@ describe('EntityResolver (e2e)', () => {
           },
         },
       );
-      mentionId = mentionRes.body?.data?.createEntityMention?.id;
+      const mentionData = mentionRes.body?.data as {
+        createEntityMention?: { id?: string };
+      };
+      mentionId = mentionData?.createEntityMention?.id || '';
 
       // Create a relationship (outgoing from entity1, incoming to entity2)
       const relRes = await graphqlRequest(
@@ -94,7 +103,10 @@ describe('EntityResolver (e2e)', () => {
           },
         },
       );
-      relationshipId = relRes.body?.data?.createEntityRelationship?.id;
+      const relData = relRes.body?.data as {
+        createEntityRelationship?: { id?: string };
+      };
+      relationshipId = relData?.createEntityRelationship?.id || '';
     });
 
     it('should directly resolve entity mentions with full data', async () => {
@@ -120,12 +132,22 @@ describe('EntityResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query, { id: entityId });
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.entity).toBeDefined();
-      expect(res.body?.data?.entity?.mentions).toBeInstanceOf(Array);
-      expect(res.body?.data?.entity?.mentions?.length).toBeGreaterThan(0);
-      expect(res.body?.data?.entity?.mentions[0]?.id).toBe(mentionId);
-      expect(res.body?.data?.entity?.mentions[0]?.entity).toBeDefined();
-      expect(res.body?.data?.entity?.mentions[0]?.chunk).toBeDefined();
+      const data = res.body?.data as {
+        entity?: {
+          id?: string;
+          mentions?: Array<{
+            id?: string;
+            entity?: unknown;
+            chunk?: unknown;
+          }>;
+        };
+      };
+      expect(data?.entity).toBeDefined();
+      expect(data?.entity?.mentions).toBeInstanceOf(Array);
+      expect(data?.entity?.mentions?.length).toBeGreaterThan(0);
+      expect(data?.entity?.mentions?.[0]?.id).toBe(mentionId);
+      expect(data?.entity?.mentions?.[0]?.entity).toBeDefined();
+      expect(data?.entity?.mentions?.[0]?.chunk).toBeDefined();
     });
 
     it('should directly resolve entity outgoing relationships with full data', async () => {
@@ -152,13 +174,24 @@ describe('EntityResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query, { id: entityId });
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.entity).toBeDefined();
-      expect(res.body?.data?.entity?.outgoing).toBeInstanceOf(Array);
-      expect(res.body?.data?.entity?.outgoing?.length).toBeGreaterThan(0);
-      expect(res.body?.data?.entity?.outgoing[0]?.id).toBe(relationshipId);
-      expect(res.body?.data?.entity?.outgoing[0]?.relation).toBe('related_to');
-      expect(res.body?.data?.entity?.outgoing[0]?.from).toBeDefined();
-      expect(res.body?.data?.entity?.outgoing[0]?.to).toBeDefined();
+      const data = res.body?.data as {
+        entity?: {
+          id?: string;
+          outgoing?: Array<{
+            id?: string;
+            relation?: string;
+            from?: unknown;
+            to?: unknown;
+          }>;
+        };
+      };
+      expect(data?.entity).toBeDefined();
+      expect(data?.entity?.outgoing).toBeInstanceOf(Array);
+      expect(data?.entity?.outgoing?.length).toBeGreaterThan(0);
+      expect(data?.entity?.outgoing?.[0]?.id).toBe(relationshipId);
+      expect(data?.entity?.outgoing?.[0]?.relation).toBe('related_to');
+      expect(data?.entity?.outgoing?.[0]?.from).toBeDefined();
+      expect(data?.entity?.outgoing?.[0]?.to).toBeDefined();
     });
 
     it('should directly resolve entity incoming relationships with full data', async () => {
@@ -185,13 +218,24 @@ describe('EntityResolver (e2e)', () => {
       const res = await graphqlRequest(context.app, query, { id: entity2Id });
 
       expect(res.status).toBe(200);
-      expect(res.body?.data?.entity).toBeDefined();
-      expect(res.body?.data?.entity?.incoming).toBeInstanceOf(Array);
-      expect(res.body?.data?.entity?.incoming?.length).toBeGreaterThan(0);
-      expect(res.body?.data?.entity?.incoming[0]?.id).toBe(relationshipId);
-      expect(res.body?.data?.entity?.incoming[0]?.relation).toBe('related_to');
-      expect(res.body?.data?.entity?.incoming[0]?.from).toBeDefined();
-      expect(res.body?.data?.entity?.incoming[0]?.to).toBeDefined();
+      const data = res.body?.data as {
+        entity?: {
+          id?: string;
+          incoming?: Array<{
+            id?: string;
+            relation?: string;
+            from?: unknown;
+            to?: unknown;
+          }>;
+        };
+      };
+      expect(data?.entity).toBeDefined();
+      expect(data?.entity?.incoming).toBeInstanceOf(Array);
+      expect(data?.entity?.incoming?.length).toBeGreaterThan(0);
+      expect(data?.entity?.incoming?.[0]?.id).toBe(relationshipId);
+      expect(data?.entity?.incoming?.[0]?.relation).toBe('related_to');
+      expect(data?.entity?.incoming?.[0]?.from).toBeDefined();
+      expect(data?.entity?.incoming?.[0]?.to).toBeDefined();
     });
   });
 });
