@@ -1,0 +1,193 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type DocumentChunk {
+  id: ID!
+  chunkIndex: Int!
+  content: String!
+  documentId: String!
+  document: Document!
+  embeddings: [Embedding!]!
+  mentions: [EntityMention!]!
+}
+
+type Document {
+  id: ID!
+  title: String!
+  user: User!
+  createdAt: DateTime!
+  chunks: [DocumentChunk!]!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type AiQuery {
+  id: ID!
+  query: String!
+  user: User!
+  createdAt: DateTime!
+  results: [AiQueryResult!]!
+}
+
+type AiQueryResult {
+  id: ID!
+  answer: String!
+  score: Float!
+  query: AiQuery!
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String
+  createdAt: DateTime!
+  lessons: [Lesson!]!
+  documents: [Document!]!
+  aiQueries: [AiQuery!]!
+}
+
+type Lesson {
+  id: ID!
+  title: String!
+  content: String
+  user: User!
+  createdAt: DateTime!
+}
+
+type Embedding {
+  id: ID!
+  values: [Float!]!
+  chunk: DocumentChunk!
+}
+
+type EntityMention {
+  id: ID!
+  entity: Entity!
+  chunk: DocumentChunk!
+}
+
+type EntityRelationship {
+  id: ID!
+  relation: String!
+  from: Entity!
+  to: Entity!
+}
+
+type Entity {
+  id: ID!
+  name: String!
+  type: String!
+  mentions: [EntityMention!]!
+  outgoing: [EntityRelationship!]!
+  incoming: [EntityRelationship!]!
+}
+
+type Query {
+  hello: String!
+  lessons: [Lesson!]!
+  lesson(id: String!): Lesson
+  lessonsByUser(userId: String!): [Lesson!]!
+  documents: [Document!]!
+  document(id: String!): Document
+  documentsByUser(userId: String!): [Document!]!
+  documentChunks: [DocumentChunk!]!
+  documentChunk(id: String!): DocumentChunk
+  chunksByDocument(documentId: String!): [DocumentChunk!]!
+  users: [User!]!
+  user(id: String!): User
+  aiQueries: [AiQuery!]!
+  aiQuery(id: String!): AiQuery
+  aiQueriesByUser(userId: String!): [AiQuery!]!
+  aiQueriesPaged(skip: Int, take: Int): [AiQuery!]!
+  aiQueryResults: [AiQueryResult!]!
+  aiQueryResult(id: String!): AiQueryResult
+  embeddings: [Embedding!]!
+  embedding(id: String!): Embedding
+  embeddingsByChunk(chunkId: String!): [Embedding!]!
+  entities: [Entity!]!
+  entity(id: String!): Entity
+  entityMentions: [EntityMention!]!
+  entityMention(id: String!): EntityMention
+  entityRelationships: [EntityRelationship!]!
+  entityRelationship(id: String!): EntityRelationship
+}
+
+type Mutation {
+  askAI(userId: String!, query: String!): String!
+  createLesson(title: String!, userId: String!, content: String): Lesson!
+  updateLesson(id: String!, title: String, content: String): Lesson!
+  deleteLesson(id: String!): Lesson!
+  createDocument(title: String!, userId: String!): Document!
+  updateDocument(id: String!, title: String): Document!
+  deleteDocument(id: String!): Document!
+  createChunk(documentId: String!, chunkIndex: Int!, content: String!): DocumentChunk!
+  updateChunk(id: String!, content: String): DocumentChunk!
+  deleteChunk(id: String!): DocumentChunk!
+  createUser(data: CreateUserInput!): User!
+  updateUser(data: UpdateUserInput!): User!
+  deleteUser(id: String!): User!
+  askAi(userId: String!, query: String!): AiQueryResult!
+  createEmbedding(chunkId: String!, values: [Float!]!): Embedding!
+  updateEmbedding(id: String!, values: [Float!]): Embedding!
+  deleteEmbedding(id: String!): Embedding!
+  createEntity(data: CreateEntityInput!): Entity!
+  updateEntity(data: UpdateEntityInput!): Entity!
+  deleteEntity(id: String!): Entity!
+  createEntityMention(data: CreateEntityMentionInput!): EntityMention!
+  updateEntityMention(data: UpdateEntityMentionInput!): EntityMention!
+  deleteEntityMention(id: String!): EntityMention!
+  createEntityRelationship(data: CreateEntityRelationshipInput!): EntityRelationship!
+  updateEntityRelationship(data: UpdateEntityRelationshipInput!): EntityRelationship!
+  deleteEntityRelationship(id: String!): EntityRelationship!
+  login(email: String!, password: String!): String!
+}
+
+input CreateUserInput {
+  email: String!
+  name: String
+}
+
+input UpdateUserInput {
+  id: String!
+  email: String
+  name: String
+}
+
+input CreateEntityInput {
+  name: String!
+  type: String!
+}
+
+input UpdateEntityInput {
+  id: String!
+  name: String
+  type: String
+}
+
+input CreateEntityMentionInput {
+  entityId: String!
+  chunkId: String!
+}
+
+input UpdateEntityMentionInput {
+  id: String!
+  entityId: String
+  chunkId: String
+}
+
+input CreateEntityRelationshipInput {
+  fromEntity: String!
+  toEntity: String!
+  relation: String!
+}
+
+input UpdateEntityRelationshipInput {
+  id: String!
+  fromEntity: String
+  toEntity: String
+  relation: String
+}

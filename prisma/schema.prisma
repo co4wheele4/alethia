@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+////////////////////
+// USERS
+////////////////////
+model User {
+  id        String   @id @default(uuid()) @map("id")
+  email     String   @unique @map("email")
+  name      String?  @map("name")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lessons   Lesson[]
+  documents Document[]
+  aiQueries AiQuery[]
+
+  @@map("users")
+}
+
+////////////////////
+// LESSONS
+////////////////////
+model Lesson {
+  id        String   @id @default(uuid()) @map("id")
+  title     String   @map("title")
+  content   String?  @map("content")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([title, userId])
+  @@map("lessons")
+}
+
+////////////////////
+// DOCUMENTS
+////////////////////
+model Document {
+  id        String   @id @default(uuid()) @map("id")
+  title     String   @map("title")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User            @relation(fields: [userId], references: [id])
+  chunks DocumentChunk[]
+
+  @@map("documents")
+}
+
+////////////////////
+// DOCUMENT CHUNKS
+////////////////////
+model DocumentChunk {
+  id         String @id @default(uuid()) @map("id")
+  documentId String @map("document_id")
+  chunkIndex Int    @map("chunk_index")
+  content    String @map("content")
+
+  document   Document        @relation(fields: [documentId], references: [id])
+  embeddings Embedding[]
+  mentions   EntityMention[]
+
+  @@unique([documentId, chunkIndex])
+  @@map("document_chunks")
+}
+
+////////////////////
+// EMBEDDINGS
+////////////////////
+model Embedding {
+  id      String  @id @default(uuid()) @map("id")
+  chunkId String  @map("chunk_id")
+  values  Float[] @map("values")
+
+  chunk DocumentChunk @relation(fields: [chunkId], references: [id])
+
+  @@map("embeddings")
+}
+
+////////////////////
+// ENTITIES
+////////////////////
+model Entity {
+  id   String @id @default(uuid()) @map("id")
+  name String @map("name")
+  type String @map("type")
+
+  mentions EntityMention[]
+  outgoing EntityRelationship[] @relation("FromEntity")
+  incoming EntityRelationship[] @relation("ToEntity")
+
+  @@unique([name, type])
+  @@map("entities")
+}
+
+////////////////////
+// ENTITY MENTIONS
+////////////////////
+model EntityMention {
+  id       String @id @default(uuid()) @map("id")
+  entityId String @map("entity_id")
+  chunkId  String @map("chunk_id")
+
+  entity Entity        @relation(fields: [entityId], references: [id])
+  chunk  DocumentChunk @relation(fields: [chunkId], references: [id])
+
+  @@map("entity_mentions")
+}
+
+////////////////////
+// ENTITY RELATIONSHIPS
+////////////////////
+model EntityRelationship {
+  id         String @id @default(uuid()) @map("id")
+  fromEntity String @map("from_entity")
+  toEntity   String @map("to_entity")
+  relation   String @map("relation")
+
+  from Entity @relation("FromEntity", fields: [fromEntity], references: [id])
+  to   Entity @relation("ToEntity", fields: [toEntity], references: [id])
+
+  @@map("entity_relationships")
+}
+
+////////////////////
+// AI QUERIES
+////////////////////
+model AiQuery {
+  id        String   @id @default(uuid()) @map("id")
+  userId    String   @map("user_id")
+  query     String   @map("query")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User            @relation(fields: [userId], references: [id])
+  results AiQueryResult[]
+
+  @@map("ai_queries")
+}
+
+////////////////////
+// AI QUERY RESULTS
+////////////////////
+model AiQueryResult {
+  id      String @id @default(uuid()) @map("id")
+  queryId String @map("query_id")
+  answer  String @map("answer")
+  score   Float  @map("score")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  query AiQuery @relation(fields: [queryId], references: [id])
+
+  @@map("ai_query_results")
+}
