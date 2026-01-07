@@ -29,6 +29,7 @@ import {
   EntityRelationshipResolver,
 } from '@resolvers';
 import { AuthModule } from '../auth/auth.module';
+import { createGraphQLContext, formatGraphQLError } from './graphql-config';
 
 @Module({
   imports: [
@@ -51,17 +52,8 @@ import { AuthModule } from '../auth/auth.module';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
-      context: ({ req, res }: { req: Request; res: Response }) => ({
-        req,
-        res,
-      }),
-      formatError: (error) => {
-        return {
-          message: error.message,
-          code: error.extensions?.code,
-          path: error.path,
-        };
-      },
+      context: createGraphQLContext,
+      formatError: formatGraphQLError,
     }),
   ],
   controllers: [AppController],

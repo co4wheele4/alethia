@@ -74,4 +74,89 @@ describe('main.ts', () => {
       ),
     );
   });
+
+  it('should use ALLOWED_ORIGINS from environment when set', async () => {
+    const originalAllowedOrigins = process.env.ALLOWED_ORIGINS;
+    process.env.ALLOWED_ORIGINS = 'http://example.com,http://test.com';
+
+    // Create a new mock app for this test
+    const testMockApp: MockApp = {
+      listen: jest.fn().mockResolvedValue(undefined),
+      use: jest.fn().mockReturnThis(),
+      enableCors: jest.fn().mockReturnThis(),
+      useGlobalPipes: jest.fn().mockReturnThis(),
+      useGlobalFilters: jest.fn().mockReturnThis(),
+    };
+    (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
+
+    // Clear module cache to re-import
+    jest.resetModules();
+    
+    // Re-import mocks
+    jest.doMock('@nestjs/core', () => ({
+      NestFactory: {
+        create: jest.fn().mockResolvedValue(testMockApp),
+      },
+    }));
+    
+    await import('./main');
+
+    // Wait for async operations to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(testMockApp.enableCors).toHaveBeenCalledWith(
+      expect.objectContaining({
+        origin: ['http://example.com', 'http://test.com'],
+      }),
+    );
+
+    // Restore
+    if (originalAllowedOrigins) {
+      process.env.ALLOWED_ORIGINS = originalAllowedOrigins;
+    } else {
+      delete process.env.ALLOWED_ORIGINS;
+    }
+  });
+
+  it('should use custom PORT from environment when set', async () => {
+    const originalPort = process.env.PORT;
+    process.env.PORT = '4000';
+
+    // Create a new mock app for this test
+    const testMockApp: MockApp = {
+      listen: jest.fn().mockResolvedValue(undefined),
+      use: jest.fn().mockReturnThis(),
+      enableCors: jest.fn().mockReturnThis(),
+      useGlobalPipes: jest.fn().mockReturnThis(),
+      useGlobalFilters: jest.fn().mockReturnThis(),
+    };
+    (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
+
+    // Clear module cache to re-import
+    jest.resetModules();
+    
+    // Re-import mocks
+    jest.doMock('@nestjs/core', () => ({
+      NestFactory: {
+        create: jest.fn().mockResolvedValue(testMockApp),
+      },
+    }));
+    
+    await import('./main');
+
+    // Wait for async operations to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(testMockApp.listen).toHaveBeenCalledWith('4000');
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('NestJS app running on http://localhost:4000'),
+    );
+
+    // Restore
+    if (originalPort) {
+      process.env.PORT = originalPort;
+    } else {
+      delete process.env.PORT;
+    }
+  });
 });
