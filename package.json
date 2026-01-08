@@ -123,6 +123,7 @@
       "^@auth/(.*)$": "<rootDir>/auth/$1",
       "^@openai/(.*)$": "<rootDir>/openai/$1",
       "^@outputs/(.*)$": "<rootDir>/graphql/outputs/$1",
+      "^@common/(.*)$": "<rootDir>/common/$1",
       "^@prisma/prisma.service$": "<rootDir>/prisma/prisma.service",
       "^@resolvers$": "<rootDir>/graphql/resolvers/index",
       "^@resolvers/(.*)$": "<rootDir>/graphql/resolvers/$1"

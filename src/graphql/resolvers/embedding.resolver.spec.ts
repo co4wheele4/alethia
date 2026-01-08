@@ -6,10 +6,12 @@ import { DocumentChunk } from '@models/document-chunk.model';
 import 'reflect-metadata';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
 describe('EmbeddingResolver', () => {
   let resolver: EmbeddingResolver;
   let prismaService: jest.Mocked<PrismaService>;
+  let dataLoaderService: jest.Mocked<DataLoaderService>;
 
   const mockChunk: DocumentChunk = {
     id: 'chunk-1',
@@ -38,6 +40,12 @@ describe('EmbeddingResolver', () => {
       },
     };
 
+    const mockDataLoaderService = {
+      getDocumentChunkLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmbeddingResolver,
@@ -45,11 +53,16 @@ describe('EmbeddingResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: mockDataLoaderService,
+        },
       ],
     }).compile();
 
-    resolver = module.get<EmbeddingResolver>(EmbeddingResolver);
+    resolver = await module.resolve<EmbeddingResolver>(EmbeddingResolver);
     prismaService = module.get(PrismaService);
+    dataLoaderService = module.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -62,7 +75,7 @@ describe('EmbeddingResolver', () => {
   });
 
   it('should instantiate with prisma service', () => {
-    const newResolver = new EmbeddingResolver(prismaService);
+    const newResolver = new EmbeddingResolver(prismaService, dataLoaderService);
     expect(newResolver).toBeInstanceOf(EmbeddingResolver);
     expect(newResolver['prisma']).toBe(prismaService);
   });
@@ -95,13 +108,17 @@ describe('EmbeddingResolver', () => {
           provide: PrismaService,
           useValue: prismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaderService,
+        },
       ],
     }).compile();
 
     const app = module.createNestApplication();
     await app.init();
 
-    const embeddingResolver = module.get<EmbeddingResolver>(EmbeddingResolver);
+    const embeddingResolver = await module.resolve<EmbeddingResolver>(EmbeddingResolver);
     expect(embeddingResolver).toBeDefined();
 
     await app.close();

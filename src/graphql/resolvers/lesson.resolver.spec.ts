@@ -5,10 +5,12 @@ import { Lesson } from '@models/lesson.model';
 import { User } from '@models/user.model';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
 describe('LessonResolver', () => {
   let resolver: LessonResolver;
   let prismaService: jest.Mocked<PrismaService>;
+  let dataLoaderService: jest.Mocked<DataLoaderService>;
 
   const mockUser: User = {
     id: 'user-1',
@@ -42,6 +44,12 @@ describe('LessonResolver', () => {
       },
     };
 
+    const mockDataLoaderService = {
+      getUserLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LessonResolver,
@@ -49,11 +57,16 @@ describe('LessonResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: mockDataLoaderService,
+        },
       ],
     }).compile();
 
-    resolver = module.get<LessonResolver>(LessonResolver);
+    resolver = await module.resolve<LessonResolver>(LessonResolver);
     prismaService = module.get(PrismaService);
+    dataLoaderService = module.get(DataLoaderService);
   });
 
   it('should be defined', () => {

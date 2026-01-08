@@ -58,7 +58,7 @@ describe('UserResolver', () => {
       ],
     }).compile();
 
-    resolver = module.get<UserResolver>(UserResolver);
+    resolver = await module.resolve<UserResolver>(UserResolver);
     prismaService = module.get(PrismaService);
     dataLoaderService = module.get(DataLoaderService);
   });
@@ -535,7 +535,7 @@ describe('UserResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const userResolver = module.get<UserResolver>(UserResolver);
+    const userResolver = await module.resolve<UserResolver>(UserResolver);
     expect(userResolver).toBeDefined();
 
     await app.close();

@@ -10,10 +10,12 @@ import {
 } from '@inputs/entity-mention.input';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
 describe('EntityMentionResolver', () => {
   let resolver: EntityMentionResolver;
   let prismaService: jest.Mocked<PrismaService>;
+  let dataLoaderService: jest.Mocked<DataLoaderService>;
 
   const mockEntity: Entity = {
     id: 'entity-1',
@@ -54,6 +56,15 @@ describe('EntityMentionResolver', () => {
       },
     };
 
+    const mockDataLoaderService = {
+      getEntityLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+      getDocumentChunkLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EntityMentionResolver,
@@ -61,11 +72,16 @@ describe('EntityMentionResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: mockDataLoaderService,
+        },
       ],
     }).compile();
 
-    resolver = module.get<EntityMentionResolver>(EntityMentionResolver);
+    resolver = await module.resolve<EntityMentionResolver>(EntityMentionResolver);
     prismaService = module.get(PrismaService);
+    dataLoaderService = module.get(DataLoaderService);
   });
 
   it('should be defined', () => {

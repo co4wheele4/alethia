@@ -7,10 +7,12 @@ import { Embedding } from '@models/embedding.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
 describe('DocumentChunkResolver', () => {
   let resolver: DocumentChunkResolver;
   let prismaService: jest.Mocked<PrismaService>;
+  let dataLoaderService: jest.Mocked<DataLoaderService>;
 
   const mockDocument: Document = {
     id: 'doc-1',
@@ -47,6 +49,18 @@ describe('DocumentChunkResolver', () => {
       },
     };
 
+    const mockDataLoaderService = {
+      getDocumentLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+      getEmbeddingsByChunkLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue([]),
+      }),
+      getMentionsByChunkLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue([]),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DocumentChunkResolver,
@@ -54,11 +68,16 @@ describe('DocumentChunkResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: mockDataLoaderService,
+        },
       ],
     }).compile();
 
-    resolver = module.get<DocumentChunkResolver>(DocumentChunkResolver);
+    resolver = await module.resolve<DocumentChunkResolver>(DocumentChunkResolver);
     prismaService = module.get(PrismaService);
+    dataLoaderService = module.get(DataLoaderService);
   });
 
   it('should be defined', () => {

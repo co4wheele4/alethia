@@ -5,10 +5,12 @@ import { AiQuery, AiQueryResult } from '@models/ai-query.model';
 import { User } from '@models/user.model';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
 describe('AiQueryResolver', () => {
   let resolver: AiQueryResolver;
   let prismaService: jest.Mocked<PrismaService>;
+  let dataLoaderService: jest.Mocked<DataLoaderService>;
 
   const mockUser: User = {
     id: 'user-1',
@@ -48,6 +50,18 @@ describe('AiQueryResolver', () => {
       },
     };
 
+    const mockDataLoaderService = {
+      getUserLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+      getAiQueryLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+      getResultsByQueryLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue([]),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AiQueryResolver,
@@ -55,11 +69,16 @@ describe('AiQueryResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: mockDataLoaderService,
+        },
       ],
     }).compile();
 
-    resolver = module.get<AiQueryResolver>(AiQueryResolver);
+    resolver = await module.resolve<AiQueryResolver>(AiQueryResolver);
     prismaService = module.get(PrismaService);
+    dataLoaderService = module.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -71,7 +90,7 @@ describe('AiQueryResolver', () => {
   });
 
   it('should instantiate AiQueryResolver directly', () => {
-    const newResolver = new AiQueryResolver(prismaService);
+    const newResolver = new AiQueryResolver(prismaService, dataLoaderService);
     expect(newResolver).toBeInstanceOf(AiQueryResolver);
     expect(newResolver['prisma']).toBe(prismaService);
   });
@@ -332,7 +351,7 @@ describe('AiQueryResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const aiQueryResolver = module.get<AiQueryResolver>(AiQueryResolver);
+    const aiQueryResolver = await module.resolve<AiQueryResolver>(AiQueryResolver);
     expect(aiQueryResolver).toBeDefined();
 
     await app.close();
@@ -342,6 +361,7 @@ describe('AiQueryResolver', () => {
 describe('AiQueryResultResolver', () => {
   let resolver: AiQueryResultResolver;
   let prismaService: jest.Mocked<PrismaService>;
+  let dataLoaderService: jest.Mocked<DataLoaderService>;
 
   const mockAiQuery: AiQuery = {
     id: 'query-1',
@@ -368,6 +388,12 @@ describe('AiQueryResultResolver', () => {
       },
     };
 
+    const mockDataLoaderService = {
+      getAiQueryLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AiQueryResultResolver,
@@ -375,11 +401,16 @@ describe('AiQueryResultResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: mockDataLoaderService,
+        },
       ],
     }).compile();
 
-    resolver = module.get<AiQueryResultResolver>(AiQueryResultResolver);
+    resolver = await module.resolve<AiQueryResultResolver>(AiQueryResultResolver);
     prismaService = module.get(PrismaService);
+    dataLoaderService = module.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -392,7 +423,7 @@ describe('AiQueryResultResolver', () => {
   });
 
   it('should instantiate AiQueryResultResolver directly', () => {
-    const newResolver = new AiQueryResultResolver(prismaService);
+    const newResolver = new AiQueryResultResolver(prismaService, dataLoaderService);
     expect(newResolver).toBeInstanceOf(AiQueryResultResolver);
     expect(newResolver['prisma']).toBe(prismaService);
   });
@@ -494,7 +525,7 @@ describe('AiQueryResultResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const resultResolver = module.get<AiQueryResultResolver>(
+    const resultResolver = await module.resolve<AiQueryResultResolver>(
       AiQueryResultResolver,
     );
     expect(resultResolver).toBeDefined();

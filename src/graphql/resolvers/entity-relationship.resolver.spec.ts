@@ -9,10 +9,12 @@ import {
 } from '@inputs/entity-relationship.input';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
 describe('EntityRelationshipResolver', () => {
   let resolver: EntityRelationshipResolver;
   let prismaService: jest.Mocked<PrismaService>;
+  let dataLoaderService: jest.Mocked<DataLoaderService>;
 
   const mockFromEntity: Entity = {
     id: 'entity-1',
@@ -53,6 +55,12 @@ describe('EntityRelationshipResolver', () => {
       },
     };
 
+    const mockDataLoaderService = {
+      getEntityLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EntityRelationshipResolver,
@@ -60,13 +68,18 @@ describe('EntityRelationshipResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: mockDataLoaderService,
+        },
       ],
     }).compile();
 
-    resolver = module.get<EntityRelationshipResolver>(
+    resolver = await module.resolve<EntityRelationshipResolver>(
       EntityRelationshipResolver,
     );
     prismaService = module.get(PrismaService);
+    dataLoaderService = module.get(DataLoaderService);
   });
 
   it('should be defined', () => {

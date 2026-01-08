@@ -6,10 +6,12 @@ import { User } from '@models/user.model';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
 describe('DocumentResolver', () => {
   let resolver: DocumentResolver;
   let prismaService: jest.Mocked<PrismaService>;
+  let dataLoaderService: jest.Mocked<DataLoaderService>;
 
   const mockUser: User = {
     id: 'user-1',
@@ -46,6 +48,15 @@ describe('DocumentResolver', () => {
       },
     };
 
+    const mockDataLoaderService = {
+      getUserLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
+      }),
+      getChunksByDocumentLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue([]),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DocumentResolver,
@@ -53,11 +64,16 @@ describe('DocumentResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: mockDataLoaderService,
+        },
       ],
     }).compile();
 
-    resolver = module.get<DocumentResolver>(DocumentResolver);
+    resolver = await module.resolve<DocumentResolver>(DocumentResolver);
     prismaService = module.get(PrismaService);
+    dataLoaderService = module.get(DataLoaderService);
   });
 
   it('should be defined', () => {
