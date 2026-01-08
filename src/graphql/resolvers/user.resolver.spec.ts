@@ -368,44 +368,35 @@ describe('UserResolver', () => {
         { id: 'lesson-1', title: 'Lesson 1', content: 'Content 1' },
         { id: 'lesson-2', title: 'Lesson 2', content: 'Content 2' },
       ];
-      const mockFindUnique = {
-        lessons: jest.fn().mockResolvedValue(mockLessons),
-      };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
-        mockFindUnique,
-      );
+      const loadMock = jest.fn().mockResolvedValue(mockLessons);
+      (dataLoaderService.getLessonsByUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.lessons(mockUser);
 
       expect(result).toEqual(mockLessons);
-      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: mockUser.id },
-      });
-      expect(mockFindUnique.lessons).toHaveBeenCalled();
+      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should return empty array when user has no lessons', async () => {
-      const mockFindUnique = {
-        lessons: jest.fn().mockResolvedValue([]),
-      };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
-        mockFindUnique,
-      );
+      const loadMock = jest.fn().mockResolvedValue([]);
+      (dataLoaderService.getLessonsByUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.lessons(mockUser);
 
       expect(result).toEqual([]);
-      expect(mockFindUnique.lessons).toHaveBeenCalled();
+      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
-      const mockFindUnique = {
-        lessons: jest.fn().mockRejectedValue(error),
-      };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
-        mockFindUnique,
-      );
+      const loadMock = jest.fn().mockRejectedValue(error);
+      (dataLoaderService.getLessonsByUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       await expect(resolver.lessons(mockUser)).rejects.toThrow(
         'Database error',
@@ -419,44 +410,35 @@ describe('UserResolver', () => {
         { id: 'doc-1', title: 'Document 1' },
         { id: 'doc-2', title: 'Document 2' },
       ];
-      const mockFindUnique = {
-        documents: jest.fn().mockResolvedValue(mockDocuments),
-      };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
-        mockFindUnique,
-      );
+      const loadMock = jest.fn().mockResolvedValue(mockDocuments);
+      (dataLoaderService.getDocumentsByUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.documents(mockUser);
 
       expect(result).toEqual(mockDocuments);
-      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: mockUser.id },
-      });
-      expect(mockFindUnique.documents).toHaveBeenCalled();
+      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should return empty array when user has no documents', async () => {
-      const mockFindUnique = {
-        documents: jest.fn().mockResolvedValue([]),
-      };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
-        mockFindUnique,
-      );
+      const loadMock = jest.fn().mockResolvedValue([]);
+      (dataLoaderService.getDocumentsByUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.documents(mockUser);
 
       expect(result).toEqual([]);
-      expect(mockFindUnique.documents).toHaveBeenCalled();
+      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
-      const mockFindUnique = {
-        documents: jest.fn().mockRejectedValue(error),
-      };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
-        mockFindUnique,
-      );
+      const loadMock = jest.fn().mockRejectedValue(error);
+      (dataLoaderService.getDocumentsByUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       await expect(resolver.documents(mockUser)).rejects.toThrow(
         'Database error',
@@ -470,44 +452,35 @@ describe('UserResolver', () => {
         { id: 'query-1', query: 'What is AI?', userId: mockUser.id },
         { id: 'query-2', query: 'How does ML work?', userId: mockUser.id },
       ];
-      const mockFindUnique = {
-        aiQueries: jest.fn().mockResolvedValue(mockAiQueries),
-      };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
-        mockFindUnique,
-      );
+      const loadMock = jest.fn().mockResolvedValue(mockAiQueries);
+      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.aiQueries(mockUser);
 
       expect(result).toEqual(mockAiQueries);
-      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: mockUser.id },
-      });
-      expect(mockFindUnique.aiQueries).toHaveBeenCalled();
+      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should return empty array when user has no aiQueries', async () => {
-      const mockFindUnique = {
-        aiQueries: jest.fn().mockResolvedValue([]),
-      };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
-        mockFindUnique,
-      );
+      const loadMock = jest.fn().mockResolvedValue([]);
+      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.aiQueries(mockUser);
 
       expect(result).toEqual([]);
-      expect(mockFindUnique.aiQueries).toHaveBeenCalled();
+      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
-      const mockFindUnique = {
-        aiQueries: jest.fn().mockRejectedValue(error),
-      };
-      (prismaService.user.findUnique as jest.Mock).mockReturnValue(
-        mockFindUnique,
-      );
+      const loadMock = jest.fn().mockRejectedValue(error);
+      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       await expect(resolver.aiQueries(mockUser)).rejects.toThrow(
         'Database error',
@@ -528,6 +501,10 @@ describe('UserResolver', () => {
         {
           provide: PrismaService,
           useValue: prismaService,
+        },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaderService,
         },
       ],
     }).compile();

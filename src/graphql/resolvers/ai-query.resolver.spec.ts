@@ -292,42 +292,36 @@ describe('AiQueryResolver', () => {
 
   describe('user', () => {
     it('should resolve user field', async () => {
-      const userMock = jest.fn().mockResolvedValue(mockUser);
-      const mockFindUnique = {
-        user: userMock,
+      const aiQueryWithUserId = {
+        ...mockAiQuery,
+        userId: mockUser.id,
+      } as unknown as import('../models/ai-query.model').AiQuery & {
+        userId: string;
       };
-      const findUniqueMock = jest.fn().mockReturnValue(mockFindUnique);
-      prismaService.aiQuery.findUnique = findUniqueMock;
+      const loadMock = jest.fn().mockResolvedValue(mockUser);
+      (dataLoaderService.getUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
-      const result = await resolver.user(mockAiQuery);
+      const result = await resolver.user(aiQueryWithUserId);
 
       expect(result).toEqual(mockUser);
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: mockAiQuery.id },
-      });
-      expect(userMock).toHaveBeenCalled();
+      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
     });
   });
 
   describe('results', () => {
     it('should resolve results field', async () => {
       const mockResults = [mockAiQueryResult];
-      const resultsMock = jest.fn().mockResolvedValue(mockResults);
-      const mockFindUnique = {
-        results: resultsMock,
-      };
-      const findUniqueMock = jest.fn().mockReturnValue(mockFindUnique);
-      prismaService.aiQuery.findUnique = findUniqueMock;
+      const loadMock = jest.fn().mockResolvedValue(mockResults);
+      (dataLoaderService.getResultsByQueryLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.results(mockAiQuery);
 
       expect(result).toEqual(mockResults);
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: mockAiQuery.id },
-      });
-      expect(resultsMock).toHaveBeenCalledWith({
-        orderBy: { createdAt: 'desc' },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockAiQuery.id);
     });
   });
 
@@ -344,6 +338,10 @@ describe('AiQueryResolver', () => {
         {
           provide: PrismaService,
           useValue: prismaService,
+        },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaderService,
         },
       ],
     }).compile();
@@ -494,20 +492,21 @@ describe('AiQueryResultResolver', () => {
 
   describe('query', () => {
     it('should resolve query field', async () => {
-      const queryMock = jest.fn().mockResolvedValue(mockAiQuery);
-      const mockFindUnique = {
-        query: queryMock,
+      const resultWithQueryId = {
+        ...mockAiQueryResult,
+        queryId: mockAiQuery.id,
+      } as unknown as import('../models/ai-query.model').AiQueryResult & {
+        queryId: string;
       };
-      const findUniqueMock = jest.fn().mockReturnValue(mockFindUnique);
-      prismaService.aiQueryResult.findUnique = findUniqueMock;
+      const loadMock = jest.fn().mockResolvedValue(mockAiQuery);
+      (dataLoaderService.getAiQueryLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
-      const result = await resolver.query(mockAiQueryResult);
+      const result = await resolver.query(resultWithQueryId);
 
       expect(result).toEqual(mockAiQuery);
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: mockAiQueryResult.id },
-      });
-      expect(queryMock).toHaveBeenCalled();
+      expect(loadMock).toHaveBeenCalledWith(mockAiQuery.id);
     });
   });
 
@@ -524,6 +523,10 @@ describe('AiQueryResultResolver', () => {
         {
           provide: PrismaService,
           useValue: prismaService,
+        },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaderService,
         },
       ],
     }).compile();

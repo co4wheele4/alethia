@@ -135,27 +135,27 @@ describe('EntityResolver', () => {
             {} as unknown as import('../models/document-chunk.model').DocumentChunk,
         },
       ];
-      (prismaService.entityMention.findMany as jest.Mock).mockResolvedValue(
-        mockMentions as any,
-      );
+      const loadMock = jest.fn().mockResolvedValue(mockMentions);
+      (dataLoaderService.getMentionsByEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.mentions(mockEntity);
 
       expect(result).toEqual(mockMentions);
-      expect(prismaService.entityMention.findMany).toHaveBeenCalledWith({
-        where: { entityId: mockEntity.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
     });
 
     it('should return empty array when entity has no mentions', async () => {
-      (prismaService.entityMention.findMany as jest.Mock).mockResolvedValue([]);
+      const loadMock = jest.fn().mockResolvedValue([]);
+      (dataLoaderService.getMentionsByEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.mentions(mockEntity);
 
       expect(result).toEqual([]);
-      expect(prismaService.entityMention.findMany).toHaveBeenCalledWith({
-        where: { entityId: mockEntity.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
     });
   });
 
@@ -169,29 +169,27 @@ describe('EntityResolver', () => {
           to: {} as Entity,
         },
       ];
-      (
-        prismaService.entityRelationship.findMany as jest.Mock
-      ).mockResolvedValue(mockRelationships as any);
+      const loadMock = jest.fn().mockResolvedValue(mockRelationships);
+      (dataLoaderService.getRelationshipsByFromEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.outgoing(mockEntity);
 
       expect(result).toEqual(mockRelationships);
-      expect(prismaService.entityRelationship.findMany).toHaveBeenCalledWith({
-        where: { fromEntity: mockEntity.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
     });
 
     it('should return empty array when entity has no outgoing relationships', async () => {
-      (
-        prismaService.entityRelationship.findMany as jest.Mock
-      ).mockResolvedValue([]);
+      const loadMock = jest.fn().mockResolvedValue([]);
+      (dataLoaderService.getRelationshipsByFromEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.outgoing(mockEntity);
 
       expect(result).toEqual([]);
-      expect(prismaService.entityRelationship.findMany).toHaveBeenCalledWith({
-        where: { fromEntity: mockEntity.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
     });
   });
 
@@ -205,29 +203,27 @@ describe('EntityResolver', () => {
           to: mockEntity,
         },
       ];
-      (
-        prismaService.entityRelationship.findMany as jest.Mock
-      ).mockResolvedValue(mockRelationships as any);
+      const loadMock = jest.fn().mockResolvedValue(mockRelationships);
+      (dataLoaderService.getRelationshipsByToEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.incoming(mockEntity);
 
       expect(result).toEqual(mockRelationships);
-      expect(prismaService.entityRelationship.findMany).toHaveBeenCalledWith({
-        where: { toEntity: mockEntity.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
     });
 
     it('should return empty array when entity has no incoming relationships', async () => {
-      (
-        prismaService.entityRelationship.findMany as jest.Mock
-      ).mockResolvedValue([]);
+      const loadMock = jest.fn().mockResolvedValue([]);
+      (dataLoaderService.getRelationshipsByToEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.incoming(mockEntity);
 
       expect(result).toEqual([]);
-      expect(prismaService.entityRelationship.findMany).toHaveBeenCalledWith({
-        where: { toEntity: mockEntity.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
     });
   });
 
@@ -300,13 +296,17 @@ describe('EntityResolver', () => {
           provide: PrismaService,
           useValue: prismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaderService,
+        },
       ],
     }).compile();
 
     const app = module.createNestApplication();
     await app.init();
 
-    const entityResolver = module.get<EntityResolver>(EntityResolver);
+    const entityResolver = await module.resolve<EntityResolver>(EntityResolver);
     expect(entityResolver).toBeDefined();
 
     await app.close();

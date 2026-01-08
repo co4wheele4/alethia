@@ -231,8 +231,10 @@ describe('DocumentResolver', () => {
 
   describe('user', () => {
     it('should resolve user field', async () => {
-      const findUniqueMock = prismaService.user.findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(mockUser as unknown as typeof mockUser);
+      const loadMock = jest.fn().mockResolvedValue(mockUser);
+      (dataLoaderService.getUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       // Mock document with userId from database field
       const documentWithUserId = {
@@ -244,14 +246,14 @@ describe('DocumentResolver', () => {
       const result = await resolver.user(documentWithUserId);
 
       expect(result).toEqual(mockUser);
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: mockUser.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should handle null user', async () => {
-      const findUniqueMock = prismaService.user.findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(null);
+      const loadMock = jest.fn().mockResolvedValue(null);
+      (dataLoaderService.getUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       // Mock document with userId from database field
       const documentWithUserId = {
@@ -263,9 +265,7 @@ describe('DocumentResolver', () => {
       const result = await resolver.user(documentWithUserId);
 
       expect(result).toBeNull();
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: 'non-existent' },
-      });
+      expect(loadMock).toHaveBeenCalledWith('non-existent');
     });
   });
 
@@ -279,29 +279,27 @@ describe('DocumentResolver', () => {
           documentId: 'doc-1',
         },
       ];
-      const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
-      findManyMock.mockResolvedValue(
-        mockChunks as unknown as typeof mockChunks,
-      );
+      const loadMock = jest.fn().mockResolvedValue(mockChunks);
+      (dataLoaderService.getChunksByDocumentLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.chunks(mockDocument);
 
       expect(result).toEqual(mockChunks);
-      expect(findManyMock).toHaveBeenCalledWith({
-        where: { documentId: mockDocument.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockDocument.id);
     });
 
     it('should return empty array when document has no chunks', async () => {
-      const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
-      findManyMock.mockResolvedValue([]);
+      const loadMock = jest.fn().mockResolvedValue([]);
+      (dataLoaderService.getChunksByDocumentLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       const result = await resolver.chunks(mockDocument);
 
       expect(result).toEqual([]);
-      expect(findManyMock).toHaveBeenCalledWith({
-        where: { documentId: mockDocument.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockDocument.id);
     });
   });
 
@@ -319,13 +317,17 @@ describe('DocumentResolver', () => {
           provide: PrismaService,
           useValue: prismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaderService,
+        },
       ],
     }).compile();
 
     const app = module.createNestApplication();
     await app.init();
 
-    const documentResolver = module.get<DocumentResolver>(DocumentResolver);
+    const documentResolver = await module.resolve<DocumentResolver>(DocumentResolver);
     expect(documentResolver).toBeDefined();
 
     await app.close();

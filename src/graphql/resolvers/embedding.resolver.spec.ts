@@ -401,12 +401,6 @@ describe('EmbeddingResolver', () => {
 
   describe('chunk', () => {
     it('should resolve chunk field', async () => {
-      const findUniqueMock = prismaService.documentChunk
-        .findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(
-        mockChunk as unknown as typeof mockChunk,
-      );
-
       // Mock embedding with chunkId from database field
       const embeddingWithChunkId = {
         ...mockEmbedding,
@@ -414,19 +408,18 @@ describe('EmbeddingResolver', () => {
       } as unknown as import('../models/embedding.model').Embedding & {
         chunkId: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(mockChunk);
+      (dataLoaderService.getDocumentChunkLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.chunk(embeddingWithChunkId);
 
       expect(result).toEqual(mockChunk);
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: mockChunk.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockChunk.id);
     });
 
     it('should handle null chunk', async () => {
-      const findUniqueMock = prismaService.documentChunk
-        .findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(null);
-
       // Mock embedding with chunkId from database field
       const embeddingWithChunkId = {
         ...mockEmbedding,
@@ -434,21 +427,31 @@ describe('EmbeddingResolver', () => {
       } as unknown as import('../models/embedding.model').Embedding & {
         chunkId: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(null);
+      (dataLoaderService.getDocumentChunkLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.chunk(embeddingWithChunkId);
 
       expect(result).toBeNull();
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: 'non-existent' },
-      });
+      expect(loadMock).toHaveBeenCalledWith('non-existent');
     });
 
     it('should handle database errors', async () => {
-      const findUniqueMock = prismaService.documentChunk
-        .findUnique as jest.Mock;
       const error = new Error('Database error');
-      findUniqueMock.mockRejectedValue(error);
+      const embeddingWithChunkId = {
+        ...mockEmbedding,
+        chunkId: mockChunk.id,
+      } as unknown as import('../models/embedding.model').Embedding & {
+        chunkId: string;
+      };
+      const loadMock = jest.fn().mockRejectedValue(error);
+      (dataLoaderService.getDocumentChunkLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
-      await expect(resolver.chunk(mockEmbedding)).rejects.toThrow(
+      await expect(resolver.chunk(embeddingWithChunkId)).rejects.toThrow(
         'Database error',
       );
     });

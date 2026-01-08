@@ -144,10 +144,6 @@ describe('EntityMentionResolver', () => {
 
   describe('entity', () => {
     it('should resolve entity field', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(
-        mockEntity as any,
-      );
-
       // Mock mention with entityId from database field
       const mentionWithEntityId = {
         ...mockEntityMention,
@@ -155,17 +151,18 @@ describe('EntityMentionResolver', () => {
       } as unknown as import('../models/entity-mention.model').EntityMention & {
         entityId: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(mockEntity);
+      (dataLoaderService.getEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.entity(mentionWithEntityId);
 
       expect(result).toEqual(mockEntity);
-      expect(prismaService.entity.findUnique).toHaveBeenCalledWith({
-        where: { id: mockEntity.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
     });
 
     it('should handle null entity', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(null);
-
       // Mock mention with entityId from database field
       const mentionWithEntityId = {
         ...mockEntityMention,
@@ -173,21 +170,20 @@ describe('EntityMentionResolver', () => {
       } as unknown as import('../models/entity-mention.model').EntityMention & {
         entityId: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(null);
+      (dataLoaderService.getEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.entity(mentionWithEntityId);
 
       expect(result).toBeNull();
-      expect(prismaService.entity.findUnique).toHaveBeenCalledWith({
-        where: { id: 'non-existent' },
-      });
+      expect(loadMock).toHaveBeenCalledWith('non-existent');
     });
   });
 
   describe('chunk', () => {
     it('should resolve chunk field', async () => {
-      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue(
-        mockChunk as any,
-      );
-
       // Mock mention with chunkId from database field
       const mentionWithChunkId = {
         ...mockEntityMention,
@@ -195,19 +191,18 @@ describe('EntityMentionResolver', () => {
       } as unknown as import('../models/entity-mention.model').EntityMention & {
         chunkId: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(mockChunk);
+      (dataLoaderService.getDocumentChunkLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.chunk(mentionWithChunkId);
 
       expect(result).toEqual(mockChunk);
-      expect(prismaService.documentChunk.findUnique).toHaveBeenCalledWith({
-        where: { id: mockChunk.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockChunk.id);
     });
 
     it('should handle null chunk', async () => {
-      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue(
-        null,
-      );
-
       // Mock mention with chunkId from database field
       const mentionWithChunkId = {
         ...mockEntityMention,
@@ -215,12 +210,15 @@ describe('EntityMentionResolver', () => {
       } as unknown as import('../models/entity-mention.model').EntityMention & {
         chunkId: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(null);
+      (dataLoaderService.getDocumentChunkLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.chunk(mentionWithChunkId);
 
       expect(result).toBeNull();
-      expect(prismaService.documentChunk.findUnique).toHaveBeenCalledWith({
-        where: { id: 'non-existent' },
-      });
+      expect(loadMock).toHaveBeenCalledWith('non-existent');
     });
   });
 
@@ -294,13 +292,17 @@ describe('EntityMentionResolver', () => {
           provide: PrismaService,
           useValue: prismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaderService,
+        },
       ],
     }).compile();
 
     const app = module.createNestApplication();
     await app.init();
 
-    const entityMentionResolver = module.get<EntityMentionResolver>(
+    const entityMentionResolver = await module.resolve<EntityMentionResolver>(
       EntityMentionResolver,
     );
     expect(entityMentionResolver).toBeDefined();

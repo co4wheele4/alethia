@@ -266,9 +266,10 @@ describe('LessonResolver', () => {
 
   describe('user', () => {
     it('should resolve user field', async () => {
-      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(
-        mockUser as any,
-      );
+      const loadMock = jest.fn().mockResolvedValue(mockUser);
+      (dataLoaderService.getUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       // Mock lesson with userId from database field
       const lessonWithUserId = {
@@ -280,13 +281,14 @@ describe('LessonResolver', () => {
       const result = await resolver.user(lessonWithUserId);
 
       expect(result).toEqual(mockUser);
-      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: mockUser.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should handle null user', async () => {
-      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(null);
+      const loadMock = jest.fn().mockResolvedValue(null);
+      (dataLoaderService.getUserLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
 
       // Mock lesson with userId from database field
       const lessonWithUserId = {
@@ -298,9 +300,7 @@ describe('LessonResolver', () => {
       const result = await resolver.user(lessonWithUserId);
 
       expect(result).toBeNull();
-      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: 'non-existent' },
-      });
+      expect(loadMock).toHaveBeenCalledWith('non-existent');
     });
   });
 
@@ -318,13 +318,17 @@ describe('LessonResolver', () => {
           provide: PrismaService,
           useValue: prismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaderService,
+        },
       ],
     }).compile();
 
     const app = module.createNestApplication();
     await app.init();
 
-    const lessonResolver = module.get<LessonResolver>(LessonResolver);
+    const lessonResolver = await module.resolve<LessonResolver>(LessonResolver);
     expect(lessonResolver).toBeDefined();
 
     await app.close();

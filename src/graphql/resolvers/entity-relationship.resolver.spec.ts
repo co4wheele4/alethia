@@ -142,10 +142,6 @@ describe('EntityRelationshipResolver', () => {
 
   describe('from', () => {
     it('should resolve from entity field', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(
-        mockFromEntity as any,
-      );
-
       // Mock relationship with fromEntity from database field
       const relationshipWithFromEntity = {
         ...mockRelationship,
@@ -153,17 +149,18 @@ describe('EntityRelationshipResolver', () => {
       } as unknown as import('../models/entity-relationship.model').EntityRelationship & {
         fromEntity: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(mockFromEntity);
+      (dataLoaderService.getEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.from(relationshipWithFromEntity);
 
       expect(result).toEqual(mockFromEntity);
-      expect(prismaService.entity.findUnique).toHaveBeenCalledWith({
-        where: { id: mockFromEntity.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockFromEntity.id);
     });
 
     it('should handle null entity', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(null);
-
       // Mock relationship with fromEntity from database field
       const relationshipWithFromEntity = {
         ...mockRelationship,
@@ -171,21 +168,20 @@ describe('EntityRelationshipResolver', () => {
       } as unknown as import('../models/entity-relationship.model').EntityRelationship & {
         fromEntity: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(null);
+      (dataLoaderService.getEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.from(relationshipWithFromEntity);
 
       expect(result).toBeNull();
-      expect(prismaService.entity.findUnique).toHaveBeenCalledWith({
-        where: { id: 'non-existent' },
-      });
+      expect(loadMock).toHaveBeenCalledWith('non-existent');
     });
   });
 
   describe('to', () => {
     it('should resolve to entity field', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(
-        mockToEntity as any,
-      );
-
       // Mock relationship with toEntity from database field
       const relationshipWithToEntity = {
         ...mockRelationship,
@@ -193,17 +189,18 @@ describe('EntityRelationshipResolver', () => {
       } as unknown as import('../models/entity-relationship.model').EntityRelationship & {
         toEntity: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(mockToEntity);
+      (dataLoaderService.getEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.to(relationshipWithToEntity);
 
       expect(result).toEqual(mockToEntity);
-      expect(prismaService.entity.findUnique).toHaveBeenCalledWith({
-        where: { id: mockToEntity.id },
-      });
+      expect(loadMock).toHaveBeenCalledWith(mockToEntity.id);
     });
 
     it('should handle null entity', async () => {
-      (prismaService.entity.findUnique as jest.Mock).mockResolvedValue(null);
-
       // Mock relationship with toEntity from database field
       const relationshipWithToEntity = {
         ...mockRelationship,
@@ -211,12 +208,15 @@ describe('EntityRelationshipResolver', () => {
       } as unknown as import('../models/entity-relationship.model').EntityRelationship & {
         toEntity: string;
       };
+      const loadMock = jest.fn().mockResolvedValue(null);
+      (dataLoaderService.getEntityLoader as jest.Mock).mockReturnValue({
+        load: loadMock,
+      });
+
       const result = await resolver.to(relationshipWithToEntity);
 
       expect(result).toBeNull();
-      expect(prismaService.entity.findUnique).toHaveBeenCalledWith({
-        where: { id: 'non-existent' },
-      });
+      expect(loadMock).toHaveBeenCalledWith('non-existent');
     });
   });
 
@@ -296,13 +296,17 @@ describe('EntityRelationshipResolver', () => {
           provide: PrismaService,
           useValue: prismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaderService,
+        },
       ],
     }).compile();
 
     const app = module.createNestApplication();
     await app.init();
 
-    const entityRelationshipResolver = module.get<EntityRelationshipResolver>(
+    const entityRelationshipResolver = await module.resolve<EntityRelationshipResolver>(
       EntityRelationshipResolver,
     );
     expect(entityRelationshipResolver).toBeDefined();
