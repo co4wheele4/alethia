@@ -232,9 +232,10 @@ describe('DocumentChunkResolver', () => {
 
   describe('document', () => {
     it('should resolve document field', async () => {
-      const chunkWithDocumentId = mockChunk as unknown as import('../models/document-chunk.model').DocumentChunk & {
-        documentId: string;
-      };
+      const chunkWithDocumentId =
+        mockChunk as unknown as import('../models/document-chunk.model').DocumentChunk & {
+          documentId: string;
+        };
       const loadMock = jest.fn().mockResolvedValue(mockDocument);
       (dataLoaderService.getDocumentLoader as jest.Mock).mockReturnValue({
         load: loadMock,
@@ -275,7 +276,9 @@ describe('DocumentChunkResolver', () => {
         },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockEmbeddings);
-      (dataLoaderService.getEmbeddingsByChunkLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getEmbeddingsByChunkLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 
@@ -287,7 +290,9 @@ describe('DocumentChunkResolver', () => {
 
     it('should return empty array when chunk has no embeddings', async () => {
       const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getEmbeddingsByChunkLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getEmbeddingsByChunkLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 
@@ -308,9 +313,11 @@ describe('DocumentChunkResolver', () => {
         },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockMentions);
-      (dataLoaderService.getMentionsByChunkLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
+      (dataLoaderService.getMentionsByChunkLoader as jest.Mock).mockReturnValue(
+        {
+          load: loadMock,
+        },
+      );
 
       const result = await resolver.mentions(mockChunk);
 
@@ -320,9 +327,11 @@ describe('DocumentChunkResolver', () => {
 
     it('should return empty array when chunk has no mentions', async () => {
       const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getMentionsByChunkLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
+      (dataLoaderService.getMentionsByChunkLoader as jest.Mock).mockReturnValue(
+        {
+          load: loadMock,
+        },
+      );
 
       const result = await resolver.mentions(mockChunk);
 

@@ -306,9 +306,10 @@ describe('EntityRelationshipResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const entityRelationshipResolver = await module.resolve<EntityRelationshipResolver>(
-      EntityRelationshipResolver,
-    );
+    const entityRelationshipResolver =
+      await module.resolve<EntityRelationshipResolver>(
+        EntityRelationshipResolver,
+      );
     expect(entityRelationshipResolver).toBeDefined();
 
     await app.close();

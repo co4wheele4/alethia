@@ -411,9 +411,11 @@ describe('UserResolver', () => {
         { id: 'doc-2', title: 'Document 2' },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockDocuments);
-      (dataLoaderService.getDocumentsByUserLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
+      (dataLoaderService.getDocumentsByUserLoader as jest.Mock).mockReturnValue(
+        {
+          load: loadMock,
+        },
+      );
 
       const result = await resolver.documents(mockUser);
 
@@ -423,9 +425,11 @@ describe('UserResolver', () => {
 
     it('should return empty array when user has no documents', async () => {
       const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getDocumentsByUserLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
+      (dataLoaderService.getDocumentsByUserLoader as jest.Mock).mockReturnValue(
+        {
+          load: loadMock,
+        },
+      );
 
       const result = await resolver.documents(mockUser);
 
@@ -436,9 +440,11 @@ describe('UserResolver', () => {
     it('should handle database errors', async () => {
       const error = new Error('Database error');
       const loadMock = jest.fn().mockRejectedValue(error);
-      (dataLoaderService.getDocumentsByUserLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
+      (dataLoaderService.getDocumentsByUserLoader as jest.Mock).mockReturnValue(
+        {
+          load: loadMock,
+        },
+      );
 
       await expect(resolver.documents(mockUser)).rejects.toThrow(
         'Database error',
@@ -453,9 +459,11 @@ describe('UserResolver', () => {
         { id: 'query-2', query: 'How does ML work?', userId: mockUser.id },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockAiQueries);
-      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
+      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue(
+        {
+          load: loadMock,
+        },
+      );
 
       const result = await resolver.aiQueries(mockUser);
 
@@ -465,9 +473,11 @@ describe('UserResolver', () => {
 
     it('should return empty array when user has no aiQueries', async () => {
       const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
+      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue(
+        {
+          load: loadMock,
+        },
+      );
 
       const result = await resolver.aiQueries(mockUser);
 
@@ -478,9 +488,11 @@ describe('UserResolver', () => {
     it('should handle database errors', async () => {
       const error = new Error('Database error');
       const loadMock = jest.fn().mockRejectedValue(error);
-      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
+      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue(
+        {
+          load: loadMock,
+        },
+      );
 
       await expect(resolver.aiQueries(mockUser)).rejects.toThrow(
         'Database error',

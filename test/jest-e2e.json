@@ -17,6 +17,7 @@
     "^@auth/(.*)$": "<rootDir>/../src/auth/$1",
     "^@openai/(.*)$": "<rootDir>/../src/openai/$1",
     "^@outputs/(.*)$": "<rootDir>/../src/graphql/outputs/$1",
+    "^@common/(.*)$": "<rootDir>/../src/common/$1",
     "^@prisma/(?!client)(.*)$": "<rootDir>/../src/prisma/$1",
     "^@resolvers$": "<rootDir>/../src/graphql/resolvers/index",
     "^@resolvers/(.*)$": "<rootDir>/../src/graphql/resolvers/$1"

@@ -136,7 +136,9 @@ describe('EntityResolver', () => {
         },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockMentions);
-      (dataLoaderService.getMentionsByEntityLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getMentionsByEntityLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 
@@ -148,7 +150,9 @@ describe('EntityResolver', () => {
 
     it('should return empty array when entity has no mentions', async () => {
       const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getMentionsByEntityLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getMentionsByEntityLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 
@@ -170,7 +174,9 @@ describe('EntityResolver', () => {
         },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockRelationships);
-      (dataLoaderService.getRelationshipsByFromEntityLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getRelationshipsByFromEntityLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 
@@ -182,7 +188,9 @@ describe('EntityResolver', () => {
 
     it('should return empty array when entity has no outgoing relationships', async () => {
       const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getRelationshipsByFromEntityLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getRelationshipsByFromEntityLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 
@@ -204,7 +212,9 @@ describe('EntityResolver', () => {
         },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockRelationships);
-      (dataLoaderService.getRelationshipsByToEntityLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getRelationshipsByToEntityLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 
@@ -216,7 +226,9 @@ describe('EntityResolver', () => {
 
     it('should return empty array when entity has no incoming relationships', async () => {
       const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getRelationshipsByToEntityLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getRelationshipsByToEntityLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 

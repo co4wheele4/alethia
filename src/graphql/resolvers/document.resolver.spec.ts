@@ -280,7 +280,9 @@ describe('DocumentResolver', () => {
         },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockChunks);
-      (dataLoaderService.getChunksByDocumentLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getChunksByDocumentLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 
@@ -292,7 +294,9 @@ describe('DocumentResolver', () => {
 
     it('should return empty array when document has no chunks', async () => {
       const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getChunksByDocumentLoader as jest.Mock).mockReturnValue({
+      (
+        dataLoaderService.getChunksByDocumentLoader as jest.Mock
+      ).mockReturnValue({
         load: loadMock,
       });
 
@@ -327,7 +331,8 @@ describe('DocumentResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const documentResolver = await module.resolve<DocumentResolver>(DocumentResolver);
+    const documentResolver =
+      await module.resolve<DocumentResolver>(DocumentResolver);
     expect(documentResolver).toBeDefined();
 
     await app.close();
