@@ -97,7 +97,7 @@ export class DataLoaderService {
           userLessons.push(lesson as unknown as Lesson);
           lessonsByUser.set(lesson.userId, userLessons);
         }
-        return userIds.map((userId) => lessonsByUser.get(userId) ?? []);
+        return userIds.map((userId) => lessonsByUser.get(userId)!);
       },
     );
 
@@ -128,7 +128,7 @@ export class DataLoaderService {
           userDocuments.push(document as unknown as Document);
           documentsByUser.set(document.userId, userDocuments);
         }
-        return userIds.map((userId) => documentsByUser.get(userId) ?? []);
+        return userIds.map((userId) => documentsByUser.get(userId)!);
       },
     );
 
@@ -160,7 +160,7 @@ export class DataLoaderService {
           chunksByDocument.set(chunk.documentId, docChunks);
         }
         return documentIds.map(
-          (documentId) => chunksByDocument.get(documentId) ?? [],
+          (documentId) => chunksByDocument.get(documentId)!,
         );
       },
     );
@@ -193,7 +193,7 @@ export class DataLoaderService {
           chunkEmbeddings.push(embedding as unknown as Embedding);
           embeddingsByChunk.set(embedding.chunkId, chunkEmbeddings);
         }
-        return chunkIds.map((chunkId) => embeddingsByChunk.get(chunkId) ?? []);
+        return chunkIds.map((chunkId) => embeddingsByChunk.get(chunkId)!);
       },
     );
 
@@ -241,7 +241,7 @@ export class DataLoaderService {
           mentionsByEntity.set(mention.entityId, entityMentions);
         }
         return entityIds.map(
-          (entityId) => mentionsByEntity.get(entityId) ?? [],
+          (entityId) => mentionsByEntity.get(entityId)!,
         );
       },
     );
@@ -260,7 +260,7 @@ export class DataLoaderService {
           chunkMentions.push(mention as unknown as EntityMention);
           mentionsByChunk.set(mention.chunkId, chunkMentions);
         }
-        return chunkIds.map((chunkId) => mentionsByChunk.get(chunkId) ?? []);
+        return chunkIds.map((chunkId) => mentionsByChunk.get(chunkId)!);
       },
     );
 
@@ -299,7 +299,7 @@ export class DataLoaderService {
         relationshipsByFrom.set(relationship.fromEntity, fromRelationships);
       }
       return entityIds.map(
-        (entityId) => relationshipsByFrom.get(entityId) ?? [],
+        (entityId) => relationshipsByFrom.get(entityId)!,
       );
     });
 
@@ -320,7 +320,7 @@ export class DataLoaderService {
         toRelationships.push(relationship as unknown as EntityRelationship);
         relationshipsByTo.set(relationship.toEntity, toRelationships);
       }
-      return entityIds.map((entityId) => relationshipsByTo.get(entityId) ?? []);
+      return entityIds.map((entityId) => relationshipsByTo.get(entityId)!);
     });
 
     // AiQuery loaders
@@ -351,7 +351,7 @@ export class DataLoaderService {
           userQueries.push(query as unknown as AiQuery);
           queriesByUser.set(query.userId, userQueries);
         }
-        return userIds.map((userId) => queriesByUser.get(userId) ?? []);
+        return userIds.map((userId) => queriesByUser.get(userId)!);
       },
     );
 
@@ -386,7 +386,7 @@ export class DataLoaderService {
           queryResults.push(result as unknown as AiQueryResult);
           resultsByQuery.set(result.queryId, queryResults);
         }
-        return queryIds.map((queryId) => resultsByQuery.get(queryId) ?? []);
+        return queryIds.map((queryId) => resultsByQuery.get(queryId)!);
       },
     );
   }
