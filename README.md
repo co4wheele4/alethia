@@ -79,6 +79,7 @@ npx prisma migrate dev
 
 # (Optional) Seed the database
 npm run seed
+# Note: The seed script provides detailed logging showing which database is being seeded and how many rows were inserted
 ```
 
 ## Development
