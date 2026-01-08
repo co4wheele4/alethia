@@ -222,7 +222,9 @@ describe('DocumentResolver', () => {
       const documentWithUserId = {
         ...mockDocument,
         userId: mockUser.id,
-      } as any;
+      } as unknown as import('../models/document.model').Document & {
+        userId: string;
+      };
       const result = await resolver.user(documentWithUserId);
 
       expect(result).toEqual(mockUser);
@@ -239,7 +241,9 @@ describe('DocumentResolver', () => {
       const documentWithUserId = {
         ...mockDocument,
         userId: 'non-existent',
-      } as any;
+      } as unknown as import('../models/document.model').Document & {
+        userId: string;
+      };
       const result = await resolver.user(documentWithUserId);
 
       expect(result).toBeNull();

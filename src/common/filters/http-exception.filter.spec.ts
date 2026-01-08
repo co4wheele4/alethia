@@ -19,7 +19,7 @@ describe('HttpExceptionFilter', () => {
     it('should throw exception directly for GraphQL context', () => {
       const exception = new HttpException('Test error', HttpStatus.BAD_REQUEST);
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'graphql' as any),
+        getType: jest.fn<any, any>(() => 'graphql'),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -35,20 +35,20 @@ describe('HttpExceptionFilter', () => {
         .spyOn(GqlArgumentsHost, 'create')
         .mockReturnValue(mockGqlContext as unknown as GqlArgumentsHost);
 
-      expect(() => filter.catch(exception, mockContext as ArgumentsHost)).toThrow(
-        HttpException,
-      );
+      expect(() =>
+        filter.catch(exception, mockContext as ArgumentsHost),
+      ).toThrow(HttpException);
     });
 
     it('should return JSON response for HTTP context', () => {
       const exception = new HttpException('Test error', HttpStatus.BAD_REQUEST);
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'http' as any),
-        switchToHttp: jest.fn(() => ({
-          getResponse: jest.fn(() => mockResponse),
+        getType: jest.fn<any, any>(() => 'http'),
+        switchToHttp: jest.fn<any, any>(() => ({
+          getResponse: jest.fn<any, any>(() => mockResponse),
           getRequest: jest.fn(),
           getNext: jest.fn(),
-        })) as any,
+        })),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -80,12 +80,12 @@ describe('HttpExceptionFilter', () => {
         HttpStatus.BAD_REQUEST,
       );
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'http' as any),
-        switchToHttp: jest.fn(() => ({
-          getResponse: jest.fn(() => mockResponse),
+        getType: jest.fn<any, any>(() => 'http'),
+        switchToHttp: jest.fn<any, any>(() => ({
+          getResponse: jest.fn<any, any>(() => mockResponse),
           getRequest: jest.fn(),
           getNext: jest.fn(),
-        })) as any,
+        })),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -119,12 +119,12 @@ describe('HttpExceptionFilter', () => {
       } as unknown as HttpException;
 
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'http' as any),
-        switchToHttp: jest.fn(() => ({
-          getResponse: jest.fn(() => mockResponse),
+        getType: jest.fn<any, any>(() => 'http'),
+        switchToHttp: jest.fn<any, any>(() => ({
+          getResponse: jest.fn<any, any>(() => mockResponse),
           getRequest: jest.fn(),
           getNext: jest.fn(),
-        })) as any,
+        })),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -147,14 +147,17 @@ describe('HttpExceptionFilter', () => {
     });
 
     it('should handle exception with string response', () => {
-      const exception = new HttpException('Simple string error', HttpStatus.BAD_REQUEST);
+      const exception = new HttpException(
+        'Simple string error',
+        HttpStatus.BAD_REQUEST,
+      );
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'http' as any),
-        switchToHttp: jest.fn(() => ({
-          getResponse: jest.fn(() => mockResponse),
+        getType: jest.fn<any, any>(() => 'http'),
+        switchToHttp: jest.fn<any, any>(() => ({
+          getResponse: jest.fn<any, any>(() => mockResponse),
           getRequest: jest.fn(),
           getNext: jest.fn(),
-        })) as any,
+        })),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -180,4 +183,3 @@ describe('HttpExceptionFilter', () => {
     });
   });
 });
-

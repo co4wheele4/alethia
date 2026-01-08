@@ -11,6 +11,7 @@ describe('AuthResolver', () => {
     id: 'user-id',
     email: 'test@example.com',
     name: 'Test User',
+    role: 'USER',
     createdAt: new Date(),
   };
 
@@ -55,9 +56,9 @@ describe('AuthResolver', () => {
     it('should throw error when credentials are invalid', async () => {
       const { UnauthorizedException } = await import('@nestjs/common');
 
-      jest.spyOn(authService, 'validateUser').mockRejectedValue(
-        new UnauthorizedException('Invalid credentials'),
-      );
+      jest
+        .spyOn(authService, 'validateUser')
+        .mockRejectedValue(new UnauthorizedException('Invalid credentials'));
 
       await expect(
         resolver.login('test@example.com', 'wrong-password'),
@@ -65,4 +66,3 @@ describe('AuthResolver', () => {
     });
   });
 });
-

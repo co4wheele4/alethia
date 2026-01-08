@@ -66,4 +66,3 @@ describe('env.validation', () => {
     expect(result.ALLOWED_ORIGINS).toBe('http://localhost:3000');
   });
 });
-

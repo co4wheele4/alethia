@@ -6,13 +6,16 @@ import {
   Parent,
   Mutation,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { Entity } from '@models/entity.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { EntityRelationship } from '@models/entity-relationship.model';
 import { CreateEntityInput, UpdateEntityInput } from '@inputs/entity.input';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 
 @Resolver(() => Entity)
+@UseGuards(JwtAuthGuard)
 export class EntityResolver {
   constructor(private readonly prisma: PrismaService) {}
 

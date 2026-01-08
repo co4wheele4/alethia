@@ -137,7 +137,9 @@ describe('EntityRelationshipResolver', () => {
       const relationshipWithFromEntity = {
         ...mockRelationship,
         fromEntity: mockFromEntity.id,
-      } as any;
+      } as unknown as import('../models/entity-relationship.model').EntityRelationship & {
+        fromEntity: string;
+      };
       const result = await resolver.from(relationshipWithFromEntity);
 
       expect(result).toEqual(mockFromEntity);
@@ -153,7 +155,9 @@ describe('EntityRelationshipResolver', () => {
       const relationshipWithFromEntity = {
         ...mockRelationship,
         fromEntity: 'non-existent',
-      } as any;
+      } as unknown as import('../models/entity-relationship.model').EntityRelationship & {
+        fromEntity: string;
+      };
       const result = await resolver.from(relationshipWithFromEntity);
 
       expect(result).toBeNull();
@@ -173,7 +177,9 @@ describe('EntityRelationshipResolver', () => {
       const relationshipWithToEntity = {
         ...mockRelationship,
         toEntity: mockToEntity.id,
-      } as any;
+      } as unknown as import('../models/entity-relationship.model').EntityRelationship & {
+        toEntity: string;
+      };
       const result = await resolver.to(relationshipWithToEntity);
 
       expect(result).toEqual(mockToEntity);
@@ -189,7 +195,9 @@ describe('EntityRelationshipResolver', () => {
       const relationshipWithToEntity = {
         ...mockRelationship,
         toEntity: 'non-existent',
-      } as any;
+      } as unknown as import('../models/entity-relationship.model').EntityRelationship & {
+        toEntity: string;
+      };
       const result = await resolver.to(relationshipWithToEntity);
 
       expect(result).toBeNull();

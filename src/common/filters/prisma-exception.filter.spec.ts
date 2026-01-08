@@ -1,4 +1,9 @@
-import { ArgumentsHost, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { GqlArgumentsHost } from '@nestjs/graphql';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaExceptionFilter } from './prisma-exception.filter';
@@ -32,14 +37,12 @@ describe('PrismaExceptionFilter', () => {
 
   describe('catch', () => {
     it('should throw ConflictException for P2002 (unique constraint)', () => {
-      const exception = createPrismaError(
-        'Unique constraint failed',
-        'P2002',
-        { target: ['email'] },
-      );
+      const exception = createPrismaError('Unique constraint failed', 'P2002', {
+        target: ['email'],
+      });
 
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'graphql' as any),
+        getType: jest.fn<any, any>(() => 'graphql'),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -56,9 +59,9 @@ describe('PrismaExceptionFilter', () => {
         .spyOn(GqlArgumentsHost, 'create')
         .mockReturnValue(mockGqlContext as unknown as GqlArgumentsHost);
 
-      expect(() => filter.catch(exception, mockContext as ArgumentsHost)).toThrow(
-        ConflictException,
-      );
+      expect(() =>
+        filter.catch(exception, mockContext as ArgumentsHost),
+      ).toThrow(ConflictException);
     });
 
     it('should throw BadRequestException for P2003 (foreign key)', () => {
@@ -68,7 +71,7 @@ describe('PrismaExceptionFilter', () => {
       );
 
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'graphql' as any),
+        getType: jest.fn<any, any>(() => 'graphql'),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -85,19 +88,16 @@ describe('PrismaExceptionFilter', () => {
         .spyOn(GqlArgumentsHost, 'create')
         .mockReturnValue(mockGqlContext as unknown as GqlArgumentsHost);
 
-      expect(() => filter.catch(exception, mockContext as ArgumentsHost)).toThrow(
-        BadRequestException,
-      );
+      expect(() =>
+        filter.catch(exception, mockContext as ArgumentsHost),
+      ).toThrow(BadRequestException);
     });
 
     it('should throw NotFoundException for P2025 (record not found)', () => {
-      const exception = createPrismaError(
-        'Record not found',
-        'P2025',
-      );
+      const exception = createPrismaError('Record not found', 'P2025');
 
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'graphql' as any),
+        getType: jest.fn<any, any>(() => 'graphql'),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -114,19 +114,16 @@ describe('PrismaExceptionFilter', () => {
         .spyOn(GqlArgumentsHost, 'create')
         .mockReturnValue(mockGqlContext as unknown as GqlArgumentsHost);
 
-      expect(() => filter.catch(exception, mockContext as ArgumentsHost)).toThrow(
-        NotFoundException,
-      );
+      expect(() =>
+        filter.catch(exception, mockContext as ArgumentsHost),
+      ).toThrow(NotFoundException);
     });
 
     it('should throw generic Error for unknown error codes', () => {
-      const exception = createPrismaError(
-        'Unknown error',
-        'P9999',
-      );
+      const exception = createPrismaError('Unknown error', 'P9999');
 
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'graphql' as any),
+        getType: jest.fn<any, any>(() => 'graphql'),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -143,9 +140,9 @@ describe('PrismaExceptionFilter', () => {
         .spyOn(GqlArgumentsHost, 'create')
         .mockReturnValue(mockGqlContext as unknown as GqlArgumentsHost);
 
-      expect(() => filter.catch(exception, mockContext as ArgumentsHost)).toThrow(
-        Error,
-      );
+      expect(() =>
+        filter.catch(exception, mockContext as ArgumentsHost),
+      ).toThrow(Error);
     });
 
     it('should handle exception with no message', () => {
@@ -155,7 +152,7 @@ describe('PrismaExceptionFilter', () => {
       );
 
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'graphql' as any),
+        getType: jest.fn<any, any>(() => 'graphql'),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -172,20 +169,18 @@ describe('PrismaExceptionFilter', () => {
         .spyOn(GqlArgumentsHost, 'create')
         .mockReturnValue(mockGqlContext as unknown as GqlArgumentsHost);
 
-      expect(() => filter.catch(exception, mockContext as ArgumentsHost)).toThrow(
-        Error,
-      );
+      expect(() =>
+        filter.catch(exception, mockContext as ArgumentsHost),
+      ).toThrow(Error);
     });
 
     it('should return HTTP response when not GraphQL context', () => {
-      const exception = createPrismaError(
-        'Unique constraint failed',
-        'P2002',
-        { target: ['email'] },
-      );
+      const exception = createPrismaError('Unique constraint failed', 'P2002', {
+        target: ['email'],
+      });
 
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'http' as any),
+        getType: jest.fn<any, any>(() => 'http'),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -216,7 +211,7 @@ describe('PrismaExceptionFilter', () => {
       );
 
       const mockContext: Partial<ArgumentsHost> = {
-        getType: jest.fn(() => 'graphql' as any),
+        getType: jest.fn<any, any>(() => 'graphql'),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -233,10 +228,9 @@ describe('PrismaExceptionFilter', () => {
         .spyOn(GqlArgumentsHost, 'create')
         .mockReturnValue(mockGqlContext as unknown as GqlArgumentsHost);
 
-      expect(() => filter.catch(exception, mockContext as ArgumentsHost)).toThrow(
-        ConflictException,
-      );
+      expect(() =>
+        filter.catch(exception, mockContext as ArgumentsHost),
+      ).toThrow(ConflictException);
     });
   });
 });
-

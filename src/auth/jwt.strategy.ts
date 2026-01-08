@@ -20,7 +20,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string }): Promise<User> {
+  async validate(payload: {
+    sub: string;
+    email: string;
+    role?: string;
+  }): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
@@ -29,6 +33,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    return user;
+    // Ensure role is set from payload or user model
+    return {
+      ...user,
+      role: payload.role || user.role || 'USER',
+    };
   }
 }

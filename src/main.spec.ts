@@ -91,14 +91,14 @@ describe('main.ts', () => {
 
     // Clear module cache to re-import
     jest.resetModules();
-    
+
     // Re-import mocks
     jest.doMock('@nestjs/core', () => ({
       NestFactory: {
         create: jest.fn().mockResolvedValue(testMockApp),
       },
     }));
-    
+
     await import('./main');
 
     // Wait for async operations to complete
@@ -134,14 +134,14 @@ describe('main.ts', () => {
 
     // Clear module cache to re-import
     jest.resetModules();
-    
+
     // Re-import mocks
     jest.doMock('@nestjs/core', () => ({
       NestFactory: {
         create: jest.fn().mockResolvedValue(testMockApp),
       },
     }));
-    
+
     await import('./main');
 
     // Wait for async operations to complete

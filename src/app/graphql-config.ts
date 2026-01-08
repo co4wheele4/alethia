@@ -4,7 +4,13 @@ import { GraphQLFormattedError } from 'graphql';
 /**
  * GraphQL context function - extracts request and response from GraphQL context
  */
-export function createGraphQLContext({ req, res }: { req: Request; res: Response }) {
+export function createGraphQLContext({
+  req,
+  res,
+}: {
+  req: Request;
+  res: Response;
+}) {
   return {
     req,
     res,
@@ -16,8 +22,10 @@ export function createGraphQLContext({ req, res }: { req: Request; res: Response
  */
 export function formatGraphQLError(
   formattedError: GraphQLFormattedError,
-  _error: unknown,
+  originalError: unknown,
 ): GraphQLFormattedError {
+  // Ensure we keep the signature expected by Apollo/Nest while avoiding unused-vars lint errors.
+  void originalError;
   return {
     message: formattedError.message,
     extensions: {
@@ -27,4 +35,3 @@ export function formatGraphQLError(
     path: formattedError.path,
   };
 }
-

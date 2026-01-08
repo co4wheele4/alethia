@@ -168,12 +168,12 @@ describe('UserResolver', () => {
 
       const result = await resolver.createUser({
         email: 'new@example.com',
-        name: null as any,
+        name: undefined,
       });
 
       expect(result).toEqual(newUser);
       expect(prismaService.user.create).toHaveBeenCalledWith({
-        data: { email: 'new@example.com', name: null },
+        data: { email: 'new@example.com', name: undefined },
       });
     });
 
@@ -247,27 +247,27 @@ describe('UserResolver', () => {
       });
     });
 
-    it('should update with null email', async () => {
-      const updatedUser = { ...mockUser, email: null };
+    it('should update with undefined email', async () => {
+      const updatedUser = { ...mockUser, email: undefined };
       (prismaService.user.update as jest.Mock).mockResolvedValue(
         updatedUser as any,
       );
 
       const result = await resolver.updateUser({
         id: '1',
-        email: null as any,
+        email: undefined,
         name: 'Updated Name',
       });
 
       expect(result).toEqual(updatedUser);
       expect(prismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: { email: null, name: 'Updated Name' },
+        data: { email: undefined, name: 'Updated Name' },
       });
     });
 
-    it('should update with null name', async () => {
-      const updatedUser = { ...mockUser, name: null };
+    it('should update with undefined name', async () => {
+      const updatedUser = { ...mockUser, name: undefined };
       (prismaService.user.update as jest.Mock).mockResolvedValue(
         updatedUser as any,
       );
@@ -275,13 +275,13 @@ describe('UserResolver', () => {
       const result = await resolver.updateUser({
         id: '1',
         email: 'test@example.com',
-        name: null as any,
+        name: undefined,
       });
 
       expect(result).toEqual(updatedUser);
       expect(prismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: { email: 'test@example.com', name: null },
+        data: { email: 'test@example.com', name: undefined },
       });
     });
 

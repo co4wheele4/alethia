@@ -14,6 +14,7 @@ describe('AuthService', () => {
     id: 'user-id',
     email: 'test@example.com',
     name: 'Test User',
+    role: 'USER',
     createdAt: new Date(),
   };
 
@@ -46,9 +47,7 @@ describe('AuthService', () => {
 
   describe('validateUser', () => {
     it('should return user when found', async () => {
-      jest
-        .spyOn(prismaService.user, 'findUnique')
-        .mockResolvedValue(mockUser);
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(mockUser);
 
       const result = await service.validateUser('test@example.com', 'password');
 
@@ -84,6 +83,46 @@ describe('AuthService', () => {
       expect(jwtService.sign).toHaveBeenCalledWith({
         email: mockUser.email,
         sub: mockUser.id,
+        role: mockUser.role,
+      });
+    });
+
+    it('should use default role when user role is null', () => {
+      const mockToken = 'mock-jwt-token';
+      const userWithoutRole = { ...mockUser, role: null as unknown as string };
+      jest.spyOn(jwtService, 'sign').mockReturnValue(mockToken);
+
+      const result = service.login(userWithoutRole as unknown as User);
+
+      expect(result).toEqual({
+        access_token: mockToken,
+        user: userWithoutRole,
+      });
+      expect(jwtService.sign).toHaveBeenCalledWith({
+        email: userWithoutRole.email,
+        sub: userWithoutRole.id,
+        role: 'USER',
+      });
+    });
+
+    it('should use default role when user role is undefined', () => {
+      const mockToken = 'mock-jwt-token';
+      const userWithoutRole = {
+        ...mockUser,
+        role: undefined as unknown as string,
+      };
+      jest.spyOn(jwtService, 'sign').mockReturnValue(mockToken);
+
+      const result = service.login(userWithoutRole as unknown as User);
+
+      expect(result).toEqual({
+        access_token: mockToken,
+        user: userWithoutRole,
+      });
+      expect(jwtService.sign).toHaveBeenCalledWith({
+        email: userWithoutRole.email,
+        sub: userWithoutRole.id,
+        role: 'USER',
       });
     });
   });
@@ -120,4 +159,3 @@ describe('AuthService', () => {
     });
   });
 });
-

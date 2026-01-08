@@ -30,3 +30,8 @@ import { PrismaService } from '@prisma/prisma.service';
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}
+
+// Export guards and decorators for use in other modules
+export { JwtAuthGuard } from './guards/jwt-auth.guard';
+export { RolesGuard } from './guards/roles.guard';
+export { Roles, Role } from './decorators/roles.decorator';

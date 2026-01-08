@@ -6,11 +6,14 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { Lesson } from '@models/lesson.model';
 import { User } from '@models';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 
 @Resolver(() => Lesson)
+@UseGuards(JwtAuthGuard)
 export class LessonResolver {
   constructor(private readonly prisma: PrismaService) {}
 

@@ -6,11 +6,14 @@ import {
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { Embedding } from '@models/embedding.model';
 import { DocumentChunk } from '@models/document-chunk.model';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 
 @Resolver(() => Embedding)
+@UseGuards(JwtAuthGuard)
 export class EmbeddingResolver {
   constructor(private readonly prisma: PrismaService) {}
 

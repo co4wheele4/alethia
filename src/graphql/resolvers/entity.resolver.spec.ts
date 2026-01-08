@@ -112,7 +112,8 @@ describe('EntityResolver', () => {
         {
           id: 'mention-1',
           entity: mockEntity,
-          chunk: {} as any,
+          chunk:
+            {} as unknown as import('../models/document-chunk.model').DocumentChunk,
         },
       ];
       (prismaService.entityMention.findMany as jest.Mock).mockResolvedValue(

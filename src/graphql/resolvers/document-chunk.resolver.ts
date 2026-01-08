@@ -7,13 +7,16 @@ import {
   Parent,
   Int,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { Document } from '@models/document.model';
 import { Embedding } from '@models/embedding.model';
 import { EntityMention } from '@models/entity-mention.model';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 
 @Resolver(() => DocumentChunk)
+@UseGuards(JwtAuthGuard)
 export class DocumentChunkResolver {
   constructor(private readonly prisma: PrismaService) {}
 

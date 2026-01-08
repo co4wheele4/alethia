@@ -14,6 +14,7 @@
     "^@inputs/(.*)$": "<rootDir>/../src/graphql/inputs/$1",
     "^@models$": "<rootDir>/../src/graphql/models/index",
     "^@models/(.*)$": "<rootDir>/../src/graphql/models/$1",
+    "^@auth/(.*)$": "<rootDir>/../src/auth/$1",
     "^@openai/(.*)$": "<rootDir>/../src/openai/$1",
     "^@outputs/(.*)$": "<rootDir>/../src/graphql/outputs/$1",
     "^@prisma/(?!client)(.*)$": "<rootDir>/../src/prisma/$1",

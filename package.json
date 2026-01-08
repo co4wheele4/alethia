@@ -118,6 +118,7 @@
       "^@inputs/(.*)$": "<rootDir>/graphql/inputs/$1",
       "^@models$": "<rootDir>/graphql/models/index",
       "^@models/(.*)$": "<rootDir>/graphql/models/$1",
+      "^@auth/(.*)$": "<rootDir>/auth/$1",
       "^@openai/(.*)$": "<rootDir>/openai/$1",
       "^@outputs/(.*)$": "<rootDir>/graphql/outputs/$1",
       "^@prisma/prisma.service$": "<rootDir>/prisma/prisma.service",

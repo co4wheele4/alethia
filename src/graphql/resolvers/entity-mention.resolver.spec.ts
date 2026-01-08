@@ -134,7 +134,9 @@ describe('EntityMentionResolver', () => {
       const mentionWithEntityId = {
         ...mockEntityMention,
         entityId: mockEntity.id,
-      } as any;
+      } as unknown as import('../models/entity-mention.model').EntityMention & {
+        entityId: string;
+      };
       const result = await resolver.entity(mentionWithEntityId);
 
       expect(result).toEqual(mockEntity);
@@ -150,7 +152,9 @@ describe('EntityMentionResolver', () => {
       const mentionWithEntityId = {
         ...mockEntityMention,
         entityId: 'non-existent',
-      } as any;
+      } as unknown as import('../models/entity-mention.model').EntityMention & {
+        entityId: string;
+      };
       const result = await resolver.entity(mentionWithEntityId);
 
       expect(result).toBeNull();
@@ -170,7 +174,9 @@ describe('EntityMentionResolver', () => {
       const mentionWithChunkId = {
         ...mockEntityMention,
         chunkId: mockChunk.id,
-      } as any;
+      } as unknown as import('../models/entity-mention.model').EntityMention & {
+        chunkId: string;
+      };
       const result = await resolver.chunk(mentionWithChunkId);
 
       expect(result).toEqual(mockChunk);
@@ -188,7 +194,9 @@ describe('EntityMentionResolver', () => {
       const mentionWithChunkId = {
         ...mockEntityMention,
         chunkId: 'non-existent',
-      } as any;
+      } as unknown as import('../models/entity-mention.model').EntityMention & {
+        chunkId: string;
+      };
       const result = await resolver.chunk(mentionWithChunkId);
 
       expect(result).toBeNull();

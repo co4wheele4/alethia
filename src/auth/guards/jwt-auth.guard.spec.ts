@@ -18,7 +18,7 @@ describe('JwtAuthGuard', () => {
   describe('getRequest', () => {
     it('should return request from GraphQL context', () => {
       const mockContext: Partial<ExecutionContext> = {
-        getType: jest.fn(() => 'graphql' as any),
+        getType: jest.fn<any, any>(() => 'graphql'),
         getArgs: jest.fn(),
         getArgByIndex: jest.fn(),
         switchToRpc: jest.fn(),
@@ -47,4 +47,3 @@ describe('JwtAuthGuard', () => {
     });
   });
 });
-

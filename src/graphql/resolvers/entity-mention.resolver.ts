@@ -6,6 +6,7 @@ import {
   Parent,
   Mutation,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { EntityMention } from '@models/entity-mention.model';
 import { Entity } from '@models/entity.model';
@@ -14,8 +15,10 @@ import {
   CreateEntityMentionInput,
   UpdateEntityMentionInput,
 } from '@inputs/entity-mention.input';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 
 @Resolver(() => EntityMention)
+@UseGuards(JwtAuthGuard)
 export class EntityMentionResolver {
   constructor(private readonly prisma: PrismaService) {}
 

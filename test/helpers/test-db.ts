@@ -16,6 +16,14 @@ export async function cleanDatabase(prisma: PrismaClient) {
 }
 
 export async function seedTestData(prisma: PrismaClient) {
+  const admin = await prisma.user.create({
+    data: {
+      email: 'admin@example.com',
+      name: 'Admin User',
+      role: 'ADMIN',
+    },
+  });
+
   const user = await prisma.user.create({
     data: {
       email: 'test@example.com',
@@ -53,5 +61,5 @@ export async function seedTestData(prisma: PrismaClient) {
     },
   });
 
-  return { user, lesson, document, chunk, entity };
+  return { admin, user, lesson, document, chunk, entity };
 }

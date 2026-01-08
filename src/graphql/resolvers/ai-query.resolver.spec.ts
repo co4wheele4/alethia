@@ -215,7 +215,10 @@ describe('AiQueryResolver', () => {
         mockQueries as unknown as typeof mockQueries,
       );
 
-      const result = await resolver.aiQueriesPaged(null as any, 10);
+      const result = await resolver.aiQueriesPaged(
+        null as unknown as number,
+        10,
+      );
 
       expect(result).toEqual(mockQueries);
       expect(findManyMock).toHaveBeenCalled();
@@ -228,7 +231,10 @@ describe('AiQueryResolver', () => {
         mockQueries as unknown as typeof mockQueries,
       );
 
-      const result = await resolver.aiQueriesPaged(5, null as any);
+      const result = await resolver.aiQueriesPaged(
+        5,
+        null as unknown as number,
+      );
 
       expect(result).toEqual(mockQueries);
       expect(findManyMock).toHaveBeenCalled();

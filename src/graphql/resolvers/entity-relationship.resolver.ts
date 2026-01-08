@@ -6,6 +6,7 @@ import {
   Parent,
   Mutation,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { EntityRelationship } from '@models/entity-relationship.model';
 import { Entity } from '@models/entity.model';
@@ -13,8 +14,10 @@ import {
   CreateEntityRelationshipInput,
   UpdateEntityRelationshipInput,
 } from '@inputs/entity-relationship.input';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 
 @Resolver(() => EntityRelationship)
+@UseGuards(JwtAuthGuard)
 export class EntityRelationshipResolver {
   constructor(private readonly prisma: PrismaService) {}
 

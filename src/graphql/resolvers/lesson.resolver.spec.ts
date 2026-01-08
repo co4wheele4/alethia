@@ -258,7 +258,12 @@ describe('LessonResolver', () => {
       );
 
       // Mock lesson with userId from database field
-      const lessonWithUserId = { ...mockLesson, userId: mockUser.id } as any;
+      const lessonWithUserId = {
+        ...mockLesson,
+        userId: mockUser.id,
+      } as unknown as import('../models/lesson.model').Lesson & {
+        userId: string;
+      };
       const result = await resolver.user(lessonWithUserId);
 
       expect(result).toEqual(mockUser);
@@ -271,7 +276,12 @@ describe('LessonResolver', () => {
       (prismaService.user.findUnique as jest.Mock).mockResolvedValue(null);
 
       // Mock lesson with userId from database field
-      const lessonWithUserId = { ...mockLesson, userId: 'non-existent' } as any;
+      const lessonWithUserId = {
+        ...mockLesson,
+        userId: 'non-existent',
+      } as unknown as import('../models/lesson.model').Lesson & {
+        userId: string;
+      };
       const result = await resolver.user(lessonWithUserId);
 
       expect(result).toBeNull();

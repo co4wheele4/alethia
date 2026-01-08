@@ -8,12 +8,14 @@ import { User } from '@prisma/client';
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
   let prismaService: PrismaService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let configService: ConfigService;
 
   const mockUser: User = {
     id: 'user-id',
     email: 'test@example.com',
     name: 'Test User',
+    role: 'USER',
     createdAt: new Date(),
   };
 
@@ -52,15 +54,84 @@ describe('JwtStrategy', () => {
     it('should return user when found', async () => {
       const payload = { sub: 'user-id', email: 'test@example.com' };
 
-      jest
-        .spyOn(prismaService.user, 'findUnique')
-        .mockResolvedValue(mockUser);
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(mockUser);
 
       const result = await strategy.validate(payload);
 
       expect(result).toEqual(mockUser);
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { id: payload.sub },
+      });
+    });
+
+    it('should use role from payload when provided', async () => {
+      const payload = {
+        sub: 'user-id',
+        email: 'test@example.com',
+        role: 'ADMIN',
+      };
+      const userWithoutRole = { ...mockUser, role: null as unknown as string };
+
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(userWithoutRole as User);
+
+      const result = await strategy.validate(payload);
+
+      expect(result).toEqual({
+        ...userWithoutRole,
+        role: 'ADMIN',
+      });
+    });
+
+    it('should use user role when payload role is not provided', async () => {
+      const payload = { sub: 'user-id', email: 'test@example.com' };
+      const userWithRole = { ...mockUser, role: 'ADMIN' };
+
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(userWithRole);
+
+      const result = await strategy.validate(payload);
+
+      expect(result).toEqual({
+        ...userWithRole,
+        role: 'ADMIN',
+      });
+    });
+
+    it('should use default role when neither payload nor user has role', async () => {
+      const payload = { sub: 'user-id', email: 'test@example.com' };
+      const userWithoutRole = { ...mockUser, role: null as unknown as string };
+
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(userWithoutRole as User);
+
+      const result = await strategy.validate(payload);
+
+      expect(result).toEqual({
+        ...userWithoutRole,
+        role: 'USER',
+      });
+    });
+
+    it('should use default role when user role is undefined', async () => {
+      const payload = { sub: 'user-id', email: 'test@example.com' };
+      const userWithoutRole = {
+        ...mockUser,
+        role: undefined as unknown as string,
+      };
+
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(userWithoutRole as User);
+
+      const result = await strategy.validate(payload);
+
+      expect(result).toEqual({
+        ...userWithoutRole,
+        role: 'USER',
       });
     });
 
@@ -110,4 +181,3 @@ describe('JwtStrategy', () => {
     });
   });
 });
-

@@ -21,7 +21,8 @@
       "@outputs/*": ["src/graphql/outputs/*"],
       "@prisma/*": ["src/prisma/*"],
       "@resolvers": ["src/graphql/resolvers/index"],
-      "@resolvers/*": ["src/graphql/resolvers/*"]
+      "@resolvers/*": ["src/graphql/resolvers/*"],
+      "@auth/*": ["src/auth/*"]
     }
   }
 }

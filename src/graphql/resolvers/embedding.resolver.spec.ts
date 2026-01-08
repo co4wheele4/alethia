@@ -314,7 +314,10 @@ describe('EmbeddingResolver', () => {
         mockEmbedding as unknown as typeof mockEmbedding,
       );
 
-      const result = await resolver.updateEmbedding('embedding-1', null as any);
+      const result = await resolver.updateEmbedding(
+        'embedding-1',
+        null as unknown as number[] | undefined,
+      );
 
       expect(result).toEqual(mockEmbedding);
       expect(updateMock).toHaveBeenCalledWith({
@@ -390,7 +393,9 @@ describe('EmbeddingResolver', () => {
       const embeddingWithChunkId = {
         ...mockEmbedding,
         chunkId: mockChunk.id,
-      } as any;
+      } as unknown as import('../models/embedding.model').Embedding & {
+        chunkId: string;
+      };
       const result = await resolver.chunk(embeddingWithChunkId);
 
       expect(result).toEqual(mockChunk);
@@ -408,7 +413,9 @@ describe('EmbeddingResolver', () => {
       const embeddingWithChunkId = {
         ...mockEmbedding,
         chunkId: 'non-existent',
-      } as any;
+      } as unknown as import('../models/embedding.model').Embedding & {
+        chunkId: string;
+      };
       const result = await resolver.chunk(embeddingWithChunkId);
 
       expect(result).toBeNull();

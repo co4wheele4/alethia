@@ -7,11 +7,14 @@ import {
   ResolveField,
   Int,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { AiQuery, AiQueryResult } from '@models/ai-query.model';
 import { User } from '@models/user.model';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 
 @Resolver(() => AiQuery)
+@UseGuards(JwtAuthGuard)
 export class AiQueryResolver {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -93,6 +96,7 @@ export class AiQueryResolver {
 }
 
 @Resolver(() => AiQueryResult)
+@UseGuards(JwtAuthGuard)
 export class AiQueryResultResolver {
   constructor(private readonly prisma: PrismaService) {}
 

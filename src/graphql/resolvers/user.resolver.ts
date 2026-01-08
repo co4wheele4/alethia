@@ -6,18 +6,26 @@ import {
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { User } from '@models/user.model';
 import { PrismaService } from '@prisma/prisma.service';
 import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
 import { AiQuery } from '@models/ai-query.model';
 import { CreateUserInput, UpdateUserInput } from '@inputs/user.input';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { Roles } from '@auth/decorators/roles.decorator';
+import { RolesGuard } from '@auth/guards/roles.guard';
+import { Role } from '@auth/decorators/roles.decorator';
 
 @Resolver(() => User)
+@UseGuards(JwtAuthGuard)
 export class UserResolver {
   constructor(private readonly prisma: PrismaService) {}
 
   @Query(() => [User])
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
   async users() {
     return this.prisma.user.findMany();
   }
@@ -28,6 +36,8 @@ export class UserResolver {
   }
 
   @Mutation(() => User)
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
   async createUser(@Args('data') data: CreateUserInput) {
     return this.prisma.user.create({ data });
   }
@@ -39,6 +49,8 @@ export class UserResolver {
   }
 
   @Mutation(() => User)
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
   async deleteUser(@Args('id') id: string) {
     return this.prisma.user.delete({ where: { id } });
   }
