@@ -40,7 +40,9 @@ export class EntityRelationshipResolver {
   async from(@Parent() rel: EntityRelationship) {
     // Access fromEntity from the database field, not the GraphQL field
     const relWithFromEntity = rel as unknown as { fromEntity: string };
-    return this.dataLoaders.getEntityLoader().load(relWithFromEntity.fromEntity);
+    return this.dataLoaders
+      .getEntityLoader()
+      .load(relWithFromEntity.fromEntity);
   }
 
   @ResolveField(() => Entity)

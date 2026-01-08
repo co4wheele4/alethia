@@ -41,3 +41,4 @@ describe('resolvers/index', () => {
     expect(resolvers.AiQueryResultResolver).toBeDefined();
   });
 });
+

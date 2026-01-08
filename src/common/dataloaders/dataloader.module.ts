@@ -8,4 +8,3 @@ import { PrismaService } from '@prisma/prisma.service';
   exports: [DataLoaderService],
 })
 export class DataLoaderModule {}
-

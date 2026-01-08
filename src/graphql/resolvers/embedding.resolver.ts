@@ -63,6 +63,8 @@ export class EmbeddingResolver {
   async chunk(@Parent() embedding: Embedding) {
     // Access chunkId from the database field, not the GraphQL field
     const embeddingWithChunkId = embedding as unknown as { chunkId: string };
-    return this.dataLoaders.getDocumentChunkLoader().load(embeddingWithChunkId.chunkId);
+    return this.dataLoaders
+      .getDocumentChunkLoader()
+      .load(embeddingWithChunkId.chunkId);
   }
 }

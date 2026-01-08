@@ -41,7 +41,9 @@ export class EntityResolver {
 
   @ResolveField(() => [EntityRelationship])
   async outgoing(@Parent() entity: Entity) {
-    return this.dataLoaders.getRelationshipsByFromEntityLoader().load(entity.id);
+    return this.dataLoaders
+      .getRelationshipsByFromEntityLoader()
+      .load(entity.id);
   }
 
   @ResolveField(() => [EntityRelationship])

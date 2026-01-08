@@ -70,7 +70,9 @@ export class DocumentChunkResolver {
   @ResolveField(() => Document)
   async document(@Parent() chunk: DocumentChunk) {
     const chunkWithDocumentId = chunk as unknown as { documentId: string };
-    return this.dataLoaders.getDocumentLoader().load(chunkWithDocumentId.documentId);
+    return this.dataLoaders
+      .getDocumentLoader()
+      .load(chunkWithDocumentId.documentId);
   }
 
   @ResolveField(() => [Embedding])

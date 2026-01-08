@@ -41,14 +41,18 @@ export class EntityMentionResolver {
   async entity(@Parent() mention: EntityMention) {
     // Access entityId from the database field, not the GraphQL field
     const mentionWithEntityId = mention as unknown as { entityId: string };
-    return this.dataLoaders.getEntityLoader().load(mentionWithEntityId.entityId);
+    return this.dataLoaders
+      .getEntityLoader()
+      .load(mentionWithEntityId.entityId);
   }
 
   @ResolveField(() => DocumentChunk)
   async chunk(@Parent() mention: EntityMention) {
     // Access chunkId from the database field, not the GraphQL field
     const mentionWithChunkId = mention as unknown as { chunkId: string };
-    return this.dataLoaders.getDocumentChunkLoader().load(mentionWithChunkId.chunkId);
+    return this.dataLoaders
+      .getDocumentChunkLoader()
+      .load(mentionWithChunkId.chunkId);
   }
 
   // ------------------

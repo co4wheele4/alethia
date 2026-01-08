@@ -22,12 +22,18 @@ export class DataLoaderService {
   private readonly lessonsByUserLoader: DataLoader<string, Lesson[]>;
   private readonly documentLoader: DataLoader<string, Document | null>;
   private readonly documentsByUserLoader: DataLoader<string, Document[]>;
-  private readonly documentChunkLoader: DataLoader<string, DocumentChunk | null>;
+  private readonly documentChunkLoader: DataLoader<
+    string,
+    DocumentChunk | null
+  >;
   private readonly chunksByDocumentLoader: DataLoader<string, DocumentChunk[]>;
   private readonly embeddingLoader: DataLoader<string, Embedding | null>;
   private readonly embeddingsByChunkLoader: DataLoader<string, Embedding[]>;
   private readonly entityLoader: DataLoader<string, Entity | null>;
-  private readonly entityMentionLoader: DataLoader<string, EntityMention | null>;
+  private readonly entityMentionLoader: DataLoader<
+    string,
+    EntityMention | null
+  >;
   private readonly mentionsByEntityLoader: DataLoader<string, EntityMention[]>;
   private readonly mentionsByChunkLoader: DataLoader<string, EntityMention[]>;
   private readonly entityRelationshipLoader: DataLoader<
@@ -44,7 +50,10 @@ export class DataLoaderService {
   >;
   private readonly aiQueryLoader: DataLoader<string, AiQuery | null>;
   private readonly aiQueriesByUserLoader: DataLoader<string, AiQuery[]>;
-  private readonly aiQueryResultLoader: DataLoader<string, AiQueryResult | null>;
+  private readonly aiQueryResultLoader: DataLoader<
+    string,
+    AiQueryResult | null
+  >;
   private readonly resultsByQueryLoader: DataLoader<string, AiQueryResult[]>;
 
   constructor(private readonly prisma: PrismaService) {
@@ -54,7 +63,9 @@ export class DataLoaderService {
         const users = await this.prisma.user.findMany({
           where: { id: { in: [...ids] } },
         });
-        const userMap = new Map(users.map((user) => [user.id, user as unknown as User]));
+        const userMap = new Map(
+          users.map((user) => [user.id, user as unknown as User]),
+        );
         return ids.map((id) => userMap.get(id) ?? null);
       },
     );
@@ -65,7 +76,9 @@ export class DataLoaderService {
         const lessons = await this.prisma.lesson.findMany({
           where: { id: { in: [...ids] } },
         });
-        const lessonMap = new Map(lessons.map((lesson) => [lesson.id, lesson as unknown as Lesson]));
+        const lessonMap = new Map(
+          lessons.map((lesson) => [lesson.id, lesson as unknown as Lesson]),
+        );
         return ids.map((id) => lessonMap.get(id) ?? null);
       },
     );
@@ -125,7 +138,9 @@ export class DataLoaderService {
         const chunks = await this.prisma.documentChunk.findMany({
           where: { id: { in: [...ids] } },
         });
-        const chunkMap = new Map(chunks.map((chunk) => [chunk.id, chunk as unknown as DocumentChunk]));
+        const chunkMap = new Map(
+          chunks.map((chunk) => [chunk.id, chunk as unknown as DocumentChunk]),
+        );
         return ids.map((id) => chunkMap.get(id) ?? null);
       },
     );
@@ -173,7 +188,8 @@ export class DataLoaderService {
           embeddingsByChunk.set(chunkId, []);
         }
         for (const embedding of embeddings) {
-          const chunkEmbeddings = embeddingsByChunk.get(embedding.chunkId) ?? [];
+          const chunkEmbeddings =
+            embeddingsByChunk.get(embedding.chunkId) ?? [];
           chunkEmbeddings.push(embedding as unknown as Embedding);
           embeddingsByChunk.set(embedding.chunkId, chunkEmbeddings);
         }
@@ -187,7 +203,9 @@ export class DataLoaderService {
         const entities = await this.prisma.entity.findMany({
           where: { id: { in: [...ids] } },
         });
-        const entityMap = new Map(entities.map((entity) => [entity.id, entity as unknown as Entity]));
+        const entityMap = new Map(
+          entities.map((entity) => [entity.id, entity as unknown as Entity]),
+        );
         return ids.map((id) => entityMap.get(id) ?? null);
       },
     );
@@ -199,7 +217,10 @@ export class DataLoaderService {
           where: { id: { in: [...ids] } },
         });
         const mentionMap = new Map(
-          mentions.map((mention) => [mention.id, mention as unknown as EntityMention]),
+          mentions.map((mention) => [
+            mention.id,
+            mention as unknown as EntityMention,
+          ]),
         );
         return ids.map((id) => mentionMap.get(id) ?? null);
       },
@@ -219,7 +240,9 @@ export class DataLoaderService {
           entityMentions.push(mention as unknown as EntityMention);
           mentionsByEntity.set(mention.entityId, entityMentions);
         }
-        return entityIds.map((entityId) => mentionsByEntity.get(entityId) ?? []);
+        return entityIds.map(
+          (entityId) => mentionsByEntity.get(entityId) ?? [],
+        );
       },
     );
 
@@ -250,7 +273,10 @@ export class DataLoaderService {
         where: { id: { in: [...ids] } },
       });
       const relationshipMap = new Map(
-        relationships.map((rel) => [rel.id, rel as unknown as EntityRelationship]),
+        relationships.map((rel) => [
+          rel.id,
+          rel as unknown as EntityRelationship,
+        ]),
       );
       return ids.map((id) => relationshipMap.get(id) ?? null);
     });
@@ -294,9 +320,7 @@ export class DataLoaderService {
         toRelationships.push(relationship as unknown as EntityRelationship);
         relationshipsByTo.set(relationship.toEntity, toRelationships);
       }
-      return entityIds.map(
-        (entityId) => relationshipsByTo.get(entityId) ?? [],
-      );
+      return entityIds.map((entityId) => relationshipsByTo.get(entityId) ?? []);
     });
 
     // AiQuery loaders
@@ -305,7 +329,9 @@ export class DataLoaderService {
         const queries = await this.prisma.aiQuery.findMany({
           where: { id: { in: [...ids] } },
         });
-        const queryMap = new Map(queries.map((query) => [query.id, query as unknown as AiQuery]));
+        const queryMap = new Map(
+          queries.map((query) => [query.id, query as unknown as AiQuery]),
+        );
         return ids.map((id) => queryMap.get(id) ?? null);
       },
     );
@@ -335,7 +361,12 @@ export class DataLoaderService {
         const results = await this.prisma.aiQueryResult.findMany({
           where: { id: { in: [...ids] } },
         });
-        const resultMap = new Map(results.map((result) => [result.id, result as unknown as AiQueryResult]));
+        const resultMap = new Map(
+          results.map((result) => [
+            result.id,
+            result as unknown as AiQueryResult,
+          ]),
+        );
         return ids.map((id) => resultMap.get(id) ?? null);
       },
     );
@@ -424,7 +455,10 @@ export class DataLoaderService {
     return this.entityRelationshipLoader;
   }
 
-  getRelationshipsByFromEntityLoader(): DataLoader<string, EntityRelationship[]> {
+  getRelationshipsByFromEntityLoader(): DataLoader<
+    string,
+    EntityRelationship[]
+  > {
     return this.relationshipsByFromEntityLoader;
   }
 
@@ -450,4 +484,3 @@ export class DataLoaderService {
     return this.resultsByQueryLoader;
   }
 }
-
