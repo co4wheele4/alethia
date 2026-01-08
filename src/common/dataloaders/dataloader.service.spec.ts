@@ -426,9 +426,7 @@ describe('DataLoaderService', () => {
     });
 
     it('should return null for non-existent chunk', async () => {
-      (prismaService.documentChunk.findMany as jest.Mock).mockResolvedValue(
-        [],
-      );
+      (prismaService.documentChunk.findMany as jest.Mock).mockResolvedValue([]);
 
       const loader = service.getDocumentChunkLoader();
       const result = await loader.load('non-existent');
@@ -472,9 +470,7 @@ describe('DataLoaderService', () => {
     });
 
     it('should return empty array when document has no chunks', async () => {
-      (prismaService.documentChunk.findMany as jest.Mock).mockResolvedValue(
-        [],
-      );
+      (prismaService.documentChunk.findMany as jest.Mock).mockResolvedValue([]);
 
       const loader = service.getChunksByDocumentLoader();
       const result = await loader.load('doc-1');
@@ -658,9 +654,7 @@ describe('DataLoaderService', () => {
     });
 
     it('should return null for non-existent mention', async () => {
-      (prismaService.entityMention.findMany as jest.Mock).mockResolvedValue(
-        [],
-      );
+      (prismaService.entityMention.findMany as jest.Mock).mockResolvedValue([]);
 
       const loader = service.getEntityMentionLoader();
       const result = await loader.load('non-existent');
@@ -697,9 +691,7 @@ describe('DataLoaderService', () => {
     });
 
     it('should return empty array when entity has no mentions', async () => {
-      (prismaService.entityMention.findMany as jest.Mock).mockResolvedValue(
-        [],
-      );
+      (prismaService.entityMention.findMany as jest.Mock).mockResolvedValue([]);
 
       const loader = service.getMentionsByEntityLoader();
       const result = await loader.load('entity-1');
@@ -755,9 +747,7 @@ describe('DataLoaderService', () => {
     });
 
     it('should return empty array when chunk has no mentions', async () => {
-      (prismaService.entityMention.findMany as jest.Mock).mockResolvedValue(
-        [],
-      );
+      (prismaService.entityMention.findMany as jest.Mock).mockResolvedValue([]);
 
       const loader = service.getMentionsByChunkLoader();
       const result = await loader.load('chunk-1');
@@ -845,7 +835,9 @@ describe('DataLoaderService', () => {
       const loader = service.getRelationshipsByFromEntityLoader();
       const result = await loader.load('entity-1');
 
-      expect(result).toEqual(mockRelationships as unknown as EntityRelationship[]);
+      expect(result).toEqual(
+        mockRelationships as unknown as EntityRelationship[],
+      );
       expect(prismaService.entityRelationship.findMany).toHaveBeenCalledWith({
         where: { fromEntity: { in: ['entity-1'] } },
       });
@@ -905,7 +897,9 @@ describe('DataLoaderService', () => {
       const loader = service.getRelationshipsByToEntityLoader();
       const result = await loader.load('entity-1');
 
-      expect(result).toEqual(mockRelationships as unknown as EntityRelationship[]);
+      expect(result).toEqual(
+        mockRelationships as unknown as EntityRelationship[],
+      );
       expect(prismaService.entityRelationship.findMany).toHaveBeenCalledWith({
         where: { toEntity: { in: ['entity-1'] } },
       });
@@ -1066,9 +1060,7 @@ describe('DataLoaderService', () => {
     });
 
     it('should return null for non-existent result', async () => {
-      (prismaService.aiQueryResult.findMany as jest.Mock).mockResolvedValue(
-        [],
-      );
+      (prismaService.aiQueryResult.findMany as jest.Mock).mockResolvedValue([]);
 
       const loader = service.getAiQueryResultLoader();
       const result = await loader.load('non-existent');
@@ -1108,9 +1100,7 @@ describe('DataLoaderService', () => {
     });
 
     it('should return empty array when query has no results', async () => {
-      (prismaService.aiQueryResult.findMany as jest.Mock).mockResolvedValue(
-        [],
-      );
+      (prismaService.aiQueryResult.findMany as jest.Mock).mockResolvedValue([]);
 
       const loader = service.getResultsByQueryLoader();
       const result = await loader.load('query-1');

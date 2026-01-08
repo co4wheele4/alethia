@@ -240,9 +240,7 @@ export class DataLoaderService {
           entityMentions.push(mention as unknown as EntityMention);
           mentionsByEntity.set(mention.entityId, entityMentions);
         }
-        return entityIds.map(
-          (entityId) => mentionsByEntity.get(entityId)!,
-        );
+        return entityIds.map((entityId) => mentionsByEntity.get(entityId)!);
       },
     );
 
@@ -298,9 +296,7 @@ export class DataLoaderService {
         fromRelationships.push(relationship as unknown as EntityRelationship);
         relationshipsByFrom.set(relationship.fromEntity, fromRelationships);
       }
-      return entityIds.map(
-        (entityId) => relationshipsByFrom.get(entityId)!,
-      );
+      return entityIds.map((entityId) => relationshipsByFrom.get(entityId)!);
     });
 
     this.relationshipsByToEntityLoader = new DataLoader<
