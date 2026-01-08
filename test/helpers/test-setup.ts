@@ -26,6 +26,19 @@ export interface TestContext {
  * Call this in beforeAll hook
  */
 export async function setupTestApp(): Promise<TestContext> {
+  // Verify we're using the test database before proceeding
+  const dbUrl = process.env.DATABASE_URL || '';
+  const dbMatch = dbUrl.match(/\/([^\/\?]+)(\?|$)/);
+  const dbName = dbMatch ? dbMatch[1] : 'unknown';
+  
+  if (dbName !== 'aletheia_test') {
+    throw new Error(
+      `⚠️  SAFETY CHECK FAILED: Test setup detected database "${dbName}" instead of "aletheia_test". ` +
+        `This prevents accidental operations on production. ` +
+        `Current DATABASE_URL: ${dbUrl.replace(/:[^:@]+@/, ':****@') || 'not set'}`
+    );
+  }
+
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();

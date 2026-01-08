@@ -30,9 +30,46 @@ describe('PrismaService', () => {
   describe('onModuleInit', () => {
     it('should connect to database', async () => {
       const connectSpy = jest.spyOn(service, '$connect').mockResolvedValue();
+      const logSpy = jest.spyOn(service['logger'], 'log').mockImplementation();
+      const originalDbUrl = process.env.DATABASE_URL;
+      process.env.DATABASE_URL = 'postgresql://localhost:5432/test';
+
       await service.onModuleInit();
       expect(connectSpy).toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith('Connecting to database: test');
+      expect(logSpy).toHaveBeenCalledWith('Successfully connected to database: test');
       connectSpy.mockRestore();
+      logSpy.mockRestore();
+      process.env.DATABASE_URL = originalDbUrl;
+    });
+
+    it('should handle malformed DATABASE_URL gracefully', async () => {
+      const connectSpy = jest.spyOn(service, '$connect').mockResolvedValue();
+      const logSpy = jest.spyOn(service['logger'], 'log').mockImplementation();
+      const originalDbUrl = process.env.DATABASE_URL;
+      process.env.DATABASE_URL = 'invalid-url';
+
+      await service.onModuleInit();
+      expect(connectSpy).toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith('Connecting to database: unknown');
+      expect(logSpy).toHaveBeenCalledWith('Successfully connected to database: unknown');
+      connectSpy.mockRestore();
+      logSpy.mockRestore();
+      process.env.DATABASE_URL = originalDbUrl;
+    });
+
+    it('should handle empty DATABASE_URL gracefully', async () => {
+      const connectSpy = jest.spyOn(service, '$connect').mockResolvedValue();
+      const logSpy = jest.spyOn(service['logger'], 'log').mockImplementation();
+      const originalDbUrl = process.env.DATABASE_URL;
+      delete process.env.DATABASE_URL;
+
+      await service.onModuleInit();
+      expect(connectSpy).toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith('Connecting to database: unknown');
+      connectSpy.mockRestore();
+      logSpy.mockRestore();
+      process.env.DATABASE_URL = originalDbUrl;
     });
   });
 

@@ -159,4 +159,129 @@ describe('main.ts', () => {
       delete process.env.PORT;
     }
   });
+
+  it('should extract database name from valid DATABASE_URL', async () => {
+    const originalDbUrl = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/mydb?schema=public';
+
+    const testMockApp: MockApp = {
+      listen: jest.fn().mockResolvedValue(undefined),
+      use: jest.fn().mockReturnThis(),
+      enableCors: jest.fn().mockReturnThis(),
+      useGlobalPipes: jest.fn().mockReturnThis(),
+      useGlobalFilters: jest.fn().mockReturnThis(),
+    };
+    (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
+
+    jest.resetModules();
+
+    await import('./main');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Database: mydb'),
+    );
+
+    process.env.DATABASE_URL = originalDbUrl;
+  });
+
+  it('should handle malformed DATABASE_URL gracefully', async () => {
+    const originalDbUrl = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = 'invalid-url';
+
+    const testMockApp: MockApp = {
+      listen: jest.fn().mockResolvedValue(undefined),
+      use: jest.fn().mockReturnThis(),
+      enableCors: jest.fn().mockReturnThis(),
+      useGlobalPipes: jest.fn().mockReturnThis(),
+      useGlobalFilters: jest.fn().mockReturnThis(),
+    };
+    (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
+
+    jest.resetModules();
+
+    await import('./main');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Database: unknown'),
+    );
+
+    process.env.DATABASE_URL = originalDbUrl;
+  });
+
+  it('should handle empty DATABASE_URL gracefully', async () => {
+    const originalDbUrl = process.env.DATABASE_URL;
+    // Explicitly set to empty string to test the || '' fallback
+    process.env.DATABASE_URL = '';
+
+    const testMockApp: MockApp = {
+      listen: jest.fn().mockResolvedValue(undefined),
+      use: jest.fn().mockReturnThis(),
+      enableCors: jest.fn().mockReturnThis(),
+      useGlobalPipes: jest.fn().mockReturnThis(),
+      useGlobalFilters: jest.fn().mockReturnThis(),
+    };
+    (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
+
+    jest.resetModules();
+
+    await import('./main');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Database: unknown'),
+    );
+
+    if (originalDbUrl) {
+      process.env.DATABASE_URL = originalDbUrl;
+    } else {
+      delete process.env.DATABASE_URL;
+    }
+  });
+
+  it('should configure helmet differently for production vs development', async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    
+    // Test production mode
+    process.env.NODE_ENV = 'production';
+    
+    // Capture helmet configuration
+    let capturedHelmetConfig: unknown;
+    const helmetMockFactory = jest.fn((config?: unknown) => {
+      capturedHelmetConfig = config;
+      return (_req: unknown, _res: unknown, next: () => void) => next();
+    });
+
+    const prodMockApp: MockApp = {
+      listen: jest.fn().mockResolvedValue(undefined),
+      use: jest.fn().mockReturnThis(),
+      enableCors: jest.fn().mockReturnThis(),
+      useGlobalPipes: jest.fn().mockReturnThis(),
+      useGlobalFilters: jest.fn().mockReturnThis(),
+    };
+    (NestFactory.create as jest.Mock).mockResolvedValue(prodMockApp);
+
+    // Reset and re-mock before importing
+    jest.resetModules();
+    jest.doMock('helmet', () => helmetMockFactory);
+    jest.doMock('@nestjs/core', () => ({
+      NestFactory: {
+        create: jest.fn().mockResolvedValue(prodMockApp),
+      },
+    }));
+    
+    // Import main after setting NODE_ENV to production
+    await import('./main');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Helmet should be called
+    expect(prodMockApp.use).toHaveBeenCalled();
+    expect(helmetMockFactory).toHaveBeenCalled();
+    // In production, CSP should be undefined
+    const helmetConfig = capturedHelmetConfig as { contentSecurityPolicy?: unknown };
+    expect(helmetConfig?.contentSecurityPolicy).toBeUndefined();
+
+    process.env.NODE_ENV = originalNodeEnv;
+  });
 });

@@ -57,6 +57,9 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       context: createGraphQLContext,
       formatError: formatGraphQLError,
+      playground: process.env.NODE_ENV !== 'production', // Enable in development only
+      introspection: process.env.NODE_ENV !== 'production', // Enable in development only
+      sortSchema: true, // Sort schema for better readability
     }),
   ],
   controllers: [AppController],

@@ -1,5 +1,33 @@
 import { PrismaClient } from '@prisma/client';
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env.test if NODE_ENV is test or if explicitly requested, otherwise load .env
+const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.SEED_TEST_DB === 'true';
+if (isTestEnvironment) {
+  const envTestPath = resolve(process.cwd(), '.env.test');
+  try {
+    config({ path: envTestPath });
+    // Ensure we're using test database
+    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('/aletheia_test')) {
+      process.env.DATABASE_URL = process.env.DATABASE_URL.replace(
+        /\/([^\/\?]+)(\?|$)/,
+        '/aletheia_test$2'
+      );
+    }
+  } catch {
+    // If .env.test doesn't exist, try to modify existing DATABASE_URL
+    config();
+    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('/aletheia_test')) {
+      process.env.DATABASE_URL = process.env.DATABASE_URL.replace(
+        /\/([^\/\?]+)(\?|$)/,
+        '/aletheia_test$2'
+      );
+    }
+  }
+} else {
+  config();
+}
 
 const prisma = new PrismaClient();
 
@@ -13,6 +41,17 @@ function getDatabaseName(): string {
 async function main() {
   const databaseName = getDatabaseName();
   console.log(`\n🌱 Starting seed process for database: ${databaseName}\n`);
+  
+  // Safety check: Warn if attempting to seed production in non-production mode
+  if (databaseName === 'devdb' && process.env.NODE_ENV !== 'production') {
+    console.warn(
+      `⚠️  WARNING: You are about to seed the production database "${databaseName}".\n` +
+        `   This should only be done explicitly in production environments.\n` +
+        `   If this is unintended, ensure DATABASE_URL points to the correct database.\n`
+    );
+    // Uncomment the following line to add a hard stop (requires confirmation):
+    // throw new Error('Production database seeding requires explicit confirmation');
+  }
 
   // Clear existing data
   console.log('Clearing existing data...');

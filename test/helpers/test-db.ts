@@ -1,7 +1,31 @@
 // test/helpers/test-db.ts
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Extracts and verifies the database name from DATABASE_URL
+ */
+function getDatabaseName(): string {
+  const dbUrl = process.env.DATABASE_URL || '';
+  const match = dbUrl.match(/\/([^\/\?]+)(\?|$)/);
+  return match ? match[1] : 'unknown';
+}
+
+/**
+ * Verifies we're using the test database (safety check)
+ */
+function verifyTestDatabase(): void {
+  const dbName = getDatabaseName();
+  if (dbName !== 'aletheia_test') {
+    throw new Error(
+      `⚠️  SAFETY CHECK FAILED: Attempting to clean/seed database "${dbName}" instead of "aletheia_test". ` +
+        `This prevents accidental operations on production. ` +
+        `Current DATABASE_URL: ${process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@') || 'not set'}`
+    );
+  }
+}
+
 export async function cleanDatabase(prisma: PrismaClient) {
+  verifyTestDatabase();
   // Delete in reverse order of dependencies
   await prisma.aiQueryResult.deleteMany();
   await prisma.aiQuery.deleteMany();
@@ -16,6 +40,7 @@ export async function cleanDatabase(prisma: PrismaClient) {
 }
 
 export async function seedTestData(prisma: PrismaClient) {
+  verifyTestDatabase();
   const admin = await prisma.user.create({
     data: {
       email: 'admin@example.com',

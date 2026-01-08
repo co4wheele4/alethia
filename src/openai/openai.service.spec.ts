@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OpenAIService } from './openai.service';
 import OpenAI from 'openai';
 
@@ -30,6 +31,11 @@ describe('OpenAIService', () => {
     process.env.OPENAI_API_KEY = 'test-api-key';
 
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+        }),
+      ],
       providers: [OpenAIService],
     }).compile();
 
@@ -48,6 +54,28 @@ describe('OpenAIService', () => {
 
   it('should initialize OpenAI client with API key', () => {
     expect(OpenAI).toHaveBeenCalledWith({ apiKey: 'test-api-key' });
+  });
+
+  it('should throw error when OPENAI_API_KEY is missing', async () => {
+    await expect(async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          OpenAIService,
+          {
+            provide: ConfigService,
+            useValue: {
+              get: jest.fn((key: string) => {
+                if (key === 'OPENAI_API_KEY') {
+                  return undefined;
+                }
+                return undefined;
+              }),
+            },
+          },
+        ],
+      }).compile();
+      module.get<OpenAIService>(OpenAIService);
+    }).rejects.toThrow('OPENAI_API_KEY is required but not found in environment variables');
   });
 
   describe('getEmbeddingResult', () => {

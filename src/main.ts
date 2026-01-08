@@ -8,8 +8,62 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Security headers
-  app.use(helmet());
+  // Log database connection info
+  const dbUrl = process.env.DATABASE_URL || '';
+  const dbMatch = dbUrl.match(/\/([^\/\?]+)(\?|$)/);
+  const dbName = dbMatch ? dbMatch[1] : 'unknown';
+  console.log(`🗄️  Database: ${dbName}`);
+
+  // Security headers - configure helmet to allow GraphQL Playground
+  const isProduction = process.env.NODE_ENV === 'production';
+  app.use(
+    helmet({
+      contentSecurityPolicy: isProduction
+        ? undefined
+        : {
+            directives: {
+              defaultSrc: ["'self'"],
+              scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'", // Required for GraphQL Playground
+                'https://cdn.jsdelivr.net', // GraphQL Playground scripts
+                'http://cdn.jsdelivr.net', // Some resources use HTTP
+              ],
+              styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                'https://cdn.jsdelivr.net', // GraphQL Playground styles
+                'http://cdn.jsdelivr.net', // Some resources use HTTP
+                'https://fonts.googleapis.com', // Google Fonts stylesheets
+              ],
+              imgSrc: [
+                "'self'",
+                'data:',
+                'https://cdn.jsdelivr.net', // GraphQL Playground images (HTTPS)
+                'http://cdn.jsdelivr.net', // GraphQL Playground images (HTTP)
+              ],
+              connectSrc: [
+                "'self'",
+                'https://cdn.jsdelivr.net', // GraphQL Playground connections
+                'http://cdn.jsdelivr.net', // Some resources use HTTP
+                'ws://localhost:3000', // WebSocket for Playground
+                'ws://localhost:3001',
+                'http://localhost:3000', // Local connections
+                'http://localhost:3001',
+              ],
+              fontSrc: [
+                "'self'",
+                'https://cdn.jsdelivr.net',
+                'http://cdn.jsdelivr.net',
+                'https://fonts.gstatic.com', // Google Fonts
+                'https://fonts.googleapis.com', // Google Fonts
+              ],
+            },
+          },
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   // CORS configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [

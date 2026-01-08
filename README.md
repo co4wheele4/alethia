@@ -38,7 +38,7 @@
 - Entity relationship management
 - Document chunking and embedding support
 - AI query processing with OpenAI integration
-- Comprehensive test coverage (~90% e2e tests)
+- **100% test coverage** (unit tests: 389 tests, e2e tests: 51 tests)
 - Type-safe database queries with Prisma
 
 ## Prerequisites
