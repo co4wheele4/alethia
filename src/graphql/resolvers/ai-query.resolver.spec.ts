@@ -351,7 +351,8 @@ describe('AiQueryResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const aiQueryResolver = await module.resolve<AiQueryResolver>(AiQueryResolver);
+    const aiQueryResolver =
+      await module.resolve<AiQueryResolver>(AiQueryResolver);
     expect(aiQueryResolver).toBeDefined();
 
     await app.close();
@@ -408,7 +409,9 @@ describe('AiQueryResultResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<AiQueryResultResolver>(AiQueryResultResolver);
+    resolver = await module.resolve<AiQueryResultResolver>(
+      AiQueryResultResolver,
+    );
     prismaService = module.get(PrismaService);
     dataLoaderService = module.get(DataLoaderService);
   });
@@ -423,7 +426,10 @@ describe('AiQueryResultResolver', () => {
   });
 
   it('should instantiate AiQueryResultResolver directly', () => {
-    const newResolver = new AiQueryResultResolver(prismaService, dataLoaderService);
+    const newResolver = new AiQueryResultResolver(
+      prismaService,
+      dataLoaderService,
+    );
     expect(newResolver).toBeInstanceOf(AiQueryResultResolver);
     expect(newResolver['prisma']).toBe(prismaService);
   });

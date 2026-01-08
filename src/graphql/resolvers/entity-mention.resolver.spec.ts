@@ -79,7 +79,9 @@ describe('EntityMentionResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<EntityMentionResolver>(EntityMentionResolver);
+    resolver = await module.resolve<EntityMentionResolver>(
+      EntityMentionResolver,
+    );
     prismaService = module.get(PrismaService);
     dataLoaderService = module.get(DataLoaderService);
   });

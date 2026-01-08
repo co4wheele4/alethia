@@ -118,7 +118,8 @@ describe('EmbeddingResolver', () => {
     const app = module.createNestApplication();
     await app.init();
 
-    const embeddingResolver = await module.resolve<EmbeddingResolver>(EmbeddingResolver);
+    const embeddingResolver =
+      await module.resolve<EmbeddingResolver>(EmbeddingResolver);
     expect(embeddingResolver).toBeDefined();
 
     await app.close();

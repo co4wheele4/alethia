@@ -75,7 +75,9 @@ describe('DocumentChunkResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<DocumentChunkResolver>(DocumentChunkResolver);
+    resolver = await module.resolve<DocumentChunkResolver>(
+      DocumentChunkResolver,
+    );
     prismaService = module.get(PrismaService);
     dataLoaderService = module.get(DataLoaderService);
   });
