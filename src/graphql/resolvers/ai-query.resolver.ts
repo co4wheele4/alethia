@@ -7,16 +7,21 @@ import {
   ResolveField,
   Int,
 } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { AiQuery, AiQueryResult } from '@models/ai-query.model';
 import { User } from '@models/user.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+@Injectable({ scope: Scope.REQUEST })
 @Resolver(() => AiQuery)
 @UseGuards(JwtAuthGuard)
 export class AiQueryResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataLoaders: DataLoaderService,
+  ) {}
 
   // ---------- BASE QUERIES ----------
 
@@ -82,23 +87,24 @@ export class AiQueryResolver {
 
   @ResolveField(() => User)
   async user(@Parent() aiQuery: AiQuery) {
-    return this.prisma.aiQuery.findUnique({ where: { id: aiQuery.id } }).user();
+    const aiQueryWithUserId = aiQuery as unknown as { userId: string };
+    return this.dataLoaders.getUserLoader().load(aiQueryWithUserId.userId);
   }
 
   @ResolveField(() => [AiQueryResult])
   async results(@Parent() aiQuery: AiQuery) {
-    return this.prisma.aiQuery
-      .findUnique({ where: { id: aiQuery.id } })
-      .results({
-        orderBy: { createdAt: 'desc' },
-      });
+    return this.dataLoaders.getResultsByQueryLoader().load(aiQuery.id);
   }
 }
 
+@Injectable({ scope: Scope.REQUEST })
 @Resolver(() => AiQueryResult)
 @UseGuards(JwtAuthGuard)
 export class AiQueryResultResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataLoaders: DataLoaderService,
+  ) {}
 
   // ---------- BASE QUERIES ----------
 
@@ -120,8 +126,7 @@ export class AiQueryResultResolver {
 
   @ResolveField(() => AiQuery)
   async query(@Parent() result: AiQueryResult) {
-    return this.prisma.aiQueryResult
-      .findUnique({ where: { id: result.id } })
-      .query();
+    const resultWithQueryId = result as unknown as { queryId: string };
+    return this.dataLoaders.getAiQueryLoader().load(resultWithQueryId.queryId);
   }
 }

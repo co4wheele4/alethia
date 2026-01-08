@@ -6,17 +6,22 @@ import {
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { Document } from '@models/document.model';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { User } from '@models/user.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+@Injectable({ scope: Scope.REQUEST })
 @Resolver(() => Document)
 @UseGuards(JwtAuthGuard)
 export class DocumentResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataLoaders: DataLoaderService,
+  ) {}
 
   @Query(() => [Document])
   async documents() {
@@ -58,15 +63,11 @@ export class DocumentResolver {
   async user(@Parent() document: Document) {
     // Access userId from the database field, not the GraphQL field
     const documentWithUserId = document as unknown as { userId: string };
-    return this.prisma.user.findUnique({
-      where: { id: documentWithUserId.userId },
-    });
+    return this.dataLoaders.getUserLoader().load(documentWithUserId.userId);
   }
 
   @ResolveField(() => [DocumentChunk])
   async chunks(@Parent() document: Document) {
-    return this.prisma.documentChunk.findMany({
-      where: { documentId: document.id },
-    });
+    return this.dataLoaders.getChunksByDocumentLoader().load(document.id);
   }
 }

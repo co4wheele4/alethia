@@ -7,18 +7,23 @@ import {
   Parent,
   Int,
 } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { Document } from '@models/document.model';
 import { Embedding } from '@models/embedding.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+@Injectable({ scope: Scope.REQUEST })
 @Resolver(() => DocumentChunk)
 @UseGuards(JwtAuthGuard)
 export class DocumentChunkResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataLoaders: DataLoaderService,
+  ) {}
 
   @Query(() => [DocumentChunk])
   async documentChunks() {
@@ -64,16 +69,17 @@ export class DocumentChunkResolver {
 
   @ResolveField(() => Document)
   async document(@Parent() chunk: DocumentChunk) {
-    return this.prisma.document.findUnique({ where: { id: chunk.documentId } });
+    const chunkWithDocumentId = chunk as unknown as { documentId: string };
+    return this.dataLoaders.getDocumentLoader().load(chunkWithDocumentId.documentId);
   }
 
   @ResolveField(() => [Embedding])
   async embeddings(@Parent() chunk: DocumentChunk) {
-    return this.prisma.embedding.findMany({ where: { chunkId: chunk.id } });
+    return this.dataLoaders.getEmbeddingsByChunkLoader().load(chunk.id);
   }
 
   @ResolveField(() => [EntityMention])
   async mentions(@Parent() chunk: DocumentChunk) {
-    return this.prisma.entityMention.findMany({ where: { chunkId: chunk.id } });
+    return this.dataLoaders.getMentionsByChunkLoader().load(chunk.id);
   }
 }

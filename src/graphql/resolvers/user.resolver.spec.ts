@@ -4,10 +4,12 @@ import { PrismaService } from '@prisma/prisma.service';
 import { User } from '@models/user.model';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
 describe('UserResolver', () => {
   let resolver: UserResolver;
   let prismaService: jest.Mocked<PrismaService>;
+  let dataLoaderService: jest.Mocked<DataLoaderService>;
 
   const mockUser: User = {
     id: '1',
@@ -30,6 +32,18 @@ describe('UserResolver', () => {
       },
     };
 
+    const mockDataLoaderService = {
+      getLessonsByUserLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue([]),
+      }),
+      getDocumentsByUserLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue([]),
+      }),
+      getAiQueriesByUserLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue([]),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserResolver,
@@ -37,11 +51,16 @@ describe('UserResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: DataLoaderService,
+          useValue: mockDataLoaderService,
+        },
       ],
     }).compile();
 
     resolver = module.get<UserResolver>(UserResolver);
     prismaService = module.get(PrismaService);
+    dataLoaderService = module.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -54,7 +73,7 @@ describe('UserResolver', () => {
   });
 
   it('should instantiate UserResolver directly', () => {
-    const newResolver = new UserResolver(prismaService);
+    const newResolver = new UserResolver(prismaService, dataLoaderService);
     expect(newResolver).toBeInstanceOf(UserResolver);
     expect(newResolver['prisma']).toBe(prismaService);
   });

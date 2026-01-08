@@ -29,6 +29,7 @@ import {
   EntityRelationshipResolver,
 } from '@resolvers';
 import { AuthModule } from '../auth/auth.module';
+import { DataLoaderModule } from '../common/dataloaders/dataloader.module';
 import { createGraphQLContext, formatGraphQLError } from './graphql-config';
 
 @Module({
@@ -48,6 +49,8 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     ]),
     // Authentication
     AuthModule,
+    // DataLoader module for N+1 query optimization
+    DataLoaderModule,
     // GraphQL configuration
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,

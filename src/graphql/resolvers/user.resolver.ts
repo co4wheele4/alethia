@@ -6,7 +6,7 @@ import {
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { User } from '@models/user.model';
 import { PrismaService } from '@prisma/prisma.service';
 import { Lesson } from '@models/lesson.model';
@@ -17,11 +17,16 @@ import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { Roles } from '@auth/decorators/roles.decorator';
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { Role } from '@auth/decorators/roles.decorator';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+@Injectable({ scope: Scope.REQUEST })
 @Resolver(() => User)
 @UseGuards(JwtAuthGuard)
 export class UserResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataLoaders: DataLoaderService,
+  ) {}
 
   @Query(() => [User])
   @UseGuards(RolesGuard)
@@ -57,16 +62,16 @@ export class UserResolver {
 
   @ResolveField(() => [Lesson])
   async lessons(@Parent() user: User) {
-    return this.prisma.user.findUnique({ where: { id: user.id } }).lessons();
+    return this.dataLoaders.getLessonsByUserLoader().load(user.id);
   }
 
   @ResolveField(() => [Document])
   async documents(@Parent() user: User) {
-    return this.prisma.user.findUnique({ where: { id: user.id } }).documents();
+    return this.dataLoaders.getDocumentsByUserLoader().load(user.id);
   }
 
   @ResolveField(() => [AiQuery])
   async aiQueries(@Parent() user: User) {
-    return this.prisma.user.findUnique({ where: { id: user.id } }).aiQueries();
+    return this.dataLoaders.getAiQueriesByUserLoader().load(user.id);
   }
 }

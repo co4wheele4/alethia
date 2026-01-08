@@ -6,16 +6,21 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { Lesson } from '@models/lesson.model';
 import { User } from '@models';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+@Injectable({ scope: Scope.REQUEST })
 @Resolver(() => Lesson)
 @UseGuards(JwtAuthGuard)
 export class LessonResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataLoaders: DataLoaderService,
+  ) {}
 
   @Query(() => [Lesson])
   async lessons() {
@@ -62,8 +67,6 @@ export class LessonResolver {
   async user(@Parent() lesson: Lesson) {
     // Access userId from the database field, not the GraphQL field
     const lessonWithUserId = lesson as unknown as { userId: string };
-    return this.prisma.user.findUnique({
-      where: { id: lessonWithUserId.userId },
-    });
+    return this.dataLoaders.getUserLoader().load(lessonWithUserId.userId);
   }
 }

@@ -37,6 +37,8 @@ model Lesson {
   user User @relation(fields: [userId], references: [id])
 
   @@unique([title, userId])
+  @@index([userId])
+  @@index([createdAt])
   @@map("lessons")
 }
 
@@ -52,6 +54,8 @@ model Document {
   user   User            @relation(fields: [userId], references: [id])
   chunks DocumentChunk[]
 
+  @@index([userId])
+  @@index([createdAt])
   @@map("documents")
 }
 
@@ -69,6 +73,7 @@ model DocumentChunk {
   mentions   EntityMention[]
 
   @@unique([documentId, chunkIndex])
+  @@index([documentId])
   @@map("document_chunks")
 }
 
@@ -82,6 +87,7 @@ model Embedding {
 
   chunk DocumentChunk @relation(fields: [chunkId], references: [id])
 
+  @@index([chunkId])
   @@map("embeddings")
 }
 
@@ -98,6 +104,7 @@ model Entity {
   incoming EntityRelationship[] @relation("ToEntity")
 
   @@unique([name, type])
+  @@index([type])
   @@map("entities")
 }
 
@@ -112,6 +119,8 @@ model EntityMention {
   entity Entity        @relation(fields: [entityId], references: [id])
   chunk  DocumentChunk @relation(fields: [chunkId], references: [id])
 
+  @@index([entityId])
+  @@index([chunkId])
   @@map("entity_mentions")
 }
 
@@ -127,6 +136,9 @@ model EntityRelationship {
   from Entity @relation("FromEntity", fields: [fromEntity], references: [id])
   to   Entity @relation("ToEntity", fields: [toEntity], references: [id])
 
+  @@index([fromEntity])
+  @@index([toEntity])
+  @@index([relation])
   @@map("entity_relationships")
 }
 
@@ -142,6 +154,8 @@ model AiQuery {
   user    User            @relation(fields: [userId], references: [id])
   results AiQueryResult[]
 
+  @@index([userId])
+  @@index([createdAt])
   @@map("ai_queries")
 }
 
@@ -157,5 +171,8 @@ model AiQueryResult {
 
   query AiQuery @relation(fields: [queryId], references: [id])
 
+  @@index([queryId])
+  @@index([createdAt])
+  @@index([score])
   @@map("ai_query_results")
 }

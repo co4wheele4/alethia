@@ -6,16 +6,21 @@ import {
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { Embedding } from '@models/embedding.model';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+@Injectable({ scope: Scope.REQUEST })
 @Resolver(() => Embedding)
 @UseGuards(JwtAuthGuard)
 export class EmbeddingResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataLoaders: DataLoaderService,
+  ) {}
 
   @Query(() => [Embedding])
   async embeddings() {
@@ -58,8 +63,6 @@ export class EmbeddingResolver {
   async chunk(@Parent() embedding: Embedding) {
     // Access chunkId from the database field, not the GraphQL field
     const embeddingWithChunkId = embedding as unknown as { chunkId: string };
-    return this.prisma.documentChunk.findUnique({
-      where: { id: embeddingWithChunkId.chunkId },
-    });
+    return this.dataLoaders.getDocumentChunkLoader().load(embeddingWithChunkId.chunkId);
   }
 }

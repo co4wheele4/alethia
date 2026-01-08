@@ -6,18 +6,23 @@ import {
   Parent,
   Mutation,
 } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { Entity } from '@models/entity.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { EntityRelationship } from '@models/entity-relationship.model';
 import { CreateEntityInput, UpdateEntityInput } from '@inputs/entity.input';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+@Injectable({ scope: Scope.REQUEST })
 @Resolver(() => Entity)
 @UseGuards(JwtAuthGuard)
 export class EntityResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataLoaders: DataLoaderService,
+  ) {}
 
   @Query(() => [Entity])
   async entities() {
@@ -31,23 +36,17 @@ export class EntityResolver {
 
   @ResolveField(() => [EntityMention])
   async mentions(@Parent() entity: Entity) {
-    return this.prisma.entityMention.findMany({
-      where: { entityId: entity.id },
-    });
+    return this.dataLoaders.getMentionsByEntityLoader().load(entity.id);
   }
 
   @ResolveField(() => [EntityRelationship])
   async outgoing(@Parent() entity: Entity) {
-    return this.prisma.entityRelationship.findMany({
-      where: { fromEntity: entity.id },
-    });
+    return this.dataLoaders.getRelationshipsByFromEntityLoader().load(entity.id);
   }
 
   @ResolveField(() => [EntityRelationship])
   async incoming(@Parent() entity: Entity) {
-    return this.prisma.entityRelationship.findMany({
-      where: { toEntity: entity.id },
-    });
+    return this.dataLoaders.getRelationshipsByToEntityLoader().load(entity.id);
   }
 
   // ------------------

@@ -6,7 +6,7 @@ import {
   Parent,
   Mutation,
 } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { EntityMention } from '@models/entity-mention.model';
 import { Entity } from '@models/entity.model';
@@ -16,11 +16,16 @@ import {
   UpdateEntityMentionInput,
 } from '@inputs/entity-mention.input';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+@Injectable({ scope: Scope.REQUEST })
 @Resolver(() => EntityMention)
 @UseGuards(JwtAuthGuard)
 export class EntityMentionResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataLoaders: DataLoaderService,
+  ) {}
 
   @Query(() => [EntityMention])
   async entityMentions() {
@@ -36,18 +41,14 @@ export class EntityMentionResolver {
   async entity(@Parent() mention: EntityMention) {
     // Access entityId from the database field, not the GraphQL field
     const mentionWithEntityId = mention as unknown as { entityId: string };
-    return this.prisma.entity.findUnique({
-      where: { id: mentionWithEntityId.entityId },
-    });
+    return this.dataLoaders.getEntityLoader().load(mentionWithEntityId.entityId);
   }
 
   @ResolveField(() => DocumentChunk)
   async chunk(@Parent() mention: EntityMention) {
     // Access chunkId from the database field, not the GraphQL field
     const mentionWithChunkId = mention as unknown as { chunkId: string };
-    return this.prisma.documentChunk.findUnique({
-      where: { id: mentionWithChunkId.chunkId },
-    });
+    return this.dataLoaders.getDocumentChunkLoader().load(mentionWithChunkId.chunkId);
   }
 
   // ------------------

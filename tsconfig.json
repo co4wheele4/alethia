@@ -22,7 +22,8 @@
       "@prisma/*": ["src/prisma/*"],
       "@resolvers": ["src/graphql/resolvers/index"],
       "@resolvers/*": ["src/graphql/resolvers/*"],
-      "@auth/*": ["src/auth/*"]
+      "@auth/*": ["src/auth/*"],
+      "@common/*": ["src/common/*"]
     }
   }
 }
