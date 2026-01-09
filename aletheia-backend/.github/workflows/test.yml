@@ -1,0 +1,113 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run unit tests with coverage
+        run: npm run test:cov
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          flags: unit
+          name: unit-tests
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: aletheia_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    env:
+      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/aletheia_test
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Setup test database
+        run: npm run test:e2e:setup
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/aletheia_test
+      
+      - name: Run e2e tests
+        run: npm run test:e2e
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/aletheia_test
+
+  check-e2e-tests:
+    name: Check E2E Test Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Check for e2e tests in PR
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }} | grep -q "^src/.*resolver\.ts$"; then
+            echo "Detected resolver changes - checking for e2e tests..."
+            CHANGED_RESOLVERS=$(git diff --name-only origin/${{ github.base_ref }} | grep "^src/.*resolver\.ts$" | sed 's|src/graphql/resolvers/||' | sed 's|\.resolver\.ts$||')
+            MISSING_TESTS=""
+            for resolver in $CHANGED_RESOLVERS; do
+              if [ ! -f "test/${resolver}.e2e-spec.ts" ] && [ ! -f "test/graphql.e2e-spec.ts" ]; then
+                MISSING_TESTS="${MISSING_TESTS} ${resolver}"
+              fi
+            done
+            if [ -n "$MISSING_TESTS" ]; then
+              echo "⚠️  Warning: New/changed resolvers detected but e2e tests may be missing:${MISSING_TESTS}"
+              echo "Please ensure e2e tests are added for new resolvers."
+              echo "See test/TESTING_GUIDELINES.md for guidelines."
+            fi
+          fi
+
