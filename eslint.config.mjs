@@ -1,0 +1,62 @@
+// @ts-check
+import eslint from '@eslint/js';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+
+export default tseslint.config(
+  {
+    ignores: ['eslint.config.mjs'],
+  },
+  eslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  eslintPluginPrettierRecommended,
+  {
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.jest,
+      },
+      sourceType: 'commonjs',
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-floating-promises': 'error', // Promises must be handled - real bug risk
+      '@typescript-eslint/no-unsafe-argument': 'warn', // Prisma types are safe, but TypeScript can't verify
+      '@typescript-eslint/no-unsafe-assignment': 'warn', // Prisma types are safe, but TypeScript can't verify
+      '@typescript-eslint/no-unsafe-call': 'warn', // Prisma types are safe, but TypeScript can't verify
+      '@typescript-eslint/no-unsafe-member-access': 'warn', // Prisma types are safe, but TypeScript can't verify
+      '@typescript-eslint/no-unsafe-return': 'warn', // Prisma types are safe, but TypeScript can't verify
+      '@typescript-eslint/no-useless-escape': 'off',
+      'no-useless-escape': 'off',
+      'prettier/prettier': ['error', { endOfLine: 'auto' }],
+    },
+  },
+  {
+    files: [
+      '**/*.spec.ts',
+      '**/*.test.ts',
+      '**/*.e2e-spec.ts',
+      'test/**/*.ts',
+      'test-helpers/**/*.ts',
+      'scripts/**/*.ts',
+    ],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      'no-useless-escape': 'off',
+      '@typescript-eslint/require-await': 'off',
+    },
+  },
+);
