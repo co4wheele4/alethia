@@ -1,0 +1,44 @@
+{
+  "name": "aletheia-monorepo",
+  "version": "1.0.0",
+  "description": "Aletheia full-stack application monorepo",
+  "private": true,
+  "workspaces": [
+    "aletheia-backend",
+    "aletheia-frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:backend": "npm run build --workspace=aletheia-backend",
+    "build:frontend": "npm run build --workspace=aletheia-frontend",
+    "start": "npm run start:dev --workspaces --if-present",
+    "start:dev": "npm run start:dev --workspaces --if-present",
+    "start:backend": "npm run start:dev --workspace=aletheia-backend",
+    "start:frontend": "npm run start:dev --workspace=aletheia-frontend",
+    "start:all": "concurrently \"npm run start:backend\" \"npm run start:frontend\" --names \"backend,frontend\" --prefix-colors \"blue,green\"",
+    "start:prod:backend": "npm run start:prod --workspace=aletheia-backend",
+    "start:prod:frontend": "npm run start --workspace=aletheia-frontend",
+    "dev": "npm run start:all",
+    "test": "npm run test --workspaces --if-present",
+    "test:backend": "npm run test:all --workspace=aletheia-backend",
+    "test:frontend": "npm run test --workspace=aletheia-frontend --if-present",
+    "test:e2e": "npm run test:e2e --workspace=aletheia-backend",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:backend": "npm run lint --workspace=aletheia-backend",
+    "lint:frontend": "npm run lint --workspace=aletheia-frontend",
+    "format": "npm run format --workspaces --if-present",
+    "format:backend": "npm run format --workspace=aletheia-backend",
+    "format:frontend": "npm run format --workspace=aletheia-frontend --if-present",
+    "clean": "npm run clean --workspaces --if-present && rimraf node_modules",
+    "clean:all": "rimraf node_modules && rimraf aletheia-backend/node_modules && rimraf aletheia-frontend/node_modules && rimraf aletheia-backend/dist && rimraf aletheia-frontend/.next",
+    "seed": "npm run seed --workspace=aletheia-backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
