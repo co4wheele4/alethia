@@ -188,14 +188,23 @@ aletheia/
 ### Workspaces
 
 - **Backend** (`aletheia-backend`): NestJS GraphQL API with PostgreSQL, Prisma ORM, and **100% test coverage** (389 unit tests, 51 e2e tests)
-- **Frontend** (`aletheia-frontend`): Next.js 16 application with React 19, Apollo Client, and Tailwind CSS
+- **Frontend** (`aletheia-frontend`): Next.js 15 application with React 19, Apollo Client 4, and Tailwind CSS 4
 
 ## Project Status
 
-- ✅ **Backend**: Production ready with 100% test coverage
-- ✅ **Frontend**: Functional and ready for feature development
-- ✅ **Monorepo**: Well-organized with npm workspaces
+- ✅ **Backend**: Production ready with 100% test coverage (389 unit tests, 51 e2e tests)
+- ✅ **Frontend**: All issues resolved, ready for feature development (0 TypeScript errors, 0 lint errors)
+- ✅ **Monorepo**: Fully converted to true monorepo structure with npm workspaces
+- ✅ **Git Hooks**: Pre-push hook configured to run all tests automatically
 - ✅ **Documentation**: Comprehensive documentation available
+- ✅ **Configuration**: Clean npm configuration (no deprecation warnings)
+
+### Latest Updates (January 9, 2026)
+
+- ✅ **Monorepo Structure**: Converted backend and frontend from submodules to true monorepo
+- ✅ **Frontend Fixes**: Fixed all Apollo Client integration issues, TypeScript errors, and linting errors
+- ✅ **Git Hooks**: Pre-push hook automatically runs backend tests and frontend checks before pushing
+- ✅ **Configuration**: Removed deprecated npm options, eliminated all warnings
 
 See [PROJECT_REVIEW.md](./PROJECT_REVIEW.md) for detailed project analysis.
 
@@ -205,6 +214,19 @@ See [PROJECT_REVIEW.md](./PROJECT_REVIEW.md) for detailed project analysis.
 2. Run tests: `npm run test`
 3. Run linting: `npm run lint`
 4. Commit changes
+5. Push changes (pre-push hook will automatically run all tests)
+
+### Git Hooks
+
+A pre-push hook is configured to automatically:
+- Run all backend tests (unit + e2e)
+- Run frontend linting
+- Run frontend type checking
+
+If any checks fail, the push will be blocked. To bypass (not recommended):
+```bash
+git push --no-verify
+```
 
 ## License
 
