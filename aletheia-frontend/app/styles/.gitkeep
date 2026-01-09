@@ -1,0 +1,5 @@
+# Styles
+
+This directory contains additional stylesheets, theme files, and CSS modules (if needed).
+
+Note: Global styles are in `globals.css` at the app root.

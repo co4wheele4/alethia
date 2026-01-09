@@ -1,0 +1,8 @@
+# Library / Utilities
+
+This directory contains utility functions, helpers, and shared logic.
+
+## Structure
+
+- `utils/` - Utility functions and helpers
+- `constants/` - Application constants and configuration values
