@@ -23,8 +23,9 @@ export function LoginForm() {
       // Login successful - token is automatically stored
       // You can redirect or update UI here
       console.log('Login successful!');
-    } catch (err: any) {
-      setError(err.message || 'Login failed. Please try again.');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      setError(errorMessage);
     }
   };
 

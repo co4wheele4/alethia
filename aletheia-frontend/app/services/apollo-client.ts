@@ -2,7 +2,7 @@
  * Apollo Client configuration for GraphQL
  */
 
-import { ApolloClient, InMemoryCache, createHttpLink, from } from '@apollo/client';
+import { ApolloClient, InMemoryCache, createHttpLink, from, CombinedGraphQLErrors } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { GRAPHQL_URL } from '../lib/constants';
@@ -27,9 +27,14 @@ const authLink = setContext((_, { headers }) => {
 });
 
 // Error Link - handles GraphQL errors
-const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
-  if (graphQLErrors) {
-    graphQLErrors.forEach(({ message, locations, path }) => {
+const errorLink = onError(({ error }) => {
+  // Check if it's a GraphQL error
+  if (CombinedGraphQLErrors.is(error)) {
+    error.errors.forEach((graphQLError: { message: string; locations?: unknown; path?: unknown }) => {
+      const message = graphQLError.message;
+      const locations = graphQLError.locations;
+      const path = graphQLError.path;
+      
       console.error(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       );
@@ -42,10 +47,9 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
         }
       }
     });
-  }
-
-  if (networkError) {
-    console.error(`[Network error]: ${networkError}`);
+  } else {
+    // Network or other error
+    console.error(`[Network error]: ${error}`);
   }
 });
 

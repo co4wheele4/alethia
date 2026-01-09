@@ -4,8 +4,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useMutation } from '@apollo/client';
+import { useState } from 'react';
+import { useMutation } from '@apollo/client/react';
 import { LOGIN_MUTATION } from '../lib/graphql/queries';
 import { setAuthToken, removeAuthToken, getAuthToken, isAuthenticated } from '../lib/utils/auth';
 
@@ -19,26 +19,19 @@ interface LoginData {
 }
 
 export function useAuth() {
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check for existing token on mount
-    const existingToken = getAuthToken();
-    setToken(existingToken);
-    setLoading(false);
-  }, []);
+  // Initialize token from localStorage on mount
+  const [token, setToken] = useState<string | null>(() => getAuthToken());
 
   const [loginMutation, { loading: loginLoading, error: loginError }] = useMutation<
     LoginData,
     LoginVariables
   >(LOGIN_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (data: LoginData) => {
       const authToken = data.login;
       setAuthToken(authToken);
       setToken(authToken);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Login error:', error);
     },
   });
@@ -64,7 +57,7 @@ export function useAuth() {
     isAuthenticated: isAuthenticated(),
     login,
     logout,
-    loading: loading || loginLoading,
+    loading: loginLoading,
     error: loginError,
   };
 }

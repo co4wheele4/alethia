@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { HELLO_QUERY } from '../lib/graphql/queries';
 
 interface HelloData {
