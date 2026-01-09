@@ -75,7 +75,9 @@ describe('OpenAIService', () => {
         ],
       }).compile();
       module.get<OpenAIService>(OpenAIService);
-    }).rejects.toThrow('OPENAI_API_KEY is required but not found in environment variables');
+    }).rejects.toThrow(
+      'OPENAI_API_KEY is required but not found in environment variables',
+    );
   });
 
   describe('getEmbeddingResult', () => {

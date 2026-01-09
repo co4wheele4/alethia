@@ -21,7 +21,7 @@ export class AppResolver {
   @Query(() => [Lesson])
   @UseGuards(JwtAuthGuard)
   async lessons() {
-    return this.prisma.lesson.findMany();
+    return await this.prisma.lesson.findMany();
   }
 
   @Mutation(() => String)

@@ -28,12 +28,12 @@ export class EntityRelationshipResolver {
 
   @Query(() => [EntityRelationship])
   async entityRelationships() {
-    return this.prisma.entityRelationship.findMany();
+    return await this.prisma.entityRelationship.findMany();
   }
 
   @Query(() => EntityRelationship, { nullable: true })
   async entityRelationship(@Args('id') id: string) {
-    return this.prisma.entityRelationship.findUnique({ where: { id } });
+    return await this.prisma.entityRelationship.findUnique({ where: { id } });
   }
 
   @ResolveField(() => Entity)
@@ -60,7 +60,7 @@ export class EntityRelationshipResolver {
   async createEntityRelationship(
     @Args('data') data: CreateEntityRelationshipInput,
   ) {
-    return this.prisma.entityRelationship.create({ data });
+    return await this.prisma.entityRelationship.create({ data });
   }
 
   @Mutation(() => EntityRelationship)
@@ -68,7 +68,7 @@ export class EntityRelationshipResolver {
     @Args('data') data: UpdateEntityRelationshipInput,
   ) {
     const { id, fromEntity, toEntity, relation } = data;
-    return this.prisma.entityRelationship.update({
+    return await this.prisma.entityRelationship.update({
       where: { id },
       data: { fromEntity, toEntity, relation },
     });
@@ -76,6 +76,6 @@ export class EntityRelationshipResolver {
 
   @Mutation(() => EntityRelationship)
   async deleteEntityRelationship(@Args('id') id: string) {
-    return this.prisma.entityRelationship.delete({ where: { id } });
+    return await this.prisma.entityRelationship.delete({ where: { id } });
   }
 }

@@ -28,14 +28,14 @@ export interface TestContext {
 export async function setupTestApp(): Promise<TestContext> {
   // Verify we're using the test database before proceeding
   const dbUrl = process.env.DATABASE_URL || '';
-  const dbMatch = dbUrl.match(/\/([^\/\?]+)(\?|$)/);
+  const dbMatch = dbUrl.match(/\/([^/?]+)(\?|$)/);
   const dbName = dbMatch ? dbMatch[1] : 'unknown';
-  
+
   if (dbName !== 'aletheia_test') {
     throw new Error(
       `⚠️  SAFETY CHECK FAILED: Test setup detected database "${dbName}" instead of "aletheia_test". ` +
         `This prevents accidental operations on production. ` +
-        `Current DATABASE_URL: ${dbUrl.replace(/:[^:@]+@/, ':****@') || 'not set'}`
+        `Current DATABASE_URL: ${dbUrl.replace(/:[^:@]+@/, ':****@') || 'not set'}`,
     );
   }
 

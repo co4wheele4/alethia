@@ -162,7 +162,8 @@ describe('main.ts', () => {
 
   it('should extract database name from valid DATABASE_URL', async () => {
     const originalDbUrl = process.env.DATABASE_URL;
-    process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/mydb?schema=public';
+    process.env.DATABASE_URL =
+      'postgresql://user:pass@localhost:5432/mydb?schema=public';
 
     const testMockApp: MockApp = {
       listen: jest.fn().mockResolvedValue(undefined),
@@ -242,10 +243,10 @@ describe('main.ts', () => {
 
   it('should configure helmet differently for production vs development', async () => {
     const originalNodeEnv = process.env.NODE_ENV;
-    
+
     // Test production mode
     process.env.NODE_ENV = 'production';
-    
+
     // Capture helmet configuration
     let capturedHelmetConfig: unknown;
     const helmetMockFactory = jest.fn((config?: unknown) => {
@@ -270,7 +271,7 @@ describe('main.ts', () => {
         create: jest.fn().mockResolvedValue(prodMockApp),
       },
     }));
-    
+
     // Import main after setting NODE_ENV to production
     await import('./main');
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -279,7 +280,9 @@ describe('main.ts', () => {
     expect(prodMockApp.use).toHaveBeenCalled();
     expect(helmetMockFactory).toHaveBeenCalled();
     // In production, CSP should be undefined
-    const helmetConfig = capturedHelmetConfig as { contentSecurityPolicy?: unknown };
+    const helmetConfig = capturedHelmetConfig as {
+      contentSecurityPolicy?: unknown;
+    };
     expect(helmetConfig?.contentSecurityPolicy).toBeUndefined();
 
     process.env.NODE_ENV = originalNodeEnv;

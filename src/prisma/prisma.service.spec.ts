@@ -37,7 +37,9 @@ describe('PrismaService', () => {
       await service.onModuleInit();
       expect(connectSpy).toHaveBeenCalled();
       expect(logSpy).toHaveBeenCalledWith('Connecting to database: test');
-      expect(logSpy).toHaveBeenCalledWith('Successfully connected to database: test');
+      expect(logSpy).toHaveBeenCalledWith(
+        'Successfully connected to database: test',
+      );
       connectSpy.mockRestore();
       logSpy.mockRestore();
       process.env.DATABASE_URL = originalDbUrl;
@@ -52,7 +54,9 @@ describe('PrismaService', () => {
       await service.onModuleInit();
       expect(connectSpy).toHaveBeenCalled();
       expect(logSpy).toHaveBeenCalledWith('Connecting to database: unknown');
-      expect(logSpy).toHaveBeenCalledWith('Successfully connected to database: unknown');
+      expect(logSpy).toHaveBeenCalledWith(
+        'Successfully connected to database: unknown',
+      );
       connectSpy.mockRestore();
       logSpy.mockRestore();
       process.env.DATABASE_URL = originalDbUrl;

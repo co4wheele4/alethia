@@ -27,17 +27,17 @@ export class DocumentChunkResolver {
 
   @Query(() => [DocumentChunk])
   async documentChunks() {
-    return this.prisma.documentChunk.findMany();
+    return await this.prisma.documentChunk.findMany();
   }
 
   @Query(() => DocumentChunk, { nullable: true })
   async documentChunk(@Args('id') id: string) {
-    return this.prisma.documentChunk.findUnique({ where: { id } });
+    return await this.prisma.documentChunk.findUnique({ where: { id } });
   }
 
   @Query(() => [DocumentChunk])
   async chunksByDocument(@Args('documentId') documentId: string) {
-    return this.prisma.documentChunk.findMany({ where: { documentId } });
+    return await this.prisma.documentChunk.findMany({ where: { documentId } });
   }
 
   @Mutation(() => DocumentChunk)
@@ -46,7 +46,7 @@ export class DocumentChunkResolver {
     @Args('chunkIndex', { type: () => Int }) chunkIndex: number,
     @Args('content') content: string,
   ) {
-    return this.prisma.documentChunk.create({
+    return await this.prisma.documentChunk.create({
       data: { documentId, chunkIndex, content },
     });
   }
@@ -56,7 +56,7 @@ export class DocumentChunkResolver {
     @Args('id') id: string,
     @Args('content', { nullable: true }) content?: string,
   ) {
-    return this.prisma.documentChunk.update({
+    return await this.prisma.documentChunk.update({
       where: { id },
       data: { content },
     });
@@ -64,7 +64,7 @@ export class DocumentChunkResolver {
 
   @Mutation(() => DocumentChunk)
   async deleteChunk(@Args('id') id: string) {
-    return this.prisma.documentChunk.delete({ where: { id } });
+    return await this.prisma.documentChunk.delete({ where: { id } });
   }
 
   @ResolveField(() => Document)

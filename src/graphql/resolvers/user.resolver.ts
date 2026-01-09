@@ -32,32 +32,32 @@ export class UserResolver {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   async users() {
-    return this.prisma.user.findMany();
+    return await this.prisma.user.findMany();
   }
 
   @Query(() => User, { nullable: true })
   async user(@Args('id') id: string) {
-    return this.prisma.user.findUnique({ where: { id } });
+    return await this.prisma.user.findUnique({ where: { id } });
   }
 
   @Mutation(() => User)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   async createUser(@Args('data') data: CreateUserInput) {
-    return this.prisma.user.create({ data });
+    return await this.prisma.user.create({ data });
   }
 
   @Mutation(() => User)
   async updateUser(@Args('data') data: UpdateUserInput) {
     const { id, ...updateData } = data;
-    return this.prisma.user.update({ where: { id }, data: updateData });
+    return await this.prisma.user.update({ where: { id }, data: updateData });
   }
 
   @Mutation(() => User)
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   async deleteUser(@Args('id') id: string) {
-    return this.prisma.user.delete({ where: { id } });
+    return await this.prisma.user.delete({ where: { id } });
   }
 
   @ResolveField(() => [Lesson])

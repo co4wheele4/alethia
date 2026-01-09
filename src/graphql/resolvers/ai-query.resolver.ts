@@ -27,21 +27,21 @@ export class AiQueryResolver {
 
   @Query(() => [AiQuery])
   async aiQueries() {
-    return this.prisma.aiQuery.findMany({
+    return await this.prisma.aiQuery.findMany({
       orderBy: { createdAt: 'desc' },
     });
   }
 
   @Query(() => AiQuery, { nullable: true })
   async aiQuery(@Args('id') id: string) {
-    return this.prisma.aiQuery.findUnique({
+    return await this.prisma.aiQuery.findUnique({
       where: { id },
     });
   }
 
   @Query(() => [AiQuery])
   async aiQueriesByUser(@Args('userId') userId: string) {
-    return this.prisma.aiQuery.findMany({
+    return await this.prisma.aiQuery.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
@@ -56,7 +56,7 @@ export class AiQueryResolver {
     const validatedSkip = Math.max(0, skip ?? 0);
     const validatedTake = Math.max(0, take ?? 20);
 
-    return this.prisma.aiQuery.findMany({
+    return await this.prisma.aiQuery.findMany({
       skip: validatedSkip,
       take: validatedTake,
       orderBy: { createdAt: 'desc' },
@@ -74,7 +74,7 @@ export class AiQueryResolver {
     });
 
     // placeholder – OpenAI integration later
-    return this.prisma.aiQueryResult.create({
+    return await this.prisma.aiQueryResult.create({
       data: {
         queryId: aiQuery.id,
         answer: 'TODO: AI response',
@@ -110,14 +110,14 @@ export class AiQueryResultResolver {
 
   @Query(() => [AiQueryResult])
   async aiQueryResults() {
-    return this.prisma.aiQueryResult.findMany({
+    return await this.prisma.aiQueryResult.findMany({
       orderBy: { createdAt: 'desc' },
     });
   }
 
   @Query(() => AiQueryResult, { nullable: true })
   async aiQueryResult(@Args('id') id: string) {
-    return this.prisma.aiQueryResult.findUnique({
+    return await this.prisma.aiQueryResult.findUnique({
       where: { id },
     });
   }

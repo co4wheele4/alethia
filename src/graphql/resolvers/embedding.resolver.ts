@@ -24,17 +24,17 @@ export class EmbeddingResolver {
 
   @Query(() => [Embedding])
   async embeddings() {
-    return this.prisma.embedding.findMany();
+    return await this.prisma.embedding.findMany();
   }
 
   @Query(() => Embedding, { nullable: true })
   async embedding(@Args('id') id: string) {
-    return this.prisma.embedding.findUnique({ where: { id } });
+    return await this.prisma.embedding.findUnique({ where: { id } });
   }
 
   @Query(() => [Embedding])
   async embeddingsByChunk(@Args('chunkId') chunkId: string) {
-    return this.prisma.embedding.findMany({ where: { chunkId } });
+    return await this.prisma.embedding.findMany({ where: { chunkId } });
   }
 
   @Mutation(() => Embedding)
@@ -42,7 +42,7 @@ export class EmbeddingResolver {
     @Args('chunkId') chunkId: string,
     @Args({ name: 'values', type: () => [Number] }) values: number[],
   ) {
-    return this.prisma.embedding.create({ data: { chunkId, values } });
+    return await this.prisma.embedding.create({ data: { chunkId, values } });
   }
 
   @Mutation(() => Embedding)
@@ -51,12 +51,15 @@ export class EmbeddingResolver {
     @Args({ name: 'values', type: () => [Number], nullable: true })
     values?: number[],
   ) {
-    return this.prisma.embedding.update({ where: { id }, data: { values } });
+    return await this.prisma.embedding.update({
+      where: { id },
+      data: { values },
+    });
   }
 
   @Mutation(() => Embedding)
   async deleteEmbedding(@Args('id') id: string) {
-    return this.prisma.embedding.delete({ where: { id } });
+    return await this.prisma.embedding.delete({ where: { id } });
   }
 
   @ResolveField(() => DocumentChunk)

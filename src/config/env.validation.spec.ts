@@ -103,7 +103,9 @@ describe('env.validation', () => {
 
       const result = validate(mockConfig);
 
-      expect(result.DATABASE_URL).toBe('postgresql://localhost:5432/aletheia?schema=public');
+      expect(result.DATABASE_URL).toBe(
+        'postgresql://localhost:5432/aletheia?schema=public',
+      );
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('WARNING: DATABASE_URL not found'),
       );

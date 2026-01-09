@@ -10,7 +10,7 @@ async function bootstrap() {
 
   // Log database connection info
   const dbUrl = process.env.DATABASE_URL || '';
-  const dbMatch = dbUrl.match(/\/([^\/\?]+)(\?|$)/);
+  const dbMatch = dbUrl.match(/\/([^/?]+)(\?|$)/);
   const dbName = dbMatch ? dbMatch[1] : 'unknown';
   console.log(`🗄️  Database: ${dbName}`);
 

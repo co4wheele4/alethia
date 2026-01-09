@@ -6,7 +6,7 @@ import { PrismaClient } from '@prisma/client';
  */
 function getDatabaseName(): string {
   const dbUrl = process.env.DATABASE_URL || '';
-  const match = dbUrl.match(/\/([^\/\?]+)(\?|$)/);
+  const match = dbUrl.match(/\/([^/?]+)(\?|$)/);
   return match ? match[1] : 'unknown';
 }
 
@@ -19,7 +19,7 @@ function verifyTestDatabase(): void {
     throw new Error(
       `⚠️  SAFETY CHECK FAILED: Attempting to clean/seed database "${dbName}" instead of "aletheia_test". ` +
         `This prevents accidental operations on production. ` +
-        `Current DATABASE_URL: ${process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@') || 'not set'}`
+        `Current DATABASE_URL: ${process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@') || 'not set'}`,
     );
   }
 }

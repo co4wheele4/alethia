@@ -25,17 +25,17 @@ export class DocumentResolver {
 
   @Query(() => [Document])
   async documents() {
-    return this.prisma.document.findMany();
+    return await this.prisma.document.findMany();
   }
 
   @Query(() => Document, { nullable: true })
   async document(@Args('id') id: string) {
-    return this.prisma.document.findUnique({ where: { id } });
+    return await this.prisma.document.findUnique({ where: { id } });
   }
 
   @Query(() => [Document])
   async documentsByUser(@Args('userId') userId: string) {
-    return this.prisma.document.findMany({ where: { userId } });
+    return await this.prisma.document.findMany({ where: { userId } });
   }
 
   @Mutation(() => Document)
@@ -43,7 +43,7 @@ export class DocumentResolver {
     @Args('title') title: string,
     @Args('userId') userId: string,
   ) {
-    return this.prisma.document.create({ data: { title, userId } });
+    return await this.prisma.document.create({ data: { title, userId } });
   }
 
   @Mutation(() => Document)
@@ -51,12 +51,15 @@ export class DocumentResolver {
     @Args('id') id: string,
     @Args('title', { nullable: true }) title?: string,
   ) {
-    return this.prisma.document.update({ where: { id }, data: { title } });
+    return await this.prisma.document.update({
+      where: { id },
+      data: { title },
+    });
   }
 
   @Mutation(() => Document)
   async deleteDocument(@Args('id') id: string) {
-    return this.prisma.document.delete({ where: { id } });
+    return await this.prisma.document.delete({ where: { id } });
   }
 
   @ResolveField(() => User)

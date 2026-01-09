@@ -11,7 +11,9 @@ export class OpenAIService {
     // This ensures consistency with the validated environment configuration
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY is required but not found in environment variables');
+      throw new Error(
+        'OPENAI_API_KEY is required but not found in environment variables',
+      );
     }
     this.openai = new OpenAI({ apiKey });
   }

@@ -29,12 +29,12 @@ export class EntityMentionResolver {
 
   @Query(() => [EntityMention])
   async entityMentions() {
-    return this.prisma.entityMention.findMany();
+    return await this.prisma.entityMention.findMany();
   }
 
   @Query(() => EntityMention, { nullable: true })
   async entityMention(@Args('id') id: string) {
-    return this.prisma.entityMention.findUnique({ where: { id } });
+    return await this.prisma.entityMention.findUnique({ where: { id } });
   }
 
   @ResolveField(() => Entity)
@@ -61,13 +61,13 @@ export class EntityMentionResolver {
 
   @Mutation(() => EntityMention)
   async createEntityMention(@Args('data') data: CreateEntityMentionInput) {
-    return this.prisma.entityMention.create({ data });
+    return await this.prisma.entityMention.create({ data });
   }
 
   @Mutation(() => EntityMention)
   async updateEntityMention(@Args('data') data: UpdateEntityMentionInput) {
     const { id, entityId, chunkId } = data;
-    return this.prisma.entityMention.update({
+    return await this.prisma.entityMention.update({
       where: { id },
       data: { entityId, chunkId },
     });
@@ -75,6 +75,6 @@ export class EntityMentionResolver {
 
   @Mutation(() => EntityMention)
   async deleteEntityMention(@Args('id') id: string) {
-    return this.prisma.entityMention.delete({ where: { id } });
+    return await this.prisma.entityMention.delete({ where: { id } });
   }
 }

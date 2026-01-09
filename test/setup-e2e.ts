@@ -20,25 +20,30 @@ if (process.env.TEST_DATABASE_URL) {
   process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 } else {
   const existingUrl = process.env.DATABASE_URL || '';
-  
+
   // If DATABASE_URL doesn't point to aletheia_test, replace the database name
   if (existingUrl && !existingUrl.includes('/aletheia_test')) {
     // Replace database name in connection string with aletheia_test
     // Pattern: postgresql://user:pass@host:port/dbname?params or postgresql://user:pass@host:port/dbname
-    const urlMatch = existingUrl.match(/^(postgresql:\/\/[^\/]+\/)([^\/\?]+)(.*)$/);
+    const urlMatch = existingUrl.match(
+      /^(postgresql:\/\/[^/]+\/)([^/?]+)(.*)$/,
+    );
     if (urlMatch) {
-      const [, prefix, dbName, params] = urlMatch;
-      process.env.DATABASE_URL = `${prefix}aletheia_test${params}`;
+      const [, prefix, , params] = urlMatch;
+      process.env.DATABASE_URL = `${prefix}aletheia_test${params || ''}`;
     } else {
       // Fallback: try simple replacement
-      process.env.DATABASE_URL = existingUrl.replace(/\/([^\/\?]+)(\?|$)/, '/aletheia_test$2');
+      process.env.DATABASE_URL = existingUrl.replace(
+        /\/([^/?]+)(\?|$)/,
+        '/aletheia_test$2',
+      );
     }
   } else if (!existingUrl) {
     // Last resort fallback - should never be reached if .env.test is properly configured
     // This is only used if no .env files exist and no DATABASE_URL is set
     console.warn(
       '⚠️  WARNING: No DATABASE_URL found in environment. Using fallback test database URL.\n' +
-        '   Please create .env.test file with proper DATABASE_URL pointing to aletheia_test database.'
+        '   Please create .env.test file with proper DATABASE_URL pointing to aletheia_test database.',
     );
     process.env.DATABASE_URL =
       'postgresql://user:password@localhost:5432/aletheia_test';
@@ -49,7 +54,7 @@ if (process.env.TEST_DATABASE_URL) {
 // Log which database we're using (only in test environment)
 if (process.env.NODE_ENV !== 'production') {
   const dbUrl = process.env.DATABASE_URL || '';
-  const dbMatch = dbUrl.match(/\/([^\/\?]+)(\?|$)/);
+  const dbMatch = dbUrl.match(/\/([^/?]+)(\?|$)/);
   const dbName = dbMatch ? dbMatch[1] : 'unknown';
   console.log(`[E2E Test Setup] Using database: ${dbName}`);
 }

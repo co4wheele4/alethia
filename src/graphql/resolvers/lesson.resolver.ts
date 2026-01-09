@@ -24,17 +24,17 @@ export class LessonResolver {
 
   @Query(() => [Lesson])
   async lessons() {
-    return this.prisma.lesson.findMany();
+    return await this.prisma.lesson.findMany();
   }
 
   @Query(() => Lesson, { nullable: true })
   async lesson(@Args('id') id: string) {
-    return this.prisma.lesson.findUnique({ where: { id } });
+    return await this.prisma.lesson.findUnique({ where: { id } });
   }
 
   @Query(() => [Lesson])
   async lessonsByUser(@Args('userId') userId: string) {
-    return this.prisma.lesson.findMany({ where: { userId } });
+    return await this.prisma.lesson.findMany({ where: { userId } });
   }
 
   @Mutation(() => Lesson)
@@ -43,7 +43,9 @@ export class LessonResolver {
     @Args('userId') userId: string,
     @Args('content', { nullable: true }) content?: string,
   ) {
-    return this.prisma.lesson.create({ data: { title, content, userId } });
+    return await this.prisma.lesson.create({
+      data: { title, content, userId },
+    });
   }
 
   @Mutation(() => Lesson)
@@ -52,7 +54,7 @@ export class LessonResolver {
     @Args('title', { nullable: true }) title?: string,
     @Args('content', { nullable: true }) content?: string,
   ) {
-    return this.prisma.lesson.update({
+    return await this.prisma.lesson.update({
       where: { id },
       data: { title, content },
     });
@@ -60,7 +62,7 @@ export class LessonResolver {
 
   @Mutation(() => Lesson)
   async deleteLesson(@Args('id') id: string) {
-    return this.prisma.lesson.delete({ where: { id } });
+    return await this.prisma.lesson.delete({ where: { id } });
   }
 
   @ResolveField(() => User)

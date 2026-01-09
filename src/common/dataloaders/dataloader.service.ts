@@ -1,6 +1,18 @@
 import { Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
 import { PrismaService } from '@prisma/prisma.service';
+import {
+  User as PrismaUser,
+  Lesson as PrismaLesson,
+  Document as PrismaDocument,
+  DocumentChunk as PrismaDocumentChunk,
+  Embedding as PrismaEmbedding,
+  Entity as PrismaEntity,
+  EntityMention as PrismaEntityMention,
+  EntityRelationship as PrismaEntityRelationship,
+  AiQuery as PrismaAiQuery,
+  AiQueryResult as PrismaAiQueryResult,
+} from '@prisma/client';
 import { User } from '@models/user.model';
 import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
@@ -60,7 +72,7 @@ export class DataLoaderService {
     // User loaders
     this.userLoader = new DataLoader<string, User | null>(
       async (ids: readonly string[]) => {
-        const users = await this.prisma.user.findMany({
+        const users: PrismaUser[] = await this.prisma.user.findMany({
           where: { id: { in: [...ids] } },
         });
         const userMap = new Map(
@@ -73,7 +85,7 @@ export class DataLoaderService {
     // Lesson loaders
     this.lessonLoader = new DataLoader<string, Lesson | null>(
       async (ids: readonly string[]) => {
-        const lessons = await this.prisma.lesson.findMany({
+        const lessons: PrismaLesson[] = await this.prisma.lesson.findMany({
           where: { id: { in: [...ids] } },
         });
         const lessonMap = new Map(
@@ -85,7 +97,7 @@ export class DataLoaderService {
 
     this.lessonsByUserLoader = new DataLoader<string, Lesson[]>(
       async (userIds: readonly string[]) => {
-        const lessons = await this.prisma.lesson.findMany({
+        const lessons: PrismaLesson[] = await this.prisma.lesson.findMany({
           where: { userId: { in: [...userIds] } },
         });
         const lessonsByUser = new Map<string, Lesson[]>();
@@ -104,9 +116,11 @@ export class DataLoaderService {
     // Document loaders
     this.documentLoader = new DataLoader<string, Document | null>(
       async (ids: readonly string[]) => {
-        const documents = await this.prisma.document.findMany({
-          where: { id: { in: [...ids] } },
-        });
+        const documents: PrismaDocument[] = await this.prisma.document.findMany(
+          {
+            where: { id: { in: [...ids] } },
+          },
+        );
         const documentMap = new Map(
           documents.map((doc) => [doc.id, doc as unknown as Document]),
         );
@@ -116,9 +130,11 @@ export class DataLoaderService {
 
     this.documentsByUserLoader = new DataLoader<string, Document[]>(
       async (userIds: readonly string[]) => {
-        const documents = await this.prisma.document.findMany({
-          where: { userId: { in: [...userIds] } },
-        });
+        const documents: PrismaDocument[] = await this.prisma.document.findMany(
+          {
+            where: { userId: { in: [...userIds] } },
+          },
+        );
         const documentsByUser = new Map<string, Document[]>();
         for (const userId of userIds) {
           documentsByUser.set(userId, []);
@@ -135,9 +151,10 @@ export class DataLoaderService {
     // DocumentChunk loaders
     this.documentChunkLoader = new DataLoader<string, DocumentChunk | null>(
       async (ids: readonly string[]) => {
-        const chunks = await this.prisma.documentChunk.findMany({
-          where: { id: { in: [...ids] } },
-        });
+        const chunks: PrismaDocumentChunk[] =
+          await this.prisma.documentChunk.findMany({
+            where: { id: { in: [...ids] } },
+          });
         const chunkMap = new Map(
           chunks.map((chunk) => [chunk.id, chunk as unknown as DocumentChunk]),
         );
@@ -147,9 +164,10 @@ export class DataLoaderService {
 
     this.chunksByDocumentLoader = new DataLoader<string, DocumentChunk[]>(
       async (documentIds: readonly string[]) => {
-        const chunks = await this.prisma.documentChunk.findMany({
-          where: { documentId: { in: [...documentIds] } },
-        });
+        const chunks: PrismaDocumentChunk[] =
+          await this.prisma.documentChunk.findMany({
+            where: { documentId: { in: [...documentIds] } },
+          });
         const chunksByDocument = new Map<string, DocumentChunk[]>();
         for (const documentId of documentIds) {
           chunksByDocument.set(documentId, []);
@@ -168,9 +186,10 @@ export class DataLoaderService {
     // Embedding loaders
     this.embeddingLoader = new DataLoader<string, Embedding | null>(
       async (ids: readonly string[]) => {
-        const embeddings = await this.prisma.embedding.findMany({
-          where: { id: { in: [...ids] } },
-        });
+        const embeddings: PrismaEmbedding[] =
+          await this.prisma.embedding.findMany({
+            where: { id: { in: [...ids] } },
+          });
         const embeddingMap = new Map(
           embeddings.map((emb) => [emb.id, emb as unknown as Embedding]),
         );
@@ -180,9 +199,10 @@ export class DataLoaderService {
 
     this.embeddingsByChunkLoader = new DataLoader<string, Embedding[]>(
       async (chunkIds: readonly string[]) => {
-        const embeddings = await this.prisma.embedding.findMany({
-          where: { chunkId: { in: [...chunkIds] } },
-        });
+        const embeddings: PrismaEmbedding[] =
+          await this.prisma.embedding.findMany({
+            where: { chunkId: { in: [...chunkIds] } },
+          });
         const embeddingsByChunk = new Map<string, Embedding[]>();
         for (const chunkId of chunkIds) {
           embeddingsByChunk.set(chunkId, []);
@@ -200,7 +220,7 @@ export class DataLoaderService {
     // Entity loaders
     this.entityLoader = new DataLoader<string, Entity | null>(
       async (ids: readonly string[]) => {
-        const entities = await this.prisma.entity.findMany({
+        const entities: PrismaEntity[] = await this.prisma.entity.findMany({
           where: { id: { in: [...ids] } },
         });
         const entityMap = new Map(
@@ -213,9 +233,10 @@ export class DataLoaderService {
     // EntityMention loaders
     this.entityMentionLoader = new DataLoader<string, EntityMention | null>(
       async (ids: readonly string[]) => {
-        const mentions = await this.prisma.entityMention.findMany({
-          where: { id: { in: [...ids] } },
-        });
+        const mentions: PrismaEntityMention[] =
+          await this.prisma.entityMention.findMany({
+            where: { id: { in: [...ids] } },
+          });
         const mentionMap = new Map(
           mentions.map((mention) => [
             mention.id,
@@ -228,9 +249,10 @@ export class DataLoaderService {
 
     this.mentionsByEntityLoader = new DataLoader<string, EntityMention[]>(
       async (entityIds: readonly string[]) => {
-        const mentions = await this.prisma.entityMention.findMany({
-          where: { entityId: { in: [...entityIds] } },
-        });
+        const mentions: PrismaEntityMention[] =
+          await this.prisma.entityMention.findMany({
+            where: { entityId: { in: [...entityIds] } },
+          });
         const mentionsByEntity = new Map<string, EntityMention[]>();
         for (const entityId of entityIds) {
           mentionsByEntity.set(entityId, []);
@@ -246,9 +268,10 @@ export class DataLoaderService {
 
     this.mentionsByChunkLoader = new DataLoader<string, EntityMention[]>(
       async (chunkIds: readonly string[]) => {
-        const mentions = await this.prisma.entityMention.findMany({
-          where: { chunkId: { in: [...chunkIds] } },
-        });
+        const mentions: PrismaEntityMention[] =
+          await this.prisma.entityMention.findMany({
+            where: { chunkId: { in: [...chunkIds] } },
+          });
         const mentionsByChunk = new Map<string, EntityMention[]>();
         for (const chunkId of chunkIds) {
           mentionsByChunk.set(chunkId, []);
@@ -267,9 +290,10 @@ export class DataLoaderService {
       string,
       EntityRelationship | null
     >(async (ids: readonly string[]) => {
-      const relationships = await this.prisma.entityRelationship.findMany({
-        where: { id: { in: [...ids] } },
-      });
+      const relationships: PrismaEntityRelationship[] =
+        await this.prisma.entityRelationship.findMany({
+          where: { id: { in: [...ids] } },
+        });
       const relationshipMap = new Map(
         relationships.map((rel) => [
           rel.id,
@@ -283,9 +307,10 @@ export class DataLoaderService {
       string,
       EntityRelationship[]
     >(async (entityIds: readonly string[]) => {
-      const relationships = await this.prisma.entityRelationship.findMany({
-        where: { fromEntity: { in: [...entityIds] } },
-      });
+      const relationships: PrismaEntityRelationship[] =
+        await this.prisma.entityRelationship.findMany({
+          where: { fromEntity: { in: [...entityIds] } },
+        });
       const relationshipsByFrom = new Map<string, EntityRelationship[]>();
       for (const entityId of entityIds) {
         relationshipsByFrom.set(entityId, []);
@@ -303,9 +328,10 @@ export class DataLoaderService {
       string,
       EntityRelationship[]
     >(async (entityIds: readonly string[]) => {
-      const relationships = await this.prisma.entityRelationship.findMany({
-        where: { toEntity: { in: [...entityIds] } },
-      });
+      const relationships: PrismaEntityRelationship[] =
+        await this.prisma.entityRelationship.findMany({
+          where: { toEntity: { in: [...entityIds] } },
+        });
       const relationshipsByTo = new Map<string, EntityRelationship[]>();
       for (const entityId of entityIds) {
         relationshipsByTo.set(entityId, []);
@@ -322,7 +348,7 @@ export class DataLoaderService {
     // AiQuery loaders
     this.aiQueryLoader = new DataLoader<string, AiQuery | null>(
       async (ids: readonly string[]) => {
-        const queries = await this.prisma.aiQuery.findMany({
+        const queries: PrismaAiQuery[] = await this.prisma.aiQuery.findMany({
           where: { id: { in: [...ids] } },
         });
         const queryMap = new Map(
@@ -334,7 +360,7 @@ export class DataLoaderService {
 
     this.aiQueriesByUserLoader = new DataLoader<string, AiQuery[]>(
       async (userIds: readonly string[]) => {
-        const queries = await this.prisma.aiQuery.findMany({
+        const queries: PrismaAiQuery[] = await this.prisma.aiQuery.findMany({
           where: { userId: { in: [...userIds] } },
           orderBy: { createdAt: 'desc' },
         });
@@ -354,9 +380,10 @@ export class DataLoaderService {
     // AiQueryResult loaders
     this.aiQueryResultLoader = new DataLoader<string, AiQueryResult | null>(
       async (ids: readonly string[]) => {
-        const results = await this.prisma.aiQueryResult.findMany({
-          where: { id: { in: [...ids] } },
-        });
+        const results: PrismaAiQueryResult[] =
+          await this.prisma.aiQueryResult.findMany({
+            where: { id: { in: [...ids] } },
+          });
         const resultMap = new Map(
           results.map((result) => [
             result.id,
@@ -369,10 +396,11 @@ export class DataLoaderService {
 
     this.resultsByQueryLoader = new DataLoader<string, AiQueryResult[]>(
       async (queryIds: readonly string[]) => {
-        const results = await this.prisma.aiQueryResult.findMany({
-          where: { queryId: { in: [...queryIds] } },
-          orderBy: { createdAt: 'desc' },
-        });
+        const results: PrismaAiQueryResult[] =
+          await this.prisma.aiQueryResult.findMany({
+            where: { queryId: { in: [...queryIds] } },
+            orderBy: { createdAt: 'desc' },
+          });
         const resultsByQuery = new Map<string, AiQueryResult[]>();
         for (const queryId of queryIds) {
           resultsByQuery.set(queryId, []);
