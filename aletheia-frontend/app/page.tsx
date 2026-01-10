@@ -3,11 +3,19 @@
 import { GraphQLExample } from './components/ui/GraphQLExample';
 import { LoginForm } from './components/ui/LoginForm';
 import { useAuth } from './hooks/useAuth';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   // useAuth uses Apollo hooks, so it must be called inside ApolloProvider
   // The provider is in layout.tsx, so this should work
   const { isAuthenticated, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering auth-dependent UI after client-side mount
+  useEffect(() => {
+    // Mark component as mounted on client side to prevent hydration mismatch
+    setMounted(true);
+  }, []); // Empty deps: only run on mount to prevent hydration mismatch
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -21,9 +29,19 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="w-full max-w-md space-y-8">
-          {/* Login Form - Prominently Displayed */}
-          {!isAuthenticated ? (
+              <div className="w-full max-w-md space-y-8">
+                {/* Login Form - Prominently Displayed */}
+                {/* Only render auth-dependent content after client-side mount to prevent hydration mismatch */}
+                {!mounted ? (
+                  <div className="p-8 border-2 border-blue-300 dark:border-blue-700 rounded-lg shadow-lg bg-white dark:bg-gray-900">
+                    <h2 className="text-2xl font-bold mb-6 text-center text-black dark:text-zinc-50">
+                      Welcome to Aletheia
+                    </h2>
+                    <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+                      Loading...
+                    </p>
+                  </div>
+                ) : !isAuthenticated ? (
             <div className="p-8 border-2 border-blue-300 dark:border-blue-700 rounded-lg shadow-lg bg-white dark:bg-gray-900">
               <h2 className="text-2xl font-bold mb-6 text-center text-black dark:text-zinc-50">
                 Welcome to Aletheia

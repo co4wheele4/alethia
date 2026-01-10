@@ -4,10 +4,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { LOGIN_MUTATION, REGISTER_MUTATION } from '../lib/graphql/queries';
-import { setAuthToken, removeAuthToken, getAuthToken, isAuthenticated } from '../lib/utils/auth';
+import { setAuthToken, removeAuthToken, getAuthToken } from '../lib/utils/auth';
 
 interface LoginVariables {
   email: string;
@@ -28,8 +28,18 @@ interface RegisterData {
 }
 
 export function useAuth() {
-  // Initialize token from localStorage on mount
-  const [token, setToken] = useState<string | null>(() => getAuthToken());
+  // Initialize token from localStorage on mount (only on client side)
+  const [token, setToken] = useState<string | null>(null);
+  const [isAuth, setIsAuth] = useState<boolean>(false);
+
+  // Initialize auth state on client-side mount to prevent hydration mismatch
+  // Using useEffect to access localStorage only on client side
+  useEffect(() => {
+    // Initialize auth state from localStorage (client-side only)
+    const authToken = getAuthToken();
+    setToken(authToken);
+    setIsAuth(authToken !== null);
+  }, []); // Empty deps: only run on mount to initialize from localStorage
 
   const [loginMutation, { loading: loginLoading, error: loginError }] = useMutation<
     LoginData,
@@ -39,6 +49,7 @@ export function useAuth() {
       const authToken = data.login;
       setAuthToken(authToken);
       setToken(authToken);
+      setIsAuth(true);
     },
     onError: (error: Error) => {
       console.error('Login error:', error);
@@ -53,6 +64,7 @@ export function useAuth() {
       const authToken = data.register;
       setAuthToken(authToken);
       setToken(authToken);
+      setIsAuth(true);
     },
     onError: (error: Error) => {
       console.error('Register error:', error);
@@ -84,11 +96,12 @@ export function useAuth() {
   const logout = () => {
     removeAuthToken();
     setToken(null);
+    setIsAuth(false);
   };
 
   return {
     token,
-    isAuthenticated: isAuthenticated(),
+    isAuthenticated: isAuth,
     login,
     register,
     logout,

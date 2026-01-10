@@ -1,6 +1,7 @@
 {
   "name": "aletheia-backend",
   "version": "0.1.0",
+  "type": "commonjs",
   "description": "",
   "author": "Evan Lunsford",
   "private": true,

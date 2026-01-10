@@ -407,6 +407,19 @@ The project demonstrates excellent engineering practices and is ready for produc
 
 ## 🔄 Changelog
 
+### January 10, 2026
+- ✅ **Added Registration Endpoint**
+  - New `register` mutation in AuthResolver (public, no auth required)
+  - Automatic user creation with email and optional name
+  - Auto-login after registration (returns JWT token)
+  - Comprehensive test coverage: 6 unit tests + 5 e2e tests
+- ✅ **Test Coverage Enhancement**
+  - Maintained 100% coverage with new register tests
+  - Total: 395 unit tests, 56 e2e tests (up from 389/51)
+- ✅ **Project Configuration**
+  - Set TypeScript project type to `commonjs` in package.json
+  - Proper module system configuration for NestJS/TypeScript
+
 ### January 8, 2026
 - ✅ **Fixed all TypeScript compilation errors**
   - Resolved type inference issues in DataLoader service with explicit Prisma types
