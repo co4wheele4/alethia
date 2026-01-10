@@ -1,6 +1,9 @@
 /**
  * Apollo Client configuration for GraphQL
+ * Note: This file uses client-side APIs (localStorage) and should only be used in client components
  */
+
+'use client';
 
 import { ApolloClient, InMemoryCache, createHttpLink, from, CombinedGraphQLErrors } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
@@ -16,7 +19,8 @@ const httpLink = createHttpLink({
 
 // Auth Link - adds JWT token to requests
 const authLink = setContext((_, { headers }) => {
-  const token = getAuthToken();
+  // Only access localStorage on client side
+  const token = typeof window !== 'undefined' ? getAuthToken() : null;
   
   return {
     headers: {
@@ -53,24 +57,42 @@ const errorLink = onError(({ error }) => {
   }
 });
 
-// Create Apollo Client
-export const apolloClient = new ApolloClient({
-  link: from([errorLink, authLink, httpLink]),
-  cache: new InMemoryCache({
-    // Add any cache configuration here
-    typePolicies: {
-      // Define type policies for better cache management
+// Create Apollo Client (lazy initialization to avoid SSR issues)
+let _apolloClient: ApolloClient<any> | null = null;
+
+function createApolloClient(): ApolloClient<any> {
+  // This should only be called on client side
+  // The provider's useMemo ensures window is defined before calling this
+  if (typeof window === 'undefined') {
+    throw new Error('Apollo Client can only be created on the client side');
+  }
+
+  // Create full client with auth/error links
+  return new ApolloClient({
+    link: from([errorLink, authLink, httpLink]),
+    cache: new InMemoryCache({
+      typePolicies: {
+        // Define type policies for better cache management
+      },
+    }),
+    defaultOptions: {
+      watchQuery: {
+        errorPolicy: 'all',
+      },
+      query: {
+        errorPolicy: 'all',
+      },
+      mutate: {
+        errorPolicy: 'all',
+      },
     },
-  }),
-  defaultOptions: {
-    watchQuery: {
-      errorPolicy: 'all',
-    },
-    query: {
-      errorPolicy: 'all',
-    },
-    mutate: {
-      errorPolicy: 'all',
-    },
-  },
-});
+  });
+}
+
+// Export singleton Apollo Client instance (created on first access, lazy initialization)
+export function getApolloClient(): ApolloClient<any> {
+  if (!_apolloClient) {
+    _apolloClient = createApolloClient();
+  }
+  return _apolloClient;
+}

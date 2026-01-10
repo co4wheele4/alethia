@@ -17,3 +17,10 @@ export const LOGIN_MUTATION = gql`
     login(email: $email, password: $password)
   }
 `;
+
+// Register mutation
+export const REGISTER_MUTATION = gql`
+  mutation Register($email: String!, $name: String) {
+    register(email: $email, name: $name)
+  }
+`;

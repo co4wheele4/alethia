@@ -117,6 +117,7 @@ type Mutation {
   deleteLesson(id: String!): Lesson!
   deleteUser(id: String!): User!
   login(email: String!, password: String!): String!
+  register(email: String!, name: String): String!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
   updateEmbedding(id: String!, values: [Float!]): Embedding!

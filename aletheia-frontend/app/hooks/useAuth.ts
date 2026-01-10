@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { LOGIN_MUTATION } from '../lib/graphql/queries';
+import { LOGIN_MUTATION, REGISTER_MUTATION } from '../lib/graphql/queries';
 import { setAuthToken, removeAuthToken, getAuthToken, isAuthenticated } from '../lib/utils/auth';
 
 interface LoginVariables {
@@ -16,6 +16,15 @@ interface LoginVariables {
 
 interface LoginData {
   login: string; // Returns the JWT token
+}
+
+interface RegisterVariables {
+  email: string;
+  name?: string;
+}
+
+interface RegisterData {
+  register: string; // Returns the JWT token
 }
 
 export function useAuth() {
@@ -36,12 +45,37 @@ export function useAuth() {
     },
   });
 
+  const [registerMutation, { loading: registerLoading, error: registerError }] = useMutation<
+    RegisterData,
+    RegisterVariables
+  >(REGISTER_MUTATION, {
+    onCompleted: (data: RegisterData) => {
+      const authToken = data.register;
+      setAuthToken(authToken);
+      setToken(authToken);
+    },
+    onError: (error: Error) => {
+      console.error('Register error:', error);
+    },
+  });
+
   const login = async (email: string, password: string) => {
     try {
       const result = await loginMutation({
         variables: { email, password },
       });
       return result.data?.login;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const register = async (email: string, name?: string) => {
+    try {
+      const result = await registerMutation({
+        variables: { email, name },
+      });
+      return result.data?.register;
     } catch (error) {
       throw error;
     }
@@ -56,8 +90,9 @@ export function useAuth() {
     token,
     isAuthenticated: isAuthenticated(),
     login,
+    register,
     logout,
-    loading: loginLoading,
-    error: loginError,
+    loading: loginLoading || registerLoading,
+    error: loginError || registerError,
   };
 }
