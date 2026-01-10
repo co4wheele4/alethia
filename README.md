@@ -192,14 +192,24 @@ aletheia/
 
 ## Project Status
 
-- ✅ **Backend**: Production ready with 100% test coverage (389 unit tests, 51 e2e tests)
+- ✅ **Backend**: Production ready with 100% test coverage (395 unit tests, 56 e2e tests)
 - ✅ **Frontend**: All issues resolved, ready for feature development (0 TypeScript errors, 0 lint errors)
+- ✅ **Features**: Login and Register fully functional in both backend and frontend
 - ✅ **Monorepo**: Fully converted to true monorepo structure with npm workspaces
 - ✅ **Git Hooks**: Pre-push hook configured to run all tests automatically
 - ✅ **Documentation**: Comprehensive documentation available
 - ✅ **Configuration**: Clean npm configuration (no deprecation warnings)
 
-### Latest Updates (January 9, 2026)
+### Latest Updates (January 10, 2026)
+
+- ✅ **Registration Feature**: Added user registration to both backend and frontend
+  - Backend: New `register` mutation with comprehensive tests (6 unit + 5 e2e tests)
+  - Frontend: Register form with Login/Register toggle, auto-login after registration
+- ✅ **Test Coverage**: Maintained 100% coverage with new tests (395 unit, 56 e2e)
+- ✅ **Code Quality**: All TypeScript and ESLint errors resolved
+- ✅ **Type Safety**: Fixed Apollo Client type issues (v4 compatibility)
+
+### Previous Updates (January 9, 2026)
 
 - ✅ **Monorepo Structure**: Converted backend and frontend from submodules to true monorepo
 - ✅ **Frontend Fixes**: Fixed all Apollo Client integration issues, TypeScript errors, and linting errors
