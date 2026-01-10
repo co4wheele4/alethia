@@ -27,6 +27,7 @@ describe('AuthService', () => {
           useValue: {
             user: {
               findUnique: jest.fn(),
+              create: jest.fn(),
             },
           },
         },
@@ -156,6 +157,70 @@ describe('AuthService', () => {
         UnauthorizedException,
       );
       expect(() => service.validateToken(mockToken)).toThrow('Invalid token');
+    });
+  });
+
+  describe('register', () => {
+    it('should create new user and return user object', async () => {
+      const newUser = {
+        ...mockUser,
+        email: 'new@example.com',
+        name: 'New User',
+      };
+
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
+      jest.spyOn(prismaService.user, 'create').mockResolvedValue(newUser);
+
+      const result = await service.register('new@example.com', 'New User');
+
+      expect(result).toEqual(newUser);
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'new@example.com' },
+      });
+      expect(prismaService.user.create).toHaveBeenCalledWith({
+        data: {
+          email: 'new@example.com',
+          name: 'New User',
+        },
+      });
+    });
+
+    it('should create user without name when name is not provided', async () => {
+      const newUser = {
+        ...mockUser,
+        email: 'new@example.com',
+        name: null,
+      };
+
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
+      jest.spyOn(prismaService.user, 'create').mockResolvedValue(newUser);
+
+      const result = await service.register('new@example.com');
+
+      expect(result).toEqual(newUser);
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'new@example.com' },
+      });
+      expect(prismaService.user.create).toHaveBeenCalledWith({
+        data: {
+          email: 'new@example.com',
+          name: null,
+        },
+      });
+    });
+
+    it('should throw UnauthorizedException when user already exists', async () => {
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(mockUser);
+
+      await expect(
+        service.register('test@example.com', 'Test User'),
+      ).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.register('test@example.com', 'Test User'),
+      ).rejects.toThrow('User with this email already exists');
+      expect(prismaService.user.create).not.toHaveBeenCalled();
     });
   });
 });

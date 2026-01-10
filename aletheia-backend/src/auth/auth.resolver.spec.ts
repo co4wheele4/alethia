@@ -24,6 +24,7 @@ describe('AuthResolver', () => {
           useValue: {
             validateUser: jest.fn(),
             login: jest.fn(),
+            register: jest.fn(),
           },
         },
       ],
@@ -63,6 +64,65 @@ describe('AuthResolver', () => {
       await expect(
         resolver.login('test@example.com', 'wrong-password'),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('register', () => {
+    it('should return access token after registration', async () => {
+      const mockAccessToken = 'mock-jwt-token';
+      const newUser = { ...mockUser, email: 'new@example.com' };
+
+      jest.spyOn(authService, 'register').mockResolvedValue(newUser);
+      jest.spyOn(authService, 'login').mockReturnValue({
+        access_token: mockAccessToken,
+        user: newUser,
+      });
+
+      const result = await resolver.register('new@example.com', 'New User');
+
+      expect(result).toBe(mockAccessToken);
+      expect(authService.register).toHaveBeenCalledWith(
+        'new@example.com',
+        'New User',
+      );
+      expect(authService.login).toHaveBeenCalledWith(newUser);
+    });
+
+    it('should return access token when registering without name', async () => {
+      const mockAccessToken = 'mock-jwt-token';
+      const newUser = { ...mockUser, email: 'new@example.com', name: null };
+
+      jest.spyOn(authService, 'register').mockResolvedValue(newUser);
+      jest.spyOn(authService, 'login').mockReturnValue({
+        access_token: mockAccessToken,
+        user: newUser,
+      });
+
+      const result = await resolver.register('new@example.com');
+
+      expect(result).toBe(mockAccessToken);
+      expect(authService.register).toHaveBeenCalledWith(
+        'new@example.com',
+        undefined,
+      );
+      expect(authService.login).toHaveBeenCalledWith(newUser);
+    });
+
+    it('should throw error when user already exists', async () => {
+      const { UnauthorizedException } = await import('@nestjs/common');
+
+      jest
+        .spyOn(authService, 'register')
+        .mockRejectedValue(
+          new UnauthorizedException('User with this email already exists'),
+        );
+
+      await expect(
+        resolver.register('existing@example.com', 'Test User'),
+      ).rejects.toThrow(UnauthorizedException);
+      await expect(
+        resolver.register('existing@example.com', 'Test User'),
+      ).rejects.toThrow('User with this email already exists');
     });
   });
 });
