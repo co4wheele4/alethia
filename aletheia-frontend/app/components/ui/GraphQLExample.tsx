@@ -5,40 +5,46 @@
 'use client';
 
 import { useHello } from '../../hooks/useHello';
+import { Box, Paper, Typography, Button, CircularProgress, Alert } from '@mui/material';
 
 export function GraphQLExample() {
   const { hello, loading, error, refetch } = useHello();
 
   if (loading) {
-    return <div className="text-gray-600">Loading...</div>;
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <CircularProgress size={20} />
+        <Typography color="text.secondary">Loading...</Typography>
+      </Box>
+    );
   }
 
   if (error) {
     return (
-      <div className="text-red-600">
-        Error: {error.message}
-        <button
-          onClick={() => refetch()}
-          className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
+      <Box>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error: {error.message}
+        </Alert>
+        <Button variant="contained" onClick={() => refetch()}>
           Retry
-        </button>
-      </div>
+        </Button>
+      </Box>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="p-4 bg-gray-100 rounded-lg">
-        <h3 className="font-semibold mb-2">GraphQL Query Result:</h3>
-        <p className="text-lg">{hello || 'No data'}</p>
-      </div>
-      <button
-        onClick={() => refetch()}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Paper elevation={1} sx={{ p: 3 }}>
+        <Typography variant="h6" gutterBottom color="text.primary">
+          GraphQL Query Result:
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          {hello || 'No data'}
+        </Typography>
+      </Paper>
+      <Button variant="contained" onClick={() => refetch()}>
         Refetch
-      </button>
-    </div>
+      </Button>
+    </Box>
   );
 }

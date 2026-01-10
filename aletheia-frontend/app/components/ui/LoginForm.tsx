@@ -7,6 +7,14 @@
 
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import {
+  Box,
+  Button,
+  TextField,
+  Alert,
+  Tabs,
+  Tab,
+} from '@mui/material';
 
 export function LoginForm() {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -36,98 +44,75 @@ export function LoginForm() {
 
 
   return (
-    <div className="space-y-4">
+    <Box sx={{ width: '100%' }}>
       {/* Toggle between Login and Register */}
-      <div className="flex gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => setIsRegisterMode(false)}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            !isRegisterMode
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+      <Box sx={{ mb: 3 }}>
+        <Tabs
+          value={isRegisterMode ? 1 : 0}
+          onChange={(_, newValue) => setIsRegisterMode(newValue === 1)}
+          sx={{ mb: 2 }}
         >
-          Login
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsRegisterMode(true)}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            isRegisterMode
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Register
-        </button>
-      </div>
+          <Tab label="Login" />
+          <Tab label="Register" />
+        </Tabs>
+      </Box>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {isRegisterMode && (
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">
-              Name (Optional)
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your name"
-            />
-          </div>
+          <TextField
+            id="name"
+            label="Name (Optional)"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name"
+            fullWidth
+            variant="outlined"
+          />
         )}
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter your email"
-          />
-        </div>
+        <TextField
+          id="email"
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder="Enter your email"
+          fullWidth
+          variant="outlined"
+        />
 
         {!isRegisterMode && (
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your password"
-            />
-          </div>
+          <TextField
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="Enter your password"
+            fullWidth
+            variant="outlined"
+          />
         )}
 
         {error && (
-          <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
-            {error}
-          </div>
+          <Alert severity="error">{error}</Alert>
         )}
 
-        <button
+        <Button
           type="submit"
+          variant="contained"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          fullWidth
+          sx={{ mt: 2 }}
         >
           {loading
             ? (isRegisterMode ? 'Registering...' : 'Logging in...')
             : (isRegisterMode ? 'Register' : 'Login')}
-        </button>
-      </form>
-    </div>
+        </Button>
+      </Box>
+    </Box>
   );
 }

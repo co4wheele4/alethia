@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ApolloClientProvider } from "./providers/apollo-provider";
+import { MuiThemeProvider } from "./providers/mui-theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ApolloClientProvider>{children}</ApolloClientProvider>
+        <MuiThemeProvider>
+          <ApolloClientProvider>{children}</ApolloClientProvider>
+        </MuiThemeProvider>
       </body>
     </html>
   );

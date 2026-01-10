@@ -4,6 +4,8 @@ import { GraphQLExample } from './components/ui/GraphQLExample';
 import { LoginForm } from './components/ui/LoginForm';
 import { useAuth } from './hooks/useAuth';
 import { useState, useEffect } from 'react';
+import { Box, Container, Typography, Paper, Button, Alert, AppBar, Toolbar } from '@mui/material';
+import { ThemeToggle } from './components/ui/ThemeToggle';
 
 export default function Home() {
   // useAuth uses Apollo hooks, so it must be called inside ApolloProvider
@@ -18,67 +20,97 @@ export default function Home() {
   }, []); // Empty deps: only run on mount to prevent hydration mismatch
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-4xl flex-col items-center gap-8 py-16 px-8 bg-white dark:bg-black">
-        <div className="w-full text-center">
-          <h1 className="text-4xl font-bold mb-4 text-black dark:text-zinc-50">
-            Aletheia
-          </h1>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
-            Frontend connected to GraphQL Backend
-          </p>
-        </div>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.default',
+      }}
+    >
+      {/* App Bar with Theme Toggle */}
+      <AppBar position="static" elevation={0}>
+        <Toolbar sx={{ justifyContent: 'flex-end' }}>
+          <ThemeToggle />
+        </Toolbar>
+      </AppBar>
 
-              <div className="w-full max-w-md space-y-8">
-                {/* Login Form - Prominently Displayed */}
-                {/* Only render auth-dependent content after client-side mount to prevent hydration mismatch */}
-                {!mounted ? (
-                  <div className="p-8 border-2 border-blue-300 dark:border-blue-700 rounded-lg shadow-lg bg-white dark:bg-gray-900">
-                    <h2 className="text-2xl font-bold mb-6 text-center text-black dark:text-zinc-50">
-                      Welcome to Aletheia
-                    </h2>
-                    <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-                      Loading...
-                    </p>
-                  </div>
-                ) : !isAuthenticated ? (
-            <div className="p-8 border-2 border-blue-300 dark:border-blue-700 rounded-lg shadow-lg bg-white dark:bg-gray-900">
-              <h2 className="text-2xl font-bold mb-6 text-center text-black dark:text-zinc-50">
-                Welcome to Aletheia
-              </h2>
-              <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-                Please login to continue
-              </p>
-              <LoginForm />
-            </div>
-          ) : (
-            <>
-              {/* Authentication Status */}
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                    ✅ Status: Authenticated
-                  </span>
-                  <button
-                    onClick={logout}
-                    className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
+      <Container
+        maxWidth="md"
+        sx={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+            py: 8,
+            px: 4,
+          }}
+        >
+          <Box sx={{ textAlign: 'center', width: '100%' }}>
+            <Typography variant="h3" component="h1" gutterBottom>
+              Aletheia
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+              Frontend connected to GraphQL Backend
+            </Typography>
+          </Box>
 
-              {/* GraphQL Example */}
-              <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4 text-black dark:text-zinc-50">
-                  GraphQL Query Example
-                </h2>
-                <GraphQLExample />
-              </div>
-            </>
-          )}
-        </div>
-      </main>
-    </div>
+          <Box sx={{ width: '100%', maxWidth: 500 }}>
+            {/* Login Form - Prominently Displayed */}
+            {/* Only render auth-dependent content after client-side mount to prevent hydration mismatch */}
+            {!mounted ? (
+              <Paper elevation={3} sx={{ p: 4 }}>
+                <Typography variant="h5" component="h2" align="center" gutterBottom>
+                  Welcome to Aletheia
+                </Typography>
+                <Typography variant="body2" color="text.secondary" align="center">
+                  Loading...
+                </Typography>
+              </Paper>
+            ) : !isAuthenticated ? (
+              <Paper elevation={3} sx={{ p: 4 }}>
+                <Typography variant="h5" component="h2" align="center" gutterBottom>
+                  Welcome to Aletheia
+                </Typography>
+                <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
+                  Please login to continue
+                </Typography>
+                <LoginForm />
+              </Paper>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {/* Authentication Status */}
+                <Alert
+                  severity="success"
+                  action={
+                    <Button color="inherit" size="small" onClick={logout}>
+                      Logout
+                    </Button>
+                  }
+                >
+                  Status: Authenticated
+                </Alert>
+
+                {/* GraphQL Example */}
+                <Paper elevation={1} sx={{ p: 3 }}>
+                  <Typography variant="h6" component="h2" gutterBottom>
+                    GraphQL Query Example
+                  </Typography>
+                  <GraphQLExample />
+                </Paper>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Container>
+    </Box>
   );
 }
