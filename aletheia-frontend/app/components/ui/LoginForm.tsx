@@ -34,13 +34,6 @@ export function LoginForm() {
     }
   };
 
-  const toggleMode = () => {
-    setIsRegisterMode(!isRegisterMode);
-    setError(null);
-    setEmail('');
-    setPassword('');
-    setName('');
-  };
 
   return (
     <div className="space-y-4">

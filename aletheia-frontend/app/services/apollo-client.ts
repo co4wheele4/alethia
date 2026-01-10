@@ -58,9 +58,9 @@ const errorLink = onError(({ error }) => {
 });
 
 // Create Apollo Client (lazy initialization to avoid SSR issues)
-let _apolloClient: ApolloClient<any> | null = null;
+let _apolloClient: ApolloClient<Record<string, unknown>> | null = null;
 
-function createApolloClient(): ApolloClient<any> {
+function createApolloClient(): ApolloClient<Record<string, unknown>> {
   // This should only be called on client side
   // The provider's useMemo ensures window is defined before calling this
   if (typeof window === 'undefined') {
@@ -90,7 +90,7 @@ function createApolloClient(): ApolloClient<any> {
 }
 
 // Export singleton Apollo Client instance (created on first access, lazy initialization)
-export function getApolloClient(): ApolloClient<any> {
+export function getApolloClient(): ApolloClient<Record<string, unknown>> {
   if (!_apolloClient) {
     _apolloClient = createApolloClient();
   }

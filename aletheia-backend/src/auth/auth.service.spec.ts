@@ -210,9 +210,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException when user already exists', async () => {
-      jest
-        .spyOn(prismaService.user, 'findUnique')
-        .mockResolvedValue(mockUser);
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(mockUser);
 
       await expect(
         service.register('test@example.com', 'Test User'),
