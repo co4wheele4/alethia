@@ -51,7 +51,7 @@ describe('useHello', () => {
       loading: false,
       error: undefined,
       refetch: jest.fn(),
-    } as ReturnType<typeof apolloReact.useQuery>);
+    } as unknown as ReturnType<typeof apolloReact.useQuery>);
 
     const { result } = renderHook(() => useHello(), { wrapper });
 
@@ -66,7 +66,7 @@ describe('useHello', () => {
       loading: false,
       error: undefined,
       refetch: jest.fn(),
-    } as ReturnType<typeof apolloReact.useQuery>);
+    } as unknown as ReturnType<typeof apolloReact.useQuery>);
 
     const { result } = renderHook(() => useHello(), { wrapper });
 

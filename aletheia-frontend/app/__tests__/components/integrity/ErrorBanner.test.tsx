@@ -3,7 +3,7 @@
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ErrorBanner } from '../../../components/integrity/ErrorBanner';
+import { ErrorBanner, ErrorSource } from '../../../components/integrity/ErrorBanner';
 
 describe('ErrorBanner', () => {
   it('should render with default message and source', () => {
@@ -59,7 +59,7 @@ describe('ErrorBanner', () => {
 
   it('should handle invalid source type with default label', () => {
     // Test default case by passing an invalid source type
-    render(<ErrorBanner source={'invalid' as unknown as 'api' | 'database' | 'network'} />);
+    render(<ErrorBanner source={'invalid' as unknown as ErrorSource} />);
     // The default case returns 'Error' - check for it in title or source text
     const errorText = screen.queryByText(/^Error$/i) || screen.queryByText(/source: error/i);
     expect(errorText).toBeInTheDocument();

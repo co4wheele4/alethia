@@ -15,7 +15,6 @@ describe('apollo-client Edge Cases', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset the singleton client
-    // @ts-expect-error - accessing private property for testing
     if (typeof window !== 'undefined') {
       // Clear the cached client
       // Force recreation by clearing the cache

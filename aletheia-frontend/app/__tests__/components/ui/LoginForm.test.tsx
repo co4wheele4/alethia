@@ -2,7 +2,7 @@
  * Unit tests for LoginForm component
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LoginForm } from '../../../components/ui/LoginForm';
 import { useAuth } from '../../../hooks/useAuth';
 import { ApolloProvider } from '@apollo/client/react';

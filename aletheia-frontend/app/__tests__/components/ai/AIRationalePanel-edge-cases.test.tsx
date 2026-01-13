@@ -41,7 +41,7 @@ describe('AIRationalePanel Edge Cases', () => {
 
   it('should handle rationale with null evidence', () => {
     const rationale = [
-      { step: 1, reasoning: 'Reasoning', evidence: null as unknown as string },
+      { step: 1, reasoning: 'Reasoning', evidence: null as unknown as string[] },
     ];
 
     render(<AIRationalePanel rationale={rationale} />);
