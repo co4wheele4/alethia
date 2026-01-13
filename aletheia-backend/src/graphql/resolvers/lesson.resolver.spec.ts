@@ -50,7 +50,7 @@ describe('LessonResolver', () => {
       }),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         LessonResolver,
         {
@@ -64,9 +64,9 @@ describe('LessonResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<LessonResolver>(LessonResolver);
-    prismaService = module.get(PrismaService);
-    dataLoaderService = module.get(DataLoaderService);
+    resolver = await moduleRef.resolve<LessonResolver>(LessonResolver);
+    prismaService = moduleRef.get(PrismaService);
+    dataLoaderService = moduleRef.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -305,7 +305,7 @@ describe('LessonResolver', () => {
   });
 
   it('should build GraphQL schema with LessonResolver', async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -325,10 +325,10 @@ describe('LessonResolver', () => {
       ],
     }).compile();
 
-    const app = module.createNestApplication();
+    const app = moduleRef.createNestApplication();
     await app.init();
 
-    const lessonResolver = await module.resolve<LessonResolver>(LessonResolver);
+    const lessonResolver = await moduleRef.resolve<LessonResolver>(LessonResolver);
     expect(lessonResolver).toBeDefined();
 
     await app.close();

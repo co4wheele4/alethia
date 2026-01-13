@@ -5,11 +5,11 @@ describe('AppService', () => {
   let service: AppService;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [AppService],
     }).compile();
 
-    service = module.get<AppService>(AppService);
+    service = moduleRef.get<AppService>(AppService);
   });
 
   it('should be defined', () => {

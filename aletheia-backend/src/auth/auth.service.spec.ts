@@ -19,7 +19,7 @@ describe('AuthService', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         AuthService,
         {
@@ -41,9 +41,9 @@ describe('AuthService', () => {
       ],
     }).compile();
 
-    service = module.get<AuthService>(AuthService);
-    prismaService = module.get<PrismaService>(PrismaService);
-    jwtService = module.get<JwtService>(JwtService);
+    service = moduleRef.get<AuthService>(AuthService);
+    prismaService = moduleRef.get<PrismaService>(PrismaService);
+    jwtService = moduleRef.get<JwtService>(JwtService);
   });
 
   describe('validateUser', () => {

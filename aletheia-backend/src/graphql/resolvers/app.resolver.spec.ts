@@ -31,7 +31,7 @@ describe('AppResolver', () => {
       getEmbeddingResult: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         AppResolver,
         {
@@ -45,9 +45,9 @@ describe('AppResolver', () => {
       ],
     }).compile();
 
-    resolver = module.get<AppResolver>(AppResolver);
-    prismaService = module.get(PrismaService);
-    openAIService = module.get(OpenAIService);
+    resolver = moduleRef.get<AppResolver>(AppResolver);
+    prismaService = moduleRef.get(PrismaService);
+    openAIService = moduleRef.get(OpenAIService);
   });
 
   it('should be defined', () => {

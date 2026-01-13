@@ -3,10 +3,16 @@
   "version": "1.0.0",
   "description": "Aletheia full-stack application monorepo",
   "private": true,
-  "workspaces": [
-    "aletheia-backend",
-    "aletheia-frontend"
-  ],
+  "workspaces": {
+    "packages": [
+      "aletheia-backend",
+      "aletheia-frontend"
+    ],
+    "nohoist": [
+      "aletheia-frontend/react",
+      "aletheia-frontend/react-dom"
+    ]
+  },
   "scripts": {
     "build": "npm run build --workspaces",
     "build:backend": "npm run build --workspace=aletheia-backend",
@@ -21,8 +27,13 @@
     "dev": "npm run start:all",
     "test": "npm run test --workspaces --if-present",
     "test:backend": "npm run test:all --workspace=aletheia-backend",
-    "test:frontend": "npm run test --workspace=aletheia-frontend --if-present",
-    "test:e2e": "npm run test:e2e --workspace=aletheia-backend",
+    "test:frontend": "npm run test --workspace=aletheia-frontend",
+    "test:unit": "npm run test:backend && npm run test:frontend",
+    "test:e2e": "jest --config test/jest-e2e.json",
+    "test:e2e:backend": "jest --config test/jest-e2e.json --testPathPattern=test/e2e/backend",
+    "test:e2e:integration": "jest --config test/jest-e2e.json --testPathPattern=test/e2e/integration",
+    "test:e2e:all": "npm run test:e2e",
+    "test:all": "npm run test:unit && npm run test:e2e:all",
     "lint": "npm run lint --workspaces --if-present",
     "lint:backend": "npm run lint --workspace=aletheia-backend",
     "lint:frontend": "npm run lint --workspace=aletheia-frontend",
@@ -34,8 +45,20 @@
     "seed": "npm run seed --workspace=aletheia-backend"
   },
   "devDependencies": {
+    "@nestjs/common": "^11.1.11",
+    "@nestjs/core": "^11.1.11",
+    "@nestjs/testing": "^11.1.11",
+    "@types/jest": "^30.0.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/supertest": "^6.0.3",
     "concurrently": "^9.1.0",
-    "rimraf": "^5.0.5"
+    "jest": "^30.2.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "rimraf": "^5.0.5",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6"
   },
   "engines": {
     "node": ">=18.0.0",

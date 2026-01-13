@@ -44,7 +44,7 @@ describe('UserResolver', () => {
       }),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         UserResolver,
         {
@@ -58,9 +58,9 @@ describe('UserResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<UserResolver>(UserResolver);
-    prismaService = module.get(PrismaService);
-    dataLoaderService = module.get(DataLoaderService);
+    resolver = await moduleRef.resolve<UserResolver>(UserResolver);
+    prismaService = moduleRef.get(PrismaService);
+    dataLoaderService = moduleRef.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -501,7 +501,7 @@ describe('UserResolver', () => {
   });
 
   it('should build GraphQL schema with UserResolver', async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -521,10 +521,10 @@ describe('UserResolver', () => {
       ],
     }).compile();
 
-    const app = module.createNestApplication();
+    const app = moduleRef.createNestApplication();
     await app.init();
 
-    const userResolver = await module.resolve<UserResolver>(UserResolver);
+    const userResolver = await moduleRef.resolve<UserResolver>(UserResolver);
     expect(userResolver).toBeDefined();
 
     await app.close();

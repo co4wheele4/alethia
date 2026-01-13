@@ -4,31 +4,31 @@ import { DataLoaderService } from './dataloader.service';
 import { PrismaService } from '@prisma/prisma.service';
 
 describe('DataLoaderModule', () => {
-  let module: TestingModule;
+  let moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>>;
 
   beforeEach(async () => {
-    module = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [DataLoaderModule],
     }).compile();
   });
 
   it('should be defined', () => {
-    expect(module).toBeDefined();
+    expect(moduleRef).toBeDefined();
   });
 
   it('should provide DataLoaderService', async () => {
-    const service = await module.resolve<DataLoaderService>(DataLoaderService);
+    const service = await moduleRef.resolve<DataLoaderService>(DataLoaderService);
     expect(service).toBeDefined();
     expect(service).toBeInstanceOf(DataLoaderService);
   });
 
   it('should provide PrismaService', () => {
-    const service = module.get<PrismaService>(PrismaService);
+    const service = moduleRef.get<PrismaService>(PrismaService);
     expect(service).toBeDefined();
   });
 
   it('should export DataLoaderService', async () => {
-    const service = await module.resolve<DataLoaderService>(DataLoaderService);
+    const service = await moduleRef.resolve<DataLoaderService>(DataLoaderService);
     expect(service).toBeDefined();
   });
 });

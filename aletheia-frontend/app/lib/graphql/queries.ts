@@ -20,7 +20,21 @@ export const LOGIN_MUTATION = gql`
 
 // Register mutation
 export const REGISTER_MUTATION = gql`
-  mutation Register($email: String!, $name: String) {
-    register(email: $email, name: $name)
+  mutation Register($email: String!, $password: String!, $name: String) {
+    register(email: $email, password: $password, name: $name)
+  }
+`;
+
+// Change password mutation
+export const CHANGE_PASSWORD_MUTATION = gql`
+  mutation ChangePassword($currentPassword: String!, $newPassword: String!) {
+    changePassword(currentPassword: $currentPassword, newPassword: $newPassword)
+  }
+`;
+
+// Forgot password mutation (request password reset email)
+export const FORGOT_PASSWORD_MUTATION = gql`
+  mutation ForgotPassword($email: String!) {
+    forgotPassword(email: $email)
   }
 `;

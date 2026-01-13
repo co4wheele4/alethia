@@ -62,7 +62,7 @@ describe('AiQueryResolver', () => {
       }),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         AiQueryResolver,
         {
@@ -76,9 +76,9 @@ describe('AiQueryResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<AiQueryResolver>(AiQueryResolver);
-    prismaService = module.get(PrismaService);
-    dataLoaderService = module.get(DataLoaderService);
+    resolver = await moduleRef.resolve<AiQueryResolver>(AiQueryResolver);
+    prismaService = moduleRef.get(PrismaService);
+    dataLoaderService = moduleRef.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -326,7 +326,7 @@ describe('AiQueryResolver', () => {
   });
 
   it('should build GraphQL schema with AiQueryResolver', async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -346,11 +346,11 @@ describe('AiQueryResolver', () => {
       ],
     }).compile();
 
-    const app = module.createNestApplication();
+    const app = moduleRef.createNestApplication();
     await app.init();
 
     const aiQueryResolver =
-      await module.resolve<AiQueryResolver>(AiQueryResolver);
+      await moduleRef.resolve<AiQueryResolver>(AiQueryResolver);
     expect(aiQueryResolver).toBeDefined();
 
     await app.close();
@@ -393,7 +393,7 @@ describe('AiQueryResultResolver', () => {
       }),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         AiQueryResultResolver,
         {
@@ -407,11 +407,11 @@ describe('AiQueryResultResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<AiQueryResultResolver>(
+    resolver = await moduleRef.resolve<AiQueryResultResolver>(
       AiQueryResultResolver,
     );
-    prismaService = module.get(PrismaService);
-    dataLoaderService = module.get(DataLoaderService);
+    prismaService = moduleRef.get(PrismaService);
+    dataLoaderService = moduleRef.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -511,7 +511,7 @@ describe('AiQueryResultResolver', () => {
   });
 
   it('should build GraphQL schema with AiQueryResultResolver', async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -531,10 +531,10 @@ describe('AiQueryResultResolver', () => {
       ],
     }).compile();
 
-    const app = module.createNestApplication();
+    const app = moduleRef.createNestApplication();
     await app.init();
 
-    const resultResolver = await module.resolve<AiQueryResultResolver>(
+    const resultResolver = await moduleRef.resolve<AiQueryResultResolver>(
       AiQueryResultResolver,
     );
     expect(resultResolver).toBeDefined();

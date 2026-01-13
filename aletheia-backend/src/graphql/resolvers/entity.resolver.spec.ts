@@ -52,7 +52,7 @@ describe('EntityResolver', () => {
       }),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         EntityResolver,
         {
@@ -66,9 +66,9 @@ describe('EntityResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<EntityResolver>(EntityResolver);
-    prismaService = module.get(PrismaService);
-    dataLoaderService = module.get(DataLoaderService);
+    resolver = await moduleRef.resolve<EntityResolver>(EntityResolver);
+    prismaService = moduleRef.get(PrismaService);
+    dataLoaderService = moduleRef.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -295,7 +295,7 @@ describe('EntityResolver', () => {
   });
 
   it('should build GraphQL schema with EntityResolver', async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -315,10 +315,10 @@ describe('EntityResolver', () => {
       ],
     }).compile();
 
-    const app = module.createNestApplication();
+    const app = moduleRef.createNestApplication();
     await app.init();
 
-    const entityResolver = await module.resolve<EntityResolver>(EntityResolver);
+    const entityResolver = await moduleRef.resolve<EntityResolver>(EntityResolver);
     expect(entityResolver).toBeDefined();
 
     await app.close();

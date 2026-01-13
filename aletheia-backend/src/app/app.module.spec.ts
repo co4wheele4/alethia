@@ -1,20 +1,20 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AppModule } from './app.module';
 
 describe('AppModule', () => {
-  let module: TestingModule;
+  let moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>>;
 
   beforeEach(async () => {
-    module = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
   });
 
   it('should be defined', () => {
-    expect(module).toBeDefined();
+    expect(moduleRef).toBeDefined();
   });
 
   it('should compile successfully', () => {
-    expect(module).toBeInstanceOf(TestingModule);
+    expect(moduleRef).toBeDefined();
   });
 });

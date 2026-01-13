@@ -61,7 +61,7 @@ describe('DocumentChunkResolver', () => {
       }),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         DocumentChunkResolver,
         {
@@ -75,11 +75,11 @@ describe('DocumentChunkResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<DocumentChunkResolver>(
+    resolver = await moduleRef.resolve<DocumentChunkResolver>(
       DocumentChunkResolver,
     );
-    prismaService = module.get(PrismaService);
-    dataLoaderService = module.get(DataLoaderService);
+    prismaService = moduleRef.get(PrismaService);
+    dataLoaderService = moduleRef.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -341,7 +341,7 @@ describe('DocumentChunkResolver', () => {
   });
 
   it('should build GraphQL schema with DocumentChunkResolver', async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -361,10 +361,10 @@ describe('DocumentChunkResolver', () => {
       ],
     }).compile();
 
-    const app = module.createNestApplication();
+    const app = moduleRef.createNestApplication();
     await app.init();
 
-    const documentChunkResolver = await module.resolve<DocumentChunkResolver>(
+    const documentChunkResolver = await moduleRef.resolve<DocumentChunkResolver>(
       DocumentChunkResolver,
     );
     expect(documentChunkResolver).toBeDefined();

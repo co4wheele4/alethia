@@ -16,7 +16,7 @@ describe('AuthResolver', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         AuthResolver,
         {
@@ -30,8 +30,8 @@ describe('AuthResolver', () => {
       ],
     }).compile();
 
-    resolver = module.get<AuthResolver>(AuthResolver);
-    authService = module.get<AuthService>(AuthService);
+    resolver = moduleRef.get<AuthResolver>(AuthResolver);
+    authService = moduleRef.get<AuthService>(AuthService);
   });
 
   describe('login', () => {

@@ -6,6 +6,11 @@ jest.mock('@nestjs/core', () => ({
   NestFactory: {
     create: jest.fn(),
   },
+  ValidationPipe: jest.fn().mockImplementation(() => ({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  })),
 }));
 
 // Mock helmet
@@ -97,6 +102,11 @@ describe('main.ts', () => {
       NestFactory: {
         create: jest.fn().mockResolvedValue(testMockApp),
       },
+      ValidationPipe: jest.fn().mockImplementation(() => ({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      })),
     }));
 
     await import('./main');
@@ -140,6 +150,11 @@ describe('main.ts', () => {
       NestFactory: {
         create: jest.fn().mockResolvedValue(testMockApp),
       },
+      ValidationPipe: jest.fn().mockImplementation(() => ({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      })),
     }));
 
     await import('./main');

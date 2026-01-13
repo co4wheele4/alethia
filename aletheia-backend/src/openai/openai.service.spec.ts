@@ -30,7 +30,7 @@ describe('OpenAIService', () => {
     // Reset environment
     process.env.OPENAI_API_KEY = 'test-api-key';
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
           isGlobal: true,
@@ -39,7 +39,7 @@ describe('OpenAIService', () => {
       providers: [OpenAIService],
     }).compile();
 
-    service = module.get<OpenAIService>(OpenAIService);
+    service = moduleRef.get<OpenAIService>(OpenAIService);
     mockOpenAI = (OpenAI as unknown as jest.MockedClass<typeof OpenAI>).mock
       .instances[0] as jest.Mocked<OpenAI>;
   });
@@ -58,7 +58,7 @@ describe('OpenAIService', () => {
 
   it('should throw error when OPENAI_API_KEY is missing', async () => {
     await expect(async () => {
-      const module: TestingModule = await Test.createTestingModule({
+      const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
         providers: [
           OpenAIService,
           {
@@ -74,7 +74,7 @@ describe('OpenAIService', () => {
           },
         ],
       }).compile();
-      module.get<OpenAIService>(OpenAIService);
+      moduleRef.get<OpenAIService>(OpenAIService);
     }).rejects.toThrow(
       'OPENAI_API_KEY is required but not found in environment variables',
     );

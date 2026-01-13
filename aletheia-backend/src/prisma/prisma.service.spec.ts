@@ -5,11 +5,11 @@ describe('PrismaService', () => {
   let service: PrismaService;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [PrismaService],
     }).compile();
 
-    service = module.get<PrismaService>(PrismaService);
+    service = moduleRef.get<PrismaService>(PrismaService);
   });
 
   afterEach(async () => {

@@ -49,7 +49,7 @@ describe('DataLoaderService', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         DataLoaderService,
         {
@@ -59,8 +59,8 @@ describe('DataLoaderService', () => {
       ],
     }).compile();
 
-    service = await module.resolve<DataLoaderService>(DataLoaderService);
-    prismaService = module.get(PrismaService);
+    service = await moduleRef.resolve<DataLoaderService>(DataLoaderService);
+    prismaService = moduleRef.get(PrismaService);
   });
 
   afterEach(() => {

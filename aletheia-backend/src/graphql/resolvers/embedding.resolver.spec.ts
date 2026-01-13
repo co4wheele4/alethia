@@ -46,7 +46,7 @@ describe('EmbeddingResolver', () => {
       }),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         EmbeddingResolver,
         {
@@ -60,9 +60,9 @@ describe('EmbeddingResolver', () => {
       ],
     }).compile();
 
-    resolver = await module.resolve<EmbeddingResolver>(EmbeddingResolver);
-    prismaService = module.get(PrismaService);
-    dataLoaderService = module.get(DataLoaderService);
+    resolver = await moduleRef.resolve<EmbeddingResolver>(EmbeddingResolver);
+    prismaService = moduleRef.get(PrismaService);
+    dataLoaderService = moduleRef.get(DataLoaderService);
   });
 
   it('should be defined', () => {
@@ -95,7 +95,7 @@ describe('EmbeddingResolver', () => {
   });
 
   it('should build GraphQL schema with resolver', async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -115,11 +115,11 @@ describe('EmbeddingResolver', () => {
       ],
     }).compile();
 
-    const app = module.createNestApplication();
+    const app = moduleRef.createNestApplication();
     await app.init();
 
     const embeddingResolver =
-      await module.resolve<EmbeddingResolver>(EmbeddingResolver);
+      await moduleRef.resolve<EmbeddingResolver>(EmbeddingResolver);
     expect(embeddingResolver).toBeDefined();
 
     await app.close();

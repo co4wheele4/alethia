@@ -20,7 +20,7 @@ describe('JwtStrategy', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
       providers: [
         JwtStrategy,
         {
@@ -45,9 +45,9 @@ describe('JwtStrategy', () => {
       ],
     }).compile();
 
-    strategy = module.get<JwtStrategy>(JwtStrategy);
-    prismaService = module.get<PrismaService>(PrismaService);
-    configService = module.get<ConfigService>(ConfigService);
+    strategy = moduleRef.get<JwtStrategy>(JwtStrategy);
+    prismaService = moduleRef.get<PrismaService>(PrismaService);
+    configService = moduleRef.get<ConfigService>(ConfigService);
   });
 
   describe('validate', () => {
@@ -152,7 +152,7 @@ describe('JwtStrategy', () => {
         },
       };
 
-      const module: TestingModule = await Test.createTestingModule({
+      const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
         providers: [
           JwtStrategy,
           {
@@ -168,7 +168,7 @@ describe('JwtStrategy', () => {
         ],
       }).compile();
 
-      const strategyWithDefault = module.get<JwtStrategy>(JwtStrategy);
+      const strategyWithDefault = moduleRef.get<JwtStrategy>(JwtStrategy);
       const payload = { sub: 'user-id', email: 'test@example.com' };
 
       jest

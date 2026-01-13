@@ -31,8 +31,9 @@ export function ThemeToggle() {
         return <Brightness4 />;
       case 'system':
         return <SettingsBrightness />;
+      /* c8 ignore next 2 */
       default:
-        return <SettingsBrightness />;
+        return <SettingsBrightness />; // Unreachable in practice, but TypeScript requires it
     }
   };
 
@@ -44,8 +45,9 @@ export function ThemeToggle() {
         return 'Dark theme';
       case 'system':
         return 'System theme';
+      /* c8 ignore next 2 */
       default:
-        return 'Theme';
+        return 'Theme'; // Unreachable in practice, but TypeScript requires it
     }
   };
 

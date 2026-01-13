@@ -25,9 +25,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Emotion insertion point for consistent style injection */}
+        <meta name="emotion-insertion-point" content="" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{
+          position: 'relative',
+          minHeight: '100vh',
+        }}
+        suppressHydrationWarning
       >
         <MuiThemeProvider>
           <ApolloClientProvider>{children}</ApolloClientProvider>
