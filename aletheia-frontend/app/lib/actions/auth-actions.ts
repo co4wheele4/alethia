@@ -13,8 +13,9 @@
 export async function loginAction(formData: FormData) {
   // This would be a server action if we implement server-side auth
   // For now, we use client-side GraphQL mutations
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  // Extract form data (not used yet, but will be when implemented)
+  void formData.get('email');
+  void formData.get('password');
   
   // TODO: Implement server-side login if needed
   return { success: false, error: 'Not implemented' };
@@ -22,8 +23,9 @@ export async function loginAction(formData: FormData) {
 
 export async function registerAction(formData: FormData) {
   // This would be a server action if we implement server-side auth
-  const email = formData.get('email') as string;
-  const name = formData.get('name') as string | null;
+  // Extract form data (not used yet, but will be when implemented)
+  void formData.get('email');
+  void formData.get('name');
   
   // TODO: Implement server-side registration if needed
   return { success: false, error: 'Not implemented' };

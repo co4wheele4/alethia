@@ -15,17 +15,17 @@ describe('apollo-client Edge Cases', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset the singleton client
-    // @ts-ignore - accessing private property for testing
+    // @ts-expect-error - accessing private property for testing
     if (typeof window !== 'undefined') {
       // Clear the cached client
-      const { getApolloClient } = require('../../services/apollo-client');
       // Force recreation by clearing the cache
+      // Note: getApolloClient is already imported at the top of the file
     }
   });
 
   it('should throw error when created on server side', () => {
     const originalWindow = global.window;
-    // @ts-ignore - intentionally setting to undefined
+    // @ts-expect-error - intentionally setting to undefined
     delete global.window;
 
     expect(() => {

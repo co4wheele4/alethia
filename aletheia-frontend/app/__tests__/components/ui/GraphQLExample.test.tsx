@@ -2,7 +2,7 @@
  * Tests for GraphQLExample component
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { GraphQLExample } from '../../../components/ui/GraphQLExample';
 import { useHello } from '../../../hooks/useHello';
 import { ApolloProvider } from '@apollo/client/react';
@@ -13,13 +13,15 @@ jest.mock('../../../hooks/useHello');
 const mockUseHello = useHello as jest.MockedFunction<typeof useHello>;
 
 const mockApolloClient = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  link: undefined as any,
   cache: new InMemoryCache(),
 });
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <ApolloProvider client={mockApolloClient}>{children}</ApolloProvider>
 );
+TestWrapper.displayName = 'TestWrapper';
 
 describe('GraphQLExample', () => {
   beforeEach(() => {
@@ -143,6 +145,7 @@ describe('GraphQLExample', () => {
   it('should show "No data" when hello is null', () => {
     // Test the branch where hello is null (line 42: hello || 'No data')
     mockUseHello.mockReturnValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       hello: null as any,
       loading: false,
       error: undefined,

@@ -17,7 +17,6 @@ jest.mock('../../lib/constants', () => ({
 
 describe('Apollo Client SSR Guard', () => {
   let originalWindow: Window | undefined;
-  let originalTypeof: typeof window;
 
   beforeEach(() => {
     // Save original window
@@ -28,20 +27,24 @@ describe('Apollo Client SSR Guard', () => {
   afterEach(() => {
     // Restore original window
     if (originalWindow !== undefined) {
-      global.window = originalWindow;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).window = originalWindow;
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (global as any).window;
     }
   });
 
   it('should throw error when window is undefined (SSR guard)', () => {
     // Save window reference
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const windowBackup = (global as any).window;
     
     // Try to delete window to simulate SSR
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (global as any).window;
-    } catch (e) {
+    } catch {
       // If we can't delete it, try using a getter that returns undefined
       try {
         const windowDescriptor = Object.getOwnPropertyDescriptor(global, 'window');
@@ -51,7 +54,7 @@ describe('Apollo Client SSR Guard', () => {
           expect(typeof createApolloClient).toBe('function');
           return;
         }
-      } catch (e2) {
+      } catch {
         // Can't test in this environment
         expect(typeof createApolloClient).toBe('function');
         return;
@@ -71,12 +74,14 @@ describe('Apollo Client SSR Guard', () => {
     }
 
     // Restore window
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).window = windowBackup;
   });
 
   it('should create client when window is defined', () => {
     // Ensure window is defined (should be by default in JSDOM)
     if (typeof window === 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global as any).window = {};
     }
 

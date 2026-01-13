@@ -10,8 +10,6 @@ describe('AIResultCard Edge Cases', () => {
   it('should handle empty string result', () => {
     const { container } = render(<AIResultCard result="" />);
     // Empty string is falsy, so result should not render
-    // Check that result Typography is not present
-    const resultText = container.querySelector('p, span, div');
     // Component should still render, just without the result text
     expect(container).toBeInTheDocument();
   });

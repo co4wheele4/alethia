@@ -20,11 +20,13 @@ describe('GraphQL queries', () => {
       expect(HELLO_QUERY.definitions).toBeDefined();
       expect(HELLO_QUERY.definitions.length).toBeGreaterThan(0);
       expect(HELLO_QUERY.definitions[0].kind).toBe('OperationDefinition');
-      expect(HELLO_QUERY.definitions[0].operation).toBe('query');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((HELLO_QUERY.definitions[0] as any).operation).toBe('query');
     });
 
     it('should have correct query name', () => {
-      const operationName = HELLO_QUERY.definitions[0].name?.value;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const operationName = (HELLO_QUERY.definitions[0] as any).name?.value;
       expect(operationName).toBe('Hello');
     });
   });
@@ -38,19 +40,23 @@ describe('GraphQL queries', () => {
       expect(LOGIN_MUTATION.definitions).toBeDefined();
       expect(LOGIN_MUTATION.definitions.length).toBeGreaterThan(0);
       expect(LOGIN_MUTATION.definitions[0].kind).toBe('OperationDefinition');
-      expect(LOGIN_MUTATION.definitions[0].operation).toBe('mutation');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((LOGIN_MUTATION.definitions[0] as any).operation).toBe('mutation');
     });
 
     it('should have correct mutation name', () => {
-      const operationName = LOGIN_MUTATION.definitions[0].name?.value;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const operationName = (LOGIN_MUTATION.definitions[0] as any).name?.value;
       expect(operationName).toBe('Login');
     });
 
     it('should have email and password variables', () => {
-      const variables = LOGIN_MUTATION.definitions[0].variableDefinitions;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const variables = (LOGIN_MUTATION.definitions[0] as any).variableDefinitions;
       expect(variables).toBeDefined();
       expect(variables?.length).toBe(2);
-      const varNames = variables?.map(v => v.variable.name.value) || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const varNames = variables?.map((v: any) => v.variable.name.value) || [];
       expect(varNames).toContain('email');
       expect(varNames).toContain('password');
     });
@@ -65,19 +71,23 @@ describe('GraphQL queries', () => {
       expect(REGISTER_MUTATION.definitions).toBeDefined();
       expect(REGISTER_MUTATION.definitions.length).toBeGreaterThan(0);
       expect(REGISTER_MUTATION.definitions[0].kind).toBe('OperationDefinition');
-      expect(REGISTER_MUTATION.definitions[0].operation).toBe('mutation');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((REGISTER_MUTATION.definitions[0] as any).operation).toBe('mutation');
     });
 
     it('should have correct mutation name', () => {
-      const operationName = REGISTER_MUTATION.definitions[0].name?.value;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const operationName = (REGISTER_MUTATION.definitions[0] as any).name?.value;
       expect(operationName).toBe('Register');
     });
 
     it('should have email, password, and optional name variables', () => {
-      const variables = REGISTER_MUTATION.definitions[0].variableDefinitions;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const variables = (REGISTER_MUTATION.definitions[0] as any).variableDefinitions;
       expect(variables).toBeDefined();
       expect(variables?.length).toBeGreaterThanOrEqual(2);
-      const varNames = variables?.map(v => v.variable.name.value) || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const varNames = variables?.map((v: any) => v.variable.name.value) || [];
       expect(varNames).toContain('email');
       expect(varNames).toContain('password');
     });
@@ -92,19 +102,23 @@ describe('GraphQL queries', () => {
       expect(CHANGE_PASSWORD_MUTATION.definitions).toBeDefined();
       expect(CHANGE_PASSWORD_MUTATION.definitions.length).toBeGreaterThan(0);
       expect(CHANGE_PASSWORD_MUTATION.definitions[0].kind).toBe('OperationDefinition');
-      expect(CHANGE_PASSWORD_MUTATION.definitions[0].operation).toBe('mutation');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((CHANGE_PASSWORD_MUTATION.definitions[0] as any).operation).toBe('mutation');
     });
 
     it('should have correct mutation name', () => {
-      const operationName = CHANGE_PASSWORD_MUTATION.definitions[0].name?.value;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const operationName = (CHANGE_PASSWORD_MUTATION.definitions[0] as any).name?.value;
       expect(operationName).toBe('ChangePassword');
     });
 
     it('should have currentPassword and newPassword variables', () => {
-      const variables = CHANGE_PASSWORD_MUTATION.definitions[0].variableDefinitions;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const variables = (CHANGE_PASSWORD_MUTATION.definitions[0] as any).variableDefinitions;
       expect(variables).toBeDefined();
       expect(variables?.length).toBe(2);
-      const varNames = variables?.map(v => v.variable.name.value) || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const varNames = variables?.map((v: any) => v.variable.name.value) || [];
       expect(varNames).toContain('currentPassword');
       expect(varNames).toContain('newPassword');
     });
@@ -119,19 +133,23 @@ describe('GraphQL queries', () => {
       expect(FORGOT_PASSWORD_MUTATION.definitions).toBeDefined();
       expect(FORGOT_PASSWORD_MUTATION.definitions.length).toBeGreaterThan(0);
       expect(FORGOT_PASSWORD_MUTATION.definitions[0].kind).toBe('OperationDefinition');
-      expect(FORGOT_PASSWORD_MUTATION.definitions[0].operation).toBe('mutation');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((FORGOT_PASSWORD_MUTATION.definitions[0] as any).operation).toBe('mutation');
     });
 
     it('should have correct mutation name', () => {
-      const operationName = FORGOT_PASSWORD_MUTATION.definitions[0].name?.value;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const operationName = (FORGOT_PASSWORD_MUTATION.definitions[0] as any).name?.value;
       expect(operationName).toBe('ForgotPassword');
     });
 
     it('should have email variable', () => {
-      const variables = FORGOT_PASSWORD_MUTATION.definitions[0].variableDefinitions;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const variables = (FORGOT_PASSWORD_MUTATION.definitions[0] as any).variableDefinitions;
       expect(variables).toBeDefined();
       expect(variables?.length).toBe(1);
-      const varNames = variables?.map(v => v.variable.name.value) || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const varNames = variables?.map((v: any) => v.variable.name.value) || [];
       expect(varNames).toContain('email');
     });
   });

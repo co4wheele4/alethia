@@ -18,7 +18,8 @@ jest.mock('../../hooks/useAuth');
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
 const mockApolloClient = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  link: undefined as any,
   cache: new InMemoryCache(),
 });
 
@@ -31,6 +32,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     </ThemeProvider>
   </ApolloProvider>
 );
+TestWrapper.displayName = 'TestWrapper';
 
 describe('Form Validation Flow Integration', () => {
   const mockLogin = jest.fn();
@@ -85,10 +87,7 @@ describe('Form Validation Flow Integration', () => {
           expect(alertText).toMatch(/Email is required/i);
         } else {
           // Fallback: check for text anywhere with flexible matching
-          const errorText = screen.queryByText(/Email is required/i) ||
-                           screen.queryByText((content, element) => {
-                             return element?.textContent?.includes('Email is required');
-                           });
+          const errorText = screen.queryByText(/Email is required/i);
           expect(errorText).toBeInTheDocument();
         }
       }, { timeout: 5000 });
@@ -127,10 +126,7 @@ describe('Form Validation Flow Integration', () => {
           expect(alertText).toMatch(/Password is required/i);
         } else {
           // Fallback: check for text anywhere with flexible matching
-          const errorText = screen.queryByText(/Password is required/i) ||
-                           screen.queryByText((content, element) => {
-                             return element?.textContent?.includes('Password is required');
-                           });
+          const errorText = screen.queryByText(/Password is required/i);
           expect(errorText).toBeInTheDocument();
         }
       }, { timeout: 5000 });
@@ -344,11 +340,7 @@ describe('Form Validation Flow Integration', () => {
           expect(alertText).toMatch(/valid email address|email/i);
         } else {
           // Fallback: check for text anywhere with flexible matching
-          const errorText = screen.queryByText(/Please enter a valid email address/i) ||
-                           screen.queryByText((content, element) => {
-                             return element?.textContent?.toLowerCase().includes('valid email address') ||
-                                    element?.textContent?.toLowerCase().includes('invalid email');
-                           });
+          const errorText = screen.queryByText(/Please enter a valid email address|invalid email/i);
           // If no error found, check if submit button is disabled (indicating validation)
           const submitButton = screen.queryByRole('button', { name: /send reset email/i });
           if (submitButton && submitButton.hasAttribute('disabled')) {
@@ -402,13 +394,11 @@ describe('Form Validation Flow Integration', () => {
 
     it('should handle multiple validation errors sequentially', async () => {
       const handleClose = jest.fn();
-      const { container } = render(
+      render(
         <TestWrapper>
           <ChangePasswordForm open={true} onClose={handleClose} />
         </TestWrapper>
       );
-
-      const form = container.querySelector('form');
       
       // Wait for dialog to be fully rendered - use heading role
       await waitFor(() => {
@@ -429,10 +419,7 @@ describe('Form Validation Flow Integration', () => {
           expect(alertText).toMatch(/Current password is required|password/i);
         } else {
           const errorText = screen.queryByText(/Current password is required/i) ||
-                           screen.queryByText((content, element) => {
-                             return element?.textContent?.toLowerCase().includes('password') && 
-                                    element?.textContent?.toLowerCase().includes('required');
-                           });
+                           screen.queryByText(/password.*required|required.*password/i);
           const submitButtonState = screen.queryByRole('button', { name: /change password/i });
           if (submitButtonState && submitButtonState.hasAttribute('disabled')) {
             expect(submitButtonState).toBeDisabled();
@@ -456,11 +443,7 @@ describe('Form Validation Flow Integration', () => {
           const alertText = alert.textContent || '';
           expect(alertText).toMatch(/New password is required|password/i);
         } else {
-          const errorText = screen.queryByText(/New password is required/i) ||
-                           screen.queryByText((content, element) => {
-                             return element?.textContent?.toLowerCase().includes('password') && 
-                                    element?.textContent?.toLowerCase().includes('required');
-                           });
+          const errorText = screen.queryByText(/New password is required|password.*required/i);
           const submitButtonState = screen.queryByRole('button', { name: /change password/i });
           if (submitButtonState && submitButtonState.hasAttribute('disabled')) {
             expect(submitButtonState).toBeDisabled();

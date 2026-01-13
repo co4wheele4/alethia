@@ -2,7 +2,7 @@
  * Unit tests for LoginForm component
  */
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { LoginForm } from '../../../components/ui/LoginForm';
 import { useAuth } from '../../../hooks/useAuth';
 import { ApolloProvider } from '@apollo/client/react';
@@ -21,13 +21,15 @@ jest.mock('react-dom', () => ({
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
 const mockApolloClient = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  link: undefined as any,
   cache: new InMemoryCache(),
 });
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <ApolloProvider client={mockApolloClient}>{children}</ApolloProvider>
 );
+TestWrapper.displayName = 'TestWrapper';
 
 describe('LoginForm', () => {
   const mockLogin = jest.fn();
@@ -40,8 +42,11 @@ describe('LoginForm', () => {
     mockUseAuth.mockReturnValue({
       token: null,
       isAuthenticated: false,
-      login: mockLogin,
-      register: mockRegister,
+      isInitialized: true,
+      login: mockLogin as (email: string, password: string) => Promise<string>,
+      register: mockRegister as (email: string, password: string, name?: string) => Promise<string>,
+      changePassword: jest.fn() as (currentPassword: string, newPassword: string) => Promise<boolean>,
+      forgotPassword: jest.fn() as (email: string) => Promise<boolean>,
       logout: jest.fn(),
       loading: false,
       error: undefined,
@@ -414,12 +419,17 @@ describe('LoginForm', () => {
     // This is triggered by onChange or onFocus
     await waitFor(() => {
       // Check if any password requirement text is present
-      const hasRequirements = screen.queryByText(/password requirements/i) ||
-                             screen.queryByText(/at least/i) ||
-                             screen.queryByText(/8 characters/i) ||
-                             screen.queryByText(/uppercase/i);
       // If requirements aren't shown, that's okay - the test still covers the onFocus/onChange paths
+      const hasRequirements = screen.queryByText(/password requirements/i) ||
+        screen.queryByText(/at least/i) ||
+        screen.queryByText(/8 characters/i) ||
+        screen.queryByText(/uppercase/i);
+      // Verify password input is present
       expect(passwordInput).toBeInTheDocument();
+      // If requirements are shown, verify they exist (optional check)
+      if (hasRequirements) {
+        expect(hasRequirements).toBeInTheDocument();
+      }
     }, { timeout: 1000 });
   });
 

@@ -18,7 +18,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Typography,
 } from '@mui/material';
 import { Lock as LockIcon } from '@mui/icons-material';
 
@@ -148,6 +147,8 @@ export function ChangePasswordForm({ open, onClose, onSuccess }: ChangePasswordF
         setError(errorMessage);
         // Clear password fields on error for security
         setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
       }
     });
   };

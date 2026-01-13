@@ -43,17 +43,26 @@ export default function DashboardPage() {
 
   // Track client-side mount and hydration completion
   useEffect(() => {
-    setMounted(true);
-    // Use requestAnimationFrame to ensure this runs after React hydration
-    // and Emotion styles are injected. This prevents hydration mismatches.
-    const rafId = requestAnimationFrame(() => {
-      // Double RAF to ensure it runs after all style injections
-      requestAnimationFrame(() => {
-        setIsHydrated(true);
+    // Defer state updates to avoid synchronous setState in effect
+    let rafId2: number | null = null;
+    const rafId1 = requestAnimationFrame(() => {
+      setMounted(true);
+      // Use requestAnimationFrame to ensure this runs after React hydration
+      // and Emotion styles are injected. This prevents hydration mismatches.
+      rafId2 = requestAnimationFrame(() => {
+        // Double RAF to ensure it runs after all style injections
+        requestAnimationFrame(() => {
+          setIsHydrated(true);
+        });
       });
     });
 
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      cancelAnimationFrame(rafId1);
+      if (rafId2 !== null) {
+        cancelAnimationFrame(rafId2);
+      }
+    };
   }, []);
 
   // Redirect to home if not authenticated (only after auth state is initialized)

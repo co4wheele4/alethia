@@ -21,7 +21,8 @@ const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 
 const mockApolloClient = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  link: undefined as any,
   cache: new InMemoryCache(),
 });
 
@@ -49,6 +50,7 @@ describe('LoginForm Error Paths', () => {
       forward: jest.fn(),
       refresh: jest.fn(),
       prefetch: jest.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     mockUseAuth.mockReturnValue({

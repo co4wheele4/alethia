@@ -40,9 +40,9 @@ describe('constants', () => {
     });
 
     it('should have a consistent value', () => {
-      // Import again to ensure it's the same value
-      const { AUTH_TOKEN_KEY: key2 } = require('../../lib/constants');
-      expect(AUTH_TOKEN_KEY).toBe(key2);
+      // The constant is already imported at the top, so it should be the same value
+      // This test verifies the constant is consistent
+      expect(AUTH_TOKEN_KEY).toBe('aletheia_auth_token');
     });
   });
 });

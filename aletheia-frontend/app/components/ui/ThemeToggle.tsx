@@ -6,7 +6,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useState } from 'react';
 
 export function ThemeToggle() {
-  const { themeMode, toggleTheme, setThemeMode } = useTheme();
+  const { themeMode, setThemeMode } = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 

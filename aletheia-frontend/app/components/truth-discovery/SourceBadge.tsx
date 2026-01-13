@@ -15,7 +15,7 @@ export interface SourceBadgeProps {
 }
 
 export function SourceBadge(props: SourceBadgeProps) {
-  const { source, confidence, onClick } = props;
+  const { source, onClick } = props;
 
   return (
     <Chip

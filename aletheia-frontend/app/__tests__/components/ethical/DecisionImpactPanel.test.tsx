@@ -22,7 +22,7 @@ describe('DecisionImpactPanel', () => {
   });
 
   it('should render impacts', () => {
-    const impacts = [
+    const impacts: Array<{ area: string; description: string; severity?: 'low' | 'medium' | 'high' }> = [
       { area: 'Area 1', description: 'Impact description 1' },
       { area: 'Area 2', description: 'Impact description 2', severity: 'high' },
     ];

@@ -12,8 +12,7 @@
  * - Document handler purposes
  */
 
-import { graphql, HttpResponse, http } from 'msw';
-import { GRAPHQL_URL } from '../../lib/constants';
+import { graphql, HttpResponse } from 'msw';
 
 /**
  * GraphQL handlers
@@ -35,7 +34,22 @@ export const handlers = [
 
   // Login mutation handler
   graphql.mutation('Login', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as { variables?: { email?: string; password?: string } } | null;
+    if (!body || typeof body !== 'object' || !('variables' in body) || !body.variables) {
+      return HttpResponse.json(
+        {
+          errors: [
+            {
+              message: 'Invalid request body',
+              extensions: {
+                code: 'BAD_USER_INPUT',
+              },
+            },
+          ],
+        },
+        { status: 400 }
+      );
+    }
     const { email, password } = body.variables;
 
     // Simulate authentication logic
@@ -65,8 +79,25 @@ export const handlers = [
 
   // Register mutation handler
   graphql.mutation('Register', async ({ request }) => {
-    const body = await request.json();
-    const { email, password, name } = body.variables;
+    const body = await request.json() as { variables?: { email?: string; password?: string; name?: string } } | null;
+    if (!body || typeof body !== 'object' || !('variables' in body) || !body.variables) {
+      return HttpResponse.json(
+        {
+          errors: [
+            {
+              message: 'Invalid request body',
+              extensions: {
+                code: 'BAD_USER_INPUT',
+              },
+            },
+          ],
+        },
+        { status: 400 }
+      );
+    }
+    const { email } = body.variables;
+    // password and name are available but not used in this mock handler
+    // const { email, password, name } = body.variables;
 
     // Simulate registration logic
     if (email === 'exists@example.com') {
@@ -95,8 +126,25 @@ export const handlers = [
 
   // Change password mutation handler
   graphql.mutation('ChangePassword', async ({ request }) => {
-    const body = await request.json();
-    const { currentPassword, newPassword } = body.variables;
+    const body = await request.json() as { variables?: { currentPassword?: string; newPassword?: string } } | null;
+    if (!body || typeof body !== 'object' || !('variables' in body) || !body.variables) {
+      return HttpResponse.json(
+        {
+          errors: [
+            {
+              message: 'Invalid request body',
+              extensions: {
+                code: 'BAD_USER_INPUT',
+              },
+            },
+          ],
+        },
+        { status: 400 }
+      );
+    }
+    const { currentPassword } = body.variables;
+    // newPassword is available but not used in this mock handler
+    // const { currentPassword, newPassword } = body.variables;
 
     // Simulate password change logic
     if (currentPassword === 'wrong-password') {
@@ -125,7 +173,22 @@ export const handlers = [
 
   // Forgot password mutation handler
   graphql.mutation('ForgotPassword', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as { variables?: { email?: string } } | null;
+    if (!body || typeof body !== 'object' || !('variables' in body) || !body.variables) {
+      return HttpResponse.json(
+        {
+          errors: [
+            {
+              message: 'Invalid request body',
+              extensions: {
+                code: 'BAD_USER_INPUT',
+              },
+            },
+          ],
+        },
+        { status: 400 }
+      );
+    }
     const { email } = body.variables;
 
     // Simulate forgot password logic

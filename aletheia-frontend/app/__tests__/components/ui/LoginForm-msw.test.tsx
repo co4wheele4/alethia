@@ -196,10 +196,7 @@ describe('LoginForm with MSW', () => {
         expect(alertText.toLowerCase()).toMatch(/email is required/i);
       } else {
         // Fallback: check for text anywhere
-        const errorText = screen.queryByText(/email is required/i) ||
-                         screen.queryByText((content, element) => {
-                           return element?.textContent?.toLowerCase().includes('email is required');
-                         });
+        const errorText = screen.queryByText(/email is required/i);
         expect(errorText).toBeInTheDocument();
       }
     }, { timeout: 10000 });

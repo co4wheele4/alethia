@@ -15,7 +15,8 @@ export interface KnowledgeNodeProps {
   onToggle?: () => void;
 }
 
-export function KnowledgeNode(props: KnowledgeNodeProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function KnowledgeNode(_props: KnowledgeNodeProps) {
   return (
     <Box>
       {/* TODO: Implement expandable node with lazy loading */}

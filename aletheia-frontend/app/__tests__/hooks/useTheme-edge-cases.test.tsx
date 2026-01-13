@@ -30,7 +30,7 @@ Object.defineProperty(window, 'localStorage', {
 
 // Mock matchMedia with change listener support
 const createMockMatchMedia = (matches: boolean) => {
-  const listeners: Array<(e: MediaQueryListEvent) => void> = [];
+  const listeners: Array<(_e: MediaQueryListEvent) => void> = [];
   
   return jest.fn().mockImplementation((query: string) => ({
     matches,
@@ -38,12 +38,12 @@ const createMockMatchMedia = (matches: boolean) => {
     onchange: null,
     addListener: jest.fn(),
     removeListener: jest.fn(),
-    addEventListener: (event: string, callback: (e: MediaQueryListEvent) => void) => {
+    addEventListener: (event: string, callback: (_e: MediaQueryListEvent) => void) => {
       if (event === 'change') {
         listeners.push(callback);
       }
     },
-    removeEventListener: (event: string, callback: (e: MediaQueryListEvent) => void) => {
+    removeEventListener: (event: string, callback: (_e: MediaQueryListEvent) => void) => {
       if (event === 'change') {
         const index = listeners.indexOf(callback);
         if (index > -1) {
@@ -142,8 +142,10 @@ describe('useTheme Edge Cases', () => {
     });
 
     // Verify listener was added (check that addEventListener exists and was called)
-    if (mockMatchMedia.addEventListener) {
-      expect(mockMatchMedia.addEventListener).toHaveBeenCalledWith('change', expect.any(Function));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((mockMatchMedia as any).addEventListener) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((mockMatchMedia as any).addEventListener).toHaveBeenCalledWith('change', expect.any(Function));
     }
   });
 

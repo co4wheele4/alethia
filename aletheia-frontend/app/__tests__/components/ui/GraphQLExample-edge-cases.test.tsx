@@ -14,7 +14,8 @@ jest.mock('../../../hooks/useHello');
 const mockUseHello = useHello as jest.MockedFunction<typeof useHello>;
 
 const mockApolloClient = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  link: undefined as any,
   cache: new InMemoryCache(),
 });
 
@@ -29,7 +30,7 @@ describe('GraphQLExample Edge Cases', () => {
 
   it('should render "No data" when hello is null', () => {
     mockUseHello.mockReturnValue({
-      hello: null,
+      hello: undefined,
       loading: false,
       error: undefined,
       refetch: jest.fn(),

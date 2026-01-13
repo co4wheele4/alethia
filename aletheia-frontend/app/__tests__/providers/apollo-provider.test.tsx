@@ -5,7 +5,6 @@
 
 import { render, screen } from '@testing-library/react';
 import { ApolloClientProvider } from '../../providers/apollo-provider';
-import { ApolloProvider } from '@apollo/client/react';
 import { getApolloClient } from '../../services/apollo-client';
 
 // Mock apollo-client service
@@ -24,6 +23,7 @@ describe('ApolloClientProvider', () => {
     const mockClient = {
       query: jest.fn(),
       mutate: jest.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     mockGetApolloClient.mockReturnValue(mockClient);
@@ -39,7 +39,7 @@ describe('ApolloClientProvider', () => {
 
   it('should create SSR client when window is undefined', () => {
     const originalWindow = global.window;
-    // @ts-ignore - intentionally setting to undefined
+    // @ts-expect-error - intentionally setting to undefined
     delete global.window;
 
     render(
@@ -58,6 +58,7 @@ describe('ApolloClientProvider', () => {
     const mockClient = {
       query: jest.fn(),
       mutate: jest.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     mockGetApolloClient.mockReturnValue(mockClient);
@@ -97,6 +98,7 @@ describe('ApolloClientProvider', () => {
     const mockClient = {
       query: jest.fn(),
       mutate: jest.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     mockGetApolloClient.mockReturnValue(mockClient);

@@ -6,7 +6,7 @@
  * Full integration testing would require a more complex Apollo Client mock setup.
  */
 
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { useAuth } from '../../hooks/useAuth';
@@ -20,16 +20,23 @@ jest.mock('../../lib/utils/auth', () => ({
 }));
 
 // Create a basic mock client for testing hook structure
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const createMockClient = () => {
   return new ApolloClient({
-    uri: 'http://localhost:3000/graphql',
+    link: undefined as any,
     cache: new InMemoryCache(),
   });
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
+ 
 
-const wrapper = (client: ApolloClient<any>) => ({ children }: { children: React.ReactNode }) => (
-  <ApolloProvider client={client}>{children}</ApolloProvider>
-);
+const wrapper = (client: ApolloClient) => {
+  const WrapperComponent = ({ children }: { children: React.ReactNode }) => (
+    <ApolloProvider client={client}>{children}</ApolloProvider>
+  );
+  WrapperComponent.displayName = 'WrapperComponent';
+  return WrapperComponent;
+};
 
 describe('useAuth Edge Cases', () => {
   beforeEach(() => {

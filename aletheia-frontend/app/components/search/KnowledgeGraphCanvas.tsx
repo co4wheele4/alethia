@@ -13,8 +13,10 @@ export interface KnowledgeGraphCanvasProps {
   onEdgeClick?: (edgeId: string) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function KnowledgeGraphCanvas(props: KnowledgeGraphCanvasProps) {
-  const { onNodeClick, onEdgeClick } = props;
+  // Props are available for future use
+  // const { onNodeClick, onEdgeClick } = props;
 
   return (
     <Box

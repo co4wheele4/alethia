@@ -5,6 +5,14 @@
 
 import { getCachedData, createCachedFunction } from '../../../lib/utils/cache';
 
+// Mock React's cache function to preserve function signatures in tests
+/* eslint-disable @typescript-eslint/no-explicit-any */
+jest.mock('react', () => ({
+  ...jest.requireActual('react'),
+  cache: <T extends (...args: any[]) => any>(fn: T): T => fn as T,
+}));
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 describe('cache utilities Edge Cases', () => {
   describe('getCachedData - Edge Cases', () => {
     it('should handle empty string key', async () => {
@@ -43,13 +51,13 @@ describe('cache utilities Edge Cases', () => {
     });
 
     it('should handle null key (if allowed)', async () => {
-      // @ts-ignore - testing edge case
+      // @ts-expect-error - testing edge case
       const result = await getCachedData(null);
       expect(result).toHaveProperty('key');
     });
 
     it('should handle undefined key (if allowed)', async () => {
-      // @ts-ignore - testing edge case
+      // @ts-expect-error - testing edge case
       const result = await getCachedData(undefined);
       expect(result).toHaveProperty('key');
     });
@@ -60,7 +68,7 @@ describe('cache utilities Edge Cases', () => {
       const fn = jest.fn(() => undefined);
       const cachedFn = createCachedFunction(fn);
       
-      const result = cachedFn(1);
+      const result = (cachedFn as (arg: number) => undefined)(1);
       expect(result).toBeUndefined();
       expect(fn).toHaveBeenCalledWith(1);
     });
@@ -69,7 +77,7 @@ describe('cache utilities Edge Cases', () => {
       const fn = jest.fn(() => null);
       const cachedFn = createCachedFunction(fn);
       
-      const result = cachedFn(1);
+      const result = (cachedFn as (arg: number) => null)(1);
       expect(result).toBeNull();
       expect(fn).toHaveBeenCalledWith(1);
     });
@@ -80,7 +88,7 @@ describe('cache utilities Edge Cases', () => {
       });
       const cachedFn = createCachedFunction(fn);
       
-      expect(() => cachedFn(1)).toThrow('Function error');
+      expect(() => (cachedFn as (arg: number) => never)(1)).toThrow('Function error');
       expect(fn).toHaveBeenCalledWith(1);
     });
 

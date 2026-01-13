@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Box, Typography, Divider } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
 export interface ChangeEvent {

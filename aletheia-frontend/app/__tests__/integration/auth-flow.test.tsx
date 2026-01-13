@@ -19,7 +19,8 @@ jest.mock('../../hooks/useAuth');
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
 const mockApolloClient = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  link: undefined as any,
   cache: new InMemoryCache(),
 });
 
@@ -32,6 +33,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     </ThemeProvider>
   </ApolloProvider>
 );
+TestWrapper.displayName = 'TestWrapper';
 
 describe('Authentication Flow Integration', () => {
   const mockLogin = jest.fn();
@@ -235,7 +237,7 @@ describe('Authentication Flow Integration', () => {
 
     it('should validate email format in forgot password form', async () => {
       const handleClose = jest.fn();
-      const { container } = render(
+      render(
         <TestWrapper>
           <ForgotPasswordForm open={true} onClose={handleClose} />
         </TestWrapper>

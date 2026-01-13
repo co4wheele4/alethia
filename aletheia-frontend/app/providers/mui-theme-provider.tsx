@@ -45,7 +45,11 @@ function MuiThemeProviderInner({
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    setMounted(true);
+    // Defer state update to avoid synchronous setState in effect
+    const rafId = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   // During SSR and initial render, use light theme to match server

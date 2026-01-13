@@ -6,6 +6,7 @@ import { renderHook } from '@testing-library/react';
 import { useHello } from '../../hooks/useHello';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import * as apolloReact from '@apollo/client/react';
 
 // Mock Apollo Client
 const mockClient = new ApolloClient({
@@ -45,12 +46,12 @@ describe('useHello', () => {
 
   it('should return hello when data exists', async () => {
     // Mock useQuery to return data
-    jest.spyOn(require('@apollo/client/react'), 'useQuery').mockReturnValue({
+    jest.spyOn(apolloReact, 'useQuery').mockReturnValue({
       data: { hello: 'Hello World' },
       loading: false,
       error: undefined,
       refetch: jest.fn(),
-    });
+    } as ReturnType<typeof apolloReact.useQuery>);
 
     const { result } = renderHook(() => useHello(), { wrapper });
 
@@ -60,12 +61,12 @@ describe('useHello', () => {
 
   it('should return undefined when data does not exist', async () => {
     // Mock useQuery to return no data
-    jest.spyOn(require('@apollo/client/react'), 'useQuery').mockReturnValue({
+    jest.spyOn(apolloReact, 'useQuery').mockReturnValue({
       data: undefined,
       loading: false,
       error: undefined,
       refetch: jest.fn(),
-    });
+    } as ReturnType<typeof apolloReact.useQuery>);
 
     const { result } = renderHook(() => useHello(), { wrapper });
 

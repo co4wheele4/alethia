@@ -29,13 +29,13 @@ export function DataShapeInspector(props: DataShapeInspectorProps) {
           <pre style={{ fontSize: '0.875rem' }}>{JSON.stringify(shape, null, 2)}</pre>
         </Box>
       )}
-      {data && (
+      {data != null && (
         <Box>
           <Typography variant="subtitle2" gutterBottom>
             Actual Data:
           </Typography>
           <pre style={{ fontSize: '0.875rem' }}>
-            {typeof data === 'string' ? data : JSON.stringify(data, null, 2)}
+            {typeof data === 'string' ? data : JSON.stringify(data as Record<string, unknown>, null, 2)}
           </pre>
         </Box>
       )}

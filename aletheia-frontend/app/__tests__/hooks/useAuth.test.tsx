@@ -2,11 +2,10 @@
  * Unit tests for useAuth hook
  */
 
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { useAuth } from '../../hooks/useAuth';
-import { LOGIN_MUTATION, REGISTER_MUTATION } from '../../lib/graphql/queries';
 import * as authUtils from '../../lib/utils/auth';
 
 // Mock the auth utils
@@ -18,7 +17,8 @@ jest.mock('../../lib/utils/auth', () => ({
 
 // Mock Apollo Client
 const mockClient = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  link: undefined as any,
   cache: new InMemoryCache(),
 });
 

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Tooltip, Typography } from '@mui/material';
+import { Tooltip } from '@mui/material';
 
 export interface ConfidenceTooltipProps {
   // TODO: Define props

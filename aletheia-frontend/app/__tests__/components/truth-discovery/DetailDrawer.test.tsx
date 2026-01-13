@@ -2,7 +2,7 @@
  * Tests for DetailDrawer component
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { DetailDrawer } from '../../../components/truth-discovery/DetailDrawer';
 
 describe('DetailDrawer', () => {

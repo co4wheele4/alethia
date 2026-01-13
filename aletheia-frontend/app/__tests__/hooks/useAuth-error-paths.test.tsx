@@ -3,12 +3,11 @@
  * Tests all error handling paths and edge cases
  */
 
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache, ApolloLink } from '@apollo/client';
 import { Observable } from 'rxjs';
 import { useAuth } from '../../hooks/useAuth';
-import { LOGIN_MUTATION, REGISTER_MUTATION, CHANGE_PASSWORD_MUTATION, FORGOT_PASSWORD_MUTATION } from '../../lib/graphql/queries';
 import * as authUtils from '../../lib/utils/auth';
 import { GraphQLError } from 'graphql';
 
@@ -21,15 +20,18 @@ jest.mock('../../lib/utils/auth', () => ({
 
 // Mock Apollo Client with error scenarios
 // Apollo Link must return an Observable
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const createMockLink = (scenario: string) => {
-  return new ApolloLink((operation) => {
-    return new Observable((observer) => {
+  return new ApolloLink((operation: any) => {
+    return new Observable((observer: any) => {
       const { operationName } = operation;
 
       try {
         if (scenario === 'network-error') {
           const error = new Error('Network error');
+           
           (error as any).graphQLErrors = [];
+           
           (error as any).networkError = new Error('Network request failed');
           observer.error(error);
           return;
@@ -37,7 +39,9 @@ const createMockLink = (scenario: string) => {
 
         if (scenario === 'graphql-error') {
           const error = new Error('GraphQL error occurred');
+           
           (error as any).graphQLErrors = [new GraphQLError('GraphQL error occurred')];
+           
           (error as any).networkError = null;
           observer.error(error);
           return;
@@ -45,7 +49,9 @@ const createMockLink = (scenario: string) => {
 
         if (scenario === 'unauthorized') {
           const error = new Error('Unauthorized');
+           
           (error as any).graphQLErrors = [new GraphQLError('Unauthorized')];
+           
           (error as any).networkError = null;
           observer.error(error);
           return;
@@ -53,7 +59,9 @@ const createMockLink = (scenario: string) => {
 
         if (scenario === 'invalid-token') {
           const error = new Error('Invalid token');
+           
           (error as any).graphQLErrors = [new GraphQLError('Invalid token')];
+           
           (error as any).networkError = null;
           observer.error(error);
           return;
@@ -62,7 +70,9 @@ const createMockLink = (scenario: string) => {
         if (scenario === 'login-invalid-password') {
           if (operationName === 'Login') {
             const error = new Error('Invalid email or password');
+             
             (error as any).graphQLErrors = [new GraphQLError('Invalid email or password')];
+             
             (error as any).networkError = null;
             observer.error(error);
             return;
@@ -72,7 +82,9 @@ const createMockLink = (scenario: string) => {
         if (scenario === 'register-email-exists') {
           if (operationName === 'Register') {
             const error = new Error('Email already exists');
+             
             (error as any).graphQLErrors = [new GraphQLError('Email already exists')];
+             
             (error as any).networkError = null;
             observer.error(error);
             return;
@@ -82,7 +94,9 @@ const createMockLink = (scenario: string) => {
         if (scenario === 'change-password-incorrect') {
           if (operationName === 'ChangePassword') {
             const error = new Error('Current password is incorrect');
+             
             (error as any).graphQLErrors = [new GraphQLError('Current password is incorrect')];
+             
             (error as any).networkError = null;
             observer.error(error);
             return;
@@ -92,7 +106,9 @@ const createMockLink = (scenario: string) => {
         if (scenario === 'forgot-password-not-found') {
           if (operationName === 'ForgotPassword') {
             const error = new Error('No account found with this email address');
+             
             (error as any).graphQLErrors = [new GraphQLError('No account found with this email address')];
+             
             (error as any).networkError = null;
             observer.error(error);
             return;
@@ -129,6 +145,7 @@ const createMockLink = (scenario: string) => {
     });
   });
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 const createMockClient = (scenario: string) => {
   return new ApolloClient({
@@ -137,9 +154,13 @@ const createMockClient = (scenario: string) => {
   });
 };
 
-const wrapper = (scenario: string) => ({ children }: { children: React.ReactNode }) => (
-  <ApolloProvider client={createMockClient(scenario)}>{children}</ApolloProvider>
-);
+const wrapper = (scenario: string) => {
+  const WrapperComponent = ({ children }: { children: React.ReactNode }) => (
+    <ApolloProvider client={createMockClient(scenario)}>{children}</ApolloProvider>
+  );
+  WrapperComponent.displayName = 'WrapperComponent';
+  return WrapperComponent;
+};
 
 describe('useAuth Error Paths', () => {
   beforeEach(() => {
@@ -221,8 +242,10 @@ describe('useAuth Error Paths', () => {
   });
 
   it('should handle login with null data response', async () => {
+     
     const mockLink = new ApolloLink(() => {
-      return new Observable((observer) => {
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+      return new Observable((observer: any) => {
         observer.next({ data: { login: null } });
         observer.complete();
       });
@@ -243,8 +266,10 @@ describe('useAuth Error Paths', () => {
   });
 
   it('should handle register with null data response', async () => {
+     
     const mockLink = new ApolloLink(() => {
-      return new Observable((observer) => {
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+      return new Observable((observer: any) => {
         observer.next({ data: { register: null } });
         observer.complete();
       });
@@ -264,8 +289,10 @@ describe('useAuth Error Paths', () => {
   });
 
   it('should handle changePassword with null data response', async () => {
+     
     const mockLink = new ApolloLink(() => {
-      return new Observable((observer) => {
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+      return new Observable((observer: any) => {
         observer.next({ data: { changePassword: null } });
         observer.complete();
       });
@@ -285,8 +312,10 @@ describe('useAuth Error Paths', () => {
   });
 
   it('should handle forgotPassword with null data response', async () => {
+     
     const mockLink = new ApolloLink(() => {
-      return new Observable((observer) => {
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+      return new Observable((observer: any) => {
         observer.next({ data: { forgotPassword: null } });
         observer.complete();
       });

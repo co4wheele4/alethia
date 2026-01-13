@@ -32,7 +32,7 @@ describe('SystemStatusPanel', () => {
 
     rerender(
       <TestWrapper>
-        <SystemStatusPanel status="warning" message="Warning" />
+        <SystemStatusPanel status="degraded" message="Warning" />
       </TestWrapper>
     );
 

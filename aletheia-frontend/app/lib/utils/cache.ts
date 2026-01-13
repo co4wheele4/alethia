@@ -19,8 +19,12 @@ export const getCachedData = cache(async (key: string) => {
  * Example of using Next.js 16 cache directive
  * Components can use "use cache" directive for explicit caching
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createCachedFunction<T extends (...args: any[]) => any>(
   fn: T
 ): T {
-  return cache(fn) as T;
+  // React's cache function has a specific signature that may not preserve
+  // the original function's argument types in the type system.
+  // We use a type assertion to maintain the correct type for callers.
+  return cache(fn as () => ReturnType<T>) as unknown as T;
 }

@@ -28,7 +28,8 @@ describe('emotion-cache', () => {
 
     it('should create cache with prepend option', () => {
       const cache = createEmotionCache();
-      expect(cache.prepend).toBe(true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((cache as any).prepend).toBe(true);
     });
 
     it('should handle browser environment', () => {
@@ -53,13 +54,14 @@ describe('emotion-cache', () => {
 
       const cache = createEmotionCache();
       expect(cache).toBeDefined();
-      expect(cache.insertionPoint).toBeUndefined();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((cache as any).insertionPoint).toBeUndefined();
     });
 
     it('should work in non-browser environment', () => {
       // This test verifies the function doesn't crash in SSR
       const originalDocument = global.document;
-      // @ts-ignore - temporarily remove document
+      // @ts-expect-error - temporarily remove document
       delete global.document;
 
       // Should not throw

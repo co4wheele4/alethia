@@ -3,13 +3,9 @@
  * Tests error link, auth link, and network error scenarios
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { GraphQLExample } from '../../components/ui/GraphQLExample';
 import { useHello } from '../../hooks/useHello';
-import { ApolloProvider } from '@apollo/client/react';
-import { ApolloClient, InMemoryCache, from, createHttpLink } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
-import { onError } from '@apollo/client/link/error';
 import { ThemeProvider } from '../../hooks/useTheme';
 import { MuiThemeProvider } from '../../providers/mui-theme-provider';
 import * as authUtils from '../../lib/utils/auth';

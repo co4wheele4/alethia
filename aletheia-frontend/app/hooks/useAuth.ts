@@ -54,11 +54,15 @@ export function useAuth() {
   // Initialize auth state on client-side mount to prevent hydration mismatch
   // Using useEffect to access localStorage only on client side
   useEffect(() => {
-    // Initialize auth state from localStorage (client-side only)
-    const authToken = getAuthToken();
-    setToken(authToken);
-    setIsAuth(authToken !== null);
-    setIsInitialized(true);
+    // Defer state updates to avoid synchronous setState in effect
+    const rafId = requestAnimationFrame(() => {
+      // Initialize auth state from localStorage (client-side only)
+      const authToken = getAuthToken();
+      setToken(authToken);
+      setIsAuth(authToken !== null);
+      setIsInitialized(true);
+    });
+    return () => cancelAnimationFrame(rafId);
   }, []); // Empty deps: only run on mount to initialize from localStorage
 
   const [loginMutation, { loading: loginLoading, error: loginError }] = useMutation<
@@ -169,7 +173,7 @@ export function useAuth() {
       if (error instanceof Error) {
         throw error;
       }
-      // @ts-expect-error - Defensive fallback for non-Error instances (unreachable with Apollo Client)
+      // Defensive fallback for non-Error instances (unreachable with Apollo Client)
       // istanbul ignore next
       throw new Error('Registration failed. Please try again.');
     }
@@ -213,7 +217,7 @@ export function useAuth() {
         throw error;
       }
       
-      // @ts-expect-error - Defensive fallback for non-Error instances (unreachable with Apollo Client)
+      // Defensive fallback for non-Error instances (unreachable with Apollo Client)
       // istanbul ignore next
       throw new Error('Failed to change password. Please try again.');
     }
@@ -257,7 +261,7 @@ export function useAuth() {
         throw error;
       }
       
-      // @ts-expect-error - Defensive fallback for non-Error instances (unreachable with Apollo Client)
+      // Defensive fallback for non-Error instances (unreachable with Apollo Client)
       // istanbul ignore next
       throw new Error('Failed to send password reset email. Please try again.');
     }

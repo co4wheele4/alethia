@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+// Jest config files typically use CommonJS require()
 const nextJest = require('next/jest')
 const path = require('path')
 

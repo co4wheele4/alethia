@@ -3,6 +3,7 @@
  * Tests edge cases, boundary conditions, and all code paths
  */
 
+import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import { AIRationalePanel } from '../../../components/ai/AIRationalePanel';
 
@@ -40,7 +41,7 @@ describe('AIRationalePanel Edge Cases', () => {
 
   it('should handle rationale with null evidence', () => {
     const rationale = [
-      { step: 1, reasoning: 'Reasoning', evidence: null as any },
+      { step: 1, reasoning: 'Reasoning', evidence: null as unknown as string },
     ];
 
     render(<AIRationalePanel rationale={rationale} />);

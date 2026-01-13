@@ -5,7 +5,7 @@
 
 'use client';
 
-import { List, ListItem, ListItemText, Typography } from '@mui/material';
+import { List, ListItem, ListItemText } from '@mui/material';
 
 export interface ReasoningStep {
   step: number;

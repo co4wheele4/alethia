@@ -8,7 +8,7 @@ import { OptimisticButton } from '../../../components/ui/OptimisticButton';
 
 describe('OptimisticButton Edge Cases', () => {
   it('should call action even when it throws error', async () => {
-    const action = jest.fn().mockRejectedValue(new Error('Action failed'));
+    const action = jest.fn<Promise<void>, []>().mockRejectedValue(new Error('Action failed'));
     
     // Suppress console errors and warnings for this test
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -29,7 +29,7 @@ describe('OptimisticButton Edge Cases', () => {
   });
 
   it('should show optimistic label when action is called', async () => {
-    const action = jest.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = jest.fn<Promise<void>, []>(() => new Promise(resolve => setTimeout(resolve, 100)));
     
     render(
       <OptimisticButton action={action} optimisticLabel="Processing...">
@@ -52,7 +52,7 @@ describe('OptimisticButton Edge Cases', () => {
   });
 
   it('should not show optimistic label when not provided', async () => {
-    const action = jest.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = jest.fn<Promise<void>, []>(() => new Promise(resolve => setTimeout(resolve, 100)));
     
     render(<OptimisticButton action={action}>Submit</OptimisticButton>);
     
@@ -66,7 +66,7 @@ describe('OptimisticButton Edge Cases', () => {
   });
 
   it('should be disabled when both isPending and optimisticState are true', async () => {
-    const action = jest.fn(() => new Promise(resolve => setTimeout(resolve, 200)));
+    const action = jest.fn<Promise<void>, []>(() => new Promise(resolve => setTimeout(resolve, 200)));
     
     render(<OptimisticButton action={action}>Submit</OptimisticButton>);
     
@@ -80,7 +80,7 @@ describe('OptimisticButton Edge Cases', () => {
   });
 
   it('should handle multiple rapid clicks', async () => {
-    const action = jest.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = jest.fn<Promise<void>, []>(() => new Promise(resolve => setTimeout(resolve, 100)));
     
     render(<OptimisticButton action={action}>Submit</OptimisticButton>);
     

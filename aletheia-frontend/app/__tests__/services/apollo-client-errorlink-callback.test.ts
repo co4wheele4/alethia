@@ -29,17 +29,14 @@ describe('errorLinkHandler Tests', () => {
       extensions: { code: 'TEST_ERROR' },
     });
 
-    // Create a CombinedGraphQLErrors instance
-    const error = new CombinedGraphQLErrors({
+    // Create an error object that CombinedGraphQLErrors.is() will recognize
+    // CombinedGraphQLErrors.is() checks if error has graphQLErrors array
+    const error = {
       graphQLErrors: [graphQLError],
-      errorMessage: 'GraphQL error',
-    });
-
-    // CombinedGraphQLErrors uses .errors property (not .graphQLErrors)
-    // Set it manually if constructor didn't populate it
-    if (!error.errors || error.errors.length === 0) {
-      (error as any).errors = [graphQLError];
-    }
+      networkError: null,
+      message: 'GraphQL error',
+      errors: [graphQLError], // CombinedGraphQLErrors uses .errors property
+    } as unknown as CombinedGraphQLErrors;
 
     // Call the handler directly
     errorLinkHandler(error);
@@ -56,13 +53,12 @@ describe('errorLinkHandler Tests', () => {
     const unauthorizedError = new GraphQLError('Unauthorized access');
     localStorage.setItem('aletheia_auth_token', 'test-token');
 
-    const error = new CombinedGraphQLErrors({
+    const error = {
       graphQLErrors: [unauthorizedError],
-      errorMessage: 'Unauthorized',
-    });
-    if (!error.errors || error.errors.length === 0) {
-      (error as any).errors = [unauthorizedError];
-    }
+      networkError: null,
+      message: 'Unauthorized',
+      errors: [unauthorizedError],
+    } as unknown as CombinedGraphQLErrors;
 
     errorLinkHandler(error);
 
@@ -74,13 +70,12 @@ describe('errorLinkHandler Tests', () => {
     const invalidTokenError = new GraphQLError('Invalid token provided');
     localStorage.setItem('aletheia_auth_token', 'invalid-token');
 
-    const error = new CombinedGraphQLErrors({
+    const error = {
       graphQLErrors: [invalidTokenError],
-      errorMessage: 'Invalid token',
-    });
-    if (!error.errors || error.errors.length === 0) {
-      (error as any).errors = [invalidTokenError];
-    }
+      networkError: null,
+      message: 'Invalid token',
+      errors: [invalidTokenError],
+    } as unknown as CombinedGraphQLErrors;
 
     errorLinkHandler(error);
 
@@ -102,25 +97,21 @@ describe('errorLinkHandler Tests', () => {
   });
 
   it('should handle GraphQL errors with locations and path', () => {
-    const graphQLError = new GraphQLError(
-      'Test error',
-      {
-        extensions: { code: 'TEST_ERROR' },
-      },
-      undefined,
-      undefined,
-      ['query', 'field'],
-      undefined,
-      [{ line: 1, column: 5 }]
-    );
-
-    const error = new CombinedGraphQLErrors({
-      graphQLErrors: [graphQLError],
-      errorMessage: 'GraphQL error',
+    const graphQLError = new GraphQLError('Test error', {
+      extensions: { code: 'TEST_ERROR' },
     });
-    if (!error.errors || error.errors.length === 0) {
-      (error as any).errors = [graphQLError];
-    }
+    // Manually set path and locations for testing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (graphQLError as any).path = ['query', 'field'];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (graphQLError as any).locations = [{ line: 1, column: 5 }];
+
+    const error = {
+      graphQLErrors: [graphQLError],
+      networkError: null,
+      message: 'GraphQL error',
+      errors: [graphQLError],
+    } as unknown as CombinedGraphQLErrors;
 
     errorLinkHandler(error);
 

@@ -56,7 +56,7 @@ describe('auth utilities Edge Cases', () => {
 
     it('should return null on server side', () => {
       const originalWindow = global.window;
-      // @ts-ignore - intentionally setting to undefined
+      // @ts-expect-error - intentionally setting to undefined
       delete global.window;
       
       expect(getAuthToken()).toBeNull();
@@ -95,7 +95,7 @@ describe('auth utilities Edge Cases', () => {
 
     it('should not throw on server side', () => {
       const originalWindow = global.window;
-      // @ts-ignore - intentionally setting to undefined
+      // @ts-expect-error - intentionally setting to undefined
       delete global.window;
       
       expect(() => setAuthToken('token')).not.toThrow();
@@ -117,7 +117,7 @@ describe('auth utilities Edge Cases', () => {
 
     it('should not throw on server side', () => {
       const originalWindow = global.window;
-      // @ts-ignore - intentionally setting to undefined
+      // @ts-expect-error - intentionally setting to undefined
       delete global.window;
       
       expect(() => removeAuthToken()).not.toThrow();

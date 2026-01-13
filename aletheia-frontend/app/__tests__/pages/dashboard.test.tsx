@@ -23,7 +23,8 @@ const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
 const mockApolloClient = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  link: undefined as any,
   cache: new InMemoryCache(),
 });
 
@@ -48,6 +49,7 @@ describe('Dashboard Page', () => {
       forward: jest.fn(),
       refresh: jest.fn(),
       prefetch: jest.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   });
 
@@ -120,6 +122,7 @@ describe('Dashboard Page', () => {
       setTimeout(cb, 0);
       return 1;
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.requestAnimationFrame = mockRAF as any;
 
     render(
@@ -152,6 +155,7 @@ describe('Dashboard Page', () => {
       setTimeout(cb, 0);
       return 1;
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.requestAnimationFrame = mockRAF as any;
 
     render(
@@ -189,6 +193,7 @@ describe('Dashboard Page', () => {
       setTimeout(cb, 0);
       return 1;
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.requestAnimationFrame = mockRAF as any;
 
     render(
@@ -230,6 +235,7 @@ describe('Dashboard Page', () => {
       setTimeout(cb, 0);
       return 1;
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.requestAnimationFrame = mockRAF as any;
 
     render(
@@ -264,6 +270,7 @@ describe('Dashboard Page', () => {
       setTimeout(cb, 0);
       return 1;
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.requestAnimationFrame = mockRAF as any;
 
     render(
@@ -300,6 +307,7 @@ describe('Dashboard Page', () => {
       setTimeout(cb, 0);
       return 1;
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.requestAnimationFrame = mockRAF as any;
 
     render(

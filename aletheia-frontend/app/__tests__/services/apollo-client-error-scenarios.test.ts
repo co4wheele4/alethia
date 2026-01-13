@@ -5,8 +5,6 @@
 
 import { getApolloClient } from '../../services/apollo-client';
 import * as authUtils from '../../lib/utils/auth';
-import { ApolloLink, execute, Observable } from '@apollo/client';
-import { GraphQLError } from 'graphql';
 
 // Mock auth utils
 jest.mock('../../lib/utils/auth', () => ({

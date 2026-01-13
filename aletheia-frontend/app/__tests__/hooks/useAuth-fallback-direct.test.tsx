@@ -17,15 +17,16 @@ jest.mock('../../lib/utils/auth', () => ({
 }));
 
 // Mock useMutation to return mutations that throw non-Error values
-const mockUseMutation = jest.fn();
 jest.mock('@apollo/client/react', () => {
   const actual = jest.requireActual('@apollo/client/react');
   return {
     ...actual,
-    useMutation: (mutation: any, options?: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    useMutation: (_mutation: any, _options?: any) => {
       // Return a mutation function that throws a plain object (not an Error instance)
       const mutationFn = async () => {
         // Throw a plain object to trigger fallback paths
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const nonErrorObj: any = { message: 'Unexpected error', toString: () => 'Unexpected error' };
         Object.setPrototypeOf(nonErrorObj, null);
         throw nonErrorObj;
@@ -36,7 +37,8 @@ jest.mock('@apollo/client/react', () => {
 });
 
 const mockClient = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  link: undefined as any,
   cache: new InMemoryCache(),
 });
 

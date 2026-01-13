@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, createContext, useContext, useMemo } from 'react';
+import React, { useState, useEffect, createContext, useContext, useMemo, useCallback } from 'react';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -28,11 +28,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Initialize theme from localStorage after mount (client-side only)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode;
-      if (stored && ['light', 'dark', 'system'].includes(stored)) {
-        setThemeModeState(stored);
-      }
-      setIsInitialized(true);
+      // Defer state updates to avoid synchronous setState in effect
+      const rafId = requestAnimationFrame(() => {
+        const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode;
+        if (stored && ['light', 'dark', 'system'].includes(stored)) {
+          setThemeModeState(stored);
+        }
+        setIsInitialized(true);
+      });
+      return () => cancelAnimationFrame(rafId);
     }
   }, []);
 
@@ -40,42 +44,69 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Only update theme after initialization to prevent hydration mismatch
     if (!isInitialized) return;
 
-    // Update actual theme based on mode
-    if (themeMode === 'system') {
-      // Use system preference
-      if (typeof window !== 'undefined') {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        setActualTheme(mediaQuery.matches ? 'dark' : 'light');
+    // Set up media query listener for system theme changes (outside requestAnimationFrame)
+    let mediaQuery: MediaQueryList | null = null;
+    let handleChange: ((e: MediaQueryListEvent) => void) | null = null;
 
-        // Listen for system theme changes
-        const handleChange = (e: MediaQueryListEvent) => {
-          setActualTheme(e.matches ? 'dark' : 'light');
-        };
-
-        mediaQuery.addEventListener('change', handleChange);
-        return () => mediaQuery.removeEventListener('change', handleChange);
-      }
-    } else {
-      setActualTheme(themeMode);
+    if (themeMode === 'system' && typeof window !== 'undefined') {
+      mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      handleChange = (e: MediaQueryListEvent) => {
+        setActualTheme(e.matches ? 'dark' : 'light');
+      };
+      mediaQuery.addEventListener('change', handleChange);
     }
+
+    // Defer state updates to avoid synchronous setState in effect
+    const rafId = requestAnimationFrame(() => {
+      // Update actual theme based on mode
+      if (themeMode === 'system') {
+        // Use system preference
+        if (mediaQuery) {
+          setActualTheme(mediaQuery.matches ? 'dark' : 'light');
+        }
+      } else {
+        setActualTheme(themeMode);
+      }
+    });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (mediaQuery && handleChange) {
+        mediaQuery.removeEventListener('change', handleChange);
+      }
+    };
   }, [themeMode, isInitialized]);
 
-  const setThemeMode = (mode: ThemeMode) => {
+  const setThemeMode = useCallback((mode: ThemeMode) => {
     setThemeModeState(mode);
     if (typeof window !== 'undefined') {
       localStorage.setItem(THEME_STORAGE_KEY, mode);
     }
-  };
+  }, []);
 
-  const toggleTheme = () => {
-    if (themeMode === 'light') {
-      setThemeMode('dark');
-    } else if (themeMode === 'dark') {
-      setThemeMode('system');
-    } else {
-      setThemeMode('light');
-    }
-  };
+  const toggleTheme = useCallback(() => {
+    setThemeModeState((currentMode) => {
+      if (currentMode === 'light') {
+        const newMode = 'dark';
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(THEME_STORAGE_KEY, newMode);
+        }
+        return newMode;
+      } else if (currentMode === 'dark') {
+        const newMode = 'system';
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(THEME_STORAGE_KEY, newMode);
+        }
+        return newMode;
+      } else {
+        const newMode = 'light';
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(THEME_STORAGE_KEY, newMode);
+        }
+        return newMode;
+      }
+    });
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -85,7 +116,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setThemeMode,
       toggleTheme,
     }),
-    [themeMode, actualTheme, isInitialized],
+    [themeMode, actualTheme, isInitialized, setThemeMode, toggleTheme],
   );
 
   return React.createElement(ThemeContext.Provider, { value }, children);

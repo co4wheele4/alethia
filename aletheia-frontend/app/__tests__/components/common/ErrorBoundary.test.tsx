@@ -124,8 +124,8 @@ describe('ErrorBoundary', () => {
   });
 
   it('should display error stack in development mode', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    const originalDescriptor = Object.getOwnPropertyDescriptor(process.env, 'NODE_ENV');
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
 
     render(
       <TestWrapper>
@@ -138,12 +138,14 @@ describe('ErrorBoundary', () => {
     // Error stack should be visible in development
     expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
 
-    process.env.NODE_ENV = originalEnv;
+    if (originalDescriptor) {
+      Object.defineProperty(process.env, 'NODE_ENV', originalDescriptor);
+    }
   });
 
   it('should not display error stack in production mode', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    const originalDescriptor = Object.getOwnPropertyDescriptor(process.env, 'NODE_ENV');
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', configurable: true });
 
     render(
       <TestWrapper>
@@ -157,7 +159,9 @@ describe('ErrorBoundary', () => {
     // Stack trace should not be visible in production
     // (We can't easily test this without checking the actual DOM structure)
 
-    process.env.NODE_ENV = originalEnv;
+    if (originalDescriptor) {
+      Object.defineProperty(process.env, 'NODE_ENV', originalDescriptor);
+    }
   });
 
   it('should display default error message when error.message is falsy', () => {
@@ -181,8 +185,8 @@ describe('ErrorBoundary', () => {
   });
 
   it('should display error stack in development mode when errorInfo exists', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    const originalDescriptor = Object.getOwnPropertyDescriptor(process.env, 'NODE_ENV');
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
 
     render(
       <TestWrapper>
@@ -200,14 +204,16 @@ describe('ErrorBoundary', () => {
     const alert = screen.getByRole('alert');
     expect(alert).toBeInTheDocument();
 
-    process.env.NODE_ENV = originalEnv;
+    if (originalDescriptor) {
+      Object.defineProperty(process.env, 'NODE_ENV', originalDescriptor);
+    }
   });
 
   it('should handle error with undefined message', () => {
     // Component that throws an error with undefined message
     const ThrowErrorUndefined = () => {
       const error = new Error('test');
-      // @ts-ignore - intentionally setting to undefined to test branch
+      // @ts-expect-error - intentionally setting to undefined to test branch
       error.message = undefined;
       throw error;
     };

@@ -8,7 +8,7 @@
 import { useOptimistic, useTransition } from 'react';
 import { Button, ButtonProps } from '@mui/material';
 
-export interface OptimisticButtonProps extends ButtonProps {
+export interface OptimisticButtonProps extends Omit<ButtonProps, 'action'> {
   action: () => Promise<void>;
   optimisticLabel?: string;
   children: React.ReactNode;

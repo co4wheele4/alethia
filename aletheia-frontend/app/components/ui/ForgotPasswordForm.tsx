@@ -18,9 +18,8 @@ import {
   DialogContent,
   DialogActions,
   Typography,
-  Link,
 } from '@mui/material';
-import { Email as EmailIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Email as EmailIcon } from '@mui/icons-material';
 
 // Submit button component using React 19 useFormStatus
 function SubmitButton({ isPending }: { isPending: boolean }) {
@@ -144,13 +143,13 @@ export function ForgotPasswordForm({ open, onClose, onSuccess }: ForgotPasswordF
                   </Typography>
                 </Alert>
                 <Typography variant="body2" color="text.secondary">
-                  Didn't receive the email? Check your spam folder or try again.
+                  Didn&apos;t receive the email? Check your spam folder or try again.
                 </Typography>
               </>
             ) : (
               <>
                 <Typography variant="body2" color="text.secondary">
-                  Enter your email address and we'll send you a link to reset your password.
+                  Enter your email address and we&apos;ll send you a link to reset your password.
                 </Typography>
                 <TextField
                   id="email"

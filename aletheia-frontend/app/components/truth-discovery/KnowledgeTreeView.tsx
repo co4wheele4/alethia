@@ -7,11 +7,14 @@
 
 import { Box } from '@mui/material';
 
+// TODO: Define props when implementing the component
 export interface KnowledgeTreeViewProps {
-  // TODO: Define props
+  // Props will be defined when component is implemented
+  [key: string]: unknown;
 }
 
-export function KnowledgeTreeView(props: KnowledgeTreeViewProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function KnowledgeTreeView(_props?: KnowledgeTreeViewProps) {
   return (
     <Box>
       {/* TODO: Implement tree/graph hybrid view */}

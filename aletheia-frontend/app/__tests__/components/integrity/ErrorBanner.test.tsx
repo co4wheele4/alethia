@@ -59,7 +59,7 @@ describe('ErrorBanner', () => {
 
   it('should handle invalid source type with default label', () => {
     // Test default case by passing an invalid source type
-    render(<ErrorBanner source={'invalid' as any} />);
+    render(<ErrorBanner source={'invalid' as unknown as 'api' | 'database' | 'network'} />);
     // The default case returns 'Error' - check for it in title or source text
     const errorText = screen.queryByText(/^Error$/i) || screen.queryByText(/source: error/i);
     expect(errorText).toBeInTheDocument();

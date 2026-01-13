@@ -7,9 +7,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // React 19 features are enabled by default in Next.js 16
   },
-  // Optimize for production
-  swcMinify: true,
   // Enable React strict mode for better development experience
+  // Note: swcMinify is deprecated in Next.js 16+ (SWC is always enabled)
   reactStrictMode: true,
 };
 
