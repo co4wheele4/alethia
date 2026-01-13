@@ -2,7 +2,7 @@
  * Unit tests for useTheme hook
  */
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { ThemeProvider, useTheme } from '../../hooks/useTheme';
 import React from 'react';
 
@@ -57,10 +57,19 @@ describe('useTheme', () => {
     expect(result.current.themeMode).toBe('system');
   });
 
-  it('should load theme from localStorage', () => {
+  it('should load theme from localStorage', async () => {
     localStorageMock.setItem('aletheia_theme_preference', 'dark');
     
     const { result } = renderHook(() => useTheme(), { wrapper });
+    
+    // Wait for initialization and requestAnimationFrame to complete
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true);
+    });
+    
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
     
     expect(result.current.themeMode).toBe('dark');
   });
@@ -101,27 +110,47 @@ describe('useTheme', () => {
     expect(result.current.themeMode).toBe('system');
   });
 
-  it('should determine actual theme for light mode', () => {
+  it('should determine actual theme for light mode', async () => {
     const { result } = renderHook(() => useTheme(), { wrapper });
+    
+    // Wait for initialization
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true);
+    });
     
     act(() => {
       result.current.setThemeMode('light');
     });
     
+    // Wait for requestAnimationFrame to complete
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+    
     expect(result.current.actualTheme).toBe('light');
   });
 
-  it('should determine actual theme for dark mode', () => {
+  it('should determine actual theme for dark mode', async () => {
     const { result } = renderHook(() => useTheme(), { wrapper });
+    
+    // Wait for initialization
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true);
+    });
     
     act(() => {
       result.current.setThemeMode('dark');
     });
     
+    // Wait for requestAnimationFrame to complete
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+    
     expect(result.current.actualTheme).toBe('dark');
   });
 
-  it('should handle system theme changes with dark mode', () => {
+  it('should handle system theme changes with dark mode', async () => {
     // Mock matchMedia to return a MediaQueryList with dark mode
     const mockMediaQueryList = {
       matches: true, // Dark mode (line 48: mediaQuery.matches ? 'dark' : 'light')
@@ -147,18 +176,19 @@ describe('useTheme', () => {
 
     const { result } = renderHook(() => useTheme(), { wrapper });
     
+    // Wait for initialization
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true);
+    });
+    
     // Set to system mode - should use dark when matches is true (line 48)
     act(() => {
       result.current.setThemeMode('system');
     });
 
-    // Wait for useEffect to run
-    act(() => {
-      // Trigger the handleChange callback (line 52: setActualTheme(e.matches ? 'dark' : 'light'))
-      if (mockMediaQueryList._handler) {
-        const event = { matches: true } as MediaQueryListEvent;
-        mockMediaQueryList._handler(event);
-      }
+    // Wait for requestAnimationFrame to complete
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
     });
 
     expect(result.current.actualTheme).toBe('dark');

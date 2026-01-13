@@ -35,6 +35,7 @@
     "test:e2e:integration": "jest --config test/jest-e2e.json --testPathPattern=test/e2e/integration",
     "test:e2e:all": "npm run test:e2e",
     "test:all": "npm run test:unit && npm run test:e2e:all",
+    "test:complete": "node scripts/test-all-with-summary.js",
     "lint": "npm run lint --workspaces --if-present",
     "lint:backend": "npm run lint --workspace=aletheia-backend",
     "lint:frontend": "npm run lint --workspace=aletheia-frontend",

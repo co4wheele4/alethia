@@ -207,9 +207,9 @@ describe('useTheme Edge Cases', () => {
     const { result } = renderHook(() => useTheme(), { wrapper });
     
     // Initially should be false, then true after mount
-    // Wait for useEffect to run
+    // Wait for requestAnimationFrame to complete
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => setTimeout(resolve, 20));
     });
     
     expect(result.current.isInitialized).toBe(true);

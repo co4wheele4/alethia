@@ -14,14 +14,25 @@ jest.mock('../../lib/constants', () => ({
 
 describe('errorLinkHandler Tests', () => {
   let consoleErrorSpy: jest.SpyInstance;
+  let originalIs: typeof CombinedGraphQLErrors.is;
 
   beforeEach(() => {
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     localStorage.clear();
+    
+    // Mock CombinedGraphQLErrors.is() to return true for objects with errors array
+    originalIs = CombinedGraphQLErrors.is;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (CombinedGraphQLErrors as any).is = jest.fn((err: any) => {
+      return err && typeof err === 'object' && Array.isArray(err.errors) && err.errors.length > 0;
+    });
   });
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
+    // Restore original
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (CombinedGraphQLErrors as any).is = originalIs;
   });
 
   it('should handle CombinedGraphQLErrors errors', () => {
@@ -106,11 +117,14 @@ describe('errorLinkHandler Tests', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (graphQLError as any).locations = [{ line: 1, column: 5 }];
 
+    // Create error that will pass CombinedGraphQLErrors.is() check
+    // CombinedGraphQLErrors.is() checks for specific structure
+    // We need to ensure it has the errors property that the handler uses
     const error = {
       graphQLErrors: [graphQLError],
       networkError: null,
       message: 'GraphQL error',
-      errors: [graphQLError],
+      errors: [graphQLError], // This is what the handler checks (cge.errors)
     } as unknown as CombinedGraphQLErrors;
 
     errorLinkHandler(error);

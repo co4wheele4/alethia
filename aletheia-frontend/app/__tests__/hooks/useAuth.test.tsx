@@ -2,7 +2,7 @@
  * Unit tests for useAuth hook
  */
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { useAuth } from '../../hooks/useAuth';
@@ -40,11 +40,16 @@ describe('useAuth', () => {
     expect(result.current.isAuthenticated).toBe(false);
   });
 
-  it('should initialize with token from localStorage', () => {
+  it('should initialize with token from localStorage', async () => {
     const mockToken = 'mock-token';
     (authUtils.getAuthToken as jest.Mock).mockReturnValue(mockToken);
     
     const { result } = renderHook(() => useAuth(), { wrapper });
+    
+    // Wait for requestAnimationFrame to complete and state to update
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true);
+    });
     
     expect(result.current.token).toBe(mockToken);
     expect(result.current.isAuthenticated).toBe(true);
