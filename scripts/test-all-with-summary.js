@@ -49,10 +49,11 @@ function runTest(name, command, cwd) {
     const executable = isWindows && parts[0] === 'npm' ? 'npm.cmd' : parts[0];
     const args = parts.slice(1);
 
-    // Use array format for args to prevent shell injection vulnerabilities
+    // Use spawn with shell for npm commands on Windows
+    // For npm commands, we need shell: true on Windows, but the command is already sanitized
     const child = spawn(executable, args, {
       cwd: cwd || process.cwd(),
-      shell: false, // Disable shell to prevent injection - args are already parsed
+      shell: isWindows, // Required for npm.cmd on Windows, but safe since we control the command
       stdio: ['inherit', 'pipe', 'pipe'],
     });
 
