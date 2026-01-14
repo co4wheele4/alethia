@@ -33,10 +33,12 @@ import { ContentSurface } from '../components/layout';
 import { SystemStatusPanel } from '../components/integrity';
 import { TruthStateIndicator } from '../components/clarity';
 import { ServerHeader } from '../components/layout/ServerHeader';
+import { DocumentsPanel } from '../components/dashboard/DocumentsPanel';
+import { getUserIdFromToken } from '../lib/utils/jwt';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, isInitialized, logout } = useAuth();
+  const { isAuthenticated, isInitialized, logout, token } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
@@ -166,6 +168,11 @@ export default function DashboardPage() {
         <Box sx={{ mb: 4 }}>
           <SystemStatusPanel status="healthy" message="All systems operational" />
         </Box>
+
+        {/* Documents Slice (real GraphQL-backed feature) */}
+        <ContentSurface>
+          <DocumentsPanel userId={getUserIdFromToken(token)} />
+        </ContentSurface>
 
         {/* Features Grid */}
         <Box

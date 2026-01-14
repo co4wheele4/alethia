@@ -7,6 +7,7 @@ import { DocumentChunk } from '@models/document-chunk.model';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
+import { ForbiddenException } from '@nestjs/common';
 
 describe('DocumentResolver', () => {
   let resolver: DocumentResolver;
@@ -163,6 +164,14 @@ describe('DocumentResolver', () => {
         where: { userId: 'user-2' },
       });
     });
+
+    it('should forbid requesting documents for another user when authenticated', async () => {
+      await expect(
+        resolver.documentsByUser('user-2', {
+          req: { user: { sub: 'user-1' } },
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
   });
 
   describe('createDocument', () => {
@@ -179,6 +188,14 @@ describe('DocumentResolver', () => {
       expect(createMock).toHaveBeenCalledWith({
         data: { title: 'New Document', userId: 'user-1' },
       });
+    });
+
+    it('should forbid creating a document for another user when authenticated', async () => {
+      await expect(
+        resolver.createDocument('New Document', 'user-2', {
+          req: { user: { sub: 'user-1' } },
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
     });
   });
 
@@ -228,6 +245,17 @@ describe('DocumentResolver', () => {
       expect(deleteMock).toHaveBeenCalledWith({
         where: { id: 'doc-1' },
       });
+    });
+
+    it('should forbid deleting a document belonging to another user when authenticated', async () => {
+      const findUniqueMock = prismaService.document.findUnique as jest.Mock;
+      findUniqueMock.mockResolvedValue({ id: 'doc-1', userId: 'user-2' });
+
+      await expect(
+        resolver.deleteDocument('doc-1', {
+          req: { user: { sub: 'user-1' } },
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
     });
   });
 

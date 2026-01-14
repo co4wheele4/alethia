@@ -110,6 +110,38 @@ test.describe('Home Page', () => {
   });
 });
 
+test.describe('Documents (Dashboard)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/graphql', setupGraphQLMocks);
+  });
+
+  test('should list documents, create a document, and delete it', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('input[name="email"]', { timeout: 10000 });
+
+    // Login (mocked)
+    await page.locator('input[name="email"]').fill('test@example.com');
+    await page.locator('input[name="password"]').fill('password123');
+    await page.getByRole('button', { name: /^login$/i }).click();
+
+    await page.waitForURL(/\/dashboard/, { timeout: 20000 });
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+
+    // Documents panel should render and show seeded doc
+    await expect(page.getByRole('heading', { name: 'Documents' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Getting Started')).toBeVisible({ timeout: 10000 });
+
+    // Create
+    await page.getByTestId('document-title-input').fill('Playwright Doc');
+    await page.getByTestId('add-document-button').click();
+    await expect(page.getByText('Playwright Doc')).toBeVisible({ timeout: 10000 });
+
+    // Delete (new doc should be doc-2 in our handler)
+    await page.getByTestId('delete-document-doc-2').click();
+    await expect(page.getByText('Playwright Doc')).toHaveCount(0);
+  });
+});
+
 test.describe('Form Validation', () => {
   // Setup GraphQL mocking for all tests in this describe block
   test.beforeEach(async ({ page }) => {

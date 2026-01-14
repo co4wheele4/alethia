@@ -83,8 +83,9 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    // Use Webpack dev server for Playwright stability (Turbopack can hang on first compile in testMode).
-    command: 'npm run dev -- --webpack',
+    // Use production server for Playwright stability on Windows.
+    // (Dev server can occasionally crash/hang under Playwright load.)
+    command: 'npm run build && npm run start',
     url: 'http://127.0.0.1:3030',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

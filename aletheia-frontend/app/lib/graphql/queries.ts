@@ -38,3 +38,32 @@ export const FORGOT_PASSWORD_MUTATION = gql`
     forgotPassword(email: $email)
   }
 `;
+
+// Documents
+export const DOCUMENTS_BY_USER_QUERY = gql`
+  query DocumentsByUser($userId: String!) {
+    documentsByUser(userId: $userId) {
+      id
+      title
+      createdAt
+    }
+  }
+`;
+
+export const CREATE_DOCUMENT_MUTATION = gql`
+  mutation CreateDocument($title: String!, $userId: String!) {
+    createDocument(title: $title, userId: $userId) {
+      id
+      title
+      createdAt
+    }
+  }
+`;
+
+export const DELETE_DOCUMENT_MUTATION = gql`
+  mutation DeleteDocument($id: String!) {
+    deleteDocument(id: $id) {
+      id
+    }
+  }
+`;

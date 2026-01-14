@@ -58,8 +58,10 @@ export function useAuth() {
     const rafId = requestAnimationFrame(() => {
       // Initialize auth state from localStorage (client-side only)
       const authToken = getAuthToken();
-      setToken(authToken);
-      setIsAuth(authToken !== null);
+      // Avoid overwriting a token that may have been set by a fast login/register
+      // before this initialization effect runs (race condition in tests and fast UIs).
+      setToken((prev) => prev ?? authToken);
+      setIsAuth((prev) => prev || authToken !== null);
       setIsInitialized(true);
     });
     return () => cancelAnimationFrame(rafId);
