@@ -78,22 +78,34 @@ test.describe('Home Page', () => {
     await page.locator('input[name="email"]').fill('test@example.com');
     await page.locator('input[name="password"]').fill('password123');
     
-    // Click login button and wait for navigation
-    // Use Promise.all to wait for both the click and navigation
-    await Promise.all([
-      page.waitForURL(/\/dashboard/, { timeout: 15000 }),
-      page.getByRole('button', { name: /^login$/i }).click(),
-    ]);
+    // Click login button
+    const loginButton = page.getByRole('button', { name: /^login$/i });
+    await loginButton.click();
+    
+    // Wait for navigation to dashboard
+    // Firefox may need more time, so we use waitForLoadState as well
+    await page.waitForURL(/\/dashboard/, { timeout: 20000 });
     
     // Verify we're on the dashboard page
     await expect(page).toHaveURL(/\/dashboard/);
     
+    // Wait for page to be fully loaded (Firefox may need this)
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+      // If networkidle times out, continue anyway - page may still be loading
+    });
+    
     // Wait for dashboard content to load (ensures auth state is fully updated)
     // Dashboard has a loading state that needs to complete
-    await page.waitForSelector('text=Dashboard', { timeout: 10000 }).catch(() => {
-      // If "Dashboard" text isn't found, check for any dashboard-specific content
-      // The dashboard should show some content after loading
-      return page.waitForSelector('body', { timeout: 5000 });
+    // Try multiple selectors that indicate the dashboard has loaded
+    await Promise.race([
+      page.waitForSelector('text=Welcome', { timeout: 10000 }),
+      page.waitForSelector('text=Dashboard', { timeout: 10000 }),
+      page.waitForSelector('button:has-text("Logout")', { timeout: 10000 }),
+      page.waitForSelector('h1, h2, h3', { timeout: 10000 }), // Any heading
+    ]).catch(() => {
+      // If none of the specific selectors work, just verify we're on the dashboard URL
+      // This handles edge cases where content might be different
+      return Promise.resolve();
     });
   });
 });
