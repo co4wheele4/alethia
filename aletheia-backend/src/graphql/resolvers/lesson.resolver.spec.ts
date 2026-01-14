@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { LessonResolver } from './lesson.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 import { Lesson } from '@models/lesson.model';
@@ -50,7 +50,9 @@ describe('LessonResolver', () => {
       }),
     };
 
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         LessonResolver,
         {
@@ -305,7 +307,9 @@ describe('LessonResolver', () => {
   });
 
   it('should build GraphQL schema with LessonResolver', async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -328,7 +332,8 @@ describe('LessonResolver', () => {
     const app = moduleRef.createNestApplication();
     await app.init();
 
-    const lessonResolver = await moduleRef.resolve<LessonResolver>(LessonResolver);
+    const lessonResolver =
+      await moduleRef.resolve<LessonResolver>(LessonResolver);
     expect(lessonResolver).toBeDefined();
 
     await app.close();

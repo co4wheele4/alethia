@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { EmbeddingResolver } from './embedding.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 import { Embedding } from '@models/embedding.model';
@@ -46,7 +46,9 @@ describe('EmbeddingResolver', () => {
       }),
     };
 
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         EmbeddingResolver,
         {
@@ -95,7 +97,9 @@ describe('EmbeddingResolver', () => {
   });
 
   it('should build GraphQL schema with resolver', async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,

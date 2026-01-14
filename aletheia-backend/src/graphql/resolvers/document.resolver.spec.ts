@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { DocumentResolver } from './document.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 import { Document } from '@models/document.model';
@@ -57,7 +57,9 @@ describe('DocumentResolver', () => {
       }),
     };
 
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         DocumentResolver,
         {
@@ -308,7 +310,9 @@ describe('DocumentResolver', () => {
   });
 
   it('should build GraphQL schema with DocumentResolver', async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,

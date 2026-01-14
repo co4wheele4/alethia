@@ -39,9 +39,8 @@ This review focused on ensuring the codebase uses the latest compatible versions
   - **Compatibility**: Next.js 16 and React 19 fully support ES2022
 
 #### Backend (`aletheia-backend/tsconfig.json`)
-- **moduleResolution**: `node` → `node16`
-  - **Benefit**: Better support for Node.js ESM/CommonJS interop
-  - **Compatibility**: NestJS 11 supports node16 resolution
+- **moduleResolution**: `node16` → `node` (CommonJS)
+  - **Reason**: Backend is CommonJS (`"type": "commonjs"` and build output uses `require`/`exports`), so `moduleResolution: node` + `module: CommonJS` is the correct, modern-compatible setting
 - **target**: `ES2020` → `ES2022`
   - **Benefit**: Latest stable target with improved performance
 

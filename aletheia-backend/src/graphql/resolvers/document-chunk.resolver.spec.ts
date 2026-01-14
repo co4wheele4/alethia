@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { DocumentChunkResolver } from './document-chunk.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 import { DocumentChunk } from '@models/document-chunk.model';
@@ -61,7 +61,9 @@ describe('DocumentChunkResolver', () => {
       }),
     };
 
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         DocumentChunkResolver,
         {
@@ -341,7 +343,9 @@ describe('DocumentChunkResolver', () => {
   });
 
   it('should build GraphQL schema with DocumentChunkResolver', async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -364,9 +368,8 @@ describe('DocumentChunkResolver', () => {
     const app = moduleRef.createNestApplication();
     await app.init();
 
-    const documentChunkResolver = await moduleRef.resolve<DocumentChunkResolver>(
-      DocumentChunkResolver,
-    );
+    const documentChunkResolver =
+      await moduleRef.resolve<DocumentChunkResolver>(DocumentChunkResolver);
     expect(documentChunkResolver).toBeDefined();
 
     await app.close();

@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { EntityResolver } from './entity.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 import { Entity } from '@models/entity.model';
@@ -52,7 +52,9 @@ describe('EntityResolver', () => {
       }),
     };
 
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         EntityResolver,
         {
@@ -295,7 +297,9 @@ describe('EntityResolver', () => {
   });
 
   it('should build GraphQL schema with EntityResolver', async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
           driver: ApolloDriver,
@@ -318,7 +322,8 @@ describe('EntityResolver', () => {
     const app = moduleRef.createNestApplication();
     await app.init();
 
-    const entityResolver = await moduleRef.resolve<EntityResolver>(EntityResolver);
+    const entityResolver =
+      await moduleRef.resolve<EntityResolver>(EntityResolver);
     expect(entityResolver).toBeDefined();
 
     await app.close();

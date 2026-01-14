@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 import { User } from '@prisma/client';
@@ -16,7 +16,9 @@ describe('AuthResolver', () => {
   };
 
   beforeEach(async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         AuthResolver,
         {

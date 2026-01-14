@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -15,7 +15,9 @@ import { AuthResolver } from './auth.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 
 describe('AuthModule', () => {
-  let moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>>;
+  let moduleRef: Awaited<
+    ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+  >;
 
   beforeEach(async () => {
     moduleRef = await Test.createTestingModule({
@@ -86,7 +88,9 @@ describe('AuthModule', () => {
 
   describe('JwtModule.useFactory', () => {
     it('should use JWT_SECRET from config when provided', async () => {
-      const testModuleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+      const testModuleRef: Awaited<
+        ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+      > = await Test.createTestingModule({
         imports: [
           ConfigModule.forRoot({
             isGlobal: false,
@@ -117,7 +121,9 @@ describe('AuthModule', () => {
     });
 
     it('should use default JWT_SECRET when not provided', async () => {
-      const testModuleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+      const testModuleRef: Awaited<
+        ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+      > = await Test.createTestingModule({
         imports: [
           ConfigModule.forRoot({
             isGlobal: false,
@@ -149,7 +155,9 @@ describe('AuthModule', () => {
 
     it('should use JWT_EXPIRES_IN from config when provided', async () => {
       process.env.JWT_EXPIRES_IN = '30d';
-      const testModuleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+      const testModuleRef: Awaited<
+        ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+      > = await Test.createTestingModule({
         imports: [
           ConfigModule.forRoot({
             isGlobal: false,
@@ -181,7 +189,9 @@ describe('AuthModule', () => {
     });
 
     it('should use default JWT_EXPIRES_IN when not provided', async () => {
-      const testModuleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+      const testModuleRef: Awaited<
+        ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+      > = await Test.createTestingModule({
         imports: [
           ConfigModule.forRoot({
             isGlobal: false,

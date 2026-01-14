@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtStrategy } from './jwt.strategy';
@@ -20,7 +20,9 @@ describe('JwtStrategy', () => {
   };
 
   beforeEach(async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         JwtStrategy,
         {
@@ -152,7 +154,9 @@ describe('JwtStrategy', () => {
         },
       };
 
-      const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+      const moduleRef: Awaited<
+        ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+      > = await Test.createTestingModule({
         providers: [
           JwtStrategy,
           {

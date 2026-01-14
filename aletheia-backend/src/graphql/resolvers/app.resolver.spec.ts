@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AppResolver } from './app.resolver';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OpenAIService } from '../../openai/openai.service';
@@ -31,7 +31,9 @@ describe('AppResolver', () => {
       getEmbeddingResult: jest.fn(),
     };
 
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         AppResolver,
         {

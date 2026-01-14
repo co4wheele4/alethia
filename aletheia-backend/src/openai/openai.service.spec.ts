@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OpenAIService } from './openai.service';
 import OpenAI from 'openai';
@@ -30,7 +30,9 @@ describe('OpenAIService', () => {
     // Reset environment
     process.env.OPENAI_API_KEY = 'test-api-key';
 
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
           isGlobal: true,
@@ -58,7 +60,9 @@ describe('OpenAIService', () => {
 
   it('should throw error when OPENAI_API_KEY is missing', async () => {
     await expect(async () => {
-      const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+      const moduleRef: Awaited<
+        ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+      > = await Test.createTestingModule({
         providers: [
           OpenAIService,
           {

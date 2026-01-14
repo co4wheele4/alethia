@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -19,7 +19,9 @@ describe('AuthService', () => {
   };
 
   beforeEach(async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         AuthService,
         {

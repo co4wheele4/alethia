@@ -42,7 +42,8 @@ export default defineConfig({
   // Shared settings for all projects
   use: {
     // Base URL for tests
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3030',
+    // Prefer IPv4 loopback to avoid occasional localhost/IPv6 (::1) resolution issues on Windows.
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3030',
     
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -82,8 +83,9 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3030',
+    // Use Webpack dev server for Playwright stability (Turbopack can hang on first compile in testMode).
+    command: 'npm run dev -- --webpack',
+    url: 'http://127.0.0.1:3030',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },

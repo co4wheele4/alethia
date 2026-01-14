@@ -161,7 +161,7 @@ aletheia-backend/
 - **GraphQL**: 16.12.0 ✅
 - **Apollo Server**: 5.2.0 ✅
 - **Prisma**: 6.19.1 ✅
-- **TypeScript**: 5.7.3 ✅
+- **TypeScript**: 5.9.3 ✅
 - **Express**: 5.2.1 ✅ (Latest major version)
 
 ### Security Dependencies

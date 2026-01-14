@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { DataLoaderService } from './dataloader.service';
 import { PrismaService } from '@prisma/prisma.service';
 import { User } from '@models/user.model';
@@ -49,7 +49,9 @@ describe('DataLoaderService', () => {
   };
 
   beforeEach(async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       providers: [
         DataLoaderService,
         {

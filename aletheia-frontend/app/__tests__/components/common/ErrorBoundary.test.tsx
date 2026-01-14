@@ -210,7 +210,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('should verify componentStack is rendered when both conditions are true', () => {
-    const { container } = render(
+    render(
       <TestWrapper>
         <ErrorBoundary isDevelopment={true}>
           <ThrowError shouldThrow={true} />
@@ -267,8 +267,8 @@ describe('ErrorBoundary', () => {
     // The Box contains a Typography with component="pre"
     // Even if componentStack is empty, the structure should exist when condition is true
     const preElements = container.querySelectorAll('pre');
-    // The pre element should exist when both conditions are true
-    // This ensures the branch where both conditions are true is actually executed
+    // The pre element should exist when both conditions are true (even if the stack is empty in jsdom)
+    expect(preElements.length).toBeGreaterThan(0);
   });
 
   it('should not render componentStack when errorInfo is null in development mode', () => {
@@ -370,7 +370,7 @@ describe('ErrorBoundary', () => {
     // 4. development=false, errorInfo=falsy → should NOT render Box (short-circuit)
 
     // Test 1: development=true, errorInfo=truthy → should render Box
-    const { container: container1, unmount: unmount1 } = render(
+    const { unmount: unmount1 } = render(
       <TestWrapper>
         <ErrorBoundary isDevelopment={true}>
           <ThrowError shouldThrow={true} />

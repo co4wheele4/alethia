@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -7,7 +7,9 @@ describe('AppController', () => {
   let service: AppService;
 
   beforeEach(async () => {
-    const moduleRef: Awaited<ReturnType<ReturnType<typeof Test.createTestingModule>["compile"]>> = await Test.createTestingModule({
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
       controllers: [AppController],
       providers: [AppService],
     }).compile();
