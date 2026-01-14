@@ -74,9 +74,9 @@ describe('Home Page', () => {
 
     // Loading text might be in different format, check for it flexibly
     const loadingElements = screen.queryAllByText(/loading/i);
-    // If not found, check for "Welcome" which appears in loading state
+    // If not found, check for the sign-in heading which appears in loading state
     if (loadingElements.length === 0) {
-      expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+      expect(screen.getByText(/sign in/i)).toBeInTheDocument();
     } else {
       expect(loadingElements.length).toBeGreaterThan(0);
     }
@@ -103,8 +103,8 @@ describe('Home Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/welcome to aletheia/i)).toBeInTheDocument();
-      expect(screen.getByText(/please login to continue/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /^sign in$/i })).toBeInTheDocument();
+      expect(screen.getByText(/use your account credentials to continue/i)).toBeInTheDocument();
     }, { timeout: 2000 });
   });
 

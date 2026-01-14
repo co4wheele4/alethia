@@ -29,7 +29,7 @@ describe('AIResultCard', () => {
 
   it('should show warning when no explanation', () => {
     render(<AIResultCard result="Result without explanation" />);
-    expect(screen.getByText(/explanation required before finalizing/i)).toBeInTheDocument();
+    expect(screen.getByText(/explanation required before treating this as reliable output/i)).toBeInTheDocument();
   });
 
   it('should not show warning when explanation is provided', () => {

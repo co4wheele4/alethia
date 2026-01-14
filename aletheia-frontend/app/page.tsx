@@ -38,37 +38,6 @@ export default function Home() {
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        // Background image layer
-        '&::before': {
-          content: '""',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: 'url(/images/aletheiabg.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          opacity: 0.15, // Muted effect - adjust this value to make more/less visible
-          zIndex: 0,
-          pointerEvents: 'none',
-        },
-        // Darkening overlay for better text readability
-        '&::after': {
-          content: '""',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: (theme) => 
-            theme.palette.mode === 'dark' 
-              ? 'rgba(0, 0, 0, 0.4)' 
-              : 'rgba(255, 255, 255, 0.3)',
-          zIndex: 0,
-          pointerEvents: 'none',
-        },
       }}
     >
       {/* App Bar with Theme Toggle */}
@@ -76,11 +45,7 @@ export default function Home() {
         position="static" 
         elevation={0}
         sx={{
-          backgroundColor: (theme) => 
-            theme.palette.mode === 'dark' 
-              ? 'rgba(18, 18, 18, 0.8)' 
-              : 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(10px)',
+          backgroundColor: 'background.paper',
           zIndex: 1,
         }}
         suppressHydrationWarning
@@ -115,8 +80,8 @@ export default function Home() {
             <Typography variant="h3" component="h1" gutterBottom>
               Aletheia
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-              Frontend connected to GraphQL Backend
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 520, mx: 'auto' }}>
+              Sign in to inspect documents as immutable evidence, with explicit provenance and uncertainty.
             </Typography>
           </Box>
 
@@ -128,16 +93,11 @@ export default function Home() {
                 elevation={3} 
                 sx={{ 
                   p: 4,
-                  backgroundColor: (theme) => 
-                    theme.palette.mode === 'dark' 
-                      ? 'rgba(18, 18, 18, 0.85)' 
-                      : 'rgba(255, 255, 255, 0.85)',
-                  backdropFilter: 'blur(10px)',
                 }}
                 suppressHydrationWarning
               >
                 <Typography variant="h5" component="h2" align="center" gutterBottom>
-                  Welcome to Aletheia
+                  Sign in
                 </Typography>
                 <Typography variant="body2" color="text.secondary" align="center">
                   Loading...
@@ -148,19 +108,14 @@ export default function Home() {
                 elevation={3} 
                 sx={{ 
                   p: 4,
-                  backgroundColor: (theme) => 
-                    theme.palette.mode === 'dark' 
-                      ? 'rgba(18, 18, 18, 0.85)' 
-                      : 'rgba(255, 255, 255, 0.85)',
-                  backdropFilter: 'blur(10px)',
                 }}
                 suppressHydrationWarning
               >
                 <Typography variant="h5" component="h2" align="center" gutterBottom>
-                  Welcome to Aletheia
+                  Sign in
                 </Typography>
                 <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-                  Please login to continue
+                  Use your account credentials to continue.
                 </Typography>
                 <LoginForm />
               </Paper>
@@ -170,11 +125,6 @@ export default function Home() {
                 elevation={3} 
                 sx={{ 
                   p: 4,
-                  backgroundColor: (theme) => 
-                    theme.palette.mode === 'dark' 
-                      ? 'rgba(18, 18, 18, 0.85)' 
-                      : 'rgba(255, 255, 255, 0.85)',
-                  backdropFilter: 'blur(10px)',
                 }}
                 suppressHydrationWarning
               >

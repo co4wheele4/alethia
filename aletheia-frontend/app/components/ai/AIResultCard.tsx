@@ -39,7 +39,7 @@ export function AIResultCard(props: AIResultCardProps) {
         )}
         {!explanation && (
           <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
-            ⚠️ Explanation required before finalizing
+            Explanation required before treating this as reliable output.
           </Typography>
         )}
       </CardContent>

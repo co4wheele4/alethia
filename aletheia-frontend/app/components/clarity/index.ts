@@ -6,6 +6,9 @@
 export { WhyPanel } from './WhyPanel';
 export type { WhyPanelProps } from './WhyPanel';
 
+export { UncertaintyBadge } from './UncertaintyBadge';
+export type { UncertaintyBadgeProps, UncertaintyLevel } from './UncertaintyBadge';
+
 export { ExplanationModal } from './ExplanationModal';
 export type { ExplanationModalProps } from './ExplanationModal';
 

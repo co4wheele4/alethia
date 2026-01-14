@@ -35,8 +35,7 @@ function getTheme(mode: 'light' | 'dark') {
 function MuiThemeProviderInner({
   children,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  children: any;
+  children: React.ReactNode;
 }) {
   const { actualTheme, isInitialized } = useTheme();
   
@@ -75,8 +74,7 @@ function MuiThemeProviderInner({
 export function MuiThemeProvider({
   children,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  children: any;
+  children: React.ReactNode;
 }) {
   return (
     <ThemeProvider>

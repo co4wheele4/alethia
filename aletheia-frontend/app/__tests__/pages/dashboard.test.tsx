@@ -4,7 +4,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
 import DashboardPage from '../../dashboard/page';
 import { ApolloProvider } from '@apollo/client/react';
@@ -14,12 +14,14 @@ import { ThemeProvider } from '../../hooks/useTheme';
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  usePathname: jest.fn(),
 }));
 
 // Mock useAuth hook
 jest.mock('../../hooks/useAuth');
 
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
+const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
 const mockApolloClient = new ApolloClient({
@@ -42,6 +44,7 @@ describe('Dashboard Page', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUsePathname.mockReturnValue('/dashboard');
     mockUseRouter.mockReturnValue({
       replace: mockReplace,
       push: jest.fn(),
@@ -133,11 +136,11 @@ describe('Dashboard Page', () => {
 
     // Wait for hydration
     await waitFor(() => {
-      expect(screen.getByText(/welcome to aletheia/i)).toBeInTheDocument();
+      expect(screen.getByText(/this system shows what is known/i)).toBeInTheDocument();
     }, { timeout: 2000 });
   });
 
-  it('should display all features', async () => {
+  it('should display primary navigation items', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isInitialized: true,
@@ -165,13 +168,11 @@ describe('Dashboard Page', () => {
     );
 
     await waitFor(() => {
-      // Use getAllByText since these might appear multiple times
-      expect(screen.getAllByText(/truth discovery/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/clarity.*sense-making/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/integrity.*trust/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/semantic search/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/user agency/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/change history/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/documents/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/evidence/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/entities/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/analysis/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/provenance/i).length).toBeGreaterThan(0);
     }, { timeout: 2000 });
   });
 
@@ -252,7 +253,7 @@ describe('Dashboard Page', () => {
     expect(mockLogout).toHaveBeenCalled();
   });
 
-  it('should display quick actions', async () => {
+  it('should display next steps links', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isInitialized: true,
@@ -280,16 +281,16 @@ describe('Dashboard Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getAllByText(/quick actions/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/explore knowledge/i).length).toBeGreaterThan(0);
-      // "Search" might appear multiple times, so use getAllByText
-      expect(screen.getAllByText(/^search$/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/view history/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/settings/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/next steps/i)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /documents \(sources\)/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /evidence \(chunks\)/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /entities \(extracted\)/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /analysis \(ai outputs\)/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /provenance \(audit\)/i })).toBeInTheDocument();
     }, { timeout: 2000 });
   });
 
-  it('should display truth state indicators', async () => {
+  it('should show documents panel actions', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isInitialized: true,
@@ -317,7 +318,7 @@ describe('Dashboard Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/truth states/i)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /open library/i })).toBeInTheDocument();
     }, { timeout: 2000 });
   });
 });

@@ -22,6 +22,9 @@ export * from './user-agency';
 // Layout
 export * from './layout';
 
+// Application Shell
+export * from './shell';
+
 // Search & Discovery
 export * from './search';
 

@@ -3,6 +3,14 @@
  */
 
 import { gql } from '@apollo/client';
+export {
+  CHUNKS_BY_DOCUMENT_QUERY,
+  CREATE_CHUNK_MUTATION,
+  CREATE_DOCUMENT_MUTATION,
+  DELETE_DOCUMENT_MUTATION,
+  DOCUMENTS_BY_USER_QUERY,
+  DOCUMENT_QUERY,
+} from '../../features/documents/graphql';
 
 // Example: Hello query
 export const HELLO_QUERY = gql`
@@ -36,34 +44,5 @@ export const CHANGE_PASSWORD_MUTATION = gql`
 export const FORGOT_PASSWORD_MUTATION = gql`
   mutation ForgotPassword($email: String!) {
     forgotPassword(email: $email)
-  }
-`;
-
-// Documents
-export const DOCUMENTS_BY_USER_QUERY = gql`
-  query DocumentsByUser($userId: String!) {
-    documentsByUser(userId: $userId) {
-      id
-      title
-      createdAt
-    }
-  }
-`;
-
-export const CREATE_DOCUMENT_MUTATION = gql`
-  mutation CreateDocument($title: String!, $userId: String!) {
-    createDocument(title: $title, userId: $userId) {
-      id
-      title
-      createdAt
-    }
-  }
-`;
-
-export const DELETE_DOCUMENT_MUTATION = gql`
-  mutation DeleteDocument($id: String!) {
-    deleteDocument(id: $id) {
-      id
-    }
   }
 `;
