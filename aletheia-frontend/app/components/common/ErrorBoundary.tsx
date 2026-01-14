@@ -14,6 +14,7 @@ interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  isDevelopment?: boolean; // Inject environment value for testability
 }
 
 interface ErrorBoundaryState {
@@ -91,7 +92,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <Alert severity="error" sx={{ maxWidth: 600, width: '100%' }}>
             <AlertTitle>Error Details</AlertTitle>
             {this.state.error?.message || 'An unexpected error occurred'}
-            {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
+            {(this.props.isDevelopment ?? process.env.NODE_ENV === 'development') && this.state.errorInfo && (
               <Box sx={{ mt: 2 }}>
                 <Typography variant="caption" component="pre" sx={{ whiteSpace: 'pre-wrap', fontSize: '0.75rem' }}>
                   {this.state.errorInfo.componentStack}
