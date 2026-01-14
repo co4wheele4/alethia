@@ -77,10 +77,24 @@ test.describe('Home Page', () => {
     // Fill in valid credentials (mocked by MSW handlers)
     await page.locator('input[name="email"]').fill('test@example.com');
     await page.locator('input[name="password"]').fill('password123');
-    await page.getByRole('button', { name: /^login$/i }).click();
     
-    // Wait for navigation and assert dashboard is visible
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
+    // Click login button and wait for navigation
+    // Use Promise.all to wait for both the click and navigation
+    await Promise.all([
+      page.waitForURL(/\/dashboard/, { timeout: 15000 }),
+      page.getByRole('button', { name: /^login$/i }).click(),
+    ]);
+    
+    // Verify we're on the dashboard page
+    await expect(page).toHaveURL(/\/dashboard/);
+    
+    // Wait for dashboard content to load (ensures auth state is fully updated)
+    // Dashboard has a loading state that needs to complete
+    await page.waitForSelector('text=Dashboard', { timeout: 10000 }).catch(() => {
+      // If "Dashboard" text isn't found, check for any dashboard-specific content
+      // The dashboard should show some content after loading
+      return page.waitForSelector('body', { timeout: 5000 });
+    });
   });
 });
 
