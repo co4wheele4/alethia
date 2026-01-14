@@ -231,4 +231,214 @@ describe('useTheme Edge Cases', () => {
     // Actual theme should reflect system preference
     expect(['light', 'dark']).toContain(result.current.actualTheme);
   });
+
+  it('should trigger handleChange callback when system theme changes to dark', async () => {
+    // Create a mock that stores the handler
+    let storedHandler: ((e: MediaQueryListEvent) => void) | null = null;
+    const mockMediaQuery = {
+      matches: false, // Start with light mode
+      media: '(prefers-color-scheme: dark)',
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn((event: string, handler: (e: MediaQueryListEvent) => void) => {
+        if (event === 'change') {
+          storedHandler = handler;
+        }
+      }),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    };
+
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: jest.fn().mockImplementation(() => mockMediaQuery),
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper });
+    
+    // Wait for initialization
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+
+    // Set to system mode to register the listener
+    act(() => {
+      result.current.setThemeMode('system');
+    });
+
+    // Wait for the effect to set up the listener
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+
+    // Verify handler was stored
+    expect(storedHandler).not.toBeNull();
+
+    // Trigger the handler with a dark mode change (line 54: e.matches ? 'dark' : 'light' - dark branch)
+    // Create a mock event object since MediaQueryListEvent may not be available in test env
+    if (storedHandler) {
+      act(() => {
+        const event = {
+          matches: true, // System changed to dark
+          media: '(prefers-color-scheme: dark)',
+        } as MediaQueryListEvent;
+        storedHandler!(event);
+      });
+
+      // Wait for state update
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      });
+
+      // Verify actualTheme was updated to dark
+      expect(result.current.actualTheme).toBe('dark');
+    }
+  });
+
+  it('should trigger handleChange callback when system theme changes to light', async () => {
+    // Create a mock that stores the handler
+    let storedHandler: ((e: MediaQueryListEvent) => void) | null = null;
+    const mockMediaQuery = {
+      matches: true, // Start with dark mode
+      media: '(prefers-color-scheme: dark)',
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn((event: string, handler: (e: MediaQueryListEvent) => void) => {
+        if (event === 'change') {
+          storedHandler = handler;
+        }
+      }),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    };
+
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: jest.fn().mockImplementation(() => mockMediaQuery),
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper });
+    
+    // Wait for initialization
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+
+    // Set to system mode to register the listener
+    act(() => {
+      result.current.setThemeMode('system');
+    });
+
+    // Wait for the effect to set up the listener
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+
+    // Verify handler was stored
+    expect(storedHandler).not.toBeNull();
+
+    // Trigger the handler with a light mode change (line 54: e.matches ? 'dark' : 'light' - light branch)
+    if (storedHandler) {
+      act(() => {
+        const event = {
+          matches: false, // System changed to light
+          media: '(prefers-color-scheme: dark)',
+        } as MediaQueryListEvent;
+        storedHandler!(event);
+      });
+
+      // Wait for state update
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      });
+
+      // Verify actualTheme was updated to light
+      expect(result.current.actualTheme).toBe('light');
+    }
+  });
+
+  it('should handle cleanup of media query listener', async () => {
+    let storedHandler: ((e: MediaQueryListEvent) => void) | null = null;
+    const removeEventListenerSpy = jest.fn();
+    
+    const mockMediaQuery = {
+      matches: false,
+      media: '(prefers-color-scheme: dark)',
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn((event: string, handler: (e: MediaQueryListEvent) => void) => {
+        if (event === 'change') {
+          storedHandler = handler;
+        }
+      }),
+      removeEventListener: removeEventListenerSpy,
+      dispatchEvent: jest.fn(),
+    };
+
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: jest.fn().mockImplementation(() => mockMediaQuery),
+    });
+
+    const { result, unmount } = renderHook(() => useTheme(), { wrapper });
+    
+    // Wait for initialization
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+
+    // Set to system mode to register the listener
+    act(() => {
+      result.current.setThemeMode('system');
+    });
+
+    // Wait for the effect to set up the listener
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+
+    // Unmount to trigger cleanup (line 74-76)
+    unmount();
+
+    // Wait for cleanup
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+
+    // Verify removeEventListener was called
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('change', storedHandler);
+  });
+
+  it('should handle window undefined in SSR environment', () => {
+    // Save original window
+    const originalWindow = global.window;
+    
+    // Remove window to simulate SSR (line 30, 51, 82, 91, 97, 103)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (global as any).window;
+
+    // This should not throw and should work without window
+    const { result } = renderHook(() => useTheme(), { wrapper });
+    
+    // Should still work, just won't access localStorage or matchMedia
+    expect(result.current.themeMode).toBe('system');
+    
+    // Test setThemeMode without window (should not access localStorage)
+    act(() => {
+      result.current.setThemeMode('dark');
+    });
+    expect(result.current.themeMode).toBe('dark');
+    
+    // Test toggleTheme without window (should not access localStorage)
+    act(() => {
+      result.current.toggleTheme();
+    });
+    expect(result.current.themeMode).toBe('system');
+    
+    // Restore window
+    global.window = originalWindow;
+  });
 });
