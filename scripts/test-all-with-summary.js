@@ -49,9 +49,10 @@ function runTest(name, command, cwd) {
     const executable = isWindows && parts[0] === 'npm' ? 'npm.cmd' : parts[0];
     const args = parts.slice(1);
 
+    // Use array format for args to prevent shell injection vulnerabilities
     const child = spawn(executable, args, {
       cwd: cwd || process.cwd(),
-      shell: isWindows,
+      shell: false, // Disable shell to prevent injection - args are already parsed
       stdio: ['inherit', 'pipe', 'pipe'],
     });
 

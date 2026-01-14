@@ -57,9 +57,11 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       context: createGraphQLContext,
       formatError: formatGraphQLError,
+      sortSchema: true, // Sort schema for better readability
+      // Apollo Server 5 configuration - playground and introspection are still supported
+      // Note: In Apollo Server 5, these are still valid options in NestJS GraphQL module
       playground: process.env.NODE_ENV !== 'production', // Enable in development only
       introspection: process.env.NODE_ENV !== 'production', // Enable in development only
-      sortSchema: true, // Sort schema for better readability
     }),
   ],
   controllers: [AppController],

@@ -20,7 +20,7 @@
     "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
-    "@apollo/client": "^4.0.12",
+    "@apollo/client": "^4.0.13",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -32,12 +32,12 @@
     "next": "^16.1.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-hook-form": "^7.71.0",
+    "react-hook-form": "^7.71.1",
     "zod": "^4.3.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
-    "@swc/helpers": "^0.5.15",
+    "@swc/helpers": "^0.5.18",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -45,7 +45,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^22",
-    "@types/react": "^19",
+    "@types/react": "^19.2.8",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.1.1",
