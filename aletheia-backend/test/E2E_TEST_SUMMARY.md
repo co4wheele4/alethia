@@ -1,9 +1,9 @@
 # E2E Test Summary
 
-**Last Updated**: January 2026  
+**Last Updated**: January 14, 2026  
 **Status**: ✅ **All Tests Passing**  
-**Total Test Suites**: 11  
-**Total Tests**: 51  
+**Total Test Suites**: 12  
+**Total Tests**: 56  
 
 ## Test Results
 
@@ -16,7 +16,8 @@ All e2e tests are passing successfully. The errors visible in the NestJS logs ar
 | Resolver | Test File | Status | Tests | Coverage |
 |----------|-----------|--------|-------|----------|
 | AppResolver | `app.resolver.e2e-spec.ts` | ✅ | 3 | Queries, Mutations |
-| UserResolver | `user.resolver.e2e-spec.ts` | ✅ | 8 | Full CRUD, ResolveFields |
+| AuthResolver | `auth.resolver.e2e-spec.ts` | ✅ | 5 | Login/Register/guards |
+| UserResolver | `user.resolver.e2e-spec.ts` | ✅ | 10 | Full CRUD, ResolveFields |
 | EntityResolver | `entity.resolver.e2e-spec.ts` | ✅ | 3 | Queries, ResolveFields |
 | AiQueryResolver | `ai-query.resolver.e2e-spec.ts` | ✅ | 4 | Queries, Mutations, ResolveFields |
 
@@ -24,7 +25,7 @@ All e2e tests are passing successfully. The errors visible in the NestJS logs ar
 
 | Test File | Status | Tests | Coverage |
 |-----------|--------|-------|----------|
-| `error-cases.e2e-spec.ts` | ✅ | 10 | Constraint violations, foreign key errors, unique constraints |
+| `error-cases.e2e-spec.ts` | ✅ | 12 | Constraint violations, foreign key errors, unique constraints |
 | `validation-edge-cases.e2e-spec.ts` | ✅ | 5 | Empty/null inputs, long strings, array validation |
 | `pagination-edge-cases.e2e-spec.ts` | ✅ | 3 | Pagination with edge values |
 | `partial-updates.e2e-spec.ts` | ✅ | 2 | Update operations with partial data |
@@ -35,7 +36,7 @@ All e2e tests are passing successfully. The errors visible in the NestJS logs ar
 | Test File | Status | Tests | Coverage |
 |-----------|--------|-------|----------|
 | `app.e2e-spec.ts` | ✅ | 1 | HTTP endpoint testing |
-| `db-setup-verification.e2e-spec.ts` | ✅ | 1 | Database setup verification |
+| `db-setup-verification.e2e-spec.ts` | ✅ | 6 | Database setup verification |
 
 ## Test Coverage by Category
 

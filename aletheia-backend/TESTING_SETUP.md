@@ -1,5 +1,7 @@
 # Testing Setup & Recommendations
 
+**Last Updated**: January 14, 2026
+
 ## ✅ Implemented Safeguards
 
 ### 1. **Testing Guidelines** (`test/TESTING_GUIDELINES.md`)
@@ -7,15 +9,13 @@
 - Test structure templates
 - Code review checklist
 
-### 2. **Pull Request Template** (`.github/pull_request_template.md`)
-- Mandatory checklist for e2e tests
-- Ensures reviewers check for test coverage
-- Self-review prompts
+### 2. **Pull Request Template** (optional)
+- Not currently included in this repo
+- Recommended if you want consistent reviewer/test checklists
 
-### 3. **CI/CD Pipeline** (`.github/workflows/test.yml`)
-- **Unit Tests**: Runs on every PR/push with coverage reporting
-- **E2E Tests**: Runs on every PR/push with database setup
-- **E2E Coverage Check**: Warns if resolvers changed without e2e tests
+### 3. **CI/CD Pipeline** (optional)
+- Not currently included in this repo
+- Recommended if you want automated lint/test enforcement on PRs
 
 ### 4. **E2E Test Checker Script** (`scripts/check-e2e-tests.js`)
 - Can be run manually: `npm run check:e2e`
@@ -73,7 +73,7 @@ fi
 
 ### For Developers
 1. **Before Committing**: Run `npm run check:e2e` to verify tests exist
-2. **When Adding Resolvers**: Add e2e tests to `test/graphql.e2e-spec.ts` or create dedicated file
+2. **When Adding Resolvers**: Add e2e tests under `test/e2e/resolvers/` (or `test/e2e/cross-cutting/` for shared behavior)
 3. **PR Checklist**: Use the PR template - it will remind you about tests
 4. **Code Review**: Check that e2e tests cover new endpoints/resolvers
 
@@ -91,10 +91,10 @@ fi
 ## 🔧 Customization
 
 ### Adjusting CI Behavior
-Edit `.github/workflows/test.yml`:
-- Make e2e test check **required** (change warning to error)
-- Add test coverage thresholds
-- Add additional test checks
+If you add CI workflows later, consider:
+- Making e2e test checks required for resolver changes
+- Adding coverage thresholds
+- Adding additional test quality gates
 
 ### Adjusting Check Script
 Edit `scripts/check-e2e-tests.js`:
@@ -107,7 +107,7 @@ Edit `scripts/check-e2e-tests.js`:
 ### Test Coverage
 - **Unit Tests**: Tracked in `coverage/` (enforced at 90%+)
 - **E2E Tests**: Tracked in `coverage-e2e/` (for reference)
-- **CI Integration**: Coverage reports uploaded to codecov
+- **CI Integration**: Optional (not configured in this repo)
 
 ### Test Health
 - Monitor CI pipeline failures
@@ -120,6 +120,7 @@ Edit `scripts/check-e2e-tests.js`:
 2. **Set Up Git Hooks** (Optional): Choose one of the options above
 3. **Run Initial Check**: `npm run check:e2e` to see current status
 4. **Update PR Template**: Customize `.github/pull_request_template.md` if needed
+   - Note: no PR template is currently included in this repo
 
 ## 📝 Notes
 

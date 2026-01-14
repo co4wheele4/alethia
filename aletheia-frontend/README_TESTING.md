@@ -83,7 +83,10 @@ server.use(
 - `playwright.config.ts` - Playwright configuration
 - `e2e/example.spec.ts` - Example E2E tests
 - `TESTING_GUIDE.md` - Comprehensive testing guide
-- `.github/workflows/e2e.yml` - CI/CD workflow for E2E tests
+
+## Notes
+
+- **Playwright webServer stability**: `playwright.config.ts` runs `next dev` with `--webpack` and uses `http://127.0.0.1:3030` to avoid Windows `localhost`/IPv6 flakiness.
 
 ## Next Steps
 

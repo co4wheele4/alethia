@@ -2,44 +2,38 @@
 
 ## Overview
 
-The e2e tests have been reorganized into a logical, maintainable structure. Tests are now grouped by:
-- **Resolvers** - Individual GraphQL resolver tests
-- **Cross-cutting** - Tests that span multiple resolvers or test cross-cutting concerns
-- **Coverage** - Tests specifically for code coverage
+Backend e2e tests are organized into a maintainable structure:
+- **Resolvers** - Resolver-focused GraphQL suites
+- **Cross-cutting** - Validation, error handling, pagination, and relationship behavior
 
-## New Structure
+## Current Structure (Verified)
 
 ```
 test/
 ├── e2e/
-│   ├── resolvers/              # Individual resolver tests
-│   │   ├── app.resolver.e2e-spec.ts ✅
-│   │   ├── user.resolver.e2e-spec.ts ✅
-│   │   ├── lesson.resolver.e2e-spec.ts ⬜
-│   │   ├── document.resolver.e2e-spec.ts ⬜
-│   │   ├── document-chunk.resolver.e2e-spec.ts ⬜
-│   │   ├── embedding.resolver.e2e-spec.ts ⬜
-│   │   ├── entity.resolver.e2e-spec.ts ⬜
-│   │   ├── entity-mention.resolver.e2e-spec.ts ⬜
-│   │   ├── entity-relationship.resolver.e2e-spec.ts ⬜
-│   │   └── ai-query.resolver.e2e-spec.ts ⬜
-│   ├── cross-cutting/          # Cross-cutting concern tests
-│   │   ├── error-cases.e2e-spec.ts ⬜
-│   │   ├── partial-updates.e2e-spec.ts ⬜
-│   │   ├── validation-edge-cases.e2e-spec.ts ⬜
-│   │   ├── relationship-edge-cases.e2e-spec.ts ⬜
-│   │   ├── pagination-edge-cases.e2e-spec.ts ⬜
-│   │   └── complex-nested-queries.e2e-spec.ts ⬜
-│   ├── coverage/               # Coverage-specific tests
-│   │   └── direct-resolver-testing.e2e-spec.ts ⬜
-│   ├── README.md               # Usage guide
-│   ├── EXTRACTION_GUIDE.md     # How to extract remaining tests
-│   └── MIGRATION_SUMMARY.md    # Migration status
+│   ├── resolvers/
+│   │   ├── app.resolver.e2e-spec.ts
+│   │   ├── auth.resolver.e2e-spec.ts
+│   │   ├── user.resolver.e2e-spec.ts
+│   │   ├── entity.resolver.e2e-spec.ts
+│   │   └── ai-query.resolver.e2e-spec.ts
+│   ├── cross-cutting/
+│   │   ├── error-cases.e2e-spec.ts
+│   │   ├── validation-edge-cases.e2e-spec.ts
+│   │   ├── pagination-edge-cases.e2e-spec.ts
+│   │   ├── partial-updates.e2e-spec.ts
+│   │   └── relationship-edge-cases.e2e-spec.ts
+│   ├── README.md
+│   ├── TEST_ORGANIZATION.md
+│   ├── TEST_VERIFICATION_SUMMARY.md
+│   ├── MIGRATION_SUMMARY.md
+│   └── EXTRACTION_GUIDE.md
 ├── helpers/
-│   ├── test-db.ts              # Database utilities
-│   ├── graphql-request.ts      # GraphQL request helper ✅ NEW
-│   └── test-setup.ts           # Test setup/teardown ✅ NEW
-└── graphql.e2e-spec.ts         # Original monolithic file (to be removed after migration)
+│   ├── test-db.ts
+│   ├── graphql-request.ts
+│   └── test-setup.ts
+├── app.e2e-spec.ts
+└── db-setup-verification.e2e-spec.ts
 ```
 
 ## Quick Start
@@ -107,11 +101,8 @@ describe('ResolverName (e2e)', () => {
 
 ## Migration Status
 
-- ✅ **Infrastructure**: Shared utilities and directory structure created
-- ✅ **Examples**: App and User resolver tests extracted as examples
-- ⬜ **Remaining**: 8 resolver tests, 6 cross-cutting tests, 1 coverage test
-
-See `test/e2e/MIGRATION_SUMMARY.md` for detailed extraction instructions.
+- ✅ **Migration complete**: Resolver and cross-cutting suites are organized under `test/e2e/`
+- ✅ **No monolithic file**: `graphql.e2e-spec.ts` is not part of this repo’s e2e suite
 
 ## Benefits
 

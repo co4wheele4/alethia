@@ -30,8 +30,11 @@ This directory contains end-to-end (e2e) tests for the Aletheia backend.
 
 ## Test Structure
 
-- `app.e2e-spec.ts` - Tests for REST endpoints
-- `graphql.e2e-spec.ts` - Tests for GraphQL queries and mutations
+- `app.e2e-spec.ts` - REST endpoint smoke tests
+- `db-setup-verification.e2e-spec.ts` - Safety checks (ensures `aletheia_test` is used, migrations applied, etc.)
+- `e2e/` - Organized GraphQL e2e tests:
+  - `e2e/resolvers/` - Resolver-focused suites
+  - `e2e/cross-cutting/` - Validation/error/relationship/pagination suites
 - `helpers/test-db.ts` - Database helper functions for cleaning and seeding
 - `setup-e2e.ts` - Test environment setup
 

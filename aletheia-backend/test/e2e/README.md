@@ -1,110 +1,40 @@
 # E2E Test Organization
 
-This directory contains all end-to-end tests organized by logical grouping for easy maintenance and navigation.
+**Last Updated**: January 14, 2026  
+**Status**: ✅ Migration complete (no monolithic `graphql.e2e-spec.ts`)
+
+This directory contains backend E2E tests organized by concern for maintainability.
 
 ## Directory Structure
 
 ```
 test/e2e/
-├── resolvers/          # Tests for individual GraphQL resolvers
-│   ├── app.resolver.e2e-spec.ts
-│   ├── user.resolver.e2e-spec.ts
-│   ├── lesson.resolver.e2e-spec.ts
-│   ├── document.resolver.e2e-spec.ts
-│   ├── document-chunk.resolver.e2e-spec.ts
-│   ├── embedding.resolver.e2e-spec.ts
-│   ├── entity.resolver.e2e-spec.ts
-│   ├── entity-mention.resolver.e2e-spec.ts
-│   ├── entity-relationship.resolver.e2e-spec.ts
-│   └── ai-query.resolver.e2e-spec.ts
-├── cross-cutting/      # Tests that span multiple resolvers or test cross-cutting concerns
-│   ├── error-cases.e2e-spec.ts
-│   ├── validation-edge-cases.e2e-spec.ts
-│   ├── relationship-edge-cases.e2e-spec.ts
-│   ├── pagination-edge-cases.e2e-spec.ts
-│   ├── complex-nested-queries.e2e-spec.ts
-│   └── partial-updates.e2e-spec.ts
-└── coverage/           # Tests specifically for code coverage
-    └── direct-resolver-testing.e2e-spec.ts
+├── resolvers/
+│   ├── app.resolver.e2e-spec.ts              # 3 tests
+│   ├── auth.resolver.e2e-spec.ts             # 5 tests
+│   ├── user.resolver.e2e-spec.ts             # 10 tests
+│   ├── entity.resolver.e2e-spec.ts           # 3 tests
+│   └── ai-query.resolver.e2e-spec.ts         # 4 tests
+└── cross-cutting/
+    ├── error-cases.e2e-spec.ts               # 12 tests
+    ├── validation-edge-cases.e2e-spec.ts     # 5 tests
+    ├── pagination-edge-cases.e2e-spec.ts     # 3 tests
+    ├── partial-updates.e2e-spec.ts           # 2 tests
+    └── relationship-edge-cases.e2e-spec.ts   # 2 tests
 ```
 
-## Adding New Tests
+Additional Jest E2E suites live in `test/`:
+- `app.e2e-spec.ts` (1 test)
+- `db-setup-verification.e2e-spec.ts` (6 tests)
 
-### Adding Tests for a Resolver
-
-1. **Find the resolver test file**: `test/e2e/resolvers/{resolver-name}.resolver.e2e-spec.ts`
-2. **Add your test** in the appropriate `describe` block:
-   - `Queries` - for query operations
-   - `Mutations` - for mutation operations
-   - `ResolveFields` - for field resolver tests
-
-Example:
-```typescript
-describe('MyResolver (e2e)', () => {
-  let context: TestContext;
-
-  beforeAll(async () => {
-    context = await setupTestApp();
-  });
-
-  afterAll(async () => {
-    await teardownTestApp(context);
-  });
-
-  describe('Queries', () => {
-    it('should do something', async () => {
-      // Your test here
-    });
-  });
-});
-```
-
-### Adding Cross-Cutting Tests
-
-1. **Determine the category**:
-   - `error-cases.e2e-spec.ts` - Error handling and edge cases
-   - `validation-edge-cases.e2e-spec.ts` - Input validation tests
-   - `relationship-edge-cases.e2e-spec.ts` - Relationship/foreign key tests
-   - `pagination-edge-cases.e2e-spec.ts` - Pagination tests
-   - `complex-nested-queries.e2e-spec.ts` - Complex query scenarios
-   - `partial-updates.e2e-spec.ts` - Partial update operations
-
-2. **Add your test** to the appropriate file
-
-### Test Utilities
-
-All test files use shared utilities from `test/helpers/`:
-
-- `test-setup.ts` - `setupTestApp()`, `teardownTestApp()`, `TestContext`
-- `graphql-request.ts` - `graphqlRequest()` function
-- `test-db.ts` - `cleanDatabase()`, `seedTestData()`
-
-## Test Structure
-
-Each test file follows this pattern:
-
-```typescript
-import { setupTestApp, teardownTestApp, TestContext } from '../../helpers/test-setup';
-import { graphqlRequest } from '../../helpers/graphql-request';
-
-describe('ResolverName (e2e)', () => {
-  let context: TestContext;
-
-  beforeAll(async () => {
-    context = await setupTestApp();
-  });
-
-  afterAll(async () => {
-    await teardownTestApp(context);
-  });
-
-  // Test cases here
-});
-```
+**Totals**: 12 test suites, 56 tests ✅
 
 ## Running Tests
 
-- Run all e2e tests: `npm run test:e2e`
-- Run specific resolver tests: `npm run test:e2e -- test/e2e/resolvers/user.resolver.e2e-spec.ts`
-- Run cross-cutting tests: `npm run test:e2e -- test/e2e/cross-cutting/error-cases.e2e-spec.ts`
+- **All backend e2e**: `npm run test:e2e`
+- **Single file**: `npm run test:e2e -- test/e2e/resolvers/user.resolver.e2e-spec.ts`
+- **Cross-cutting only**: `npm run test:e2e -- test/e2e/cross-cutting/error-cases.e2e-spec.ts`
 
+## Notes
+
+- Some Prisma/Nest log errors during runs are **expected**: we intentionally test constraint violations and validation paths.
