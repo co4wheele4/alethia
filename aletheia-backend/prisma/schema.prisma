@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 ////////////////////
@@ -53,10 +52,65 @@ model Document {
 
   user   User            @relation(fields: [userId], references: [id])
   chunks DocumentChunk[]
+  /**
+   * Source metadata is required for epistemic completeness, but is nullable for backward safety:
+   * existing documents may predate structured source capture.
+   */
+  source DocumentSource?
 
   @@index([userId])
   @@index([createdAt])
   @@map("documents")
+}
+
+////////////////////
+// DOCUMENT SOURCES (STRUCTURED PROVENANCE)
+////////////////////
+
+enum DocumentSourceKind {
+  MANUAL
+  FILE
+  URL
+}
+
+model DocumentSource {
+  id         String             @id @default(uuid()) @map("id")
+  documentId String             @unique @map("document_id")
+  kind       DocumentSourceKind @map("kind")
+
+  /**
+   * When the source snapshot was ingested.
+   * Nullable for backward safety (legacy documents).
+   */
+  ingestedAt DateTime? @map("ingested_at")
+
+  /**
+   * Digest of the ingested text snapshot (best-effort).
+   * This is not a security primitive; it is an audit signal.
+   */
+  contentSha256 String? @map("content_sha256")
+
+  // FILE source metadata (nullable unless kind=FILE)
+  filename       String? @map("filename")
+  mimeType       String? @map("mime_type")
+  sizeBytes      Int?    @map("size_bytes")
+  lastModifiedMs BigInt? @map("last_modified_ms")
+  fileSha256     String? @map("file_sha256")
+
+  // URL source metadata (nullable unless kind=URL)
+  requestedUrl String?   @map("requested_url")
+  fetchedUrl   String?   @map("fetched_url")
+  contentType  String?   @map("content_type")
+  publisher    String?   @map("publisher")
+  author       String?   @map("author")
+  publishedAt  DateTime? @map("published_at")
+  accessedAt   DateTime? @map("accessed_at")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([kind])
+  @@index([ingestedAt])
+  @@map("document_sources")
 }
 
 ////////////////////
@@ -116,6 +170,25 @@ model EntityMention {
   entityId String @map("entity_id")
   chunkId  String @map("chunk_id")
 
+  /**
+   * Exact span offsets into `DocumentChunk.content`.
+   * 0-based, end-exclusive. Nullable for legacy mentions created before spans existed.
+   */
+  startOffset Int? @map("start_offset")
+  endOffset   Int? @map("end_offset")
+
+  /**
+   * Optional captured span text at extraction time (best-effort).
+   * If present, the API can validate it against `DocumentChunk.content[startOffset:endOffset]`.
+   */
+  spanText String? @map("span_text")
+
+  /**
+   * Optional extraction confidence as metadata.
+   * Not a truth indicator; nullable and not required.
+   */
+  confidence Float? @map("confidence")
+
   entity Entity        @relation(fields: [entityId], references: [id])
   chunk  DocumentChunk @relation(fields: [chunkId], references: [id])
 
@@ -135,11 +208,44 @@ model EntityRelationship {
 
   from Entity @relation("FromEntity", fields: [fromEntity], references: [id])
   to   Entity @relation("ToEntity", fields: [toEntity], references: [id])
+  evidence EntityRelationshipEvidence[]
 
   @@index([fromEntity])
   @@index([toEntity])
   @@index([relation])
   @@map("entity_relationships")
+}
+
+////////////////////
+// RELATIONSHIP EVIDENCE (TRACEABILITY)
+////////////////////
+
+enum RelationshipEvidenceKind {
+  TEXT_SPAN
+}
+
+model EntityRelationshipEvidence {
+  id             String                 @id @default(uuid()) @map("id")
+  relationshipId String                 @map("relationship_id")
+  chunkId        String                 @map("chunk_id")
+  kind           RelationshipEvidenceKind @default(TEXT_SPAN) @map("kind")
+
+  /**
+   * Evidence anchor into `DocumentChunk.content`.
+   * Nullable only for backward safety; new evidence should always include a span.
+   */
+  startOffset Int? @map("start_offset")
+  endOffset   Int? @map("end_offset")
+  quotedText  String? @map("quoted_text")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  relationship EntityRelationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
+  chunk        DocumentChunk      @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+
+  @@index([relationshipId])
+  @@index([chunkId])
+  @@map("entity_relationship_evidence")
 }
 
 ////////////////////

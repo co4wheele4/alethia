@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Entity } from './entity.model';
+import { EntityRelationshipEvidence } from './entity-relationship-evidence.model';
 
 @ObjectType()
 export class EntityRelationship {
@@ -14,4 +15,10 @@ export class EntityRelationship {
 
   @Field(() => Entity)
   to!: Entity;
+
+  @Field(() => [EntityRelationshipEvidence], {
+    description:
+      'Inspectable evidence anchors supporting this relationship. May be empty for legacy relationships.',
+  })
+  evidence!: EntityRelationshipEvidence[];
 }
