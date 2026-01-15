@@ -120,15 +120,26 @@ export class EntityMentionResolver {
       validatedSpanText = exact;
     }
 
+    const createData: {
+      entityId: string;
+      chunkId: string;
+      startOffset?: number;
+      endOffset?: number;
+      spanText?: string | null;
+      confidence?: number;
+    } = { entityId, chunkId };
+
+    if (hasStart && hasEnd) {
+      createData.startOffset = startOffset!;
+      createData.endOffset = endOffset!;
+      createData.spanText = validatedSpanText;
+    }
+    if (typeof confidence === 'number') {
+      createData.confidence = confidence;
+    }
+
     return await this.prisma.entityMention.create({
-      data: {
-        entityId,
-        chunkId,
-        startOffset: hasStart ? startOffset! : undefined,
-        endOffset: hasEnd ? endOffset! : undefined,
-        spanText: validatedSpanText,
-        confidence: typeof confidence === 'number' ? confidence : undefined,
-      },
+      data: createData,
     });
   }
 
