@@ -1,5 +1,7 @@
 import 'dotenv/config';
-import { defineConfig, env } from 'prisma/config';
+// NOTE: Import from `@prisma/config` (not `prisma/config`) to avoid resolving
+// to our local `prisma/config.ts` when TypeScript uses `baseUrl: "."`.
+import { defineConfig, env } from '@prisma/config';
 
 /**
  * Prisma 7 configuration

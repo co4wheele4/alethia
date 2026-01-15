@@ -73,13 +73,18 @@ export const createMockEntityMention = (
 
 export const createMockEntityRelationship = (
   overrides?: Partial<EntityRelationship>,
-): EntityRelationship => ({
-  id: 'rel-1',
-  relation: 'knows',
-  from: createMockEntity(),
-  to: createMockEntity({ id: 'entity-2', name: 'Other Entity' }),
-  ...overrides,
-});
+): EntityRelationship => {
+  const { evidence, ...rest } = overrides ?? {};
+
+  return {
+    id: 'rel-1',
+    relation: 'knows',
+    from: createMockEntity(),
+    to: createMockEntity({ id: 'entity-2', name: 'Other Entity' }),
+    ...rest,
+    evidence: evidence ?? [],
+  };
+};
 
 export const createMockEmbedding = (
   overrides?: Partial<Embedding>,
