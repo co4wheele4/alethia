@@ -7,7 +7,8 @@ export enum RelationshipEvidenceKind {
 
 registerEnumType(RelationshipEvidenceKind, {
   name: 'RelationshipEvidenceKind',
-  description: 'Evidence kind for an entity relationship (currently only TEXT_SPAN).',
+  description:
+    'Evidence kind for an entity relationship (currently only TEXT_SPAN).',
 });
 
 @ObjectType()
@@ -24,19 +25,28 @@ export class EntityRelationshipEvidence {
   @Field(() => RelationshipEvidenceKind)
   kind!: RelationshipEvidenceKind;
 
-  @Field(() => Int, { nullable: true, description: '0-based, inclusive start offset into chunk content.' })
+  @Field(() => Int, {
+    nullable: true,
+    description: '0-based, inclusive start offset into chunk content.',
+  })
   startOffset?: number | null;
 
-  @Field(() => Int, { nullable: true, description: '0-based, exclusive end offset into chunk content.' })
+  @Field(() => Int, {
+    nullable: true,
+    description: '0-based, exclusive end offset into chunk content.',
+  })
   endOffset?: number | null;
 
-  @Field({ nullable: true, description: 'Optional captured quote text (best-effort), validated against offsets when provided.' })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'Optional captured quote text (best-effort), validated against offsets when provided.',
+  })
   quotedText?: string | null;
 
-  @Field()
+  @Field(() => Date)
   createdAt!: Date;
 
   @Field(() => DocumentChunk)
   chunk!: DocumentChunk;
 }
-

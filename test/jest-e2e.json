@@ -7,7 +7,8 @@
   "preset": "ts-jest/presets/default-esm",
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", {
-      "useESM": true
+      "useESM": true,
+      "tsconfig": "<rootDir>/../aletheia-backend/tsconfig.json"
     }]
   },
   "moduleNameMapper": {
@@ -18,7 +19,7 @@
     "^@openai/(.*)$": "<rootDir>/../aletheia-backend/src/openai/$1",
     "^@outputs/(.*)$": "<rootDir>/../aletheia-backend/src/graphql/outputs/$1",
     "^@common/(.*)$": "<rootDir>/../aletheia-backend/src/common/$1",
-    "^@prisma/(?!client)(.*)$": "<rootDir>/../aletheia-backend/src/prisma/$1",
+    "^@prisma/prisma\\.service$": "<rootDir>/../aletheia-backend/src/prisma/prisma.service",
     "^@resolvers$": "<rootDir>/../aletheia-backend/src/graphql/resolvers/index",
     "^@resolvers/(.*)$": "<rootDir>/../aletheia-backend/src/graphql/resolvers/$1"
   },

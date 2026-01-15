@@ -9,6 +9,12 @@ describe('DataLoaderModule', () => {
   >;
 
   beforeEach(async () => {
+    // Prisma 7 runtime requires an explicit datasourceUrl; unit tests should not connect,
+    // but PrismaService must be constructible for module compilation.
+    process.env.DATABASE_URL =
+      process.env.DATABASE_URL ||
+      'postgresql://user:password@localhost:5432/aletheia_test';
+
     moduleRef = await Test.createTestingModule({
       imports: [DataLoaderModule],
     }).compile();

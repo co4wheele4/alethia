@@ -5,9 +5,9 @@
  * Note: MUI components require 'use client', so this is a simple text component
  */
 
+'use client';
+
 export function ServerHeader() {
-  // This is a Server Component - no 'use client' directive
-  // Can access server-side data directly
-  // Returns plain text/HTML since MUI requires client components
+  // Rendered inside client components; keep it client-safe.
   return 'Aletheia';
 }

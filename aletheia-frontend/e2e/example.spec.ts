@@ -25,7 +25,7 @@ test.describe('Home Page', () => {
     
     // Wait for the page to be fully loaded and hydrated
     // The page has a loading state that needs to complete
-    await page.waitForSelector('text=Welcome to Aletheia', { timeout: 10000 });
+    await page.waitForSelector('text=Aletheia', { timeout: 10000 });
     
     // Wait for form to be visible (MUI components need time to render)
     await page.waitForSelector('input[name="email"]', { timeout: 10000 });
@@ -127,18 +127,31 @@ test.describe('Documents (Dashboard)', () => {
     await page.waitForURL(/\/dashboard/, { timeout: 20000 });
     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
-    // Documents panel should render and show seeded doc
-    await expect(page.getByRole('heading', { name: 'Documents' })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Getting Started')).toBeVisible({ timeout: 10000 });
+    // Dashboard entry should offer a Documents action
+    await expect(page.getByRole('link', { name: /view documents/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /view documents/i }).click();
 
-    // Create
-    await page.getByTestId('document-title-input').fill('Playwright Doc');
-    await page.getByTestId('add-document-button').click();
-    await expect(page.getByText('Playwright Doc')).toBeVisible({ timeout: 10000 });
+    await page.waitForURL(/\/documents/, { timeout: 20000 });
+    await expect(page.getByRole('heading', { name: 'Documents' })).toBeVisible({ timeout: 10000 });
+
+    // Seeded doc should be listed
+    const documentsList = page.getByRole('list', { name: 'documents-list' });
+    await expect(documentsList.getByText('Getting Started').first()).toBeVisible({ timeout: 10000 });
+
+    // Create via ingestion dialog (manual text)
+    await page.getByTestId('open-ingest-dialog').click();
+    await expect(page.getByRole('heading', { name: 'Ingest documents' })).toBeVisible({ timeout: 10000 });
+
+    await page.getByLabel('Title').fill('Playwright Doc');
+    await page.getByLabel('Text').fill('Playwright ingested content.');
+    await page.getByLabel(/i understand ingestion is irreversible/i).check();
+    await page.getByRole('button', { name: /^ingest$/i }).click();
+
+    await expect(documentsList.getByText('Playwright Doc').first()).toBeVisible({ timeout: 10000 });
 
     // Delete (new doc should be doc-2 in our handler)
     await page.getByTestId('delete-document-doc-2').click();
-    await expect(page.getByText('Playwright Doc')).toHaveCount(0);
+    await expect(documentsList.getByText('Playwright Doc')).toHaveCount(0);
   });
 });
 

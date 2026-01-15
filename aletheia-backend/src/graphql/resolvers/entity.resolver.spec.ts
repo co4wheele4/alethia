@@ -173,6 +173,7 @@ describe('EntityResolver', () => {
           relation: 'knows',
           from: mockEntity,
           to: {} as Entity,
+          evidence: [],
         },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockRelationships);
@@ -211,6 +212,7 @@ describe('EntityResolver', () => {
           relation: 'known_by',
           from: {} as Entity,
           to: mockEntity,
+          evidence: [],
         },
       ];
       const loadMock = jest.fn().mockResolvedValue(mockRelationships);

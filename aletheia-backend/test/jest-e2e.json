@@ -18,7 +18,7 @@
     "^@openai/(.*)$": "<rootDir>/../src/openai/$1",
     "^@outputs/(.*)$": "<rootDir>/../src/graphql/outputs/$1",
     "^@common/(.*)$": "<rootDir>/../src/common/$1",
-    "^@prisma/(?!client)(.*)$": "<rootDir>/../src/prisma/$1",
+    "^@prisma/prisma\\.service$": "<rootDir>/../src/prisma/prisma.service",
     "^@resolvers$": "<rootDir>/../src/graphql/resolvers/index",
     "^@resolvers/(.*)$": "<rootDir>/../src/graphql/resolvers/$1"
   },

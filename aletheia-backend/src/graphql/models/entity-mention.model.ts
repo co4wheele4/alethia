@@ -21,7 +21,7 @@ export class EntityMention {
   })
   endOffset?: number | null;
 
-  @Field({
+  @Field(() => String, {
     nullable: true,
     description:
       'Optional captured mention text at creation time (best-effort). When present with offsets, the backend validates consistency.',

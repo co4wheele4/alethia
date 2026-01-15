@@ -127,9 +127,11 @@ export function EntityList() {
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .slice(0, visibleByType[type] ?? 50)
                 .map((e) => (
-                  <ListItemButton key={e.id} component={Link} href={`/entities/${e.id}`} sx={{ borderRadius: 1 }}>
-                    <ListItemText primary={e.name} secondary={`Type: ${e.type || 'unknown'}`} />
-                  </ListItemButton>
+                  <Link key={e.id} href={`/entities/${e.id}`} passHref legacyBehavior>
+                    <ListItemButton component="a" sx={{ borderRadius: 1 }}>
+                      <ListItemText primary={e.name} secondary={`Type: ${e.type || 'unknown'}`} />
+                    </ListItemButton>
+                  </Link>
                 ))}
             </List>
 

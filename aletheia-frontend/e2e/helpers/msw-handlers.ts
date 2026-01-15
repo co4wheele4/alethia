@@ -192,6 +192,59 @@ export async function setupGraphQLMocks(route: Route) {
         break;
       }
 
+      case 'DocumentIndexByUser': {
+        // Documents index used by the evidence-first Documents library UI.
+        response = {
+          status: 200,
+          body: {
+            data: {
+              documentsByUser: documentsStore.map((d) => ({
+                __typename: 'Document',
+                id: d.id,
+                title: d.title,
+                createdAt: d.createdAt,
+                chunks: [],
+              })),
+            },
+          },
+        };
+        break;
+      }
+
+      case 'Document': {
+        const { id } = parsedBody.variables || {};
+        const doc = documentsStore.find((d) => d.id === id);
+        response = {
+          status: 200,
+          body: {
+            data: {
+              document: doc
+                ? {
+                    __typename: 'Document',
+                    id: doc.id,
+                    title: doc.title,
+                    createdAt: doc.createdAt,
+                  }
+                : null,
+            },
+          },
+        };
+        break;
+      }
+
+      case 'ChunksByDocument': {
+        // The UI can render with empty chunks; this keeps the right pane stable for tests.
+        response = {
+          status: 200,
+          body: {
+            data: {
+              chunksByDocument: [],
+            },
+          },
+        };
+        break;
+      }
+
       case 'CreateDocument': {
         const { title } = parsedBody.variables || {};
         const newDoc = {

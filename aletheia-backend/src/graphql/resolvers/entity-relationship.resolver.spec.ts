@@ -39,6 +39,7 @@ describe('EntityRelationshipResolver', () => {
     relation: 'knows',
     from: mockFromEntity,
     to: mockToEntity,
+    evidence: [],
   };
 
   beforeEach(async () => {

@@ -1,5 +1,12 @@
-import { Field, InputType, Int, registerEnumType } from '@nestjs/graphql';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { Field, InputType, registerEnumType } from '@nestjs/graphql';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 
 /**
  * DocumentSourceKindInput
@@ -40,7 +47,10 @@ export class CreateDocumentSourceInput {
   @IsOptional()
   sizeBytes?: number;
 
-  @Field({ nullable: true, description: 'Milliseconds since epoch, as string.' })
+  @Field({
+    nullable: true,
+    description: 'Milliseconds since epoch, as string.',
+  })
   @IsOptional()
   @IsString()
   lastModifiedMs?: string;
@@ -102,4 +112,3 @@ export class UpsertDocumentSourceInput {
   @Field(() => CreateDocumentSourceInput)
   source!: CreateDocumentSourceInput;
 }
-

@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 
 /**
  * DocumentSourceKind
@@ -29,48 +29,59 @@ export class DocumentSource {
   @Field(() => DocumentSourceKind)
   kind!: DocumentSourceKind;
 
-  @Field({ nullable: true, description: 'When the source snapshot was ingested (nullable for legacy documents).' })
+  @Field(() => Date, {
+    nullable: true,
+    description:
+      'When the source snapshot was ingested (nullable for legacy documents).',
+  })
   ingestedAt?: Date | null;
 
-  @Field({ nullable: true, description: 'Best-effort digest of the ingested text snapshot (audit signal).' })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'Best-effort digest of the ingested text snapshot (audit signal).',
+  })
   contentSha256?: string | null;
 
   // FILE metadata (nullable unless kind=FILE)
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   filename?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   mimeType?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => Int, { nullable: true })
   sizeBytes?: number | null;
 
-  @Field({ nullable: true, description: 'File last-modified time in milliseconds since epoch (string to avoid BigInt scalar).' })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'File last-modified time in milliseconds since epoch (string to avoid BigInt scalar).',
+  })
   lastModifiedMs?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   fileSha256?: string | null;
 
   // URL metadata (nullable unless kind=URL)
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   requestedUrl?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   fetchedUrl?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   contentType?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   publisher?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   author?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   publishedAt?: Date | null;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   accessedAt?: Date | null;
 }
-

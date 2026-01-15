@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
@@ -125,6 +126,7 @@ model DocumentChunk {
   document   Document        @relation(fields: [documentId], references: [id])
   embeddings Embedding[]
   mentions   EntityMention[]
+  relationshipEvidence EntityRelationshipEvidence[]
 
   @@unique([documentId, chunkIndex])
   @@index([documentId])

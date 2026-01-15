@@ -69,13 +69,15 @@ export function DocumentEvidencePanel(props: { document: DocumentHeader | null; 
         ) : (
           <List dense aria-label="document-entities">
             {visible.map((e) => (
-              <ListItemButton key={e.id} component={Link} href={`/entities/${e.id}`} sx={{ borderRadius: 1 }}>
-                <ListItemText
-                  primary={e.name}
-                  secondary={`Type: ${e.type || 'unknown'} • Mentions: ${e.mentionCount} • Confidence: unknown`}
-                  secondaryTypographyProps={{ variant: 'caption' }}
-                />
-              </ListItemButton>
+              <Link key={e.id} href={`/entities/${e.id}`} passHref legacyBehavior>
+                <ListItemButton component="a" sx={{ borderRadius: 1 }}>
+                  <ListItemText
+                    primary={e.name}
+                    secondary={`Type: ${e.type || 'unknown'} • Mentions: ${e.mentionCount} • Confidence: unknown`}
+                    secondaryTypographyProps={{ variant: 'caption' }}
+                  />
+                </ListItemButton>
+              </Link>
             ))}
           </List>
         )}
@@ -89,9 +91,11 @@ export function DocumentEvidencePanel(props: { document: DocumentHeader | null; 
         ) : null}
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-          <Button component={Link} href="/entities" size="small" variant="text" sx={{ textTransform: 'none' }}>
-            Browse all entities
-          </Button>
+          <Link href="/entities" passHref legacyBehavior>
+            <Button component="a" size="small" variant="text" sx={{ textTransform: 'none' }}>
+              Browse all entities
+            </Button>
+          </Link>
         </Box>
       </Box>
     </Box>

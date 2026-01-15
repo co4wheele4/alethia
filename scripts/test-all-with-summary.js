@@ -43,19 +43,27 @@ function runTest(name, command, cwd) {
     let output = '';
     let errorOutput = '';
 
-    // Parse command into executable and args
     const isWindows = process.platform === 'win32';
-    const parts = command.split(/\s+/);
-    const executable = isWindows && parts[0] === 'npm' ? 'npm.cmd' : parts[0];
-    const args = parts.slice(1);
+    const child = (() => {
+      if (isWindows) {
+        // On Windows, `.cmd` shims require `cmd.exe` (CreateProcess cannot execute them directly).
+        // We avoid Node's `shell: true` (DEP0190 warning) by spawning cmd.exe explicitly.
+        const comspec = process.env.ComSpec || 'cmd.exe';
+        return spawn(comspec, ['/d', '/s', '/c', command], {
+          cwd: cwd || process.cwd(),
+          stdio: ['inherit', 'pipe', 'pipe'],
+        });
+      }
 
-    // Use spawn with shell for npm commands on Windows
-    // For npm commands, we need shell: true on Windows, but the command is already sanitized
-    const child = spawn(executable, args, {
-      cwd: cwd || process.cwd(),
-      shell: isWindows, // Required for npm.cmd on Windows, but safe since we control the command
-      stdio: ['inherit', 'pipe', 'pipe'],
-    });
+      // Non-Windows: run directly without a shell.
+      const parts = command.split(/\s+/);
+      const executable = parts[0];
+      const args = parts.slice(1);
+      return spawn(executable, args, {
+        cwd: cwd || process.cwd(),
+        stdio: ['inherit', 'pipe', 'pipe'],
+      });
+    })();
 
     // Capture stdout
     child.stdout.on('data', (data) => {

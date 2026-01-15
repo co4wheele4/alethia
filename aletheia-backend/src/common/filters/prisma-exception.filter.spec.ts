@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { GqlArgumentsHost } from '@nestjs/graphql';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PrismaExceptionFilter } from './prisma-exception.filter';
 import { Response } from 'express';
 
@@ -17,7 +17,7 @@ function createPrismaError(
 ): PrismaClientKnownRequestError {
   const error = new PrismaClientKnownRequestError(message, {
     code,
-    clientVersion: '6.19.1',
+    clientVersion: '7.2.0',
     ...(meta && { meta }),
   });
   return error;

@@ -123,7 +123,8 @@ describe('Full-Stack Authentication Flow (e2e)', () => {
       );
 
       expect(loginRes.status).toBe(200); // GraphQL returns 200 even on errors
-      expect(loginRes.body?.data?.login).toBeNull();
+      // GraphQL may omit the field (undefined) or return null when the resolver errors.
+      expect(loginRes.body?.data?.login ?? null).toBeNull();
       expect(loginRes.body?.errors).toBeDefined();
       expect(loginRes.body?.errors?.length).toBeGreaterThan(0);
     });

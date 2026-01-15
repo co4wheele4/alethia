@@ -45,14 +45,11 @@ export function EntityRelationshipGraph(props: { entity: EntityDetail }) {
               </Typography>
             ) : (
               outgoing.map((rel) => (
-                <ListItemButton
-                  key={rel.id}
-                  component={Link}
-                  href={`/entities/${rel.to.id}`}
-                  sx={{ borderRadius: 1 }}
-                >
-                  <ListItemText primary={`${rel.relation} → ${rel.to.name}`} secondary={`Type: ${rel.to.type}`} />
-                </ListItemButton>
+                <Link key={rel.id} href={`/entities/${rel.to.id}`} passHref legacyBehavior>
+                  <ListItemButton component="a" sx={{ borderRadius: 1 }}>
+                    <ListItemText primary={`${rel.relation} → ${rel.to.name}`} secondary={`Type: ${rel.to.type}`} />
+                  </ListItemButton>
+                </Link>
               ))
             )}
           </List>
@@ -69,14 +66,11 @@ export function EntityRelationshipGraph(props: { entity: EntityDetail }) {
               </Typography>
             ) : (
               incoming.map((rel) => (
-                <ListItemButton
-                  key={rel.id}
-                  component={Link}
-                  href={`/entities/${rel.from.id}`}
-                  sx={{ borderRadius: 1 }}
-                >
-                  <ListItemText primary={`${rel.from.name} → ${rel.relation}`} secondary={`Type: ${rel.from.type}`} />
-                </ListItemButton>
+                <Link key={rel.id} href={`/entities/${rel.from.id}`} passHref legacyBehavior>
+                  <ListItemButton component="a" sx={{ borderRadius: 1 }}>
+                    <ListItemText primary={`${rel.from.name} → ${rel.relation}`} secondary={`Type: ${rel.from.type}`} />
+                  </ListItemButton>
+                </Link>
               ))
             )}
           </List>

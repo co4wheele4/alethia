@@ -7,7 +7,12 @@ import {
   Parent,
   Context,
 } from '@nestjs/graphql';
-import { UseGuards, Scope, Injectable, ForbiddenException } from '@nestjs/common';
+import {
+  UseGuards,
+  Scope,
+  Injectable,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { Document } from '@models/document.model';
 import { DocumentChunk } from '@models/document-chunk.model';
@@ -79,7 +84,10 @@ export class DocumentResolver {
   }
 
   @Mutation(() => Document)
-  async deleteDocument(@Args('id') id: string, @Context() ctx?: GqlRequestContext) {
+  async deleteDocument(
+    @Args('id') id: string,
+    @Context() ctx?: GqlRequestContext,
+  ) {
     const authUserId = ctx?.req?.user?.sub;
     if (authUserId) {
       const existing = await this.prisma.document.findUnique({
@@ -88,7 +96,9 @@ export class DocumentResolver {
       });
       // Prisma returns null if not found; let prisma.delete throw consistent error later
       if (existing && existing.userId !== authUserId) {
-        throw new ForbiddenException('Cannot delete documents for another user');
+        throw new ForbiddenException(
+          'Cannot delete documents for another user',
+        );
       }
     }
     return await this.prisma.document.delete({ where: { id } });

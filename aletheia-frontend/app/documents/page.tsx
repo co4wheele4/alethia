@@ -5,7 +5,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
 import { useAuth } from '../hooks/useAuth';
 import { getUserIdFromToken } from '../lib/utils/jwt';
@@ -13,7 +13,7 @@ import { ContentSurface } from '../components/layout';
 import { AppShell } from '../components/shell';
 import { DocumentsDashboard } from '../features/documents/components/DocumentsDashboard';
 
-export default function DocumentsPage() {
+function DocumentsPageInner() {
   const searchParams = useSearchParams();
   const { token } = useAuth();
 
@@ -44,6 +44,16 @@ export default function DocumentsPage() {
         />
       </ContentSurface>
     </AppShell>
+  );
+}
+
+export default function DocumentsPage() {
+  // Next.js requires `useSearchParams()` to be used within a Suspense boundary
+  // to avoid prerender errors during build.
+  return (
+    <Suspense fallback={<AppShell title="Documents"><ContentSurface>Loading…</ContentSurface></AppShell>}>
+      <DocumentsPageInner />
+    </Suspense>
   );
 }
 

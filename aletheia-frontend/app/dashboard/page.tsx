@@ -36,12 +36,16 @@ export default function DashboardPage() {
           </Typography>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-            <Button component={Link} href="/documents" variant="contained" sx={{ textTransform: 'none' }}>
-              View documents
-            </Button>
-            <Button component={Link} href="/documents?ingest=1" variant="outlined" sx={{ textTransform: 'none' }}>
-              Add source
-            </Button>
+            <Link href="/documents" passHref legacyBehavior>
+              <Button component="a" variant="contained" sx={{ textTransform: 'none' }}>
+                View documents
+              </Button>
+            </Link>
+            <Link href="/documents?ingest=1" passHref legacyBehavior>
+              <Button component="a" variant="outlined" sx={{ textTransform: 'none' }}>
+                Add source
+              </Button>
+            </Link>
           </Box>
         </Box>
       </Box>

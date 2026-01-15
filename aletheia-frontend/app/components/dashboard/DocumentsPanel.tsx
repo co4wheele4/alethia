@@ -35,18 +35,22 @@ export function DocumentsPanel({ userId }: { userId: string | null }) {
       <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 1 }}>
         <Typography variant="h5">Documents</Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            component={Link}
-            href="/documents?ingest=1"
-            variant="contained"
-            sx={{ textTransform: 'none' }}
-            disabled={!userId}
-          >
-            Add sources
-          </Button>
-          <Button component={Link} href="/documents" variant="outlined" sx={{ textTransform: 'none' }}>
-            Open library
-          </Button>
+          {userId ? (
+            <Link href="/documents?ingest=1" passHref legacyBehavior>
+              <Button component="a" variant="contained" sx={{ textTransform: 'none' }}>
+                Add sources
+              </Button>
+            </Link>
+          ) : (
+            <Button variant="contained" sx={{ textTransform: 'none' }} disabled>
+              Add sources
+            </Button>
+          )}
+          <Link href="/documents" passHref legacyBehavior>
+            <Button component="a" variant="outlined" sx={{ textTransform: 'none' }}>
+              Open library
+            </Button>
+          </Link>
         </Box>
       </Box>
 
@@ -71,12 +75,11 @@ export function DocumentsPanel({ userId }: { userId: string | null }) {
 
       <List dense aria-label="documents-list">
         {recent.map((doc) => (
-          <ListItemButton key={doc.id} component={Link} href="/documents" sx={{ borderRadius: 1 }}>
-            <ListItemText
-              primary={doc.title}
-              secondary={new Date(doc.createdAt).toLocaleString()}
-            />
-          </ListItemButton>
+          <Link key={doc.id} href="/documents" passHref legacyBehavior>
+            <ListItemButton component="a" sx={{ borderRadius: 1 }}>
+              <ListItemText primary={doc.title} secondary={new Date(doc.createdAt).toLocaleString()} />
+            </ListItemButton>
+          </Link>
         ))}
       </List>
 
