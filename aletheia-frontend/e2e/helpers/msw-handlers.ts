@@ -24,6 +24,10 @@ function createMockJwt(payload: Record<string, unknown>): string {
 }
 
 let documentsStore: Array<{ id: string; title: string; createdAt: string }> = [];
+let chunksStore: Record<
+  string,
+  Array<{ id: string; chunkIndex: number; content: string }>
+> = {};
 
 /**
  * Setup GraphQL route handlers for Playwright
@@ -83,6 +87,9 @@ export async function setupGraphQLMocks(route: Route) {
           documentsStore = [
             { id: 'doc-1', title: 'Getting Started', createdAt: new Date('2026-01-01T00:00:00Z').toISOString() },
           ];
+          chunksStore = {
+            'doc-1': [],
+          };
           response = {
             status: 200,
             body: {
@@ -203,7 +210,12 @@ export async function setupGraphQLMocks(route: Route) {
                 id: d.id,
                 title: d.title,
                 createdAt: d.createdAt,
-                chunks: [],
+                chunks: (chunksStore[d.id] ?? []).map((c) => ({
+                  __typename: 'DocumentChunk',
+                  id: c.id,
+                  chunkIndex: c.chunkIndex,
+                  mentions: [],
+                })),
               })),
             },
           },
@@ -233,12 +245,18 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'ChunksByDocument': {
-        // The UI can render with empty chunks; this keeps the right pane stable for tests.
+        const { documentId } = parsedBody.variables || {};
         response = {
           status: 200,
           body: {
             data: {
-              chunksByDocument: [],
+              chunksByDocument: (chunksStore[documentId] ?? []).map((c) => ({
+                __typename: 'DocumentChunk',
+                id: c.id,
+                chunkIndex: c.chunkIndex,
+                content: c.content,
+                mentions: [],
+              })),
             },
           },
         };
@@ -253,6 +271,7 @@ export async function setupGraphQLMocks(route: Route) {
           createdAt: new Date().toISOString(),
         };
         documentsStore = [...documentsStore, newDoc];
+        chunksStore[newDoc.id] = [];
         response = {
           status: 200,
           body: {
@@ -264,9 +283,52 @@ export async function setupGraphQLMocks(route: Route) {
         break;
       }
 
+      case 'CreateChunk': {
+        const { documentId, chunkIndex, content } = parsedBody.variables || {};
+        const docExists = documentsStore.some((d) => d.id === documentId);
+        if (!docExists) {
+          response = {
+            status: 400,
+            body: {
+              errors: [
+                {
+                  message: `Document not found: ${String(documentId)}`,
+                  extensions: { code: 'BAD_USER_INPUT' },
+                },
+              ],
+            },
+          };
+          break;
+        }
+        const newChunk = {
+          id: `chunk-${String(documentId)}-${String(chunkIndex)}`,
+          chunkIndex: Number(chunkIndex) || 0,
+          content: String(content ?? ''),
+        };
+        chunksStore[documentId] = [...(chunksStore[documentId] ?? []), newChunk].sort(
+          (a, b) => a.chunkIndex - b.chunkIndex
+        );
+        response = {
+          status: 200,
+          body: {
+            data: {
+              createChunk: {
+                __typename: 'DocumentChunk',
+                id: newChunk.id,
+                chunkIndex: newChunk.chunkIndex,
+                content: newChunk.content,
+                documentId: String(documentId),
+              },
+            },
+          },
+        };
+        break;
+      }
+
       case 'DeleteDocument': {
         const { id } = parsedBody.variables || {};
         documentsStore = documentsStore.filter((d) => d.id !== id);
+        delete chunksStore[id];
         response = {
           status: 200,
           body: {

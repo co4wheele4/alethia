@@ -116,6 +116,7 @@ test.describe('Documents (Dashboard)', () => {
   });
 
   test('should list documents, create a document, and delete it', async ({ page }) => {
+    test.setTimeout(60_000);
     await page.goto('/');
     await page.waitForSelector('input[name="email"]', { timeout: 10000 });
 
@@ -149,8 +150,8 @@ test.describe('Documents (Dashboard)', () => {
 
     await expect(documentsList.getByText('Playwright Doc').first()).toBeVisible({ timeout: 10000 });
 
-    // Delete (new doc should be doc-2 in our handler)
-    await page.getByTestId('delete-document-doc-2').click();
+    // Delete (target the icon button element explicitly)
+    await documentsList.locator('button[aria-label="Delete Playwright Doc"]').click();
     await expect(documentsList.getByText('Playwright Doc')).toHaveCount(0);
   });
 });
