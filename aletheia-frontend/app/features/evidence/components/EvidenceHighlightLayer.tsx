@@ -7,6 +7,11 @@ export interface EvidenceHighlightLayerProps {
   text: string;
   query?: string;
   /**
+   * Exact span highlight(s) into the provided text.
+   * Offsets are 0-based; end is exclusive.
+   */
+  ranges?: Array<{ start: number; end: number }>;
+  /**
    * If true, renders as `<pre>` with monospace and wrapping.
    */
   preformatted?: boolean;
@@ -17,10 +22,29 @@ function escapeRegExp(s: string) {
 }
 
 export function EvidenceHighlightLayer(props: EvidenceHighlightLayerProps) {
-  const { text, query, preformatted = true } = props;
+  const { text, query, ranges, preformatted = true } = props;
   const q = (query ?? '').trim();
 
   const parts = useMemo(() => {
+    const validRanges = (ranges ?? [])
+      .filter((r) => Number.isFinite(r.start) && Number.isFinite(r.end))
+      .map((r) => ({ start: Math.max(0, r.start), end: Math.min(text.length, r.end) }))
+      .filter((r) => r.end > r.start)
+      .sort((a, b) => a.start - b.start || a.end - b.end);
+
+    if (validRanges.length) {
+      const out: Array<{ kind: 'text' | 'hit'; value: string }> = [];
+      let cursor = 0;
+      for (const r of validRanges) {
+        if (r.start < cursor) continue; // avoid overlaps by skipping
+        if (r.start > cursor) out.push({ kind: 'text', value: text.slice(cursor, r.start) });
+        out.push({ kind: 'hit', value: text.slice(r.start, r.end) });
+        cursor = r.end;
+      }
+      if (cursor < text.length) out.push({ kind: 'text', value: text.slice(cursor) });
+      return out.length ? out : [{ kind: 'text' as const, value: text }];
+    }
+
     if (!q) return [{ kind: 'text' as const, value: text }];
     const re = new RegExp(escapeRegExp(q), 'ig');
     const out: Array<{ kind: 'text' | 'hit'; value: string }> = [];
@@ -37,9 +61,9 @@ export function EvidenceHighlightLayer(props: EvidenceHighlightLayerProps) {
 
   return (
     <Box>
-      {q ? (
+      {q || (ranges?.length ?? 0) > 0 ? (
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-          Highlighting is literal text match only.
+          Highlighting is literal: exact spans (when provided) or literal text match.
         </Typography>
       ) : null}
 

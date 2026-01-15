@@ -8,7 +8,7 @@
  * - Immutable chunk text (no summaries)
  *
  * Limitations (explicit):
- * - API does not provide exact span offsets for mentions, so “exact text span” is shown as unknown.
+ * - Some mentions may be legacy (no spans). When spans are missing, exact highlights are unavailable.
  */
 'use client';
 
@@ -27,7 +27,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import type { EntityMention } from '../hooks/useEntity';
-import { EvidenceTextWithEntityHighlights } from '../../evidence/components/EvidenceTextWithEntityHighlights';
+import { EvidenceHighlightLayer } from '../../evidence/components/EvidenceHighlightLayer';
 
 function excerpt(text: string, max = 220) {
   const s = text.trim().replace(/\s+/g, ' ');
@@ -64,10 +64,12 @@ export function EntityMentionsList(props: {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Each mention links to a specific document chunk. No summaries are shown here.
       </Typography>
-
-      <Alert severity="warning" sx={{ mb: 2 }}>
-        Exact text spans are <strong>unknown</strong>: the current API does not provide mention start/end offsets.
-      </Alert>
+      {mentions.some((m) => m.startOffset == null || m.endOffset == null) ? (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Some mentions have <strong>unknown</strong> exact spans (legacy data). When spans are missing, highlights are
+          unavailable.
+        </Alert>
+      ) : null}
 
       <TextField
         label="Filter mentions by literal text"
@@ -110,11 +112,13 @@ export function EntityMentionsList(props: {
                   Entity: {entityName} • Type: {entityType || 'unknown'} • Confidence: unknown • Mentions (entity):{' '}
                   {mentionCount}
                 </Typography>
-                <EvidenceTextWithEntityHighlights
+                <EvidenceHighlightLayer
                   text={m.chunk.content}
-                  entities={[
-                    { id: entityId, name: entityName, type: entityType, mentionCount, confidence: null },
-                  ]}
+                  ranges={
+                    typeof m.startOffset === 'number' && typeof m.endOffset === 'number'
+                      ? [{ start: m.startOffset, end: m.endOffset }]
+                      : undefined
+                  }
                 />
               </AccordionDetails>
             </Accordion>

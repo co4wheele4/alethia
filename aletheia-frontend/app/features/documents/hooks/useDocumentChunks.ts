@@ -14,6 +14,10 @@ import { CHUNKS_BY_DOCUMENT_QUERY, DOCUMENT_QUERY } from '../graphql';
 export type EntityMentionItem = {
   __typename?: 'EntityMention';
   id: string;
+  startOffset?: number | null;
+  endOffset?: number | null;
+  spanText?: string | null;
+  confidence?: number | null;
   entity: {
     __typename?: 'Entity';
     id: string;

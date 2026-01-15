@@ -4,9 +4,9 @@
  * Renders immutable evidence text with subtle, best-effort entity highlighting.
  *
  * IMPORTANT:
- * - Backend does not provide exact mention spans/offsets.
- * - Therefore, highlights are literal name matches only and may include false positives/negatives.
- * - This component must never imply that highlights are authoritative provenance.
+ * - This component highlights by literal entity name matches only (best-effort).
+ * - Even when exact mention spans exist in the backend, this component does not use them.
+ * - It must never imply that highlights are authoritative provenance.
  */
 'use client';
 

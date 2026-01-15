@@ -24,7 +24,11 @@ input CreateEntityInput {
 
 input CreateEntityMentionInput {
   chunkId: String!
+  confidence: Float
+  endOffset: Int
   entityId: String!
+  spanText: String
+  startOffset: Int
 }
 
 input CreateEntityRelationshipInput {

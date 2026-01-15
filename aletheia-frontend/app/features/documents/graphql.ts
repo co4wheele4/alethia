@@ -106,6 +106,10 @@ export const CHUNKS_BY_DOCUMENT_QUERY = gql`
       mentions {
         __typename
         id
+        startOffset
+        endOffset
+        spanText
+        confidence
         entity {
           __typename
           id

@@ -6,7 +6,7 @@ import {
   Parent,
   Mutation,
 } from '@nestjs/graphql';
-import { UseGuards, Scope, Injectable } from '@nestjs/common';
+import { BadRequestException, UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { EntityMention } from '@models/entity-mention.model';
 import { Entity } from '@models/entity.model';
@@ -61,7 +61,75 @@ export class EntityMentionResolver {
 
   @Mutation(() => EntityMention)
   async createEntityMention(@Args('data') data: CreateEntityMentionInput) {
-    return await this.prisma.entityMention.create({ data });
+    const {
+      entityId,
+      chunkId,
+      startOffset,
+      endOffset,
+      spanText,
+      confidence,
+    } = data;
+
+    const hasStart = typeof startOffset === 'number';
+    const hasEnd = typeof endOffset === 'number';
+    if (hasStart !== hasEnd) {
+      throw new BadRequestException(
+        'startOffset and endOffset must be provided together (or both omitted).',
+      );
+    }
+
+    if (typeof confidence === 'number' && (confidence < 0 || confidence > 1)) {
+      throw new BadRequestException('confidence must be between 0 and 1.');
+    }
+
+    let validatedSpanText: string | null = spanText ?? null;
+    if (!hasStart && validatedSpanText !== null) {
+      throw new BadRequestException(
+        'spanText requires startOffset/endOffset so it can be validated against chunk content.',
+      );
+    }
+
+    if (hasStart && hasEnd) {
+      if (endOffset! <= startOffset!) {
+        throw new BadRequestException('endOffset must be greater than startOffset.');
+      }
+
+      const chunk = await this.prisma.documentChunk.findUnique({
+        where: { id: chunkId },
+        select: { content: true },
+      });
+      if (!chunk) {
+        throw new BadRequestException('Chunk not found.');
+      }
+
+      const content = chunk.content ?? '';
+      if (startOffset! < 0 || endOffset! > content.length) {
+        throw new BadRequestException(
+          `Span offsets are out of bounds for chunk content (length=${content.length}).`,
+        );
+      }
+
+      const exact = content.slice(startOffset!, endOffset!);
+      if (validatedSpanText !== null && validatedSpanText !== exact) {
+        throw new BadRequestException(
+          'spanText does not match the chunk content at the provided offsets.',
+        );
+      }
+
+      // Best-effort capture of exact span text for auditability.
+      validatedSpanText = exact;
+    }
+
+    return await this.prisma.entityMention.create({
+      data: {
+        entityId,
+        chunkId,
+        startOffset: hasStart ? startOffset! : undefined,
+        endOffset: hasEnd ? endOffset! : undefined,
+        spanText: validatedSpanText,
+        confidence: typeof confidence === 'number' ? confidence : undefined,
+      },
+    });
   }
 
   @Mutation(() => EntityMention)

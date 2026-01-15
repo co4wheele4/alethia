@@ -50,6 +50,10 @@ export const ENTITY_QUERY = gql`
       mentions {
         __typename
         id
+        startOffset
+        endOffset
+        spanText
+        confidence
         chunk {
           __typename
           id

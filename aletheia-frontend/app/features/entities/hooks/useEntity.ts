@@ -16,6 +16,10 @@ export type EntityRelationship = {
 export type EntityMention = {
   __typename?: 'EntityMention';
   id: string;
+  startOffset?: number | null;
+  endOffset?: number | null;
+  spanText?: string | null;
+  confidence?: number | null;
   chunk: {
     __typename?: 'DocumentChunk';
     id: string;
