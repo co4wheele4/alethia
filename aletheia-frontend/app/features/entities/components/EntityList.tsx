@@ -6,7 +6,7 @@ import {
   Alert,
   Box,
   Chip,
-  CircularProgress,
+  LinearProgress,
   List,
   ListItemButton,
   ListItemText,
@@ -94,9 +94,11 @@ export function EntityList() {
       </Box>
 
       {loading ? (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-          <CircularProgress size={18} />
-          <Typography variant="body2">Loading entities…</Typography>
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Loading extracted entities…
+          </Typography>
+          <LinearProgress />
         </Box>
       ) : null}
 

@@ -8,8 +8,8 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   IconButton,
+  LinearProgress,
   List,
   ListItemButton,
   ListItemText,
@@ -18,11 +18,11 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-import type { DocumentListItem } from '../hooks/useDocuments';
+import type { DocumentIndexItem } from '../hooks/useDocumentIndex';
 import { ContentSurface } from '../../../components/layout';
 
 export function DocumentsListPane(props: {
-  documents: DocumentListItem[];
+  documents: DocumentIndexItem[];
   allDocumentsCount: number;
   filter: string;
   onFilterChange: (value: string) => void;
@@ -32,6 +32,7 @@ export function DocumentsListPane(props: {
   busy: boolean;
   onDelete: (id: string) => Promise<void>;
   onOpenIngest: () => void;
+  getSourceKind: (documentId: string) => string;
 }) {
   const {
     documents,
@@ -44,7 +45,14 @@ export function DocumentsListPane(props: {
     busy,
     onDelete,
     onOpenIngest,
+    getSourceKind,
   } = props;
+
+  const statusLabelFor = (doc: DocumentIndexItem) => {
+    if (doc.chunkCount === 0) return 'No chunks (ingestion incomplete)';
+    if (doc.mentionCount === 0) return 'Chunks ready (no extracted mentions)';
+    return 'Chunks + mentions ready';
+  };
 
   return (
     <ContentSurface>
@@ -72,9 +80,11 @@ export function DocumentsListPane(props: {
       />
 
       {loading ? (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 1 }}>
-          <CircularProgress size={18} />
-          <Typography variant="body2">Loading documents…</Typography>
+        <Box sx={{ mb: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Fetching document index (titles, timestamps, chunk/entity counts)…
+          </Typography>
+          <LinearProgress />
         </Box>
       ) : null}
 
@@ -99,9 +109,25 @@ export function DocumentsListPane(props: {
             sx={{ borderRadius: 1 }}
           >
             <ListItemText
-              primary={doc.title}
-              secondary={new Date(doc.createdAt).toLocaleString()}
-              secondaryTypographyProps={{ variant: 'caption' }}
+              primary={
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                    {doc.title}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+                    Source type: {String(getSourceKind(doc.id) || 'unknown')}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+                    Date added: {new Date(doc.dateAddedIso).toLocaleString()}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+                    Processing status: {statusLabelFor(doc)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+                    Entity count: {doc.entityCount}
+                  </Typography>
+                </Box>
+              }
             />
             <IconButton
               edge="end"

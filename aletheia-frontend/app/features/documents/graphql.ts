@@ -16,6 +16,43 @@ export const DOCUMENTS_BY_USER_QUERY = gql`
   }
 `;
 
+/**
+ * Document Index query (evidence-first)
+ *
+ * Purpose:
+ * - render a non-interpretive document index (no summaries)
+ * - show derived, inspectable counts (chunk count, entity count)
+ *
+ * Notes:
+ * - We intentionally do NOT fetch chunk `content` here to keep the index lightweight.
+ * - Source type is stored in the immutable provenance header (chunk 0 content), so it is not directly available here.
+ */
+export const DOCUMENT_INDEX_BY_USER_QUERY = gql`
+  query DocumentIndexByUser($userId: String!) {
+    documentsByUser(userId: $userId) {
+      __typename
+      id
+      title
+      createdAt
+      chunks {
+        __typename
+        id
+        chunkIndex
+        mentions {
+          __typename
+          id
+          entity {
+            __typename
+            id
+            name
+            type
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const CREATE_DOCUMENT_MUTATION = gql`
   mutation CreateDocument($title: String!, $userId: String!) {
     createDocument(title: $title, userId: $userId) {

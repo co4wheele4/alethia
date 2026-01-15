@@ -1,0 +1,89 @@
+/**
+ * DocumentEvidencePanel
+ *
+ * Right-side panel for the Document Viewer:
+ * - immutable metadata (from Document + provenance header)
+ * - entity index (extracted) with mention counts and evidence navigation
+ *
+ * This component must not summarize content.
+ */
+'use client';
+
+import Link from 'next/link';
+import { useMemo } from 'react';
+import { Alert, Box, Button, Divider, List, ListItemButton, ListItemText, Typography } from '@mui/material';
+
+import type { DocumentChunkItem, DocumentHeader } from '../hooks/useDocumentChunks';
+import { DocumentMetadataPanel } from './DocumentMetadataPanel';
+
+type EntityIndexRow = {
+  id: string;
+  name: string;
+  type: string;
+  mentionCount: number;
+};
+
+function buildEntityIndex(chunks: DocumentChunkItem[]): EntityIndexRow[] {
+  const byId = new Map<string, EntityIndexRow>();
+
+  for (const c of chunks) {
+    for (const m of c.mentions ?? []) {
+      const e = m.entity;
+      const prev = byId.get(e.id);
+      byId.set(e.id, {
+        id: e.id,
+        name: e.name,
+        type: e.type,
+        mentionCount: (prev?.mentionCount ?? 0) + 1,
+      });
+    }
+  }
+
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function DocumentEvidencePanel(props: { document: DocumentHeader | null; chunks: DocumentChunkItem[] }) {
+  const { document, chunks } = props;
+
+  const entities = useMemo(() => buildEntityIndex(chunks), [chunks]);
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <DocumentMetadataPanel document={document} chunks={chunks} />
+
+      <Divider />
+
+      <Box>
+        <Typography variant="subtitle2" gutterBottom>
+          Entities (extracted)
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+          Entities are extracted mentions. Treat them as pointers into evidence, not conclusions.
+        </Typography>
+
+        {entities.length === 0 ? (
+          <Alert severity="info">No entity mentions were returned for this document.</Alert>
+        ) : (
+          <List dense aria-label="document-entities">
+            {entities.map((e) => (
+              <ListItemButton key={e.id} component={Link} href={`/entities/${e.id}`} sx={{ borderRadius: 1 }}>
+                <ListItemText
+                  primary={e.name}
+                  secondary={`Type: ${e.type || 'unknown'} • Mentions: ${e.mentionCount} • Confidence: unknown`}
+                  secondaryTypographyProps={{ variant: 'caption' }}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        )}
+
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+          <Button component={Link} href="/entities" size="small" variant="text" sx={{ textTransform: 'none' }}>
+            Browse all entities
+          </Button>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+

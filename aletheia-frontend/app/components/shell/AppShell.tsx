@@ -62,7 +62,7 @@ export function AppShell(props: AppShellProps) {
         { href: '/documents', label: 'Documents', description: 'Immutable sources and chunks' },
         { href: '/evidence', label: 'Evidence', description: 'Chunk-level inspection & comparison' },
         { href: '/entities', label: 'Entities', description: 'Extracted mentions and relationships' },
-        { href: '/analysis', label: 'Analysis', description: 'AI hypotheses with explicit uncertainty' },
+        { href: '/questions', label: 'Questions', description: 'Gated workspace (claims must link to evidence)' },
         { href: '/provenance', label: 'Provenance', description: 'Auditability & transformation steps' },
       ],
     [navItems]

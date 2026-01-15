@@ -88,11 +88,27 @@ function removeFromDocumentsByUser(cache: ApolloCache, userId: string, id: strin
 }
 
 export function useDocuments(userId: string | null) {
+  // Some views only need document mutations (delete/create) and use a separate index query.
+  // Keep this opt-in to avoid duplicate network traffic.
+  const skipList = false;
+  return useDocumentsInternal(userId, { skipList });
+}
+
+export function useDocumentsInternal(
+  userId: string | null,
+  opts?: {
+    /**
+     * If true, skip the DocumentsByUser list query. Mutations still work.
+     */
+    skipList?: boolean;
+  }
+) {
+  const skipList = Boolean(opts?.skipList);
   const variables = useMemo(() => ({ userId: userId ?? '' }), [userId]);
 
   const query = useQuery<DocumentsByUserData, DocumentsByUserVars>(DOCUMENTS_BY_USER_QUERY, {
     variables,
-    skip: !userId,
+    skip: !userId || skipList,
     fetchPolicy: 'cache-and-network',
   });
 
@@ -146,7 +162,7 @@ export function useDocuments(userId: string | null) {
 
   return {
     documents: query.data?.documentsByUser ?? [],
-    loading: query.loading,
+    loading: skipList ? false : query.loading,
     error: query.error ?? createState.error ?? deleteState.error ?? null,
     isBusy: createState.loading || deleteState.loading,
     createDocument,

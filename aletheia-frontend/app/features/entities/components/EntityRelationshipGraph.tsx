@@ -28,6 +28,10 @@ export function EntityRelationshipGraph(props: { entity: EntityDetail }) {
         Relationships are extracted assertions. Treat them as hypotheses unless you can trace them to concrete
         mentions.
       </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+        Supporting evidence for relationships is <strong>missing</strong> in the current API. The UI does not
+        auto-resolve contradictions.
+      </Typography>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
         <Box>
