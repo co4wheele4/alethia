@@ -27,8 +27,8 @@ import {
 import { AppShell } from '../components/shell';
 import { useAuth } from '../hooks/useAuth';
 import { getUserIdFromToken } from '../lib/utils/jwt';
-import { useDocuments } from '../features/documents/hooks/useDocuments';
-import { useEntities } from '../features/entities/hooks/useEntities';
+import { QuestionScopeDocumentsQueryContainer } from '../features/questions/components/QuestionScopeDocumentsQueryContainer';
+import { QuestionEntityConstraintsQueryContainer } from '../features/questions/components/QuestionEntityConstraintsQueryContainer';
 
 function useHasViewedDocumentsGate() {
   const [hasViewed, setHasViewed] = useState(false);
@@ -47,8 +47,6 @@ export default function QuestionsPage() {
   const userId = getUserIdFromToken(token);
 
   const hasViewedDocuments = useHasViewedDocumentsGate();
-  const docs = useDocuments(userId);
-  const entities = useEntities();
 
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
   const [timeStartIso, setTimeStartIso] = useState('');
@@ -84,53 +82,59 @@ export default function QuestionsPage() {
                 Select the documents that are in scope. Nothing is implicitly included.
               </Typography>
 
-              {docs.loading ? (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    Loading documents for scope selection…
-                  </Typography>
-                  <LinearProgress />
-                </Box>
-              ) : null}
+              <QuestionScopeDocumentsQueryContainer userId={userId}>
+                {({ documents, loading, error }) => (
+                  <>
+                    {loading ? (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          Loading documents for scope selection…
+                        </Typography>
+                        <LinearProgress />
+                      </Box>
+                    ) : null}
 
-              {docs.error ? (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {docs.error.message}
-                </Alert>
-              ) : null}
+                    {error ? (
+                      <Alert severity="error" sx={{ mb: 2 }}>
+                        {error.message}
+                      </Alert>
+                    ) : null}
 
-              {!docs.loading && docs.documents.length === 0 ? (
-                <Alert severity="info">No documents available. Ingest sources first to build an evidence base.</Alert>
-              ) : null}
+                    {!loading && documents.length === 0 ? (
+                      <Alert severity="info">No documents available. Ingest sources first to build an evidence base.</Alert>
+                    ) : null}
 
-              <List dense aria-label="question-scope-documents">
-                {docs.documents
-                  .slice()
-                  .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-                  .map((d) => {
-                    const checked = selectedDocumentIds.includes(d.id);
-                    return (
-                      <ListItemButton
-                        key={d.id}
-                        sx={{ borderRadius: 1 }}
-                        onClick={() =>
-                          setSelectedDocumentIds((prev) =>
-                            prev.includes(d.id) ? prev.filter((x) => x !== d.id) : [...prev, d.id]
-                          )
-                        }
-                      >
-                        <ListItemIcon>
-                          <Checkbox edge="start" checked={checked} tabIndex={-1} disableRipple />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={d.title}
-                          secondary={`Date added: ${new Date(d.createdAt).toLocaleString()}`}
-                          secondaryTypographyProps={{ variant: 'caption' }}
-                        />
-                      </ListItemButton>
-                    );
-                  })}
-              </List>
+                    <List dense aria-label="question-scope-documents">
+                      {documents
+                        .slice()
+                        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+                        .map((d) => {
+                          const checked = selectedDocumentIds.includes(d.id);
+                          return (
+                            <ListItemButton
+                              key={d.id}
+                              sx={{ borderRadius: 1 }}
+                              onClick={() =>
+                                setSelectedDocumentIds((prev) =>
+                                  prev.includes(d.id) ? prev.filter((x) => x !== d.id) : [...prev, d.id]
+                                )
+                              }
+                            >
+                              <ListItemIcon>
+                                <Checkbox edge="start" checked={checked} tabIndex={-1} disableRipple />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={d.title}
+                                secondary={`Date added: ${new Date(d.createdAt).toLocaleString()}`}
+                                secondaryTypographyProps={{ variant: 'caption' }}
+                              />
+                            </ListItemButton>
+                          );
+                        })}
+                    </List>
+                  </>
+                )}
+              </QuestionScopeDocumentsQueryContainer>
 
               <Divider sx={{ my: 2 }} />
 
@@ -165,47 +169,53 @@ export default function QuestionsPage() {
                 scope.
               </Typography>
 
-              {entities.loading ? (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    Loading entities for constraint selection…
-                  </Typography>
-                  <LinearProgress />
-                </Box>
-              ) : null}
+              <QuestionEntityConstraintsQueryContainer>
+                {({ entities, loading, error }) => (
+                  <>
+                    {loading ? (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          Loading entities for constraint selection…
+                        </Typography>
+                        <LinearProgress />
+                      </Box>
+                    ) : null}
 
-              {entities.error ? (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {entities.error.message}
-                </Alert>
-              ) : null}
+                    {error ? (
+                      <Alert severity="error" sx={{ mb: 2 }}>
+                        {error.message}
+                      </Alert>
+                    ) : null}
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                {entities.entities.slice(0, 25).map((e) => {
-                  const checked = entityConstraintIds.includes(e.id);
-                  return (
-                    <FormControlLabel
-                      key={e.id}
-                      control={
-                        <Checkbox
-                          checked={checked}
-                          onChange={() =>
-                            setEntityConstraintIds((prev) =>
-                              prev.includes(e.id) ? prev.filter((x) => x !== e.id) : [...prev, e.id]
-                            )
-                          }
-                        />
-                      }
-                      label={`${e.name} (${e.type || 'unknown'})`}
-                    />
-                  );
-                })}
-                {entities.entities.length > 25 ? (
-                  <Typography variant="caption" color="text.secondary">
-                    Showing first 25 entities. (A dedicated constraint picker is pending.)
-                  </Typography>
-                ) : null}
-              </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      {entities.slice(0, 25).map((e) => {
+                        const checked = entityConstraintIds.includes(e.id);
+                        return (
+                          <FormControlLabel
+                            key={e.id}
+                            control={
+                              <Checkbox
+                                checked={checked}
+                                onChange={() =>
+                                  setEntityConstraintIds((prev) =>
+                                    prev.includes(e.id) ? prev.filter((x) => x !== e.id) : [...prev, e.id]
+                                  )
+                                }
+                              />
+                            }
+                            label={`${e.name} (${e.type || 'unknown'})`}
+                          />
+                        );
+                      })}
+                      {entities.length > 25 ? (
+                        <Typography variant="caption" color="text.secondary">
+                          Showing first 25 entities. (A dedicated constraint picker is pending.)
+                        </Typography>
+                      ) : null}
+                    </Box>
+                  </>
+                )}
+              </QuestionEntityConstraintsQueryContainer>
 
               {/* Explicit scope variables stay visible above; nothing is sent implicitly. */}
             </Box>

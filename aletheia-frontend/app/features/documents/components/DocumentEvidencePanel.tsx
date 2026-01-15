@@ -10,7 +10,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Box, Button, Divider, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
 import type { DocumentChunkItem, DocumentHeader } from '../hooks/useDocumentChunks';
@@ -46,6 +46,9 @@ export function DocumentEvidencePanel(props: { document: DocumentHeader | null; 
   const { document, chunks } = props;
 
   const entities = useMemo(() => buildEntityIndex(chunks), [chunks]);
+  const [visibleCount, setVisibleCount] = useState(50);
+  const visible = useMemo(() => entities.slice(0, visibleCount), [entities, visibleCount]);
+  const canLoadMore = entities.length > visible.length;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -65,7 +68,7 @@ export function DocumentEvidencePanel(props: { document: DocumentHeader | null; 
           <Alert severity="info">No entity mentions were returned for this document.</Alert>
         ) : (
           <List dense aria-label="document-entities">
-            {entities.map((e) => (
+            {visible.map((e) => (
               <ListItemButton key={e.id} component={Link} href={`/entities/${e.id}`} sx={{ borderRadius: 1 }}>
                 <ListItemText
                   primary={e.name}
@@ -76,6 +79,14 @@ export function DocumentEvidencePanel(props: { document: DocumentHeader | null; 
             ))}
           </List>
         )}
+
+        {canLoadMore ? (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+            <Button size="small" variant="outlined" sx={{ textTransform: 'none' }} onClick={() => setVisibleCount((v) => v + 50)}>
+              Load more entities
+            </Button>
+          </Box>
+        ) : null}
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
           <Button component={Link} href="/entities" size="small" variant="text" sx={{ textTransform: 'none' }}>

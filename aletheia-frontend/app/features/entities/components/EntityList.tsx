@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   Alert,
   Box,
+  Button,
   Chip,
   LinearProgress,
   List,
@@ -30,6 +31,7 @@ export function EntityList() {
   const { entities, loading, error } = useEntities();
   const [q, setQ] = useState('');
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [visibleByType, setVisibleByType] = useState<Record<string, number>>({});
 
   const types = useMemo(() => {
     const uniq = new Set<string>();
@@ -116,16 +118,38 @@ export function EntityList() {
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               {type} ({list.length})
             </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+              Rendering is capped client-side. (API does not provide pagination parameters.)
+            </Typography>
             <List dense aria-label={`entities-${type}`}>
               {list
                 .slice()
                 .sort((a, b) => a.name.localeCompare(b.name))
+                .slice(0, visibleByType[type] ?? 50)
                 .map((e) => (
                   <ListItemButton key={e.id} component={Link} href={`/entities/${e.id}`} sx={{ borderRadius: 1 }}>
                     <ListItemText primary={e.name} secondary={`Type: ${e.type || 'unknown'}`} />
                   </ListItemButton>
                 ))}
             </List>
+
+            {list.length > (visibleByType[type] ?? 50) ? (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  sx={{ textTransform: 'none' }}
+                  onClick={() =>
+                    setVisibleByType((prev) => ({
+                      ...prev,
+                      [type]: (prev[type] ?? 50) + 50,
+                    }))
+                  }
+                >
+                  Load more
+                </Button>
+              </Box>
+            ) : null}
           </Box>
         ))}
       </Box>

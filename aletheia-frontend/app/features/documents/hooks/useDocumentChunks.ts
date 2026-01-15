@@ -53,6 +53,44 @@ type ChunksByDocumentVars = {
   documentId: string;
 };
 
+export function useDocumentHeader(documentId: string | null) {
+  const docVars = useMemo(() => ({ id: documentId ?? '' }), [documentId]);
+
+  const query = useQuery<DocumentData, DocumentVars>(DOCUMENT_QUERY, {
+    variables: docVars,
+    skip: !documentId,
+    fetchPolicy: 'cache-and-network',
+  });
+
+  return {
+    document: query.data?.document ?? null,
+    loading: query.loading,
+    error: query.error ?? null,
+    refetch: query.refetch,
+  };
+}
+
+export function useChunksByDocument(documentId: string | null) {
+  const vars = useMemo(() => ({ documentId: documentId ?? '' }), [documentId]);
+
+  const query = useQuery<ChunksByDocumentData, ChunksByDocumentVars>(CHUNKS_BY_DOCUMENT_QUERY, {
+    variables: vars,
+    skip: !documentId,
+    fetchPolicy: 'cache-and-network',
+  });
+
+  return {
+    chunks: query.data?.chunksByDocument ?? [],
+    loading: query.loading,
+    error: query.error ?? null,
+    refetch: query.refetch,
+  };
+}
+
+/**
+ * Deprecated: combines two queries (Document + Chunks) in one hook.
+ * Prefer `useDocumentHeader` and `useChunksByDocument` in separate containers for strict query/component mapping.
+ */
 export function useDocumentDetails(documentId: string | null) {
   const docVars = useMemo(() => ({ id: documentId ?? '' }), [documentId]);
   const chunksVars = useMemo(() => ({ documentId: documentId ?? '' }), [documentId]);

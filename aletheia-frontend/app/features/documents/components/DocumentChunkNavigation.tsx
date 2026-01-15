@@ -5,7 +5,8 @@
  */
 'use client';
 
-import { Box, List, ListItemButton, ListItemText, Typography } from '@mui/material';
+import { Box, Button, List, ListItemButton, ListItemText, Typography } from '@mui/material';
+import { useMemo, useState } from 'react';
 
 import type { DocumentChunkItem } from '../hooks/useDocumentChunks';
 
@@ -17,6 +18,9 @@ export function DocumentChunkNavigation(props: {
   const { chunks, selectedChunkIndex, onSelectChunkIndex } = props;
 
   const sorted = chunks.slice().sort((a, b) => a.chunkIndex - b.chunkIndex);
+  const [visibleCount, setVisibleCount] = useState(40);
+  const visible = useMemo(() => sorted.slice(0, visibleCount), [sorted, visibleCount]);
+  const canLoadMore = sorted.length > visible.length;
 
   return (
     <Box sx={{ minWidth: 0 }}>
@@ -28,7 +32,7 @@ export function DocumentChunkNavigation(props: {
       </Typography>
 
       <List dense aria-label="document-chunk-navigation" sx={{ maxHeight: '70vh', overflow: 'auto' }}>
-        {sorted.map((c) => (
+        {visible.map((c) => (
           <ListItemButton
             key={c.id}
             selected={selectedChunkIndex === c.chunkIndex}
@@ -43,6 +47,14 @@ export function DocumentChunkNavigation(props: {
           </ListItemButton>
         ))}
       </List>
+
+      {canLoadMore ? (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+          <Button size="small" variant="outlined" sx={{ textTransform: 'none' }} onClick={() => setVisibleCount((v) => v + 40)}>
+            Load more chunks
+          </Button>
+        </Box>
+      ) : null}
     </Box>
   );
 }

@@ -20,6 +20,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
+  Button,
   TextField,
   Typography,
 } from '@mui/material';
@@ -42,12 +43,16 @@ export function EntityMentionsList(props: {
 }) {
   const { entityId, entityName, entityType, mentions } = props;
   const [q, setQ] = useState('');
+  const [visibleCount, setVisibleCount] = useState(20);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
     if (!query) return mentions;
     return mentions.filter((m) => m.chunk.content.toLowerCase().includes(query));
   }, [mentions, q]);
+
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  const canLoadMore = filtered.length > visible.length;
 
   const mentionCount = mentions.length;
 
@@ -79,7 +84,7 @@ export function EntityMentionsList(props: {
       {mentions.length === 0 ? <Alert severity="info">No mentions are available for this entity.</Alert> : null}
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {filtered.map((m) => {
+        {visible.map((m) => {
           const doc = m.chunk.document;
           const chunkIndex = m.chunk.chunkIndex;
           return (
@@ -120,6 +125,14 @@ export function EntityMentionsList(props: {
           <Alert severity="info">No mentions match your filter.</Alert>
         ) : null}
       </Box>
+
+      {canLoadMore ? (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+          <Button size="small" variant="outlined" sx={{ textTransform: 'none' }} onClick={() => setVisibleCount((v) => v + 20)}>
+            Load more mentions
+          </Button>
+        </Box>
+      ) : null}
     </Box>
   );
 }

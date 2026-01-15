@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+import { useMemo, useState } from 'react';
 import type { DocumentIndexItem } from '../hooks/useDocumentIndex';
 import { ContentSurface } from '../../../components/layout';
 
@@ -32,7 +33,6 @@ export function DocumentsListPane(props: {
   busy: boolean;
   onDelete: (id: string) => Promise<void>;
   onOpenIngest: () => void;
-  getSourceKind: (documentId: string) => string;
 }) {
   const {
     documents,
@@ -45,7 +45,6 @@ export function DocumentsListPane(props: {
     busy,
     onDelete,
     onOpenIngest,
-    getSourceKind,
   } = props;
 
   const statusLabelFor = (doc: DocumentIndexItem) => {
@@ -53,6 +52,10 @@ export function DocumentsListPane(props: {
     if (doc.mentionCount === 0) return 'Chunks ready (no extracted mentions)';
     return 'Chunks + mentions ready';
   };
+
+  const [visibleCount, setVisibleCount] = useState(25);
+  const visible = useMemo(() => documents.slice(0, visibleCount), [documents, visibleCount]);
+  const canLoadMore = documents.length > visible.length;
 
   return (
     <ContentSurface>
@@ -100,8 +103,12 @@ export function DocumentsListPane(props: {
         </Alert>
       ) : null}
 
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        Showing {visible.length} of {documents.length} documents. (API does not provide pagination parameters.)
+      </Typography>
+
       <List dense aria-label="documents-list">
-        {documents.map((doc) => (
+        {visible.map((doc) => (
           <ListItemButton
             key={doc.id}
             selected={doc.id === selectedId}
@@ -115,7 +122,7 @@ export function DocumentsListPane(props: {
                     {doc.title}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                    Source type: {String(getSourceKind(doc.id) || 'unknown')}
+                    Source type: unknown (not provided by API)
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
                     Date added: {new Date(doc.dateAddedIso).toLocaleString()}
@@ -144,6 +151,19 @@ export function DocumentsListPane(props: {
           </ListItemButton>
         ))}
       </List>
+
+      {canLoadMore ? (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            sx={{ textTransform: 'none' }}
+            onClick={() => setVisibleCount((v) => v + 25)}
+          >
+            Load more
+          </Button>
+        </Box>
+      ) : null}
     </ContentSurface>
   );
 }

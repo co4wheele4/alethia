@@ -1,15 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Alert, Box, CircularProgress, List, ListItemButton, ListItemText, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
 import { AppShell } from '../components/shell';
 import { ContentSurface } from '../components/layout';
 import { useAuth } from '../hooks/useAuth';
 import { getUserIdFromToken } from '../lib/utils/jwt';
 import { useDocuments } from '../features/documents/hooks/useDocuments';
-import { useDocumentDetails } from '../features/documents/hooks/useDocumentChunks';
 import { ProvenanceInspector } from '../features/provenance/components/ProvenanceInspector';
+import { SelectedDocumentHeaderQueryContainer } from '../features/documents/components/SelectedDocumentHeaderQueryContainer';
+import { SelectedDocumentChunksQueryContainer } from '../features/documents/components/SelectedDocumentChunksQueryContainer';
 
 export default function ProvenancePage() {
   const { token } = useAuth();
@@ -17,13 +18,12 @@ export default function ProvenancePage() {
 
   const { documents, loading, error } = useDocuments(userId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [visibleDocumentsCount, setVisibleDocumentsCount] = useState(25);
 
   const activeId = useMemo(() => {
     if (selectedId && documents.some((d) => d.id === selectedId)) return selectedId;
     return documents[0]?.id ?? null;
   }, [documents, selectedId]);
-
-  const details = useDocumentDetails(activeId);
 
   return (
     <AppShell title="Provenance">
@@ -52,8 +52,11 @@ export default function ProvenancePage() {
               </Box>
             ) : null}
 
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+              Showing {Math.min(visibleDocumentsCount, documents.length)} of {documents.length}. (API does not provide pagination parameters.)
+            </Typography>
             <List dense aria-label="provenance-documents">
-              {documents.map((d) => (
+              {documents.slice(0, visibleDocumentsCount).map((d) => (
                 <ListItemButton
                   key={d.id}
                   selected={d.id === activeId}
@@ -64,23 +67,44 @@ export default function ProvenancePage() {
                 </ListItemButton>
               ))}
             </List>
+            {documents.length > visibleDocumentsCount ? (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <Button size="small" variant="outlined" sx={{ textTransform: 'none' }} onClick={() => setVisibleDocumentsCount((v) => v + 25)}>
+                  Load more documents
+                </Button>
+              </Box>
+            ) : null}
           </ContentSurface>
 
           <ContentSurface>
-            {details.error ? (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {details.error.message}
-              </Alert>
-            ) : null}
+            <SelectedDocumentHeaderQueryContainer documentId={activeId}>
+              {({ document, loading: docLoading, error: docError }) => (
+                <SelectedDocumentChunksQueryContainer documentId={activeId}>
+                  {({ chunks, loading: chunksLoading, error: chunksError }) => {
+                    const loading = docLoading || chunksLoading;
+                    const error = docError ?? chunksError;
+                    return (
+                      <>
+                        {error ? (
+                          <Alert severity="error" sx={{ mb: 2 }}>
+                            {error.message}
+                          </Alert>
+                        ) : null}
 
-            {details.loading ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-                <CircularProgress size={18} />
-                <Typography variant="body2">Loading provenance…</Typography>
-              </Box>
-            ) : null}
+                        {loading ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
+                            <CircularProgress size={18} />
+                            <Typography variant="body2">Loading provenance…</Typography>
+                          </Box>
+                        ) : null}
 
-            <ProvenanceInspector document={details.document} chunks={details.chunks} />
+                        <ProvenanceInspector document={document} chunks={chunks} />
+                      </>
+                    );
+                  }}
+                </SelectedDocumentChunksQueryContainer>
+              )}
+            </SelectedDocumentHeaderQueryContainer>
           </ContentSurface>
         </Box>
       )}
