@@ -19,6 +19,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+
+  // WebKit (and mobile WebKit) can be slow to start on Windows under load.
+  // Increase the per-test timeout to reduce flaky "browserContext.newPage" failures.
+  timeout: 60 * 1000,
   
   // Run tests in parallel
   fullyParallel: true,
@@ -30,7 +34,12 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   
   // Opt out of parallel tests on CI
-  workers: process.env.CI ? 1 : undefined,
+  // Also reduce parallelism on Windows to avoid browser startup timeouts.
+  workers: process.env.CI ? 1 : process.platform === 'win32' ? 4 : undefined,
+
+  expect: {
+    timeout: 15 * 1000,
+  },
   
   // Reporter configuration
   reporter: [

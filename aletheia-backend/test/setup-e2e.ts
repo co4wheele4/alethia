@@ -51,6 +51,9 @@ if (process.env.TEST_DATABASE_URL) {
   // If it already contains /aletheia_test, keep it as is
 }
 
+// E2E must never depend on external OpenAI network calls.
+process.env.OPENAI_DISABLE_NETWORK = 'true';
+
 // Log which database we're using (only in test environment)
 if (process.env.NODE_ENV !== 'production') {
   const dbUrl = process.env.DATABASE_URL || '';

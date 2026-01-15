@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
+import { createHash } from 'node:crypto';
 
 @Injectable()
 export class OpenAIService {
   private openai: OpenAI;
+  private readonly disableNetwork: boolean;
 
   constructor(private configService: ConfigService) {
+    this.disableNetwork =
+      String(process.env.OPENAI_DISABLE_NETWORK ?? '').toLowerCase() === 'true';
+
     // Use ConfigService to get OPENAI_API_KEY from environment variables
     // This ensures consistency with the validated environment configuration
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
@@ -19,6 +24,17 @@ export class OpenAIService {
   }
 
   async getEmbeddingResult(prompt: string): Promise<string> {
+    if (this.disableNetwork) {
+      // Deterministic, non-network embedding placeholder for tests/e2e.
+      // Not a semantic embedding; strictly a stable, inspectable artifact.
+      const sha = createHash('sha256').update(prompt).digest('hex').slice(0, 16);
+      return JSON.stringify({
+        kind: 'embedding-placeholder',
+        sha256_16: sha,
+        length: prompt.length,
+      });
+    }
+
     const response = await this.openai.embeddings.create({
       model: 'text-embedding-3-large',
       input: prompt,
