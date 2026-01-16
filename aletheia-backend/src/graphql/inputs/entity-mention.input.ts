@@ -1,5 +1,5 @@
-import { InputType, Field, Float, Int } from '@nestjs/graphql';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { InputType, Field, Int } from '@nestjs/graphql';
+import { IsNotEmpty, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 @InputType()
 export class CreateEntityMentionInput {
@@ -26,12 +26,7 @@ export class CreateEntityMentionInput {
   @Field({ nullable: true })
   @IsOptional()
   @IsString()
-  spanText?: string;
-
-  @Field(() => Float, { nullable: true })
-  @IsOptional()
-  @IsNumber()
-  confidence?: number;
+  excerpt?: string;
 }
 
 @InputType()

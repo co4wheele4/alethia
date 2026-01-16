@@ -5,22 +5,28 @@ import {
   User as PrismaUser,
   Lesson as PrismaLesson,
   Document as PrismaDocument,
+  DocumentSource as PrismaDocumentSource,
   DocumentChunk as PrismaDocumentChunk,
   Embedding as PrismaEmbedding,
   Entity as PrismaEntity,
   EntityMention as PrismaEntityMention,
   EntityRelationship as PrismaEntityRelationship,
+  EntityRelationshipEvidence as PrismaEntityRelationshipEvidence,
+  EntityRelationshipEvidenceMention as PrismaEntityRelationshipEvidenceMention,
   AiQuery as PrismaAiQuery,
   AiQueryResult as PrismaAiQueryResult,
 } from '@prisma/client';
 import { User } from '@models/user.model';
 import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
+import { DocumentSource } from '@models/document-source.model';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { Embedding } from '@models/embedding.model';
 import { Entity } from '@models/entity.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { EntityRelationship } from '@models/entity-relationship.model';
+import { EntityRelationshipEvidence } from '@models/entity-relationship-evidence.model';
+import { EntityRelationshipEvidenceMention } from '@models/entity-relationship-evidence-mention.model';
 import { AiQuery, AiQueryResult } from '@models/ai-query.model';
 
 /**
@@ -34,6 +40,10 @@ export class DataLoaderService {
   private readonly lessonsByUserLoader: DataLoader<string, Lesson[]>;
   private readonly documentLoader: DataLoader<string, Document | null>;
   private readonly documentsByUserLoader: DataLoader<string, Document[]>;
+  private readonly documentSourceByDocumentLoader: DataLoader<
+    string,
+    DocumentSource | null
+  >;
   private readonly documentChunkLoader: DataLoader<
     string,
     DocumentChunk | null
@@ -51,6 +61,14 @@ export class DataLoaderService {
   private readonly entityRelationshipLoader: DataLoader<
     string,
     EntityRelationship | null
+  >;
+  private readonly relationshipEvidenceByRelationshipLoader: DataLoader<
+    string,
+    EntityRelationshipEvidence[]
+  >;
+  private readonly evidenceMentionLinksByEvidenceLoader: DataLoader<
+    string,
+    EntityRelationshipEvidenceMention[]
   >;
   private readonly relationshipsByFromEntityLoader: DataLoader<
     string,
@@ -147,6 +165,23 @@ export class DataLoaderService {
         return userIds.map((userId) => documentsByUser.get(userId)!);
       },
     );
+
+    this.documentSourceByDocumentLoader = new DataLoader<
+      string,
+      DocumentSource | null
+    >(async (documentIds: readonly string[]) => {
+      const sources: PrismaDocumentSource[] =
+        await this.prisma.documentSource.findMany({
+          where: { documentId: { in: [...documentIds] } },
+        });
+      const sourceByDocumentId = new Map(
+        sources.map((source) => [
+          source.documentId,
+          source as unknown as DocumentSource,
+        ]),
+      );
+      return documentIds.map((documentId) => sourceByDocumentId.get(documentId) ?? null);
+    });
 
     // DocumentChunk loaders
     this.documentChunkLoader = new DataLoader<string, DocumentChunk | null>(
@@ -303,6 +338,49 @@ export class DataLoaderService {
       return ids.map((id) => relationshipMap.get(id) ?? null);
     });
 
+    this.relationshipEvidenceByRelationshipLoader = new DataLoader<
+      string,
+      EntityRelationshipEvidence[]
+    >(async (relationshipIds: readonly string[]) => {
+      const evidence: PrismaEntityRelationshipEvidence[] =
+        await this.prisma.entityRelationshipEvidence.findMany({
+          where: { relationshipId: { in: [...relationshipIds] } },
+          orderBy: { createdAt: 'asc' },
+        });
+      const evidenceByRelationshipId = new Map<string, EntityRelationshipEvidence[]>();
+      for (const relationshipId of relationshipIds) {
+        evidenceByRelationshipId.set(relationshipId, []);
+      }
+      for (const e of evidence) {
+        const list = evidenceByRelationshipId.get(e.relationshipId) ?? [];
+        list.push(e as unknown as EntityRelationshipEvidence);
+        evidenceByRelationshipId.set(e.relationshipId, list);
+      }
+      return relationshipIds.map(
+        (relationshipId) => evidenceByRelationshipId.get(relationshipId)!,
+      );
+    });
+
+    this.evidenceMentionLinksByEvidenceLoader = new DataLoader<
+      string,
+      EntityRelationshipEvidenceMention[]
+    >(async (evidenceIds: readonly string[]) => {
+      const links: PrismaEntityRelationshipEvidenceMention[] =
+        await this.prisma.entityRelationshipEvidenceMention.findMany({
+          where: { evidenceId: { in: [...evidenceIds] } },
+        });
+      const linksByEvidenceId = new Map<string, EntityRelationshipEvidenceMention[]>();
+      for (const evidenceId of evidenceIds) {
+        linksByEvidenceId.set(evidenceId, []);
+      }
+      for (const link of links) {
+        const list = linksByEvidenceId.get(link.evidenceId) ?? [];
+        list.push(link as unknown as EntityRelationshipEvidenceMention);
+        linksByEvidenceId.set(link.evidenceId, list);
+      }
+      return evidenceIds.map((evidenceId) => linksByEvidenceId.get(evidenceId)!);
+    });
+
     this.relationshipsByFromEntityLoader = new DataLoader<
       string,
       EntityRelationship[]
@@ -438,6 +516,10 @@ export class DataLoaderService {
     return this.documentsByUserLoader;
   }
 
+  getDocumentSourceByDocumentLoader(): DataLoader<string, DocumentSource | null> {
+    return this.documentSourceByDocumentLoader;
+  }
+
   // DocumentChunk loaders
   getDocumentChunkLoader(): DataLoader<string, DocumentChunk | null> {
     return this.documentChunkLoader;
@@ -477,6 +559,20 @@ export class DataLoaderService {
   // EntityRelationship loaders
   getEntityRelationshipLoader(): DataLoader<string, EntityRelationship | null> {
     return this.entityRelationshipLoader;
+  }
+
+  getRelationshipEvidenceByRelationshipLoader(): DataLoader<
+    string,
+    EntityRelationshipEvidence[]
+  > {
+    return this.relationshipEvidenceByRelationshipLoader;
+  }
+
+  getEvidenceMentionLinksByEvidenceLoader(): DataLoader<
+    string,
+    EntityRelationshipEvidenceMention[]
+  > {
+    return this.evidenceMentionLinksByEvidenceLoader;
   }
 
   getRelationshipsByFromEntityLoader(): DataLoader<

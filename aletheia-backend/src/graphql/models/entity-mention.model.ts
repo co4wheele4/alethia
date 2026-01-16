@@ -1,4 +1,4 @@
-import { Field, Float, ID, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { Entity } from './entity.model';
 import { DocumentChunk } from './document-chunk.model';
 
@@ -6,6 +6,18 @@ import { DocumentChunk } from './document-chunk.model';
 export class EntityMention {
   @Field(() => ID)
   id!: string;
+
+  @Field(() => ID, {
+    description:
+      'Explicit foreign key to the mentioned entity (persisted; enables ID-first traversal).',
+  })
+  entityId!: string;
+
+  @Field(() => ID, {
+    description:
+      'Explicit foreign key to the chunk where this mention occurred (persisted; enables ID-first traversal).',
+  })
+  chunkId!: string;
 
   @Field(() => Int, {
     nullable: true,
@@ -26,14 +38,7 @@ export class EntityMention {
     description:
       'Optional captured mention text at creation time (best-effort). When present with offsets, the backend validates consistency.',
   })
-  spanText?: string | null;
-
-  @Field(() => Float, {
-    nullable: true,
-    description:
-      'Optional extraction confidence as metadata (nullable; not a truth indicator).',
-  })
-  confidence?: number | null;
+  excerpt?: string | null;
 
   @Field(() => Entity)
   entity!: Entity;

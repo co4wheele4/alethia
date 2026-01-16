@@ -1,7 +1,7 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { User } from './user.model';
 import { DocumentChunk } from './document-chunk.model';
-import { DocumentSource } from './document-source.model';
+import { DocumentSource, DocumentSourceKind } from './document-source.model';
 
 @ObjectType()
 export class Document {
@@ -19,6 +19,20 @@ export class Document {
 
   @Field(() => [DocumentChunk])
   chunks!: DocumentChunk[];
+
+  @Field(() => DocumentSourceKind, {
+    nullable: true,
+    description:
+      'Declared provenance type for this document (persisted; nullable for legacy documents).',
+  })
+  sourceType?: DocumentSourceKind | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'Human-readable provenance label for this document (persisted; nullable for legacy documents).',
+  })
+  sourceLabel?: string | null;
 
   @Field(() => DocumentSource, {
     nullable: true,

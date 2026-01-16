@@ -16,6 +16,7 @@ import {
 import { PrismaService } from '@prisma/prisma.service';
 import { Document } from '@models/document.model';
 import { DocumentChunk } from '@models/document-chunk.model';
+import { DocumentSource } from '@models/document-source.model';
 import { User } from '@models/user.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
@@ -114,5 +115,10 @@ export class DocumentResolver {
   @ResolveField(() => [DocumentChunk])
   async chunks(@Parent() document: Document) {
     return this.dataLoaders.getChunksByDocumentLoader().load(document.id);
+  }
+
+  @ResolveField(() => DocumentSource, { nullable: true })
+  async source(@Parent() document: Document) {
+    return this.dataLoaders.getDocumentSourceByDocumentLoader().load(document.id);
   }
 }

@@ -6,5 +6,7 @@ export { EmbeddingResolver } from './embedding.resolver';
 export { EntityResolver } from './entity.resolver';
 export { EntityMentionResolver } from './entity-mention.resolver';
 export { EntityRelationshipResolver } from './entity-relationship.resolver';
+export { EntityRelationshipEvidenceResolver } from './entity-relationship-evidence.resolver';
+export { EntityRelationshipEvidenceMentionResolver } from './entity-relationship-evidence-mention.resolver';
 export { AiQueryResolver } from './ai-query.resolver';
 export { AiQueryResultResolver } from './ai-query.resolver';

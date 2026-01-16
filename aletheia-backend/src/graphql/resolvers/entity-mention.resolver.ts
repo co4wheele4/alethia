@@ -66,8 +66,7 @@ export class EntityMentionResolver {
       chunkId,
       startOffset,
       endOffset,
-      spanText,
-      confidence,
+      excerpt,
     } = data;
 
     const hasStart = typeof startOffset === 'number';
@@ -78,14 +77,10 @@ export class EntityMentionResolver {
       );
     }
 
-    if (typeof confidence === 'number' && (confidence < 0 || confidence > 1)) {
-      throw new BadRequestException('confidence must be between 0 and 1.');
-    }
-
-    let validatedSpanText: string | null = spanText ?? null;
-    if (!hasStart && validatedSpanText !== null) {
+    let validatedExcerpt: string | null = excerpt ?? null;
+    if (!hasStart && validatedExcerpt !== null) {
       throw new BadRequestException(
-        'spanText requires startOffset/endOffset so it can be validated against chunk content.',
+        'excerpt requires startOffset/endOffset so it can be validated against chunk content.',
       );
     }
 
@@ -110,14 +105,14 @@ export class EntityMentionResolver {
       }
 
       const exact = content.slice(startOffset!, endOffset!);
-      if (validatedSpanText !== null && validatedSpanText !== exact) {
+      if (validatedExcerpt !== null && validatedExcerpt !== exact) {
         throw new BadRequestException(
-          'spanText does not match the chunk content at the provided offsets.',
+          'excerpt does not match the chunk content at the provided offsets.',
         );
       }
 
       // Best-effort capture of exact span text for auditability.
-      validatedSpanText = exact;
+      validatedExcerpt = exact;
     }
 
     const createData: {
@@ -125,17 +120,13 @@ export class EntityMentionResolver {
       chunkId: string;
       startOffset?: number;
       endOffset?: number;
-      spanText?: string | null;
-      confidence?: number;
+      excerpt?: string | null;
     } = { entityId, chunkId };
 
     if (hasStart && hasEnd) {
       createData.startOffset = startOffset!;
       createData.endOffset = endOffset!;
-      createData.spanText = validatedSpanText;
-    }
-    if (typeof confidence === 'number') {
-      createData.confidence = confidence;
+      createData.excerpt = validatedExcerpt;
     }
 
     return await this.prisma.entityMention.create({

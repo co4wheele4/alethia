@@ -27,6 +27,8 @@ import {
   EntityResolver,
   EntityMentionResolver,
   EntityRelationshipResolver,
+  EntityRelationshipEvidenceResolver,
+  EntityRelationshipEvidenceMentionResolver,
 } from '@resolvers';
 import { AuthModule } from '../auth/auth.module';
 import { DataLoaderModule } from '../common/dataloaders/dataloader.module';
@@ -80,6 +82,8 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     EntityResolver,
     EntityMentionResolver,
     EntityRelationshipResolver,
+    EntityRelationshipEvidenceResolver,
+    EntityRelationshipEvidenceMentionResolver,
     // Apply rate limiting globally (GraphQL-compatible)
     {
       provide: APP_GUARD,

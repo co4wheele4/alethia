@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
 // Load .env.test if NODE_ENV is test or if explicitly requested, otherwise load .env
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.SEED_TEST_DB === 'true';
@@ -29,7 +31,20 @@ if (isTestEnvironment) {
   config();
 }
 
-const prisma = new PrismaClient();
+function createPrismaClient() {
+  const datasourceUrl = process.env.DATABASE_URL;
+  if (!datasourceUrl || datasourceUrl.trim().length === 0) {
+    throw new Error(
+      'DATABASE_URL is required for seeding. No default or inferred datasource is permitted.',
+    );
+  }
+  const pool = new Pool({ connectionString: datasourceUrl });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
+  return { prisma, pool };
+}
+
+const { prisma, pool } = createPrismaClient();
 
 // Extract database name from DATABASE_URL
 function getDatabaseName(): string {
@@ -159,4 +174,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

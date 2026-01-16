@@ -1,5 +1,6 @@
 import { Field, ID, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { DocumentChunk } from './document-chunk.model';
+import { EntityRelationshipEvidenceMention } from './entity-relationship-evidence-mention.model';
 
 export enum RelationshipEvidenceKind {
   TEXT_SPAN = 'TEXT_SPAN',
@@ -49,4 +50,10 @@ export class EntityRelationshipEvidence {
 
   @Field(() => DocumentChunk)
   chunk!: DocumentChunk;
+
+  @Field(() => [EntityRelationshipEvidenceMention], {
+    description:
+      'Explicit persisted links from this evidence anchor to concrete mention IDs (may be empty for legacy evidence).',
+  })
+  mentionLinks!: EntityRelationshipEvidenceMention[];
 }

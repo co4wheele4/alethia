@@ -13,3 +13,4 @@ export {
   EntityRelationshipEvidence,
   RelationshipEvidenceKind,
 } from './entity-relationship-evidence.model';
+export { EntityRelationshipEvidenceMention } from './entity-relationship-evidence-mention.model';

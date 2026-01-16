@@ -10,6 +10,7 @@ import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { EntityRelationship } from '@models/entity-relationship.model';
 import { Entity } from '@models/entity.model';
+import { EntityRelationshipEvidence } from '@models/entity-relationship-evidence.model';
 import {
   CreateEntityRelationshipInput,
   UpdateEntityRelationshipInput,
@@ -50,6 +51,13 @@ export class EntityRelationshipResolver {
     // Access toEntity from the database field, not the GraphQL field
     const relWithToEntity = rel as unknown as { toEntity: string };
     return this.dataLoaders.getEntityLoader().load(relWithToEntity.toEntity);
+  }
+
+  @ResolveField(() => [EntityRelationshipEvidence])
+  async evidence(@Parent() rel: EntityRelationship) {
+    return this.dataLoaders
+      .getRelationshipEvidenceByRelationshipLoader()
+      .load(rel.id);
   }
 
   // ------------------

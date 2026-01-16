@@ -64,12 +64,26 @@ export const createMockEntity = (overrides?: Partial<Entity>): Entity => ({
 
 export const createMockEntityMention = (
   overrides?: Partial<EntityMention>,
-): EntityMention => ({
-  id: 'mention-1',
-  entity: createMockEntity(),
-  chunk: createMockDocumentChunk(),
-  ...overrides,
-});
+): EntityMention => {
+  const entity = overrides?.entity ?? createMockEntity();
+  const chunk = overrides?.chunk ?? createMockDocumentChunk();
+
+  // Ensure required persisted FK fields are always present.
+  const entityId = overrides?.entityId ?? entity.id;
+  const chunkId = overrides?.chunkId ?? chunk.id;
+
+  return {
+    id: 'mention-1',
+    entityId,
+    chunkId,
+    startOffset: null,
+    endOffset: null,
+    excerpt: null,
+    entity,
+    chunk,
+    ...overrides,
+  };
+};
 
 export const createMockEntityRelationship = (
   overrides?: Partial<EntityRelationship>,

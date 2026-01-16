@@ -11,7 +11,7 @@
     "ci": "npm run lint && npx prisma validate && npm run test && npm run test:e2e",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "postinstall": "prisma generate",
-    "seed": "ts-node --esm prisma/seed.ts",
+    "seed": "ts-node prisma/seed.ts",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",

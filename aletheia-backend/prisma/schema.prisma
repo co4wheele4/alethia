@@ -51,6 +51,17 @@ model Document {
   userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
 
+  /**
+   * Declared, human-legible provenance summary for this document.
+   *
+   * Epistemic contract:
+   * - These fields are *not inferred* from content.
+   * - They are nullable for backward safety (legacy documents).
+   * - They may be duplicated (in summarized form) alongside `source` for UI convenience.
+   */
+  sourceType  DocumentSourceKind? @map("source_type")
+  sourceLabel String?             @map("source_label")
+
   user   User            @relation(fields: [userId], references: [id])
   chunks DocumentChunk[]
   /**
@@ -183,13 +194,25 @@ model EntityMention {
    * Optional captured span text at extraction time (best-effort).
    * If present, the API can validate it against `DocumentChunk.content[startOffset:endOffset]`.
    */
-  spanText String? @map("span_text")
+  excerpt String? @map("span_text")
 
   /**
-   * Optional extraction confidence as metadata.
-   * Not a truth indicator; nullable and not required.
+   * Legacy column: present in some DBs due to earlier experimentation.
+   *
+   * Epistemic contract:
+   * - This is NOT part of the truth contract and MUST NOT be used to infer correctness.
+   * - Prisma Client ignores this field.
    */
-  confidence Float? @map("confidence")
+  confidence Float? @map("confidence") @ignore
+
+  /**
+   * Evidence links (join table) that explicitly connect relationship evidence -> mentions.
+   *
+   * Epistemic contract:
+   * - This is not inference; it is a persisted linkage created at write time.
+   * - It enables navigability from a relationship's evidence anchor to concrete mention IDs.
+   */
+  relationshipEvidenceLinks EntityRelationshipEvidenceMention[]
 
   entity Entity        @relation(fields: [entityId], references: [id])
   chunk  DocumentChunk @relation(fields: [chunkId], references: [id])
@@ -244,10 +267,26 @@ model EntityRelationshipEvidence {
 
   relationship EntityRelationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
   chunk        DocumentChunk      @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  mentionLinks EntityRelationshipEvidenceMention[]
 
   @@index([relationshipId])
   @@index([chunkId])
   @@map("entity_relationship_evidence")
+}
+
+////////////////////
+// RELATIONSHIP EVIDENCE <-> MENTION LINKS (EXPLICIT NAVIGABILITY)
+////////////////////
+model EntityRelationshipEvidenceMention {
+  evidenceId String @map("evidence_id")
+  mentionId  String @map("mention_id")
+
+  evidence EntityRelationshipEvidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  mention  EntityMention             @relation(fields: [mentionId], references: [id], onDelete: Cascade)
+
+  @@id([evidenceId, mentionId])
+  @@index([mentionId])
+  @@map("entity_relationship_evidence_mentions")
 }
 
 ////////////////////
