@@ -81,8 +81,10 @@ export async function setupTestApp(): Promise<TestContext> {
   const adminToken = adminLoginRes.body?.data?.login;
 
   if (!userToken || !adminToken) {
-    const userErr = userLoginRes.body?.errors?.map((e) => e.message).join(' | ') || '';
-    const adminErr = adminLoginRes.body?.errors?.map((e) => e.message).join(' | ') || '';
+    const userErr =
+      userLoginRes.body?.errors?.map((e) => e.message).join(' | ') || '';
+    const adminErr =
+      adminLoginRes.body?.errors?.map((e) => e.message).join(' | ') || '';
     throw new Error(
       [
         'Failed to obtain auth tokens for e2e tests',

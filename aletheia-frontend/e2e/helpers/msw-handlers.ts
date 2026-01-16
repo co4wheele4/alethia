@@ -30,7 +30,7 @@ let chunksStore: Record<
 > = {};
 
 let entitiesStore: Array<{ id: string; name: string; type: string; mentionCount: number }> = [];
-let entityDetailStore: Record<string, unknown> = {};
+let entityDetailStore: Record<string, Record<string, unknown> | null> = {};
 
 /**
  * Setup GraphQL route handlers for Playwright
@@ -370,7 +370,7 @@ export async function setupGraphQLMocks(route: Route) {
           status: 200,
           body: {
             data: {
-              entity: (entityDetailStore[String(id)] as any) ?? null,
+              entity: entityDetailStore[String(id)] ?? null,
             },
           },
         };

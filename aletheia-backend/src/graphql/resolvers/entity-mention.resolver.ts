@@ -6,7 +6,12 @@ import {
   Parent,
   Mutation,
 } from '@nestjs/graphql';
-import { BadRequestException, UseGuards, Scope, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  UseGuards,
+  Scope,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { EntityMention } from '@models/entity-mention.model';
 import { Entity } from '@models/entity.model';
@@ -61,13 +66,7 @@ export class EntityMentionResolver {
 
   @Mutation(() => EntityMention)
   async createEntityMention(@Args('data') data: CreateEntityMentionInput) {
-    const {
-      entityId,
-      chunkId,
-      startOffset,
-      endOffset,
-      excerpt,
-    } = data;
+    const { entityId, chunkId, startOffset, endOffset, excerpt } = data;
 
     const hasStart = typeof startOffset === 'number';
     const hasEnd = typeof endOffset === 'number';
@@ -85,8 +84,10 @@ export class EntityMentionResolver {
     }
 
     if (hasStart && hasEnd) {
-      if (endOffset! <= startOffset!) {
-        throw new BadRequestException('endOffset must be greater than startOffset.');
+      if (endOffset <= startOffset) {
+        throw new BadRequestException(
+          'endOffset must be greater than startOffset.',
+        );
       }
 
       const chunk = await this.prisma.documentChunk.findUnique({
@@ -98,13 +99,13 @@ export class EntityMentionResolver {
       }
 
       const content = chunk.content ?? '';
-      if (startOffset! < 0 || endOffset! > content.length) {
+      if (startOffset < 0 || endOffset > content.length) {
         throw new BadRequestException(
           `Span offsets are out of bounds for chunk content (length=${content.length}).`,
         );
       }
 
-      const exact = content.slice(startOffset!, endOffset!);
+      const exact = content.slice(startOffset, endOffset);
       if (validatedExcerpt !== null && validatedExcerpt !== exact) {
         throw new BadRequestException(
           'excerpt does not match the chunk content at the provided offsets.',

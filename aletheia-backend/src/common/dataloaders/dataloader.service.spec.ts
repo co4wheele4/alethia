@@ -1172,7 +1172,9 @@ describe('DataLoaderService', () => {
     });
 
     it('should return null when document has no source', async () => {
-      (prismaService.documentSource.findMany as jest.Mock).mockResolvedValue([]);
+      (prismaService.documentSource.findMany as jest.Mock).mockResolvedValue(
+        [],
+      );
       const loader = service.getDocumentSourceByDocumentLoader();
       const result = await loader.load('doc-1');
       expect(result).toBeNull();
@@ -1222,17 +1224,21 @@ describe('DataLoaderService', () => {
         relationshipId: 'rel-2',
       } as unknown as EntityRelationshipEvidence;
 
-      (prismaService.entityRelationshipEvidence.findMany as jest.Mock).mockResolvedValue([
-        evidence1,
-        evidence2,
-      ]);
+      (
+        prismaService.entityRelationshipEvidence.findMany as jest.Mock
+      ).mockResolvedValue([evidence1, evidence2]);
 
       const loader = service.getRelationshipEvidenceByRelationshipLoader();
-      const [r1, r2] = await Promise.all([loader.load('rel-1'), loader.load('rel-2')]);
+      const [r1, r2] = await Promise.all([
+        loader.load('rel-1'),
+        loader.load('rel-2'),
+      ]);
 
       expect(r1).toEqual([evidence1]);
       expect(r2).toEqual([evidence2]);
-      expect(prismaService.entityRelationshipEvidence.findMany).toHaveBeenCalledWith({
+      expect(
+        prismaService.entityRelationshipEvidence.findMany,
+      ).toHaveBeenCalledWith({
         where: { relationshipId: { in: ['rel-1', 'rel-2'] } },
         orderBy: { createdAt: 'asc' },
       });
@@ -1244,12 +1250,15 @@ describe('DataLoaderService', () => {
         relationshipId: 'rel-unexpected',
       } as unknown as EntityRelationshipEvidence;
 
-      (prismaService.entityRelationshipEvidence.findMany as jest.Mock).mockResolvedValue([
-        unexpected,
-      ]);
+      (
+        prismaService.entityRelationshipEvidence.findMany as jest.Mock
+      ).mockResolvedValue([unexpected]);
 
       const loader = service.getRelationshipEvidenceByRelationshipLoader();
-      const [r1, r2] = await Promise.all([loader.load('rel-1'), loader.load('rel-2')]);
+      const [r1, r2] = await Promise.all([
+        loader.load('rel-1'),
+        loader.load('rel-2'),
+      ]);
 
       expect(r1).toEqual([]);
       expect(r2).toEqual([]);
@@ -1277,11 +1286,16 @@ describe('DataLoaderService', () => {
       ).mockResolvedValue([link1, link2]);
 
       const loader = service.getEvidenceMentionLinksByEvidenceLoader();
-      const [l1, l2] = await Promise.all([loader.load('ev-1'), loader.load('ev-2')]);
+      const [l1, l2] = await Promise.all([
+        loader.load('ev-1'),
+        loader.load('ev-2'),
+      ]);
 
       expect(l1).toEqual([link1]);
       expect(l2).toEqual([link2]);
-      expect(prismaService.entityRelationshipEvidenceMention.findMany).toHaveBeenCalledWith({
+      expect(
+        prismaService.entityRelationshipEvidenceMention.findMany,
+      ).toHaveBeenCalledWith({
         where: { evidenceId: { in: ['ev-1', 'ev-2'] } },
       });
     });
@@ -1297,7 +1311,10 @@ describe('DataLoaderService', () => {
       ).mockResolvedValue([unexpected]);
 
       const loader = service.getEvidenceMentionLinksByEvidenceLoader();
-      const [l1, l2] = await Promise.all([loader.load('ev-1'), loader.load('ev-2')]);
+      const [l1, l2] = await Promise.all([
+        loader.load('ev-1'),
+        loader.load('ev-2'),
+      ]);
 
       expect(l1).toEqual([]);
       expect(l2).toEqual([]);

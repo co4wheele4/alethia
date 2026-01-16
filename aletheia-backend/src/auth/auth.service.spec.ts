@@ -1,6 +1,9 @@
 import { Test } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PrismaService } from '@prisma/prisma.service';
 import { User } from '@prisma/client';
@@ -75,7 +78,10 @@ describe('AuthService', () => {
           passwordHash: true,
         },
       });
-      expect(bcrypt.compare).toHaveBeenCalledWith('password', mockUser.passwordHash);
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        'password',
+        mockUser.passwordHash,
+      );
     });
 
     it('should throw UnauthorizedException when user not found', async () => {
@@ -104,7 +110,9 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException when passwordHash is missing (legacy)', async () => {
       const userWithoutHash = { ...mockUser, passwordHash: null };
-      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(userWithoutHash);
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(userWithoutHash);
 
       await expect(
         service.validateUser('test@example.com', 'password'),
@@ -142,9 +150,9 @@ describe('AuthService', () => {
         .spyOn(prismaService.user, 'findUnique')
         .mockRejectedValue(new Error('boom'));
 
-      await expect(service.validateUser('test@example.com', 'password')).rejects.toThrow(
-        'boom',
-      );
+      await expect(
+        service.validateUser('test@example.com', 'password'),
+      ).rejects.toThrow('boom');
     });
   });
 
@@ -252,7 +260,11 @@ describe('AuthService', () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
       jest.spyOn(prismaService.user, 'create').mockResolvedValue(newUser);
 
-      const result = await service.register('new@example.com', 'Password123!', 'New User');
+      const result = await service.register(
+        'new@example.com',
+        'Password123!',
+        'New User',
+      );
 
       expect(result).toEqual(newUser);
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
@@ -315,12 +327,12 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException when password is too short', async () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
-      await expect(service.register('new@example.com', 'short', 'New User')).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(service.register('new@example.com', 'short', 'New User')).rejects.toThrow(
-        'Password is too short',
-      );
+      await expect(
+        service.register('new@example.com', 'short', 'New User'),
+      ).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.register('new@example.com', 'short', 'New User'),
+      ).rejects.toThrow('Password is too short');
     });
 
     it('should throw UnauthorizedException when user already exists', async () => {
@@ -350,9 +362,9 @@ describe('AuthService', () => {
         .spyOn(prismaService.user, 'findUnique')
         .mockRejectedValue(new Error('boom'));
 
-      await expect(service.register('new@example.com', 'Password123!', 'New User')).rejects.toThrow(
-        'boom',
-      );
+      await expect(
+        service.register('new@example.com', 'Password123!', 'New User'),
+      ).rejects.toThrow('boom');
     });
 
     it('should upgrade legacy user without passwordHash by setting a new password', async () => {
@@ -360,12 +372,22 @@ describe('AuthService', () => {
       (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$newhash');
 
       const legacyUser = { ...mockUser, passwordHash: null, name: null };
-      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(legacyUser);
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(legacyUser);
 
-      const updated = { ...mockUser, passwordHash: '$2b$10$newhash', name: 'Upgraded Name' };
+      const updated = {
+        ...mockUser,
+        passwordHash: '$2b$10$newhash',
+        name: 'Upgraded Name',
+      };
       jest.spyOn(prismaService.user, 'update').mockResolvedValue(updated);
 
-      const result = await service.register(mockUser.email, 'Password123!', 'Upgraded Name');
+      const result = await service.register(
+        mockUser.email,
+        'Password123!',
+        'Upgraded Name',
+      );
 
       expect(result).toEqual(updated);
       expect(prismaService.user.update).toHaveBeenCalledWith({
@@ -381,13 +403,27 @@ describe('AuthService', () => {
       const bcrypt = await import('bcrypt');
       (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$newhash');
 
-      const legacyUser = { ...mockUser, passwordHash: null, name: 'Existing Name' };
-      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(legacyUser);
+      const legacyUser = {
+        ...mockUser,
+        passwordHash: null,
+        name: 'Existing Name',
+      };
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(legacyUser);
 
-      const updated = { ...mockUser, passwordHash: '$2b$10$newhash', name: 'Existing Name' };
+      const updated = {
+        ...mockUser,
+        passwordHash: '$2b$10$newhash',
+        name: 'Existing Name',
+      };
       jest.spyOn(prismaService.user, 'update').mockResolvedValue(updated);
 
-      const result = await service.register(mockUser.email, 'Password123!', 'Ignored Name');
+      const result = await service.register(
+        mockUser.email,
+        'Password123!',
+        'Ignored Name',
+      );
 
       expect(result).toEqual(updated);
       expect(prismaService.user.update).toHaveBeenCalledWith({
@@ -404,9 +440,15 @@ describe('AuthService', () => {
       (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$newhash');
 
       const legacyUser = { ...mockUser, passwordHash: null, name: null };
-      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(legacyUser);
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(legacyUser);
 
-      const updated = { ...mockUser, passwordHash: '$2b$10$newhash', name: null };
+      const updated = {
+        ...mockUser,
+        passwordHash: '$2b$10$newhash',
+        name: null,
+      };
       jest.spyOn(prismaService.user, 'update').mockResolvedValue(updated);
 
       const result = await service.register(mockUser.email, 'Password123!');
@@ -426,7 +468,9 @@ describe('AuthService', () => {
       (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$newhash');
 
       const legacyUser = { ...mockUser, passwordHash: null, name: null };
-      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(legacyUser);
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(legacyUser);
       jest
         .spyOn(prismaService.user, 'update')
         .mockRejectedValue(new Error('column "passwordHash" does not exist'));
@@ -441,8 +485,12 @@ describe('AuthService', () => {
       (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$newhash');
 
       const legacyUser = { ...mockUser, passwordHash: null, name: null };
-      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(legacyUser);
-      jest.spyOn(prismaService.user, 'update').mockRejectedValue(new Error('boom'));
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(legacyUser);
+      jest
+        .spyOn(prismaService.user, 'update')
+        .mockRejectedValue(new Error('boom'));
 
       await expect(
         service.register(mockUser.email, 'Password123!', 'Upgraded Name'),
@@ -468,7 +516,9 @@ describe('AuthService', () => {
       (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hash');
 
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
-      jest.spyOn(prismaService.user, 'create').mockRejectedValue(new Error('boom'));
+      jest
+        .spyOn(prismaService.user, 'create')
+        .mockRejectedValue(new Error('boom'));
 
       await expect(
         service.register('new@example.com', 'Password123!', 'New User'),

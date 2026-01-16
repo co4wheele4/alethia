@@ -21,4 +21,3 @@ export class EntityRelationshipEvidenceMention {
   })
   mention!: EntityMention;
 }
-

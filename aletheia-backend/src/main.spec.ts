@@ -129,9 +129,7 @@ describe('main.ts', () => {
     }
   });
 
-  it(
-    'should use custom PORT from environment when set',
-    async () => {
+  it('should use custom PORT from environment when set', async () => {
     const originalPort = process.env.PORT;
     process.env.PORT = '4000';
 
@@ -171,14 +169,12 @@ describe('main.ts', () => {
     );
 
     // Restore
-      if (originalPort) {
-        process.env.PORT = originalPort;
-      } else {
-        delete process.env.PORT;
-      }
-    },
-    15000,
-  );
+    if (originalPort) {
+      process.env.PORT = originalPort;
+    } else {
+      delete process.env.PORT;
+    }
+  }, 15000);
 
   it('should extract database name from valid DATABASE_URL', async () => {
     const originalDbUrl = process.env.DATABASE_URL;

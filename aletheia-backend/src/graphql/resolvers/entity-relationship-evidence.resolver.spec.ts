@@ -27,7 +27,9 @@ describe('EntityRelationshipEvidenceResolver', () => {
 
   it('should resolve mentionLinks via DataLoader using evidence id', async () => {
     const load = jest.fn().mockResolvedValue([{ id: 'link-1' }]);
-    dataLoaders.getEvidenceMentionLinksByEvidenceLoader.mockReturnValue({ load } as any);
+    dataLoaders.getEvidenceMentionLinksByEvidenceLoader.mockReturnValue({
+      load,
+    } as any);
 
     const evidence = { id: 'ev-1' } as any;
     const result = await resolver.mentionLinks(evidence);
@@ -36,4 +38,3 @@ describe('EntityRelationshipEvidenceResolver', () => {
     expect(load).toHaveBeenCalledWith('ev-1');
   });
 });
-

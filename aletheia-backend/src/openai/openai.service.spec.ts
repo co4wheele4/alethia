@@ -131,8 +131,8 @@ describe('OpenAIService', () => {
       }).compile();
 
       const svc = moduleRef.get<OpenAIService>(OpenAIService);
-      const instances = (OpenAI as unknown as jest.MockedClass<typeof OpenAI>).mock
-        .instances as unknown as jest.Mocked<OpenAI>[];
+      const instances = (OpenAI as unknown as jest.MockedClass<typeof OpenAI>)
+        .mock.instances as unknown as jest.Mocked<OpenAI>[];
       const instance = instances[instances.length - 1];
 
       const createMock = jest.fn();
@@ -144,7 +144,10 @@ describe('OpenAIService', () => {
 
       expect(parsed).toEqual({
         kind: 'embedding-placeholder',
-        sha256_16: createHash('sha256').update(prompt).digest('hex').slice(0, 16),
+        sha256_16: createHash('sha256')
+          .update(prompt)
+          .digest('hex')
+          .slice(0, 16),
         length: prompt.length,
       });
       expect(createMock).not.toHaveBeenCalled();

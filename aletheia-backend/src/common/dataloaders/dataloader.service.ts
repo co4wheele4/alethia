@@ -181,7 +181,9 @@ export class DataLoaderService {
           source as unknown as DocumentSource,
         ]),
       );
-      return documentIds.map((documentId) => sourceByDocumentId.get(documentId) ?? null);
+      return documentIds.map(
+        (documentId) => sourceByDocumentId.get(documentId) ?? null,
+      );
     });
 
     // DocumentChunk loaders
@@ -366,7 +368,10 @@ export class DataLoaderService {
           where: { relationshipId: { in: [...relationshipIds] } },
           orderBy: { createdAt: 'asc' },
         });
-      const evidenceByRelationshipId = new Map<string, EntityRelationshipEvidence[]>();
+      const evidenceByRelationshipId = new Map<
+        string,
+        EntityRelationshipEvidence[]
+      >();
       for (const relationshipId of relationshipIds) {
         evidenceByRelationshipId.set(relationshipId, []);
       }
@@ -388,7 +393,10 @@ export class DataLoaderService {
         await this.prisma.entityRelationshipEvidenceMention.findMany({
           where: { evidenceId: { in: [...evidenceIds] } },
         });
-      const linksByEvidenceId = new Map<string, EntityRelationshipEvidenceMention[]>();
+      const linksByEvidenceId = new Map<
+        string,
+        EntityRelationshipEvidenceMention[]
+      >();
       for (const evidenceId of evidenceIds) {
         linksByEvidenceId.set(evidenceId, []);
       }
@@ -397,7 +405,9 @@ export class DataLoaderService {
         list.push(link as unknown as EntityRelationshipEvidenceMention);
         linksByEvidenceId.set(link.evidenceId, list);
       }
-      return evidenceIds.map((evidenceId) => linksByEvidenceId.get(evidenceId)!);
+      return evidenceIds.map(
+        (evidenceId) => linksByEvidenceId.get(evidenceId)!,
+      );
     });
 
     this.relationshipsByFromEntityLoader = new DataLoader<
@@ -535,7 +545,10 @@ export class DataLoaderService {
     return this.documentsByUserLoader;
   }
 
-  getDocumentSourceByDocumentLoader(): DataLoader<string, DocumentSource | null> {
+  getDocumentSourceByDocumentLoader(): DataLoader<
+    string,
+    DocumentSource | null
+  > {
     return this.documentSourceByDocumentLoader;
   }
 

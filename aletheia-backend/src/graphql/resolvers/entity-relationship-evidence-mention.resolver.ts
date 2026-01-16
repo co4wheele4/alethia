@@ -16,4 +16,3 @@ export class EntityRelationshipEvidenceMentionResolver {
     return this.dataLoaders.getEntityMentionLoader().load(link.mentionId);
   }
 }
-

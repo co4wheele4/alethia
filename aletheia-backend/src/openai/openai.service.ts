@@ -27,7 +27,10 @@ export class OpenAIService {
     if (this.disableNetwork) {
       // Deterministic, non-network embedding placeholder for tests/e2e.
       // Not a semantic embedding; strictly a stable, inspectable artifact.
-      const sha = createHash('sha256').update(prompt).digest('hex').slice(0, 16);
+      const sha = createHash('sha256')
+        .update(prompt)
+        .digest('hex')
+        .slice(0, 16);
       return JSON.stringify({
         kind: 'embedding-placeholder',
         sha256_16: sha,

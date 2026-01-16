@@ -25,4 +25,3 @@ describe('DocumentSource inputs', () => {
     expect(upsert.source.kind).toBe(DocumentSourceKindInput.MANUAL);
   });
 });
-

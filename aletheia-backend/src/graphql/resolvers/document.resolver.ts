@@ -120,6 +120,8 @@ export class DocumentResolver {
   /* c8 ignore next */
   @ResolveField(() => DocumentSource, { nullable: true })
   async source(@Parent() document: Document) {
-    return this.dataLoaders.getDocumentSourceByDocumentLoader().load(document.id);
+    return this.dataLoaders
+      .getDocumentSourceByDocumentLoader()
+      .load(document.id);
   }
 }

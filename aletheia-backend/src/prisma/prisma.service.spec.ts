@@ -35,9 +35,14 @@ describe('PrismaService', () => {
       process.env.DATABASE_URL = 'postgresql://localhost:5432/test';
 
       const localService = new PrismaService();
-      const connectSpy = jest.spyOn(localService, '$connect').mockResolvedValue();
+      const connectSpy = jest
+        .spyOn(localService, '$connect')
+        .mockResolvedValue();
       const logSpy = jest
-        .spyOn((localService as unknown as { logger: { log: () => void } }).logger, 'log')
+        .spyOn(
+          (localService as unknown as { logger: { log: () => void } }).logger,
+          'log',
+        )
         .mockImplementation();
 
       await localService.onModuleInit();
@@ -56,9 +61,14 @@ describe('PrismaService', () => {
       process.env.DATABASE_URL = 'invalid-url';
 
       const localService = new PrismaService();
-      const connectSpy = jest.spyOn(localService, '$connect').mockResolvedValue();
+      const connectSpy = jest
+        .spyOn(localService, '$connect')
+        .mockResolvedValue();
       const logSpy = jest
-        .spyOn((localService as unknown as { logger: { log: () => void } }).logger, 'log')
+        .spyOn(
+          (localService as unknown as { logger: { log: () => void } }).logger,
+          'log',
+        )
         .mockImplementation();
 
       await localService.onModuleInit();

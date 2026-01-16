@@ -81,7 +81,11 @@ describe('AuthResolver', () => {
         user: newUser,
       });
 
-      const result = await resolver.register('new@example.com', 'Password123!', 'New User');
+      const result = await resolver.register(
+        'new@example.com',
+        'Password123!',
+        'New User',
+      );
 
       expect(result).toBe(mockAccessToken);
       expect(authService.register).toHaveBeenCalledWith(

@@ -24,4 +24,3 @@ describe('EntityRelationshipEvidenceMentionResolver', () => {
     expect(load).toHaveBeenCalledWith('mention-1');
   });
 });
-

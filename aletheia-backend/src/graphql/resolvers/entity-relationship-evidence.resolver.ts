@@ -27,4 +27,3 @@ export class EntityRelationshipEvidenceResolver {
       .load(evidence.id);
   }
 }
-

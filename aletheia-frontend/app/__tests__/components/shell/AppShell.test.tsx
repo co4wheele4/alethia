@@ -4,9 +4,13 @@ import { act } from 'react';
 
 jest.mock('@mui/material', () => {
   const actual = jest.requireActual('@mui/material');
+  type DrawerProps = React.PropsWithChildren<{
+    open?: boolean;
+    onClose?: (event: unknown, reason: string) => void;
+  }>;
   return {
     ...actual,
-    Drawer: ({ open, onClose, children }: any) => {
+    Drawer: ({ open, onClose, children }: DrawerProps) => {
       if (!open) return null;
       return (
         <div data-testid="drawer">
@@ -32,7 +36,7 @@ jest.mock('../../../components/ui/SkeletonLoader', () => ({
 }));
 
 jest.mock('../../../components/layout/AletheiaLayout', () => ({
-  AletheiaLayout: ({ header, children }: any) => (
+  AletheiaLayout: ({ header, children }: { header?: React.ReactNode; children?: React.ReactNode }) => (
     <div>
       <div data-testid="header">{header}</div>
       <div data-testid="content">{children}</div>
@@ -41,11 +45,11 @@ jest.mock('../../../components/layout/AletheiaLayout', () => ({
 }));
 
 jest.mock('../../../components/common/ErrorBoundary', () => ({
-  ErrorBoundary: ({ children }: any) => <div>{children}</div>,
+  ErrorBoundary: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 
 jest.mock('../../../components/shell/primary-nav/PrimaryNav', () => ({
-  PrimaryNav: ({ variant, onNavigate }: any) => (
+  PrimaryNav: ({ variant, onNavigate }: { variant: string; onNavigate?: () => void }) => (
     <nav data-testid={`primary-nav-${variant}`}>
       <button onClick={() => onNavigate?.()}>navigate</button>
     </nav>
@@ -53,7 +57,7 @@ jest.mock('../../../components/shell/primary-nav/PrimaryNav', () => ({
 }));
 
 jest.mock('../../../components/shell/Header', () => ({
-  Header: ({ onOpenMobileNav, onLogout }: any) => (
+  Header: ({ onOpenMobileNav, onLogout }: { onOpenMobileNav?: () => void; onLogout?: () => void }) => (
     <header data-testid="header-component">
       <button onClick={() => onOpenMobileNav?.()}>open mobile nav</button>
       {onLogout ? <button onClick={() => onLogout()}>logout</button> : null}
@@ -62,7 +66,7 @@ jest.mock('../../../components/shell/Header', () => ({
 }));
 
 function loadAppShell(): typeof import('../../../components/shell/AppShell') {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require('../../../components/shell/AppShell');
 }
 
@@ -178,10 +182,16 @@ describe('AppShell', () => {
   });
 
   it('uses timeout fallback when RAF APIs are unavailable', async () => {
-    const originalRaf = (globalThis as any).requestAnimationFrame;
-    const originalCaf = (globalThis as any).cancelAnimationFrame;
-    delete (globalThis as any).requestAnimationFrame;
-    delete (globalThis as any).cancelAnimationFrame;
+    type RafFn = (cb: (time: number) => void) => number;
+    type CafFn = (id: number) => void;
+    const g = globalThis as typeof globalThis & {
+      requestAnimationFrame?: RafFn;
+      cancelAnimationFrame?: CafFn;
+    };
+    const originalRaf = g.requestAnimationFrame;
+    const originalCaf = g.cancelAnimationFrame;
+    delete g.requestAnimationFrame;
+    delete g.cancelAnimationFrame;
 
     const { AppShell } = loadAppShell();
 
@@ -206,8 +216,8 @@ describe('AppShell', () => {
       jest.runAllTimers();
     });
 
-    ;(globalThis as any).requestAnimationFrame = originalRaf;
-    ;(globalThis as any).cancelAnimationFrame = originalCaf;
+    g.requestAnimationFrame = originalRaf;
+    g.cancelAnimationFrame = originalCaf;
   });
 });
 

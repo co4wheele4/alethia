@@ -18,7 +18,10 @@ export class AuthService {
   private isMissingColumnError(err: unknown): boolean {
     const msg = err instanceof Error ? err.message : String(err);
     // Prisma/Postgres "column does not exist" typically includes this phrase; keep it broad.
-    return msg.toLowerCase().includes('column') && msg.toLowerCase().includes('does not exist');
+    return (
+      msg.toLowerCase().includes('column') &&
+      msg.toLowerCase().includes('does not exist')
+    );
   }
 
   async validateUser(email: string, password: string): Promise<User> {
@@ -52,9 +55,13 @@ export class AuthService {
 
     // Backward safety: legacy users may not have password hashes.
     // We do NOT treat that as a successful login, but we do provide a clear message.
-    const passwordHash = (user as unknown as { passwordHash?: string | null }).passwordHash ?? null;
+    const passwordHash =
+      (user as unknown as { passwordHash?: string | null }).passwordHash ??
+      null;
     if (!passwordHash) {
-      throw new UnauthorizedException('Password not set for this account. Re-register to set a password.');
+      throw new UnauthorizedException(
+        'Password not set for this account. Re-register to set a password.',
+      );
     }
 
     const ok = await bcrypt.compare(password, passwordHash);
@@ -65,15 +72,25 @@ export class AuthService {
     return user;
   }
 
-  async register(email: string, password: string, name?: string): Promise<User> {
+  async register(
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<User> {
     if (!password || password.trim().length < 8) {
       // Keep message generic; frontend can enforce stronger validation.
       throw new UnauthorizedException('Password is too short');
     }
 
     // Check if user already exists
-    let existingUser: { id: string; passwordHash: string | null; name: string | null; email: string; role: string; createdAt: Date } | null =
-      null;
+    let existingUser: {
+      id: string;
+      passwordHash: string | null;
+      name: string | null;
+      email: string;
+      role: string;
+      createdAt: Date;
+    } | null = null;
     try {
       existingUser = await this.prisma.user.findUnique({
         where: { email },
@@ -139,7 +156,6 @@ export class AuthService {
       }
       throw e;
     }
-
   }
 
   login(user: User) {
