@@ -190,8 +190,8 @@ describe('AppShell', () => {
     };
     const originalRaf = g.requestAnimationFrame;
     const originalCaf = g.cancelAnimationFrame;
-    delete g.requestAnimationFrame;
-    delete g.cancelAnimationFrame;
+    g.requestAnimationFrame = undefined as unknown as typeof g.requestAnimationFrame;
+    g.cancelAnimationFrame = undefined as unknown as typeof g.cancelAnimationFrame;
 
     const { AppShell } = loadAppShell();
 
