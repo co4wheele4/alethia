@@ -41,7 +41,7 @@ export function EntityMentionsList(props: {
   entityType: string;
   mentions: EntityMention[];
 }) {
-  const { entityId, entityName, entityType, mentions } = props;
+  const { entityName, entityType, mentions } = props;
   const [q, setQ] = useState('');
   const [visibleCount, setVisibleCount] = useState(20);
 

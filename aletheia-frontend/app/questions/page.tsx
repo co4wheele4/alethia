@@ -8,7 +8,7 @@
  */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Alert,
   Box,
@@ -31,14 +31,13 @@ import { QuestionScopeDocumentsQueryContainer } from '../features/questions/comp
 import { QuestionEntityConstraintsQueryContainer } from '../features/questions/components/QuestionEntityConstraintsQueryContainer';
 
 function useHasViewedDocumentsGate() {
-  const [hasViewed, setHasViewed] = useState(false);
-  useEffect(() => {
+  const [hasViewed] = useState(() => {
     try {
-      setHasViewed(globalThis.localStorage?.getItem('aletheia.hasViewedDocuments.v1') === 'true');
+      return globalThis.localStorage?.getItem('aletheia.hasViewedDocuments.v1') === 'true';
     } catch {
-      setHasViewed(false);
+      return false;
     }
-  }, []);
+  });
   return hasViewed;
 }
 

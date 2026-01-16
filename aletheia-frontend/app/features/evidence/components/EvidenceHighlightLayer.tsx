@@ -57,7 +57,7 @@ export function EvidenceHighlightLayer(props: EvidenceHighlightLayerProps) {
     }
     if (last < text.length) out.push({ kind: 'text', value: text.slice(last) });
     return out.length ? out : [{ kind: 'text' as const, value: text }];
-  }, [text, q]);
+  }, [text, q, ranges]);
 
   return (
     <Box>
