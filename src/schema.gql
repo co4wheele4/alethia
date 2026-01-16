@@ -24,7 +24,10 @@ input CreateEntityInput {
 
 input CreateEntityMentionInput {
   chunkId: String!
+  endOffset: Int
   entityId: String!
+  excerpt: String
+  startOffset: Int
 }
 
 input CreateEntityRelationshipInput {
@@ -52,6 +55,16 @@ type Document {
   Structured source metadata for this document snapshot. Nullable for backward safety; if absent, the document is epistemically incomplete.
   """
   source: DocumentSource
+
+  """
+  Human-readable provenance label for this document (persisted; nullable for legacy documents).
+  """
+  sourceLabel: String
+
+  """
+  Declared provenance type for this document (persisted; nullable for legacy documents).
+  """
+  sourceType: DocumentSourceKind
   title: String!
   user: User!
 }
@@ -110,6 +123,7 @@ type Embedding {
 type Entity {
   id: ID!
   incoming: [EntityRelationship!]!
+  mentionCount: Int!
   mentions: [EntityMention!]!
   name: String!
   outgoing: [EntityRelationship!]!
@@ -120,21 +134,26 @@ type EntityMention {
   chunk: DocumentChunk!
 
   """
-  Optional extraction confidence as metadata (nullable; not a truth indicator).
+  Explicit foreign key to the chunk where this mention occurred (persisted; enables ID-first traversal).
   """
-  confidence: Float
+  chunkId: ID!
 
   """
   0-based exclusive end offset into chunk content. Nullable for legacy mentions created without spans.
   """
   endOffset: Int
   entity: Entity!
-  id: ID!
+
+  """
+  Explicit foreign key to the mentioned entity (persisted; enables ID-first traversal).
+  """
+  entityId: ID!
 
   """
   Optional captured mention text at creation time (best-effort). When present with offsets, the backend validates consistency.
   """
-  spanText: String
+  excerpt: String
+  id: ID!
 
   """
   0-based inclusive start offset into chunk content. Nullable for legacy mentions created without spans.
@@ -164,6 +183,11 @@ type EntityRelationshipEvidence {
   kind: RelationshipEvidenceKind!
 
   """
+  Explicit persisted links from this evidence anchor to concrete mention IDs (may be empty for legacy evidence).
+  """
+  mentionLinks: [EntityRelationshipEvidenceMention!]!
+
+  """
   Optional captured quote text (best-effort), validated against offsets when provided.
   """
   quotedText: String
@@ -171,6 +195,14 @@ type EntityRelationshipEvidence {
 
   """0-based, inclusive start offset into chunk content."""
   startOffset: Int
+}
+
+type EntityRelationshipEvidenceMention {
+  evidenceId: ID!
+
+  """The referenced mention record (persisted via mentionId)."""
+  mention: EntityMention!
+  mentionId: ID!
 }
 
 type Lesson {
@@ -201,7 +233,7 @@ type Mutation {
   deleteLesson(id: String!): Lesson!
   deleteUser(id: String!): User!
   login(email: String!, password: String!): String!
-  register(email: String!, name: String): String!
+  register(email: String!, name: String, password: String!): String!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
   updateEmbedding(id: String!, values: [Float!]): Embedding!
@@ -219,6 +251,7 @@ type Query {
   aiQuery(id: String!): AiQuery
   aiQueryResult(id: String!): AiQueryResult
   aiQueryResults: [AiQueryResult!]!
+  chunk0ByDocument(documentId: String!): DocumentChunk
   chunksByDocument(documentId: String!): [DocumentChunk!]!
   document(id: String!): Document
   documentChunk(id: String!): DocumentChunk

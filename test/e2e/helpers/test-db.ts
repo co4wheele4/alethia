@@ -1,5 +1,6 @@
 // test/helpers/test-db.ts
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 /**
  * Extracts and verifies the database name from DATABASE_URL
@@ -41,11 +42,13 @@ export async function cleanDatabase(prisma: PrismaClient) {
 
 export async function seedTestData(prisma: PrismaClient) {
   verifyTestDatabase();
+  const passwordHash = await bcrypt.hash('password', 12);
   const admin = await prisma.user.create({
     data: {
       email: 'admin@example.com',
       name: 'Admin User',
       role: 'ADMIN',
+      passwordHash,
     },
   });
 
@@ -53,6 +56,7 @@ export async function seedTestData(prisma: PrismaClient) {
     data: {
       email: 'test@example.com',
       name: 'Test User',
+      passwordHash,
     },
   });
 

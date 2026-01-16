@@ -18,7 +18,8 @@ export const graphqlRequest = async <T = Record<string, any>>(
 ): Promise<GraphQLResponse<T>> => {
   const httpServer = app.getHttpServer() as Parameters<typeof request>[0];
 
-  const token = options?.authToken ?? globalThis.__ALETHEIA_E2E_AUTH_TOKEN__;
+  const hasExplicitAuthToken = Boolean(options && Object.prototype.hasOwnProperty.call(options, 'authToken'));
+  const token = hasExplicitAuthToken ? options!.authToken : globalThis.__ALETHEIA_E2E_AUTH_TOKEN__;
 
   const req = request(httpServer)
     .post('/graphql')

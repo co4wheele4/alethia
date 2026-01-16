@@ -25,18 +25,19 @@ describe('Full-Stack Authentication Flow (e2e)', () => {
     it('should complete full registration flow', async () => {
       const email = `fullstack-register-${Date.now()}@example.com`;
       const name = 'Full Stack Test User';
+      const password = 'password';
 
       // Step 1: Register user via GraphQL API
       const registerMutation = `
-        mutation Register($email: String!, $name: String) {
-          register(email: $email, name: $name)
+        mutation Register($email: String!, $password: String!, $name: String) {
+          register(email: $email, password: $password, name: $name)
         }
       `;
 
       const registerRes = await graphqlRequest(
         context.app,
         registerMutation,
-        { email, name },
+        { email, password, name },
         { authToken: undefined },
       );
 

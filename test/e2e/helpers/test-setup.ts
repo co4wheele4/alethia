@@ -81,7 +81,15 @@ export async function setupTestApp(): Promise<TestContext> {
   const adminToken = adminLoginRes.body?.data?.login;
 
   if (!userToken || !adminToken) {
-    throw new Error('Failed to obtain auth tokens for e2e tests');
+    const userErr = userLoginRes.body?.errors?.map((e) => e.message).join(' | ') || '';
+    const adminErr = adminLoginRes.body?.errors?.map((e) => e.message).join(' | ') || '';
+    throw new Error(
+      [
+        'Failed to obtain auth tokens for e2e tests',
+        `userLogin: status=${userLoginRes.status} token=${Boolean(userToken)} errors=${userErr || '(none)'}`,
+        `adminLogin: status=${adminLoginRes.status} token=${Boolean(adminToken)} errors=${adminErr || '(none)'}`,
+      ].join('\n'),
+    );
   }
 
   // Default to the admin token so admin-only mutations (e.g. createUser) work in e2e tests
@@ -96,7 +104,13 @@ export async function setupTestApp(): Promise<TestContext> {
  * Call this in afterAll hook
  */
 export async function teardownTestApp(context: TestContext): Promise<void> {
-  await cleanDatabase(context.prisma);
-  await context.prisma.$disconnect();
-  await context.app.close();
+  // Be resilient: if setup failed, Jest will still run afterAll hooks in some cases.
+  if (!context) return;
+  try {
+    await cleanDatabase(context.prisma);
+  } finally {
+    // Always attempt graceful shutdown.
+    await context.prisma?.$disconnect?.();
+    await context.app?.close?.();
+  }
 }
