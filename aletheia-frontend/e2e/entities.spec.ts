@@ -1,0 +1,37 @@
+import { test, expect } from '@playwright/test';
+import { setupGraphQLMocks } from './helpers/msw-handlers';
+
+async function login(page: import('@playwright/test').Page) {
+  await page.goto('/');
+  await page.waitForSelector('input[name="email"]', { timeout: 10000 });
+  await page.locator('input[name="email"]').fill('test@example.com');
+  await page.locator('input[name="password"]').fill('password123');
+  await page.getByRole('button', { name: /^login$/i }).click();
+  await page.waitForURL(/\/dashboard/, { timeout: 20000 });
+}
+
+test.describe('Entities', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/graphql', setupGraphQLMocks);
+  });
+
+  test('lists entities and opens entity detail', async ({ page }) => {
+    await login(page);
+
+    await page.goto('/entities');
+    await expect(page.getByRole('heading', { name: /entities \(extracted\)/i })).toBeVisible({
+      timeout: 15000,
+    });
+
+    // Entity list entry (mocked)
+    await expect(page.getByRole('link', { name: /test entity/i })).toBeVisible({
+      timeout: 15000,
+    });
+    await page.getByRole('link', { name: /test entity/i }).click();
+
+    await page.waitForURL(/\/entities\/entity-1/, { timeout: 20000 });
+    await expect(page.locator('h6', { hasText: 'Test Entity' }).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/mentions \(evidence only\)/i)).toBeVisible();
+  });
+});
+

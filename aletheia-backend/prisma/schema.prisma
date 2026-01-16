@@ -14,6 +14,11 @@ model User {
   id        String   @id @default(uuid()) @map("id")
   email     String   @unique @map("email")
   name      String?  @map("name")
+  /**
+   * Password hash (bcrypt). Nullable for backward safety for legacy rows.
+   * New registrations must set this field; login requires it to be present.
+   */
+  passwordHash String? @map("password_hash")
   role      String   @default("USER") @map("role")
   createdAt DateTime @default(now()) @map("created_at")
 

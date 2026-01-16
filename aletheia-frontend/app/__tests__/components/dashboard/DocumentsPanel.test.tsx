@@ -8,11 +8,7 @@ import { ApolloClient, ApolloLink, InMemoryCache, Observable } from '@apollo/cli
 import { ApolloProvider } from '@apollo/client/react';
 import { DocumentsPanel } from '../../../components/dashboard/DocumentsPanel';
 
-function createMockClient() {
-  const documents = [
-    { id: 'doc-1', title: 'First doc', createdAt: new Date('2026-01-01T00:00:00Z').toISOString() },
-  ];
-
+function createMockClient(documents: Array<{ id: string; title: string; createdAt: string }> = []) {
   const link = new ApolloLink((operation) => {
     return new Observable((observer) => {
       try {
@@ -40,7 +36,9 @@ function createMockClient() {
 
 describe('DocumentsPanel', () => {
   it('should render info message when userId is null', () => {
-    const client = createMockClient();
+    const client = createMockClient([
+      { id: 'doc-1', title: 'First doc', createdAt: new Date('2026-01-01T00:00:00Z').toISOString() },
+    ]);
     render(
       <ApolloProvider client={client}>
         <DocumentsPanel userId={null} />
@@ -52,7 +50,9 @@ describe('DocumentsPanel', () => {
   });
 
   it('should list recent documents and provide ingestion entrypoints', async () => {
-    const client = createMockClient();
+    const client = createMockClient([
+      { id: 'doc-1', title: 'First doc', createdAt: new Date('2026-01-01T00:00:00Z').toISOString() },
+    ]);
     render(
       <ApolloProvider client={client}>
         <DocumentsPanel userId="user-1" />
@@ -66,6 +66,21 @@ describe('DocumentsPanel', () => {
 
     expect(screen.getByRole('link', { name: /add sources/i })).toHaveAttribute('href', '/documents?ingest=1');
     expect(screen.getByRole('link', { name: /open library/i })).toHaveAttribute('href', '/documents');
+  });
+
+  it('should show empty-state message when user has no documents', async () => {
+    const client = createMockClient([]);
+    render(
+      <ApolloProvider client={client}>
+        <DocumentsPanel userId="user-1" />
+      </ApolloProvider>
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/no documents yet\. add a source/i),
+      ).toBeInTheDocument();
+    });
   });
 });
 

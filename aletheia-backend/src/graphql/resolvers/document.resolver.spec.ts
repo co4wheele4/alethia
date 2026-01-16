@@ -5,9 +5,11 @@ import { Document } from '@models/document.model';
 import { User } from '@models/user.model';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { GraphQLModule } from '@nestjs/graphql';
+import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 import { ForbiddenException } from '@nestjs/common';
+import { printSchema } from 'graphql';
 
 describe('DocumentResolver', () => {
   let resolver: DocumentResolver;
@@ -55,6 +57,9 @@ describe('DocumentResolver', () => {
       }),
       getChunksByDocumentLoader: jest.fn().mockReturnValue({
         load: jest.fn().mockResolvedValue([]),
+      }),
+      getDocumentSourceByDocumentLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(null),
       }),
     };
 
@@ -337,6 +342,41 @@ describe('DocumentResolver', () => {
     });
   });
 
+  describe('source', () => {
+    it('should resolve source field', async () => {
+      const mockSource = {
+        id: 'source-1',
+        kind: 'MANUAL',
+        documentId: mockDocument.id,
+      };
+      const loadMock = jest.fn().mockResolvedValue(mockSource);
+      (
+        dataLoaderService.getDocumentSourceByDocumentLoader as jest.Mock
+      ).mockReturnValue({
+        load: loadMock,
+      });
+
+      const result = await resolver.source(mockDocument);
+
+      expect(result).toEqual(mockSource);
+      expect(loadMock).toHaveBeenCalledWith(mockDocument.id);
+    });
+
+    it('should return null when source is missing', async () => {
+      const loadMock = jest.fn().mockResolvedValue(null);
+      (
+        dataLoaderService.getDocumentSourceByDocumentLoader as jest.Mock
+      ).mockReturnValue({
+        load: loadMock,
+      });
+
+      const result = await resolver.source(mockDocument);
+
+      expect(result).toBeNull();
+      expect(loadMock).toHaveBeenCalledWith(mockDocument.id);
+    });
+  });
+
   it('should build GraphQL schema with DocumentResolver', async () => {
     const moduleRef: Awaited<
       ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
@@ -362,6 +402,10 @@ describe('DocumentResolver', () => {
 
     const app = moduleRef.createNestApplication();
     await app.init();
+
+    // Force schema materialization (executes lazy type functions used in decorators)
+    const schemaHost = app.get(GraphQLSchemaHost);
+    expect(printSchema(schemaHost.schema)).toContain('type Document');
 
     const documentResolver =
       await moduleRef.resolve<DocumentResolver>(DocumentResolver);

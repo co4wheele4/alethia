@@ -83,19 +83,36 @@ const localStorageMock = (function() {
   }
 })()
 
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock
-})
+// Some tests run under non-jsdom environments; guard window usage.
+if (typeof window !== 'undefined') {
+  // Ensure RAF APIs exist (some components use them for hydration timing).
+  if (typeof window.requestAnimationFrame !== 'function') {
+    window.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 0)
+  }
+  if (typeof window.cancelAnimationFrame !== 'function') {
+    window.cancelAnimationFrame = (id) => clearTimeout(id)
+  }
+  if (typeof globalThis.requestAnimationFrame !== 'function') {
+    globalThis.requestAnimationFrame = window.requestAnimationFrame
+  }
+  if (typeof globalThis.cancelAnimationFrame !== 'function') {
+    globalThis.cancelAnimationFrame = window.cancelAnimationFrame
+  }
 
-// Mock window.matchMedia for theme hooks
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-})
+  Object.defineProperty(window, 'localStorage', {
+    value: localStorageMock,
+  })
+
+  // Mock window.matchMedia for theme hooks
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  })
+}

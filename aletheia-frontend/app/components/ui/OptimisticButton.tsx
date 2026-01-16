@@ -27,14 +27,16 @@ export function OptimisticButton({
   );
 
   const handleClick = () => {
-    // Set optimistic state immediately
-    setOptimisticState(true);
-    
+    // React requires optimistic updates to occur within an action/transition.
     startTransition(async () => {
+      setOptimisticState(true);
       try {
         await action();
+      } catch (e) {
+        // Swallow to avoid unhandled rejections; error handling is caller-specific.
+        // Consumers can still observe failures via their own state or logging.
+        console.error(e);
       } finally {
-        // Reset optimistic state after action completes
         setOptimisticState(false);
       }
     });

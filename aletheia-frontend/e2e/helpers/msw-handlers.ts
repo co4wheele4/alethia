@@ -29,6 +29,9 @@ let chunksStore: Record<
   Array<{ id: string; chunkIndex: number; content: string }>
 > = {};
 
+let entitiesStore: Array<{ id: string; name: string; type: string; mentionCount: number }> = [];
+let entityDetailStore: Record<string, unknown> = {};
+
 /**
  * Setup GraphQL route handlers for Playwright
  * This intercepts GraphQL requests and returns mock responses
@@ -88,8 +91,58 @@ export async function setupGraphQLMocks(route: Route) {
             { id: 'doc-1', title: 'Getting Started', createdAt: new Date('2026-01-01T00:00:00Z').toISOString() },
           ];
           chunksStore = {
-            'doc-1': [],
+            'doc-1': [
+              {
+                id: 'chunk-doc-1-0',
+                chunkIndex: 0,
+                content: 'Getting Started (chunk 0)',
+              },
+              {
+                id: 'chunk-doc-1-1',
+                chunkIndex: 1,
+                content: 'This chunk mentions Test Entity.',
+              },
+            ],
           };
+
+          entitiesStore = [
+            { id: 'entity-1', name: 'Test Entity', type: 'TestType', mentionCount: 1 },
+          ];
+          entityDetailStore = {
+            'entity-1': {
+              __typename: 'Entity',
+              id: 'entity-1',
+              name: 'Test Entity',
+              type: 'TestType',
+              mentionCount: 1,
+              outgoing: [],
+              incoming: [],
+              mentions: [
+                {
+                  __typename: 'EntityMention',
+                  id: 'mention-1',
+                  startOffset: 17,
+                  endOffset: 28,
+                  spanText: 'Test Entity',
+                  confidence: 0.9,
+                  chunk: {
+                    __typename: 'DocumentChunk',
+                    id: 'chunk-doc-1-1',
+                    chunkIndex: 1,
+                    content: 'This chunk mentions Test Entity.',
+                    documentId: 'doc-1',
+                    document: {
+                      __typename: 'Document',
+                      id: 'doc-1',
+                      title: 'Getting Started',
+                      createdAt: new Date('2026-01-01T00:00:00Z').toISOString(),
+                    },
+                  },
+                },
+              ],
+            },
+          };
+
           response = {
             status: 200,
             body: {
@@ -257,6 +310,67 @@ export async function setupGraphQLMocks(route: Route) {
                 content: c.content,
                 mentions: [],
               })),
+            },
+          },
+        };
+        break;
+      }
+
+      case 'Chunk0ByDocument': {
+        const { documentId } = parsedBody.variables || {};
+        const doc = documentsStore.find((d) => d.id === documentId);
+        const chunk0 = (chunksStore[documentId] ?? []).find((c) => c.chunkIndex === 0) ?? null;
+        response = {
+          status: 200,
+          body: {
+            data: {
+              chunk0ByDocument:
+                doc && chunk0
+                  ? {
+                      __typename: 'DocumentChunk',
+                      id: chunk0.id,
+                      chunkIndex: chunk0.chunkIndex,
+                      content: chunk0.content,
+                      documentId,
+                      document: {
+                        __typename: 'Document',
+                        id: doc.id,
+                        title: doc.title,
+                        createdAt: doc.createdAt,
+                      },
+                    }
+                  : null,
+            },
+          },
+        };
+        break;
+      }
+
+      case 'Entities': {
+        response = {
+          status: 200,
+          body: {
+            data: {
+              entities: entitiesStore.map((e) => ({
+                __typename: 'Entity',
+                id: e.id,
+                name: e.name,
+                type: e.type,
+                mentionCount: e.mentionCount,
+              })),
+            },
+          },
+        };
+        break;
+      }
+
+      case 'Entity': {
+        const { id } = parsedBody.variables || {};
+        response = {
+          status: 200,
+          body: {
+            data: {
+              entity: (entityDetailStore[String(id)] as any) ?? null,
             },
           },
         };

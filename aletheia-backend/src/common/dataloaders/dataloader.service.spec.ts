@@ -4,11 +4,14 @@ import { PrismaService } from '@prisma/prisma.service';
 import { User } from '@models/user.model';
 import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
+import { DocumentSource } from '@models/document-source.model';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { Embedding } from '@models/embedding.model';
 import { Entity } from '@models/entity.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { EntityRelationship } from '@models/entity-relationship.model';
+import { EntityRelationshipEvidence } from '@models/entity-relationship-evidence.model';
+import { EntityRelationshipEvidenceMention } from '@models/entity-relationship-evidence-mention.model';
 import { AiQuery, AiQueryResult } from '@models/ai-query.model';
 
 describe('DataLoaderService', () => {
@@ -25,6 +28,9 @@ describe('DataLoaderService', () => {
     document: {
       findMany: jest.fn(),
     },
+    documentSource: {
+      findMany: jest.fn(),
+    },
     documentChunk: {
       findMany: jest.fn(),
     },
@@ -36,8 +42,15 @@ describe('DataLoaderService', () => {
     },
     entityMention: {
       findMany: jest.fn(),
+      groupBy: jest.fn(),
     },
     entityRelationship: {
+      findMany: jest.fn(),
+    },
+    entityRelationshipEvidence: {
+      findMany: jest.fn(),
+    },
+    entityRelationshipEvidenceMention: {
       findMany: jest.fn(),
     },
     aiQuery: {
@@ -603,6 +616,7 @@ describe('DataLoaderService', () => {
         id: 'entity-1',
         name: 'Test Entity',
         type: 'Person',
+        mentionCount: 0,
         mentions: [],
         outgoing: [],
         incoming: [],
@@ -1129,6 +1143,164 @@ describe('DataLoaderService', () => {
       const result = await loader.load('query-2');
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('getDocumentSourceByDocumentLoader', () => {
+    it('should return a DataLoader', () => {
+      const loader = service.getDocumentSourceByDocumentLoader();
+      expect(loader).toBeDefined();
+    });
+
+    it('should load document source by document id', async () => {
+      const mockSource = {
+        id: 'source-1',
+        kind: 'MANUAL',
+        documentId: 'doc-1',
+      } as unknown as DocumentSource;
+      (prismaService.documentSource.findMany as jest.Mock).mockResolvedValue([
+        mockSource,
+      ]);
+
+      const loader = service.getDocumentSourceByDocumentLoader();
+      const result = await loader.load('doc-1');
+
+      expect(result).toEqual(mockSource);
+      expect(prismaService.documentSource.findMany).toHaveBeenCalledWith({
+        where: { documentId: { in: ['doc-1'] } },
+      });
+    });
+
+    it('should return null when document has no source', async () => {
+      (prismaService.documentSource.findMany as jest.Mock).mockResolvedValue([]);
+      const loader = service.getDocumentSourceByDocumentLoader();
+      const result = await loader.load('doc-1');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getMentionCountByEntityLoader', () => {
+    it('should return a DataLoader', () => {
+      const loader = service.getMentionCountByEntityLoader();
+      expect(loader).toBeDefined();
+    });
+
+    it('should load mention counts using groupBy with default 0s', async () => {
+      (prismaService.entityMention.groupBy as jest.Mock).mockResolvedValue([
+        { entityId: 'entity-1', _count: { _all: 3 } },
+      ]);
+
+      const loader = service.getMentionCountByEntityLoader();
+      const [c1, c2] = await Promise.all([
+        loader.load('entity-1'),
+        loader.load('entity-2'),
+      ]);
+
+      expect(c1).toBe(3);
+      expect(c2).toBe(0);
+      expect(prismaService.entityMention.groupBy).toHaveBeenCalledWith({
+        by: ['entityId'],
+        where: { entityId: { in: ['entity-1', 'entity-2'] } },
+        _count: { _all: true },
+      });
+    });
+  });
+
+  describe('getRelationshipEvidenceByRelationshipLoader', () => {
+    it('should return a DataLoader', () => {
+      const loader = service.getRelationshipEvidenceByRelationshipLoader();
+      expect(loader).toBeDefined();
+    });
+
+    it('should load evidence grouped by relationship id', async () => {
+      const evidence1 = {
+        id: 'ev-1',
+        relationshipId: 'rel-1',
+      } as unknown as EntityRelationshipEvidence;
+      const evidence2 = {
+        id: 'ev-2',
+        relationshipId: 'rel-2',
+      } as unknown as EntityRelationshipEvidence;
+
+      (prismaService.entityRelationshipEvidence.findMany as jest.Mock).mockResolvedValue([
+        evidence1,
+        evidence2,
+      ]);
+
+      const loader = service.getRelationshipEvidenceByRelationshipLoader();
+      const [r1, r2] = await Promise.all([loader.load('rel-1'), loader.load('rel-2')]);
+
+      expect(r1).toEqual([evidence1]);
+      expect(r2).toEqual([evidence2]);
+      expect(prismaService.entityRelationshipEvidence.findMany).toHaveBeenCalledWith({
+        where: { relationshipId: { in: ['rel-1', 'rel-2'] } },
+        orderBy: { createdAt: 'asc' },
+      });
+    });
+
+    it('should ignore evidence rows for unexpected relationshipIds (defensive)', async () => {
+      const unexpected = {
+        id: 'ev-x',
+        relationshipId: 'rel-unexpected',
+      } as unknown as EntityRelationshipEvidence;
+
+      (prismaService.entityRelationshipEvidence.findMany as jest.Mock).mockResolvedValue([
+        unexpected,
+      ]);
+
+      const loader = service.getRelationshipEvidenceByRelationshipLoader();
+      const [r1, r2] = await Promise.all([loader.load('rel-1'), loader.load('rel-2')]);
+
+      expect(r1).toEqual([]);
+      expect(r2).toEqual([]);
+    });
+  });
+
+  describe('getEvidenceMentionLinksByEvidenceLoader', () => {
+    it('should return a DataLoader', () => {
+      const loader = service.getEvidenceMentionLinksByEvidenceLoader();
+      expect(loader).toBeDefined();
+    });
+
+    it('should load mention links grouped by evidence id', async () => {
+      const link1 = {
+        evidenceId: 'ev-1',
+        mentionId: 'mention-1',
+      } as unknown as EntityRelationshipEvidenceMention;
+      const link2 = {
+        evidenceId: 'ev-2',
+        mentionId: 'mention-2',
+      } as unknown as EntityRelationshipEvidenceMention;
+
+      (
+        prismaService.entityRelationshipEvidenceMention.findMany as jest.Mock
+      ).mockResolvedValue([link1, link2]);
+
+      const loader = service.getEvidenceMentionLinksByEvidenceLoader();
+      const [l1, l2] = await Promise.all([loader.load('ev-1'), loader.load('ev-2')]);
+
+      expect(l1).toEqual([link1]);
+      expect(l2).toEqual([link2]);
+      expect(prismaService.entityRelationshipEvidenceMention.findMany).toHaveBeenCalledWith({
+        where: { evidenceId: { in: ['ev-1', 'ev-2'] } },
+      });
+    });
+
+    it('should ignore links for unexpected evidenceIds (defensive)', async () => {
+      const unexpected = {
+        evidenceId: 'ev-unexpected',
+        mentionId: 'mention-x',
+      } as unknown as EntityRelationshipEvidenceMention;
+
+      (
+        prismaService.entityRelationshipEvidenceMention.findMany as jest.Mock
+      ).mockResolvedValue([unexpected]);
+
+      const loader = service.getEvidenceMentionLinksByEvidenceLoader();
+      const [l1, l2] = await Promise.all([loader.load('ev-1'), loader.load('ev-2')]);
+
+      expect(l1).toEqual([]);
+      expect(l2).toEqual([]);
     });
   });
 });

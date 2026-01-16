@@ -11,6 +11,39 @@ export type EntityRelationship = {
   relation: string;
   to?: { __typename?: 'Entity'; id: string; name: string; type: string } | null;
   from?: { __typename?: 'Entity'; id: string; name: string; type: string } | null;
+  evidence?: Array<{
+    __typename?: 'EntityRelationshipEvidence';
+    id: string;
+    kind: string;
+    createdAt: string;
+    startOffset?: number | null;
+    endOffset?: number | null;
+    quotedText?: string | null;
+    chunkId: string;
+    chunk: {
+      __typename?: 'DocumentChunk';
+      id: string;
+      chunkIndex: number;
+      content: string;
+      documentId: string;
+      document: { __typename?: 'Document'; id: string; title: string; createdAt: string };
+    };
+    mentionLinks: Array<{
+      __typename?: 'EntityRelationshipEvidenceMention';
+      evidenceId: string;
+      mentionId: string;
+      mention: {
+        __typename?: 'EntityMention';
+        id: string;
+        startOffset?: number | null;
+        endOffset?: number | null;
+        excerpt?: string | null;
+        spanText?: string | null;
+        confidence?: number | null;
+        entity: { __typename?: 'Entity'; id: string; name: string; type: string };
+      };
+    }>;
+  }> | null;
 };
 
 export type EntityMention = {
@@ -35,17 +68,20 @@ export type EntityDetail = {
   id: string;
   name: string;
   type: string;
+  mentionCount: number;
   outgoing: Array<{
     __typename?: 'EntityRelationship';
     id: string;
     relation: string;
     to: { __typename?: 'Entity'; id: string; name: string; type: string };
+    evidence?: EntityRelationship['evidence'];
   }>;
   incoming: Array<{
     __typename?: 'EntityRelationship';
     id: string;
     relation: string;
     from: { __typename?: 'Entity'; id: string; name: string; type: string };
+    evidence?: EntityRelationship['evidence'];
   }>;
   mentions: EntityMention[];
 };

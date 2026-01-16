@@ -18,6 +18,7 @@ describe('EntityResolver', () => {
     id: 'entity-1',
     name: 'Test Entity',
     type: 'Person',
+    mentionCount: 0,
     mentions: [],
     outgoing: [],
     incoming: [],
@@ -43,6 +44,9 @@ describe('EntityResolver', () => {
     const mockDataLoaderService = {
       getMentionsByEntityLoader: jest.fn().mockReturnValue({
         load: jest.fn().mockResolvedValue([]),
+      }),
+      getMentionCountByEntityLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue(0),
       }),
       getRelationshipsByFromEntityLoader: jest.fn().mockReturnValue({
         load: jest.fn().mockResolvedValue([]),
@@ -132,6 +136,11 @@ describe('EntityResolver', () => {
       const mockMentions: EntityMention[] = [
         {
           id: 'mention-1',
+          entityId: mockEntity.id,
+          chunkId: 'chunk-1',
+          startOffset: null,
+          endOffset: null,
+          excerpt: null,
           entity: mockEntity,
           chunk:
             {} as unknown as import('../models/document-chunk.model').DocumentChunk,
@@ -161,6 +170,36 @@ describe('EntityResolver', () => {
       const result = await resolver.mentions(mockEntity);
 
       expect(result).toEqual([]);
+      expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
+    });
+  });
+
+  describe('mentionCount', () => {
+    it('should resolve mentionCount field', async () => {
+      const loadMock = jest.fn().mockResolvedValue(7);
+      (
+        dataLoaderService.getMentionCountByEntityLoader as jest.Mock
+      ).mockReturnValue({
+        load: loadMock,
+      });
+
+      const result = await resolver.mentionCount(mockEntity);
+
+      expect(result).toBe(7);
+      expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
+    });
+
+    it('should default to 0 when loader returns 0', async () => {
+      const loadMock = jest.fn().mockResolvedValue(0);
+      (
+        dataLoaderService.getMentionCountByEntityLoader as jest.Mock
+      ).mockReturnValue({
+        load: loadMock,
+      });
+
+      const result = await resolver.mentionCount(mockEntity);
+
+      expect(result).toBe(0);
       expect(loadMock).toHaveBeenCalledWith(mockEntity.id);
     });
   });

@@ -34,6 +34,7 @@ describe('DocumentChunkResolver', () => {
       documentChunk: {
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        findFirst: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
@@ -170,6 +171,29 @@ describe('DocumentChunkResolver', () => {
       expect(findManyMock).toHaveBeenCalledWith({
         where: { documentId: 'doc-2' },
       });
+    });
+  });
+
+  describe('chunk0ByDocument', () => {
+    it('should return chunkIndex=0 for a document', async () => {
+      const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
+      findFirstMock.mockResolvedValue(mockChunk as unknown as typeof mockChunk);
+
+      const result = await resolver.chunk0ByDocument('doc-1');
+
+      expect(result).toEqual(mockChunk);
+      expect(findFirstMock).toHaveBeenCalledWith({
+        where: { documentId: 'doc-1', chunkIndex: 0 },
+      });
+    });
+
+    it('should return null when chunk0 is not present', async () => {
+      const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
+      findFirstMock.mockResolvedValue(null);
+
+      const result = await resolver.chunk0ByDocument('doc-1');
+
+      expect(result).toBeNull();
     });
   });
 
@@ -310,6 +334,11 @@ describe('DocumentChunkResolver', () => {
       const mockMentions: EntityMention[] = [
         {
           id: 'mention-1',
+          entityId: 'entity-1',
+          chunkId: mockChunk.id,
+          startOffset: null,
+          endOffset: null,
+          excerpt: null,
           entity: {} as unknown as EntityMention['entity'],
           chunk: mockChunk,
         },

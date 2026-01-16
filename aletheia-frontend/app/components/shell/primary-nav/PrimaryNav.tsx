@@ -59,20 +59,20 @@ export function PrimaryNav(props: PrimaryNavProps) {
         {items.map((item) => {
           const selected = pathname === item.href || pathname?.startsWith(`${item.href}/`);
           return (
-            <Link key={item.href} href={item.href} passHref legacyBehavior>
-              <ListItemButton
-                component="a"
-                selected={selected}
-                sx={{ borderRadius: 1, mx: 1 }}
-                onClick={() => onNavigate?.()}
-              >
-                <ListItemText
-                  primary={item.label}
-                  secondary={item.description}
-                  secondaryTypographyProps={{ variant: 'caption' }}
-                />
-              </ListItemButton>
-            </Link>
+            <ListItemButton
+              key={item.href}
+              component={Link}
+              href={item.href}
+              selected={selected}
+              sx={{ borderRadius: 1, mx: 1 }}
+              onClick={() => onNavigate?.()}
+            >
+              <ListItemText
+                primary={item.label}
+                secondary={item.description}
+                secondaryTypographyProps={{ variant: 'caption' }}
+              />
+            </ListItemButton>
           );
         })}
       </List>

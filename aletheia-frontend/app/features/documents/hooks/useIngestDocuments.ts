@@ -12,7 +12,16 @@ import { useMutation } from '@apollo/client/react';
 import { CREATE_CHUNK_MUTATION, CREATE_DOCUMENT_MUTATION, DOCUMENTS_BY_USER_QUERY } from '../graphql';
 
 export type IngestionSource =
-  | { kind: 'manual' }
+  | {
+      kind: 'manual';
+      /**
+       * Optional user-entered provenance classification.
+       * This is not a trust signal; it is simply how the source was obtained.
+       */
+      provenanceType?: string;
+      provenanceLabel?: string;
+      provenanceConfirmed?: boolean;
+    }
   | {
       kind: 'file';
       filename: string;
@@ -21,6 +30,9 @@ export type IngestionSource =
       lastModifiedMs: number;
       // Optional digests for auditability (may be absent if not computed).
       fileSha256?: string;
+      provenanceType?: string;
+      provenanceLabel?: string;
+      provenanceConfirmed?: boolean;
     }
   | {
       kind: 'url';
@@ -31,6 +43,9 @@ export type IngestionSource =
       publisher?: string | null;
       publishedAtIso?: string | null;
       author?: string | null;
+      provenanceType?: string;
+      provenanceLabel?: string;
+      provenanceConfirmed?: boolean;
     };
 
 export type IngestInput = {
@@ -71,6 +86,11 @@ function safeYamlScalar(value: string | number | null | undefined): string {
   return compact;
 }
 
+function safeYamlBool(value: boolean | null | undefined): string {
+  if (value === null || value === undefined) return '';
+  return value ? 'true' : 'false';
+}
+
 async function sha256HexOfText(text: string): Promise<string | null> {
   try {
     if (!globalThis.crypto?.subtle) return null;
@@ -88,12 +108,18 @@ async function sha256HexOfText(text: string): Promise<string | null> {
 function toProvenanceHeader(source: IngestionSource, opts: { ingestedAtIso: string; contentSha256?: string | null }) {
   const { ingestedAtIso, contentSha256 } = opts;
   if (source.kind === 'manual') {
-    return `---\nsource:\n  kind: manual\ningestedAt: ${safeYamlScalar(ingestedAtIso)}\ncontentSha256: ${safeYamlScalar(
-      contentSha256
-    )}\n---\n`;
+    return `---\nsource:\n  kind: manual\n  provenanceType: ${safeYamlScalar(
+      source.provenanceType
+    )}\n  provenanceLabel: ${safeYamlScalar(source.provenanceLabel)}\n  provenanceConfirmed: ${safeYamlBool(
+      source.provenanceConfirmed
+    )}\ningestedAt: ${safeYamlScalar(ingestedAtIso)}\ncontentSha256: ${safeYamlScalar(contentSha256)}\n---\n`;
   }
   if (source.kind === 'file') {
-    return `---\nsource:\n  kind: file\n  filename: ${safeYamlScalar(source.filename)}\n  mimeType: ${safeYamlScalar(
+    return `---\nsource:\n  kind: file\n  provenanceType: ${safeYamlScalar(
+      source.provenanceType
+    )}\n  provenanceLabel: ${safeYamlScalar(source.provenanceLabel)}\n  provenanceConfirmed: ${safeYamlBool(
+      source.provenanceConfirmed
+    )}\n  filename: ${safeYamlScalar(source.filename)}\n  mimeType: ${safeYamlScalar(
       source.mimeType
     )}\n  sizeBytes: ${safeYamlScalar(source.sizeBytes)}\n  lastModifiedMs: ${safeYamlScalar(
       source.lastModifiedMs
@@ -101,7 +127,11 @@ function toProvenanceHeader(source: IngestionSource, opts: { ingestedAtIso: stri
       ingestedAtIso
     )}\ncontentSha256: ${safeYamlScalar(contentSha256)}\n---\n`;
   }
-  return `---\nsource:\n  kind: url\n  url: ${safeYamlScalar(source.url)}\n  fetchedUrl: ${safeYamlScalar(
+  return `---\nsource:\n  kind: url\n  provenanceType: ${safeYamlScalar(
+    source.provenanceType
+  )}\n  provenanceLabel: ${safeYamlScalar(source.provenanceLabel)}\n  provenanceConfirmed: ${safeYamlBool(
+    source.provenanceConfirmed
+  )}\n  url: ${safeYamlScalar(source.url)}\n  fetchedUrl: ${safeYamlScalar(
     source.fetchedUrl
   )}\n  contentType: ${safeYamlScalar(source.contentType)}\n  publisher: ${safeYamlScalar(
     source.publisher

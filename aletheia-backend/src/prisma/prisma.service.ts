@@ -43,7 +43,8 @@ export class PrismaService
       throw new Error('DATABASE_URL is required to initialize PrismaService.');
     }
     // Log which database we're connecting to
-    const dbUrl = process.env.DATABASE_URL || '';
+    // Safe because `hasExplicitDatasourceUrl` implies a non-empty DATABASE_URL at construction time.
+    const dbUrl = process.env.DATABASE_URL!;
     const dbMatch = dbUrl.match(/\/([^/?]+)(\?|$)/);
     const dbName = dbMatch ? dbMatch[1] : 'unknown';
     this.logger.log(`Connecting to database: ${dbName}`);

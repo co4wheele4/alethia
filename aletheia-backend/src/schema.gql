@@ -123,6 +123,7 @@ type Embedding {
 type Entity {
   id: ID!
   incoming: [EntityRelationship!]!
+  mentionCount: Int!
   mentions: [EntityMention!]!
   name: String!
   outgoing: [EntityRelationship!]!
@@ -232,7 +233,7 @@ type Mutation {
   deleteLesson(id: String!): Lesson!
   deleteUser(id: String!): User!
   login(email: String!, password: String!): String!
-  register(email: String!, name: String): String!
+  register(email: String!, name: String, password: String!): String!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
   updateEmbedding(id: String!, values: [Float!]): Embedding!
@@ -250,6 +251,7 @@ type Query {
   aiQuery(id: String!): AiQuery
   aiQueryResult(id: String!): AiQueryResult
   aiQueryResults: [AiQueryResult!]!
+  chunk0ByDocument(documentId: String!): DocumentChunk
   chunksByDocument(documentId: String!): [DocumentChunk!]!
   document(id: String!): Document
   documentChunk(id: String!): DocumentChunk

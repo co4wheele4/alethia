@@ -14,6 +14,7 @@ export const ENTITIES_QUERY = gql`
       id
       name
       type
+      mentionCount
     }
   }
 `;
@@ -25,6 +26,7 @@ export const ENTITY_QUERY = gql`
       id
       name
       type
+      mentionCount
       outgoing {
         __typename
         id
@@ -34,6 +36,49 @@ export const ENTITY_QUERY = gql`
           id
           name
           type
+        }
+        evidence {
+          __typename
+          id
+          kind
+          createdAt
+          startOffset
+          endOffset
+          quotedText
+          chunkId
+          chunk {
+            __typename
+            id
+            chunkIndex
+            content
+            documentId
+            document {
+              __typename
+              id
+              title
+              createdAt
+            }
+          }
+          mentionLinks {
+            __typename
+            evidenceId
+            mentionId
+            mention {
+              __typename
+              id
+              startOffset
+              endOffset
+              excerpt
+              spanText
+              confidence
+              entity {
+                __typename
+                id
+                name
+                type
+              }
+            }
+          }
         }
       }
       incoming {
@@ -45,6 +90,49 @@ export const ENTITY_QUERY = gql`
           id
           name
           type
+        }
+        evidence {
+          __typename
+          id
+          kind
+          createdAt
+          startOffset
+          endOffset
+          quotedText
+          chunkId
+          chunk {
+            __typename
+            id
+            chunkIndex
+            content
+            documentId
+            document {
+              __typename
+              id
+              title
+              createdAt
+            }
+          }
+          mentionLinks {
+            __typename
+            evidenceId
+            mentionId
+            mention {
+              __typename
+              id
+              startOffset
+              endOffset
+              excerpt
+              spanText
+              confidence
+              entity {
+                __typename
+                id
+                name
+                type
+              }
+            }
+          }
         }
       }
       mentions {

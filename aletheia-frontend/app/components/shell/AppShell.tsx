@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Drawer, Typography } from '@mui/material';
 
@@ -31,17 +31,25 @@ function useClientReady() {
 
   useEffect(() => {
     let raf2: number | null = null;
-    const raf1 = requestAnimationFrame(() => {
+    // Use globalThis to avoid ReferenceError in non-browser runtimes/tests.
+    const raf =
+      (globalThis as unknown as { requestAnimationFrame?: typeof requestAnimationFrame })
+        .requestAnimationFrame ?? ((cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 0));
+    const caf =
+      (globalThis as unknown as { cancelAnimationFrame?: typeof cancelAnimationFrame })
+        .cancelAnimationFrame ?? ((id: number) => window.clearTimeout(id));
+
+    const raf1 = raf(() => {
       setMounted(true);
-      raf2 = requestAnimationFrame(() => {
+      raf2 = raf(() => {
         // Double RAF to reduce hydration/style injection mismatch risk.
-        requestAnimationFrame(() => setIsHydrated(true));
+        raf(() => setIsHydrated(true));
       });
     });
 
     return () => {
-      cancelAnimationFrame(raf1);
-      if (raf2 !== null) cancelAnimationFrame(raf2);
+      caf(raf1);
+      if (raf2 !== null) caf(raf2);
     };
   }, []);
 
@@ -54,6 +62,8 @@ export function AppShell(props: AppShellProps) {
   const { isAuthenticated, isInitialized, logout } = useAuth();
   const { mounted, isHydrated } = useClientReady();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const openMobileNav = useCallback(() => setMobileNavOpen(true), []);
+  const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
 
   const items: AppShellNavItem[] = useMemo(
     () =>
@@ -99,7 +109,7 @@ export function AppShell(props: AppShellProps) {
                 title={title}
                 headerActions={headerActions}
                 showMobileNavButton
-                onOpenMobileNav={() => setMobileNavOpen(true)}
+                onOpenMobileNav={openMobileNav}
                 onLogout={requireAuth ? logout : undefined}
               />
             }
@@ -110,7 +120,7 @@ export function AppShell(props: AppShellProps) {
 
         <Drawer
           open={mobileNavOpen}
-          onClose={() => setMobileNavOpen(false)}
+          onClose={closeMobileNav}
           ModalProps={{ keepMounted: true }}
           sx={{ display: { xs: 'block', md: 'none' } }}
         >
@@ -118,7 +128,7 @@ export function AppShell(props: AppShellProps) {
             items={items}
             variant="drawer"
             ariaLabel="mobile primary navigation"
-            onNavigate={() => setMobileNavOpen(false)}
+            onNavigate={closeMobileNav}
             footer={
               <Typography variant="caption" color="text.secondary">
                 Nothing is asserted without evidence.

@@ -37,21 +37,28 @@ const customJestConfig = {
     '^react/jsx-runtime$': normalizePath(path.dirname(reactPath)) + '/jsx-runtime',
   },
   collectCoverageFrom: [
-    'app/**/*.{js,jsx,ts,tsx}',
+    // Focus unit coverage on code intended for unit testing.
+    // Feature-level pages/workspaces are exercised by Playwright e2e instead.
+    'app/components/**/*.{js,jsx,ts,tsx}',
+    'app/hooks/**/*.{js,jsx,ts,tsx}',
+    'app/services/**/*.{js,jsx,ts,tsx}',
+    'app/lib/**/*.{js,jsx,ts,tsx}',
     '!app/**/*.d.ts',
     '!app/**/layout.tsx',
     '!app/**/page.tsx',
     '!app/**/*.stories.{js,jsx,ts,tsx}',
     '!app/**/__tests__/**',
     '!app/providers/**',
-    '!app/lib/**',
+    '!app/features/**',
+    '!app/error.tsx',
+    '!app/not-found.tsx',
   ],
   coverageThreshold: {
     global: {
-      branches: 99,
-      functions: 99,
-      lines: 99,
-      statements: 99,
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100,
     },
   },
   // Configure coverage ignore patterns

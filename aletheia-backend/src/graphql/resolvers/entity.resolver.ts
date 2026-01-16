@@ -5,6 +5,7 @@ import {
   ResolveField,
   Parent,
   Mutation,
+  Int,
 } from '@nestjs/graphql';
 import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
@@ -37,6 +38,11 @@ export class EntityResolver {
   @ResolveField(() => [EntityMention])
   async mentions(@Parent() entity: Entity) {
     return this.dataLoaders.getMentionsByEntityLoader().load(entity.id);
+  }
+
+  @ResolveField(() => Int)
+  async mentionCount(@Parent() entity: Entity) {
+    return this.dataLoaders.getMentionCountByEntityLoader().load(entity.id);
   }
 
   @ResolveField(() => [EntityRelationship])

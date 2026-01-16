@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OpenAIService } from './openai.service';
 import OpenAI from 'openai';
+import { createHash } from 'node:crypto';
 
 // Mock OpenAI
 jest.mock('openai');
@@ -111,6 +112,45 @@ describe('OpenAIService', () => {
       await expect(service.getEmbeddingResult('test prompt')).rejects.toThrow(
         'API Error',
       );
+    });
+
+    it('should return deterministic placeholder when network is disabled', async () => {
+      const originalDisable = process.env.OPENAI_DISABLE_NETWORK;
+      process.env.OPENAI_DISABLE_NETWORK = 'true';
+      process.env.OPENAI_API_KEY = 'test-api-key';
+
+      const moduleRef: Awaited<
+        ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+      > = await Test.createTestingModule({
+        imports: [
+          ConfigModule.forRoot({
+            isGlobal: true,
+          }),
+        ],
+        providers: [OpenAIService],
+      }).compile();
+
+      const svc = moduleRef.get<OpenAIService>(OpenAIService);
+      const instances = (OpenAI as unknown as jest.MockedClass<typeof OpenAI>).mock
+        .instances as unknown as jest.Mocked<OpenAI>[];
+      const instance = instances[instances.length - 1];
+
+      const createMock = jest.fn();
+      instance.embeddings = { create: createMock } as any;
+
+      const prompt = 'hello';
+      const result = await svc.getEmbeddingResult(prompt);
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual({
+        kind: 'embedding-placeholder',
+        sha256_16: createHash('sha256').update(prompt).digest('hex').slice(0, 16),
+        length: prompt.length,
+      });
+      expect(createMock).not.toHaveBeenCalled();
+
+      process.env.OPENAI_DISABLE_NETWORK = originalDisable;
+      await moduleRef.close();
     });
   });
 

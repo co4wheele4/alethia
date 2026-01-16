@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { EntityMention } from './entity-mention.model';
 import { EntityRelationship } from './entity-relationship.model';
 
@@ -12,6 +12,13 @@ export class Entity {
 
   @Field()
   type!: string;
+
+  /**
+   * Inspectable count only (must drill down to mentions).
+   * This is intentionally just a number, not a confidence signal.
+   */
+  @Field(() => Int)
+  mentionCount!: number;
 
   @Field(() => [EntityMention])
   mentions!: EntityMention[];

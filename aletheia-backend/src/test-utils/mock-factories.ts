@@ -56,6 +56,7 @@ export const createMockEntity = (overrides?: Partial<Entity>): Entity => ({
   id: 'entity-1',
   name: 'Test Entity',
   type: 'Person',
+  mentionCount: 0,
   mentions: [],
   outgoing: [],
   incoming: [],

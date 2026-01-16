@@ -15,6 +15,7 @@ describe('JwtStrategy', () => {
     id: 'user-id',
     email: 'test@example.com',
     name: 'Test User',
+    passwordHash: null,
     role: 'USER',
     createdAt: new Date(),
   };

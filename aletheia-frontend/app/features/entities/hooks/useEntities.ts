@@ -9,6 +9,7 @@ export type EntityListItem = {
   id: string;
   name: string;
   type: string;
+  mentionCount: number;
 };
 
 type EntitiesData = {

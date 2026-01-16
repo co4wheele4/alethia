@@ -20,6 +20,7 @@ describe('EntityRelationshipResolver', () => {
     id: 'entity-1',
     name: 'From Entity',
     type: 'Person',
+    mentionCount: 0,
     mentions: [],
     outgoing: [],
     incoming: [],
@@ -29,6 +30,7 @@ describe('EntityRelationshipResolver', () => {
     id: 'entity-2',
     name: 'To Entity',
     type: 'Person',
+    mentionCount: 0,
     mentions: [],
     outgoing: [],
     incoming: [],
@@ -59,6 +61,9 @@ describe('EntityRelationshipResolver', () => {
     const mockDataLoaderService = {
       getEntityLoader: jest.fn().mockReturnValue({
         load: jest.fn().mockResolvedValue(null),
+      }),
+      getRelationshipEvidenceByRelationshipLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue([]),
       }),
     };
 
@@ -220,6 +225,37 @@ describe('EntityRelationshipResolver', () => {
 
       expect(result).toBeNull();
       expect(loadMock).toHaveBeenCalledWith('non-existent');
+    });
+  });
+
+  describe('evidence', () => {
+    it('should resolve evidence field', async () => {
+      const mockEvidence = [{ id: 'ev-1' }];
+      const loadMock = jest.fn().mockResolvedValue(mockEvidence);
+      (
+        dataLoaderService.getRelationshipEvidenceByRelationshipLoader as jest.Mock
+      ).mockReturnValue({
+        load: loadMock,
+      });
+
+      const result = await resolver.evidence(mockRelationship);
+
+      expect(result).toEqual(mockEvidence);
+      expect(loadMock).toHaveBeenCalledWith(mockRelationship.id);
+    });
+
+    it('should return empty array when no evidence exists', async () => {
+      const loadMock = jest.fn().mockResolvedValue([]);
+      (
+        dataLoaderService.getRelationshipEvidenceByRelationshipLoader as jest.Mock
+      ).mockReturnValue({
+        load: loadMock,
+      });
+
+      const result = await resolver.evidence(mockRelationship);
+
+      expect(result).toEqual([]);
+      expect(loadMock).toHaveBeenCalledWith(mockRelationship.id);
     });
   });
 

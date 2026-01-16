@@ -57,6 +57,7 @@ export class DataLoaderService {
     EntityMention | null
   >;
   private readonly mentionsByEntityLoader: DataLoader<string, EntityMention[]>;
+  private readonly mentionCountByEntityLoader: DataLoader<string, number>;
   private readonly mentionsByChunkLoader: DataLoader<string, EntityMention[]>;
   private readonly entityRelationshipLoader: DataLoader<
     string,
@@ -298,6 +299,24 @@ export class DataLoaderService {
           mentionsByEntity.set(mention.entityId, entityMentions);
         }
         return entityIds.map((entityId) => mentionsByEntity.get(entityId)!);
+      },
+    );
+
+    this.mentionCountByEntityLoader = new DataLoader<string, number>(
+      async (entityIds: readonly string[]) => {
+        const grouped = await this.prisma.entityMention.groupBy({
+          by: ['entityId'],
+          where: { entityId: { in: [...entityIds] } },
+          _count: { _all: true },
+        });
+
+        const countByEntityId = new Map<string, number>();
+        for (const entityId of entityIds) countByEntityId.set(entityId, 0);
+        for (const row of grouped) {
+          countByEntityId.set(row.entityId, row._count._all);
+        }
+        // Every requested entityId is pre-seeded to 0 above, so this is always defined.
+        return entityIds.map((entityId) => countByEntityId.get(entityId)!);
       },
     );
 
@@ -550,6 +569,10 @@ export class DataLoaderService {
 
   getMentionsByEntityLoader(): DataLoader<string, EntityMention[]> {
     return this.mentionsByEntityLoader;
+  }
+
+  getMentionCountByEntityLoader(): DataLoader<string, number> {
+    return this.mentionCountByEntityLoader;
   }
 
   getMentionsByChunkLoader(): DataLoader<string, EntityMention[]> {

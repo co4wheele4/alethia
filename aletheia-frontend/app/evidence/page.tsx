@@ -3,7 +3,7 @@
 import { AppShell } from '../components/shell';
 import { useAuth } from '../hooks/useAuth';
 import { getUserIdFromToken } from '../lib/utils/jwt';
-import { EvidencePanel } from '../features/evidence/components/EvidencePanel';
+import { EvidenceExplorer } from '../features/evidence/components/EvidenceExplorer';
 
 export default function EvidencePage() {
   const { token } = useAuth();
@@ -11,7 +11,7 @@ export default function EvidencePage() {
 
   return (
     <AppShell title="Evidence">
-      <EvidencePanel userId={userId} />
+      <EvidenceExplorer userId={userId} />
     </AppShell>
   );
 }

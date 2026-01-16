@@ -20,12 +20,13 @@ describe('AuthResolver (e2e)', () => {
   describe('register', () => {
     it('should register a new user and return access token', async () => {
       const mutation = `
-        mutation Register($email: String!, $name: String) {
-          register(email: $email, name: $name)
+        mutation Register($email: String!, $password: String!, $name: String) {
+          register(email: $email, password: $password, name: $name)
         }
       `;
       const variables = {
         email: `register-test-${Date.now()}@example.com`,
+        password: 'password',
         name: 'New User',
       };
       const res = await graphqlRequest(
@@ -43,12 +44,13 @@ describe('AuthResolver (e2e)', () => {
 
     it('should register a user without name', async () => {
       const mutation = `
-        mutation Register($email: String!) {
-          register(email: $email)
+        mutation Register($email: String!, $password: String!) {
+          register(email: $email, password: $password)
         }
       `;
       const variables = {
         email: `register-no-name-${Date.now()}@example.com`,
+        password: 'password',
       };
       const res = await graphqlRequest(
         context.app,
@@ -65,12 +67,13 @@ describe('AuthResolver (e2e)', () => {
 
     it('should throw error when registering with existing email', async () => {
       const mutation = `
-        mutation Register($email: String!) {
-          register(email: $email)
+        mutation Register($email: String!, $password: String!) {
+          register(email: $email, password: $password)
         }
       `;
       const variables = {
         email: context.testData.user.email, // Use existing user's email
+        password: 'password',
       };
       const res = await graphqlRequest(
         context.app,

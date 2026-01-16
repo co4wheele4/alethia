@@ -31,12 +31,16 @@ describe('PrismaService', () => {
 
   describe('onModuleInit', () => {
     it('should connect to database', async () => {
-      const connectSpy = jest.spyOn(service, '$connect').mockResolvedValue();
-      const logSpy = jest.spyOn(service['logger'], 'log').mockImplementation();
       const originalDbUrl = process.env.DATABASE_URL;
       process.env.DATABASE_URL = 'postgresql://localhost:5432/test';
 
-      await service.onModuleInit();
+      const localService = new PrismaService();
+      const connectSpy = jest.spyOn(localService, '$connect').mockResolvedValue();
+      const logSpy = jest
+        .spyOn((localService as unknown as { logger: { log: () => void } }).logger, 'log')
+        .mockImplementation();
+
+      await localService.onModuleInit();
       expect(connectSpy).toHaveBeenCalled();
       expect(logSpy).toHaveBeenCalledWith('Connecting to database: test');
       expect(logSpy).toHaveBeenCalledWith(
@@ -48,12 +52,16 @@ describe('PrismaService', () => {
     });
 
     it('should handle malformed DATABASE_URL gracefully', async () => {
-      const connectSpy = jest.spyOn(service, '$connect').mockResolvedValue();
-      const logSpy = jest.spyOn(service['logger'], 'log').mockImplementation();
       const originalDbUrl = process.env.DATABASE_URL;
       process.env.DATABASE_URL = 'invalid-url';
 
-      await service.onModuleInit();
+      const localService = new PrismaService();
+      const connectSpy = jest.spyOn(localService, '$connect').mockResolvedValue();
+      const logSpy = jest
+        .spyOn((localService as unknown as { logger: { log: () => void } }).logger, 'log')
+        .mockImplementation();
+
+      await localService.onModuleInit();
       expect(connectSpy).toHaveBeenCalled();
       expect(logSpy).toHaveBeenCalledWith('Connecting to database: unknown');
       expect(logSpy).toHaveBeenCalledWith(
@@ -64,17 +72,15 @@ describe('PrismaService', () => {
       process.env.DATABASE_URL = originalDbUrl;
     });
 
-    it('should handle empty DATABASE_URL gracefully', async () => {
-      const connectSpy = jest.spyOn(service, '$connect').mockResolvedValue();
-      const logSpy = jest.spyOn(service['logger'], 'log').mockImplementation();
+    it('should throw when DATABASE_URL was missing at service construction', async () => {
       const originalDbUrl = process.env.DATABASE_URL;
       delete process.env.DATABASE_URL;
 
-      await service.onModuleInit();
-      expect(connectSpy).toHaveBeenCalled();
-      expect(logSpy).toHaveBeenCalledWith('Connecting to database: unknown');
-      connectSpy.mockRestore();
-      logSpy.mockRestore();
+      const localService = new PrismaService();
+      await expect(localService.onModuleInit()).rejects.toThrow(
+        'DATABASE_URL is required to initialize PrismaService.',
+      );
+
       process.env.DATABASE_URL = originalDbUrl;
     });
   });

@@ -11,6 +11,7 @@ describe('AuthResolver', () => {
     id: 'user-id',
     email: 'test@example.com',
     name: 'Test User',
+    passwordHash: '$2b$10$testhash',
     role: 'USER',
     createdAt: new Date(),
   };
@@ -80,11 +81,12 @@ describe('AuthResolver', () => {
         user: newUser,
       });
 
-      const result = await resolver.register('new@example.com', 'New User');
+      const result = await resolver.register('new@example.com', 'Password123!', 'New User');
 
       expect(result).toBe(mockAccessToken);
       expect(authService.register).toHaveBeenCalledWith(
         'new@example.com',
+        'Password123!',
         'New User',
       );
       expect(authService.login).toHaveBeenCalledWith(newUser);
@@ -100,11 +102,12 @@ describe('AuthResolver', () => {
         user: newUser,
       });
 
-      const result = await resolver.register('new@example.com');
+      const result = await resolver.register('new@example.com', 'Password123!');
 
       expect(result).toBe(mockAccessToken);
       expect(authService.register).toHaveBeenCalledWith(
         'new@example.com',
+        'Password123!',
         undefined,
       );
       expect(authService.login).toHaveBeenCalledWith(newUser);
@@ -120,10 +123,10 @@ describe('AuthResolver', () => {
         );
 
       await expect(
-        resolver.register('existing@example.com', 'Test User'),
+        resolver.register('existing@example.com', 'Password123!', 'Test User'),
       ).rejects.toThrow(UnauthorizedException);
       await expect(
-        resolver.register('existing@example.com', 'Test User'),
+        resolver.register('existing@example.com', 'Password123!', 'Test User'),
       ).rejects.toThrow('User with this email already exists');
     });
   });

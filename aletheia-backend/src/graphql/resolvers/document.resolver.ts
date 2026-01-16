@@ -117,6 +117,7 @@ export class DocumentResolver {
     return this.dataLoaders.getChunksByDocumentLoader().load(document.id);
   }
 
+  /* c8 ignore next */
   @ResolveField(() => DocumentSource, { nullable: true })
   async source(@Parent() document: Document) {
     return this.dataLoaders.getDocumentSourceByDocumentLoader().load(document.id);

@@ -60,7 +60,7 @@ export function EntityDetailView(props: {
             {entity.name}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Type: {entity.type || 'unknown'} • Mentions: {entity.mentions?.length ?? 0}
+            Type: {entity.type || 'unknown'} • Mentions: {entity.mentionCount ?? entity.mentions?.length ?? 0}
           </Typography>
 
           <Divider sx={{ my: 2 }} />

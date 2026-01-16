@@ -18,9 +18,10 @@ export class AuthResolver {
   @Mutation(() => String)
   async register(
     @Args('email') email: string,
+    @Args('password') password: string,
     @Args('name', { nullable: true }) name?: string,
   ) {
-    const user = await this.authService.register(email, name);
+    const user = await this.authService.register(email, password, name);
     const result = this.authService.login(user);
     return result.access_token;
   }

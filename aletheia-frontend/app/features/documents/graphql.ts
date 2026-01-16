@@ -121,3 +121,59 @@ export const CHUNKS_BY_DOCUMENT_QUERY = gql`
   }
 `;
 
+/**
+ * Chunk 0 lookup for provenance display (index-safe).
+ */
+export const CHUNK0_BY_DOCUMENT_QUERY = gql`
+  query Chunk0ByDocument($documentId: String!) {
+    chunk0ByDocument(documentId: $documentId) {
+      __typename
+      id
+      chunkIndex
+      content
+      documentId
+      document {
+        __typename
+        id
+        title
+        createdAt
+      }
+    }
+  }
+`;
+
+/**
+ * Single chunk lookup (ID-first traversal).
+ */
+export const DOCUMENT_CHUNK_QUERY = gql`
+  query DocumentChunk($id: String!) {
+    documentChunk(id: $id) {
+      __typename
+      id
+      chunkIndex
+      content
+      documentId
+      document {
+        __typename
+        id
+        title
+        createdAt
+      }
+      mentions {
+        __typename
+        id
+        startOffset
+        endOffset
+        spanText
+        confidence
+        entity {
+          __typename
+          id
+          name
+          type
+        }
+      }
+    }
+  }
+`;
+

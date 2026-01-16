@@ -4,6 +4,7 @@ import { PrismaService } from '@prisma/prisma.service';
 import { EntityMention } from '@models/entity-mention.model';
 import { Entity } from '@models/entity.model';
 import { DocumentChunk } from '@models/document-chunk.model';
+import { BadRequestException } from '@nestjs/common';
 import {
   CreateEntityMentionInput,
   UpdateEntityMentionInput,
@@ -21,6 +22,7 @@ describe('EntityMentionResolver', () => {
     id: 'entity-1',
     name: 'Test Entity',
     type: 'Person',
+    mentionCount: 0,
     mentions: [],
     outgoing: [],
     incoming: [],
@@ -35,6 +37,11 @@ describe('EntityMentionResolver', () => {
 
   const mockEntityMention: EntityMention = {
     id: 'mention-1',
+    entityId: mockEntity.id,
+    chunkId: mockChunk.id,
+    startOffset: null,
+    endOffset: null,
+    excerpt: null,
     entity: mockEntity,
     chunk: mockChunk,
   };
@@ -239,6 +246,184 @@ describe('EntityMentionResolver', () => {
       expect(result).toEqual(mockEntityMention);
       expect(prismaService.entityMention.create).toHaveBeenCalledWith({
         data: input,
+      });
+    });
+
+    it('should require startOffset and endOffset together', async () => {
+      const input: CreateEntityMentionInput = {
+        entityId: 'entity-1',
+        chunkId: 'chunk-1',
+        startOffset: 0,
+      };
+
+      await expect(resolver.createEntityMention(input)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(resolver.createEntityMention(input)).rejects.toThrow(
+        'startOffset and endOffset must be provided together',
+      );
+    });
+
+    it('should forbid excerpt without offsets', async () => {
+      const input: CreateEntityMentionInput = {
+        entityId: 'entity-1',
+        chunkId: 'chunk-1',
+        excerpt: 'hello',
+      };
+
+      await expect(resolver.createEntityMention(input)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(resolver.createEntityMention(input)).rejects.toThrow(
+        'excerpt requires startOffset/endOffset',
+      );
+    });
+
+    it('should require endOffset > startOffset', async () => {
+      const input: CreateEntityMentionInput = {
+        entityId: 'entity-1',
+        chunkId: 'chunk-1',
+        startOffset: 5,
+        endOffset: 5,
+      };
+
+      await expect(resolver.createEntityMention(input)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(resolver.createEntityMention(input)).rejects.toThrow(
+        'endOffset must be greater than startOffset',
+      );
+    });
+
+    it('should error when chunk not found for span validation', async () => {
+      const input: CreateEntityMentionInput = {
+        entityId: 'entity-1',
+        chunkId: 'chunk-missing',
+        startOffset: 0,
+        endOffset: 1,
+      };
+      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue(
+        null,
+      );
+
+      await expect(resolver.createEntityMention(input)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(resolver.createEntityMention(input)).rejects.toThrow(
+        'Chunk not found',
+      );
+    });
+
+    it('should error when offsets are out of bounds', async () => {
+      const input: CreateEntityMentionInput = {
+        entityId: 'entity-1',
+        chunkId: 'chunk-1',
+        startOffset: 0,
+        endOffset: 999,
+      };
+      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue({
+        content: 'short',
+      });
+
+      await expect(resolver.createEntityMention(input)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(resolver.createEntityMention(input)).rejects.toThrow(
+        'Span offsets are out of bounds',
+      );
+    });
+
+    it('should treat null chunk content as empty string for bounds checks', async () => {
+      const input: CreateEntityMentionInput = {
+        entityId: 'entity-1',
+        chunkId: 'chunk-1',
+        startOffset: 0,
+        endOffset: 1,
+      };
+      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue({
+        content: null,
+      });
+
+      await expect(resolver.createEntityMention(input)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(resolver.createEntityMention(input)).rejects.toThrow(
+        'Span offsets are out of bounds',
+      );
+    });
+
+    it('should error when provided excerpt does not match chunk content', async () => {
+      const input: CreateEntityMentionInput = {
+        entityId: 'entity-1',
+        chunkId: 'chunk-1',
+        startOffset: 0,
+        endOffset: 5,
+        excerpt: 'WRONG',
+      };
+      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue({
+        content: 'hello world',
+      });
+
+      await expect(resolver.createEntityMention(input)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(resolver.createEntityMention(input)).rejects.toThrow(
+        'excerpt does not match the chunk content',
+      );
+    });
+
+    it('should fill excerpt from chunk content when offsets are provided', async () => {
+      const input: CreateEntityMentionInput = {
+        entityId: 'entity-1',
+        chunkId: 'chunk-1',
+        startOffset: 0,
+        endOffset: 5,
+      };
+      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue({
+        content: 'hello world',
+      });
+      (prismaService.entityMention.create as jest.Mock).mockResolvedValue(
+        mockEntityMention as any,
+      );
+
+      await resolver.createEntityMention(input);
+
+      expect(prismaService.entityMention.create).toHaveBeenCalledWith({
+        data: {
+          entityId: 'entity-1',
+          chunkId: 'chunk-1',
+          startOffset: 0,
+          endOffset: 5,
+          excerpt: 'hello',
+        },
+      });
+    });
+
+    it('should allow excerpt when it matches the chunk content at offsets', async () => {
+      const input: CreateEntityMentionInput = {
+        entityId: 'entity-1',
+        chunkId: 'chunk-1',
+        startOffset: 6,
+        endOffset: 11,
+        excerpt: 'world',
+      };
+      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue({
+        content: 'hello world',
+      });
+      (prismaService.entityMention.create as jest.Mock).mockResolvedValue(
+        mockEntityMention as any,
+      );
+
+      await resolver.createEntityMention(input);
+
+      expect(prismaService.entityMention.create).toHaveBeenCalledWith({
+        data: {
+          entityId: 'entity-1',
+          chunkId: 'chunk-1',
+          startOffset: 6,
+          endOffset: 11,
+          excerpt: 'world',
+        },
       });
     });
   });

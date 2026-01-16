@@ -40,6 +40,19 @@ export class DocumentChunkResolver {
     return await this.prisma.documentChunk.findMany({ where: { documentId } });
   }
 
+  /**
+   * chunk0ByDocument
+   *
+   * Returns only chunkIndex=0 for a document (if present).
+   * This enables provenance/source-type display without downloading all chunks.
+   */
+  @Query(() => DocumentChunk, { nullable: true })
+  async chunk0ByDocument(@Args('documentId') documentId: string) {
+    return await this.prisma.documentChunk.findFirst({
+      where: { documentId, chunkIndex: 0 },
+    });
+  }
+
   @Mutation(() => DocumentChunk)
   async createChunk(
     @Args('documentId') documentId: string,
