@@ -117,6 +117,22 @@ export const CHUNKS_BY_DOCUMENT_QUERY = gql`
           type
         }
       }
+      aiSuggestions {
+        __typename
+        id
+        kind
+        status
+        entityName
+        entityType
+        subjectName
+        subjectType
+        objectName
+        objectType
+        relation
+        startOffset
+        endOffset
+        excerpt
+      }
     }
   }
 `;

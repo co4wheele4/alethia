@@ -110,7 +110,7 @@
       "!**/*.interface.ts",
       "!**/index.ts",
       "!**/*.model.ts",
-      "!**/graphql/inputs/document-source.input.ts",
+      "!**/graphql/inputs/*.input.ts",
       "!**/test-utils/**"
     ],
     "coverageDirectory": "../coverage",

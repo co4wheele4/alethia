@@ -118,7 +118,7 @@ export function DocumentInspectionView(props: {
       </Box>
 
       <Box sx={{ minWidth: 0 }}>
-        <DocumentEvidencePanel document={document} chunks={sorted} />
+        <DocumentEvidencePanel document={document} chunks={sorted} selectedChunk={selectedChunk} />
       </Box>
     </Box>
   );

@@ -11,7 +11,6 @@ import { Request, Response } from 'express';
 
 import { validate } from '../config/env.validation';
 import { PrismaService } from '@prisma/prisma.service';
-import { OpenAIService } from '@openai/openai.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -31,6 +30,8 @@ import {
   EntityRelationshipEvidenceMentionResolver,
 } from '@resolvers';
 import { AuthModule } from '../auth/auth.module';
+import { OpenAIModule } from '../openai/openai.module';
+import { IngestionModule } from '../ingestion/ingestion.module';
 import { DataLoaderModule } from '../common/dataloaders/dataloader.module';
 import { createGraphQLContext, formatGraphQLError } from './graphql-config';
 
@@ -51,6 +52,10 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     ]),
     // Authentication
     AuthModule,
+    // OpenAI module
+    OpenAIModule,
+    // Ingestion module
+    IngestionModule,
     // DataLoader module for N+1 query optimization
     DataLoaderModule,
     // GraphQL configuration
@@ -70,7 +75,6 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
   providers: [
     AppService,
     PrismaService,
-    OpenAIService,
     AppResolver,
     LessonResolver,
     DocumentResolver,

@@ -15,6 +15,7 @@ import { Alert, Box, Button, Divider, List, ListItemButton, ListItemText, Typogr
 
 import type { DocumentChunkItem, DocumentHeader } from '../hooks/useDocumentChunks';
 import { DocumentMetadataPanel } from './DocumentMetadataPanel';
+import { SuggestedExtractionsPanel } from '../../extraction/components/SuggestedExtractionsPanel';
 
 type EntityIndexRow = {
   id: string;
@@ -42,8 +43,12 @@ function buildEntityIndex(chunks: DocumentChunkItem[]): EntityIndexRow[] {
   return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function DocumentEvidencePanel(props: { document: DocumentHeader | null; chunks: DocumentChunkItem[] }) {
-  const { document, chunks } = props;
+export function DocumentEvidencePanel(props: {
+  document: DocumentHeader | null;
+  chunks: DocumentChunkItem[];
+  selectedChunk?: DocumentChunkItem | null;
+}) {
+  const { document, chunks, selectedChunk } = props;
 
   const entities = useMemo(() => buildEntityIndex(chunks), [chunks]);
   const [visibleCount, setVisibleCount] = useState(50);
@@ -94,6 +99,16 @@ export function DocumentEvidencePanel(props: { document: DocumentHeader | null; 
           </Button>
         </Box>
       </Box>
+
+      {selectedChunk && (
+        <>
+          <Divider />
+          <SuggestedExtractionsPanel
+            chunkId={selectedChunk.id}
+            suggestions={selectedChunk.aiSuggestions ?? []}
+          />
+        </>
+      )}
     </Box>
   );
 }

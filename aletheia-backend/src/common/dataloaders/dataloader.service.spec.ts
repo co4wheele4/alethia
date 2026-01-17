@@ -59,6 +59,9 @@ describe('DataLoaderService', () => {
     aiQueryResult: {
       findMany: jest.fn(),
     },
+    aiExtractionSuggestion: {
+      findMany: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -1141,6 +1144,64 @@ describe('DataLoaderService', () => {
       const loader = service.getResultsByQueryLoader();
       // Request query-2 which has no results
       const result = await loader.load('query-2');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getSuggestionsByChunkLoader', () => {
+    it('should return a DataLoader', () => {
+      const loader = service.getSuggestionsByChunkLoader();
+      expect(loader).toBeDefined();
+    });
+
+    it('should load suggestions for a chunk', async () => {
+      const mockSuggestions = [
+        {
+          id: 'suggestion-1',
+          chunkId: 'chunk-1',
+        },
+      ];
+      (
+        prismaService.aiExtractionSuggestion.findMany as jest.Mock
+      ).mockResolvedValue(mockSuggestions);
+
+      const loader = service.getSuggestionsByChunkLoader();
+      const result = await loader.load('chunk-1');
+
+      expect(result).toEqual(mockSuggestions as any);
+      expect(
+        prismaService.aiExtractionSuggestion.findMany,
+      ).toHaveBeenCalledWith({
+        where: { chunkId: { in: ['chunk-1'] } },
+      });
+    });
+
+    it('should return empty array when chunk has no suggestions', async () => {
+      (
+        prismaService.aiExtractionSuggestion.findMany as jest.Mock
+      ).mockResolvedValue([]);
+
+      const loader = service.getSuggestionsByChunkLoader();
+      const result = await loader.load('chunk-1');
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle suggestions with unexpected chunkIds in batch', async () => {
+      const mockSuggestions = [
+        {
+          id: 'suggestion-1',
+          chunkId: 'chunk-1',
+        },
+      ];
+      (
+        prismaService.aiExtractionSuggestion.findMany as jest.Mock
+      ).mockResolvedValue(mockSuggestions);
+
+      const loader = service.getSuggestionsByChunkLoader();
+      // Request chunk-2 which has no suggestions
+      const result = await loader.load('chunk-2');
 
       expect(result).toEqual([]);
     });

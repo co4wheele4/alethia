@@ -158,16 +158,111 @@ describe('OpenAIService', () => {
   });
 
   describe('ask', () => {
-    it('should call getEmbeddingResult', async () => {
-      const createMock = jest.fn().mockResolvedValue(mockEmbeddingResponse);
-      mockOpenAI.embeddings = {
-        create: createMock,
-      } as unknown as typeof mockOpenAI.embeddings;
+    it('should call chat.completions.create with prompt', async () => {
+      const mockChatResponse = {
+        choices: [{ message: { content: 'AI Answer' } }],
+      };
+      const createMock = jest.fn().mockResolvedValue(mockChatResponse);
+      mockOpenAI.chat = {
+        completions: {
+          create: createMock,
+        },
+      } as any;
 
-      const getEmbeddingResultSpy = jest.spyOn(service, 'getEmbeddingResult');
-      await service.ask('test prompt');
+      const result = await service.ask('test prompt');
 
-      expect(getEmbeddingResultSpy).toHaveBeenCalledWith('test prompt');
+      expect(createMock).toHaveBeenCalledWith({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: 'test prompt' }],
+      });
+      expect(result).toBe('AI Answer');
+    });
+
+    it('should return placeholder when network is disabled', async () => {
+      // Create a service with network disabled
+      const originalDisable = process.env.OPENAI_DISABLE_NETWORK;
+      process.env.OPENAI_DISABLE_NETWORK = 'true';
+
+      const moduleRef = await Test.createTestingModule({
+        imports: [ConfigModule.forRoot({ isGlobal: true })],
+        providers: [OpenAIService],
+      }).compile();
+      const svc = moduleRef.get<OpenAIService>(OpenAIService);
+
+      const result = await svc.ask('test prompt');
+      expect(result).toBe('AI Response Placeholder');
+
+      process.env.OPENAI_DISABLE_NETWORK = originalDisable;
+    });
+
+    it('should handle empty content in response', async () => {
+      const mockChatResponse = {
+        choices: [{ message: { content: null } }],
+      };
+      const createMock = jest.fn().mockResolvedValue(mockChatResponse);
+      mockOpenAI.chat = {
+        completions: {
+          create: createMock,
+        },
+      } as any;
+
+      const result = await service.ask('test prompt');
+      expect(result).toBe('');
+    });
+  });
+
+  describe('extract', () => {
+    it('should call chat.completions.create with json mode and prompt', async () => {
+      const mockResult = { entities: [], relationships: [] };
+      const mockChatResponse = {
+        choices: [{ message: { content: JSON.stringify(mockResult) } }],
+      };
+      const createMock = jest.fn().mockResolvedValue(mockChatResponse);
+      mockOpenAI.chat = {
+        completions: {
+          create: createMock,
+        },
+      } as any;
+
+      const result = await service.extract('test prompt');
+
+      expect(createMock).toHaveBeenCalledWith({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: 'test prompt' }],
+        response_format: { type: 'json_object' },
+      });
+      expect(result).toEqual(mockResult);
+    });
+
+    it('should return empty suggestions when network is disabled', async () => {
+      const originalDisable = process.env.OPENAI_DISABLE_NETWORK;
+      process.env.OPENAI_DISABLE_NETWORK = 'true';
+
+      const moduleRef = await Test.createTestingModule({
+        imports: [ConfigModule.forRoot({ isGlobal: true })],
+        providers: [OpenAIService],
+      }).compile();
+      const svc = moduleRef.get<OpenAIService>(OpenAIService);
+
+      const result = await svc.extract('test prompt');
+      expect(result).toEqual({ suggestions: [] });
+
+      process.env.OPENAI_DISABLE_NETWORK = originalDisable;
+    });
+
+    it('should handle empty response content', async () => {
+      const mockChatResponse = {
+        choices: [{ message: { content: null } }],
+      };
+      const createMock = jest.fn().mockResolvedValue(mockChatResponse);
+      mockOpenAI.chat = {
+        completions: {
+          create: createMock,
+        },
+      } as any;
+
+      const result = await service.extract('test prompt');
+      expect(result).toEqual({});
     });
   });
 });

@@ -48,6 +48,28 @@ export class OpenAIService {
   }
 
   async ask(prompt: string): Promise<string> {
-    return this.getEmbeddingResult(prompt);
+    if (this.disableNetwork) {
+      return 'AI Response Placeholder';
+    }
+
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return response.choices[0].message.content || '';
+  }
+
+  async extract(prompt: string): Promise<any> {
+    if (this.disableNetwork) {
+      return { suggestions: [] };
+    }
+
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
   }
 }

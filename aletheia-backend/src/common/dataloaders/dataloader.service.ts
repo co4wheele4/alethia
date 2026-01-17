@@ -15,6 +15,7 @@ import {
   EntityRelationshipEvidenceMention as PrismaEntityRelationshipEvidenceMention,
   AiQuery as PrismaAiQuery,
   AiQueryResult as PrismaAiQueryResult,
+  AiExtractionSuggestion as PrismaAiExtractionSuggestion,
 } from '@prisma/client';
 import { User } from '@models/user.model';
 import { Lesson } from '@models/lesson.model';
@@ -28,6 +29,7 @@ import { EntityRelationship } from '@models/entity-relationship.model';
 import { EntityRelationshipEvidence } from '@models/entity-relationship-evidence.model';
 import { EntityRelationshipEvidenceMention } from '@models/entity-relationship-evidence-mention.model';
 import { AiQuery, AiQueryResult } from '@models/ai-query.model';
+import { AiExtractionSuggestion } from '@models/ai-extraction-suggestion.model';
 
 /**
  * DataLoader service that provides batched loaders for all entity types
@@ -86,6 +88,10 @@ export class DataLoaderService {
     AiQueryResult | null
   >;
   private readonly resultsByQueryLoader: DataLoader<string, AiQueryResult[]>;
+  private readonly suggestionsByChunkLoader: DataLoader<
+    string,
+    AiExtractionSuggestion[]
+  >;
 
   constructor(private readonly prisma: PrismaService) {
     // User loaders
@@ -520,6 +526,27 @@ export class DataLoaderService {
         return queryIds.map((queryId) => resultsByQuery.get(queryId)!);
       },
     );
+
+    this.suggestionsByChunkLoader = new DataLoader<
+      string,
+      AiExtractionSuggestion[]
+    >(async (chunkIds: readonly string[]) => {
+      const suggestions: PrismaAiExtractionSuggestion[] =
+        await this.prisma.aiExtractionSuggestion.findMany({
+          where: { chunkId: { in: [...chunkIds] } },
+        });
+      const suggestionsByChunk = new Map<string, AiExtractionSuggestion[]>();
+      for (const chunkId of chunkIds) {
+        suggestionsByChunk.set(chunkId, []);
+      }
+      for (const suggestion of suggestions) {
+        const chunkSuggestions =
+          suggestionsByChunk.get(suggestion.chunkId) ?? [];
+        chunkSuggestions.push(suggestion as unknown as AiExtractionSuggestion);
+        suggestionsByChunk.set(suggestion.chunkId, chunkSuggestions);
+      }
+      return chunkIds.map((chunkId) => suggestionsByChunk.get(chunkId)!);
+    });
   }
 
   // User loaders
@@ -638,5 +665,9 @@ export class DataLoaderService {
 
   getResultsByQueryLoader(): DataLoader<string, AiQueryResult[]> {
     return this.resultsByQueryLoader;
+  }
+
+  getSuggestionsByChunkLoader(): DataLoader<string, AiExtractionSuggestion[]> {
+    return this.suggestionsByChunkLoader;
   }
 }

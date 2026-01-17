@@ -1,5 +1,6 @@
 // src/graphql/models/document-chunk.model.ts
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { AiExtractionSuggestion } from './ai-extraction-suggestion.model';
 
 @ObjectType()
 export class DocumentChunk {
@@ -18,4 +19,7 @@ export class DocumentChunk {
 
   @Field(() => String)
   documentId?: string;
+
+  @Field(() => [AiExtractionSuggestion], { nullable: true })
+  aiSuggestions?: AiExtractionSuggestion[];
 }

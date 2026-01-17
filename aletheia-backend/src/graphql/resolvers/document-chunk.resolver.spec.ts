@@ -60,6 +60,9 @@ describe('DocumentChunkResolver', () => {
       getMentionsByChunkLoader: jest.fn().mockReturnValue({
         load: jest.fn().mockResolvedValue([]),
       }),
+      getSuggestionsByChunkLoader: jest.fn().mockReturnValue({
+        load: jest.fn().mockResolvedValue([]),
+      }),
     };
 
     const moduleRef: Awaited<
@@ -367,6 +370,23 @@ describe('DocumentChunkResolver', () => {
       const result = await resolver.mentions(mockChunk);
 
       expect(result).toEqual([]);
+      expect(loadMock).toHaveBeenCalledWith(mockChunk.id);
+    });
+  });
+
+  describe('aiSuggestions', () => {
+    it('should resolve aiSuggestions field', async () => {
+      const mockSuggestions = [{ id: 's1' }];
+      const loadMock = jest.fn().mockResolvedValue(mockSuggestions);
+      (
+        dataLoaderService.getSuggestionsByChunkLoader as jest.Mock
+      ).mockReturnValue({
+        load: loadMock,
+      });
+
+      const result = await resolver.aiSuggestions(mockChunk);
+
+      expect(result).toEqual(mockSuggestions);
       expect(loadMock).toHaveBeenCalledWith(mockChunk.id);
     });
   });

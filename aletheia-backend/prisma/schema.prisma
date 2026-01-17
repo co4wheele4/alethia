@@ -143,6 +143,7 @@ model DocumentChunk {
   embeddings Embedding[]
   mentions   EntityMention[]
   relationshipEvidence EntityRelationshipEvidence[]
+  aiSuggestions AiExtractionSuggestion[]
 
   @@unique([documentId, chunkIndex])
   @@index([documentId])
@@ -327,4 +328,50 @@ model AiQueryResult {
   @@index([createdAt])
   @@index([score])
   @@map("ai_query_results")
+}
+
+////////////////////
+// AI EXTRACTION SUGGESTIONS (PROPOSALS)
+////////////////////
+
+enum SuggestionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum SuggestionKind {
+  ENTITY_MENTION
+  RELATIONSHIP
+}
+
+model AiExtractionSuggestion {
+  id         String   @id @default(uuid()) @map("id")
+  chunkId    String   @map("chunk_id")
+  kind       SuggestionKind @map("kind")
+  status     SuggestionStatus @default(PENDING) @map("status")
+  
+  // Suggested data (Entity Mention)
+  entityName  String? @map("entity_name")
+  entityType  String? @map("entity_type")
+  
+  // Suggested data (Relationship)
+  subjectName String? @map("subject_name")
+  subjectType String? @map("subject_type")
+  objectName  String? @map("object_name")
+  objectType  String? @map("object_type")
+  relation    String? @map("relation")
+
+  // Provenance (offsets into DocumentChunk.content)
+  startOffset Int? @map("start_offset")
+  endOffset   Int? @map("end_offset")
+  excerpt     String? @map("excerpt")
+  
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  chunk DocumentChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+
+  @@index([chunkId])
+  @@index([status])
+  @@map("ai_extraction_suggestions")
 }

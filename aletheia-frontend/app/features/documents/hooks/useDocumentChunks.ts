@@ -32,6 +32,24 @@ export type DocumentChunkItem = {
   chunkIndex: number;
   content: string;
   mentions: EntityMentionItem[];
+  aiSuggestions: AiExtractionSuggestionItem[];
+};
+
+export type AiExtractionSuggestionItem = {
+  __typename?: 'AiExtractionSuggestion';
+  id: string;
+  kind: 'ENTITY_MENTION' | 'RELATIONSHIP';
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  entityName?: string | null;
+  entityType?: string | null;
+  subjectName?: string | null;
+  subjectType?: string | null;
+  objectName?: string | null;
+  objectType?: string | null;
+  relation?: string | null;
+  startOffset?: number | null;
+  endOffset?: number | null;
+  excerpt?: string | null;
 };
 
 export type DocumentHeader = {

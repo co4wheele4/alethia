@@ -13,6 +13,7 @@ import { DocumentChunk } from '@models/document-chunk.model';
 import { Document } from '@models/document.model';
 import { Embedding } from '@models/embedding.model';
 import { EntityMention } from '@models/entity-mention.model';
+import { AiExtractionSuggestion } from '@models/ai-extraction-suggestion.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
@@ -96,5 +97,10 @@ export class DocumentChunkResolver {
   @ResolveField(() => [EntityMention])
   async mentions(@Parent() chunk: DocumentChunk) {
     return this.dataLoaders.getMentionsByChunkLoader().load(chunk.id);
+  }
+
+  @ResolveField(() => [AiExtractionSuggestion])
+  async aiSuggestions(@Parent() chunk: DocumentChunk) {
+    return this.dataLoaders.getSuggestionsByChunkLoader().load(chunk.id);
   }
 }

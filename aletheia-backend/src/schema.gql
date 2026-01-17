@@ -2,6 +2,24 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AiExtractionSuggestion {
+  chunkId: String!
+  createdAt: DateTime!
+  endOffset: Int
+  entityName: String
+  entityType: String
+  excerpt: String
+  id: ID!
+  kind: SuggestionKind!
+  objectName: String
+  objectType: String
+  relation: String
+  startOffset: Int
+  status: SuggestionStatus!
+  subjectName: String
+  subjectType: String
+}
+
 type AiQuery {
   createdAt: DateTime!
   id: ID!
@@ -15,6 +33,25 @@ type AiQueryResult {
   id: ID!
   query: AiQuery!
   score: Float!
+}
+
+input CreateDocumentSourceInput {
+  accessedAt: DateTime
+  author: String
+  contentSha256: String
+  contentType: String
+  fetchedUrl: String
+  fileSha256: String
+  filename: String
+  kind: DocumentSourceKindInput!
+
+  """Milliseconds since epoch, as string."""
+  lastModifiedMs: String
+  mimeType: String
+  publishedAt: DateTime
+  publisher: String
+  requestedUrl: String
+  sizeBytes: Float
 }
 
 input CreateEntityInput {
@@ -70,6 +107,7 @@ type Document {
 }
 
 type DocumentChunk {
+  aiSuggestions: [AiExtractionSuggestion!]
   chunkIndex: Int!
   content: String!
   document: Document!
@@ -109,6 +147,13 @@ type DocumentSource {
 
 """Declared source kind for an ingested document snapshot."""
 enum DocumentSourceKind {
+  FILE
+  MANUAL
+  URL
+}
+
+"""Declared source kind for document ingestion."""
+enum DocumentSourceKindInput {
   FILE
   MANUAL
   URL
@@ -205,6 +250,13 @@ type EntityRelationshipEvidenceMention {
   mentionId: ID!
 }
 
+input IngestDocumentInput {
+  content: String!
+  source: CreateDocumentSourceInput!
+  title: String!
+  userId: String!
+}
+
 type Lesson {
   content: String
   createdAt: DateTime!
@@ -214,6 +266,7 @@ type Lesson {
 }
 
 type Mutation {
+  acceptSuggestion(id: ID!): AiExtractionSuggestion!
   askAI(query: String!, userId: String!): String!
   askAi(query: String!, userId: String!): AiQueryResult!
   createChunk(chunkIndex: Int!, content: String!, documentId: String!): DocumentChunk!
@@ -232,8 +285,11 @@ type Mutation {
   deleteEntityRelationship(id: String!): EntityRelationship!
   deleteLesson(id: String!): Lesson!
   deleteUser(id: String!): User!
+  ingestDocument(input: IngestDocumentInput!): Document!
   login(email: String!, password: String!): String!
+  proposeExtraction(chunkId: ID!): [AiExtractionSuggestion!]!
   register(email: String!, name: String, password: String!): String!
+  rejectSuggestion(id: ID!): AiExtractionSuggestion!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
   updateEmbedding(id: String!, values: [Float!]): Embedding!
@@ -268,6 +324,7 @@ type Query {
   entityRelationship(id: String!): EntityRelationship
   entityRelationships: [EntityRelationship!]!
   hello: String!
+  ingestionHealthCheck: String!
   lesson(id: String!): Lesson
   lessons: [Lesson!]!
   lessonsByUser(userId: String!): [Lesson!]!
@@ -278,6 +335,17 @@ type Query {
 """Evidence kind for an entity relationship (currently only TEXT_SPAN)."""
 enum RelationshipEvidenceKind {
   TEXT_SPAN
+}
+
+enum SuggestionKind {
+  ENTITY_MENTION
+  RELATIONSHIP
+}
+
+enum SuggestionStatus {
+  ACCEPTED
+  PENDING
+  REJECTED
 }
 
 input UpdateEntityInput {
