@@ -9,13 +9,13 @@ import { useHello } from '../../../hooks/useHello';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-jest.mock('../../../hooks/useHello');
+vi.mock('../../../hooks/useHello');
 
-const mockUseHello = useHello as jest.MockedFunction<typeof useHello>;
+const mockUseHello = useHello as any;
 
 const mockApolloClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -25,7 +25,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('GraphQLExample Edge Cases', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should render "No data" when hello is null', () => {
@@ -33,7 +33,7 @@ describe('GraphQLExample Edge Cases', () => {
       hello: undefined,
       loading: false,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -50,7 +50,7 @@ describe('GraphQLExample Edge Cases', () => {
       hello: undefined,
       loading: false,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -67,7 +67,7 @@ describe('GraphQLExample Edge Cases', () => {
       hello: '',
       loading: false,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -84,7 +84,7 @@ describe('GraphQLExample Edge Cases', () => {
       hello: undefined,
       loading: true,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -103,7 +103,7 @@ describe('GraphQLExample Edge Cases', () => {
       hello: undefined,
       loading: false,
       error: { message: errorMessage } as Error,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -118,7 +118,7 @@ describe('GraphQLExample Edge Cases', () => {
   });
 
   it('should call refetch from error state', () => {
-    const mockRefetch = jest.fn();
+    const mockRefetch = vi.fn();
     mockUseHello.mockReturnValue({
       hello: undefined,
       loading: false,
@@ -139,7 +139,7 @@ describe('GraphQLExample Edge Cases', () => {
   });
 
   it('should call refetch from success state', () => {
-    const mockRefetch = jest.fn();
+    const mockRefetch = vi.fn();
     mockUseHello.mockReturnValue({
       hello: 'Hello World',
       loading: false,

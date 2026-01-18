@@ -12,17 +12,17 @@ import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { ThemeProvider } from '../../../hooks/useTheme';
 import { MuiThemeProvider } from '../../../providers/mui-theme-provider';
 
-jest.mock('../../../hooks/useAuth');
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+vi.mock('../../../hooks/useAuth');
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
 }));
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
-const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
+const mockUseAuth = useAuth as any;
+const mockUseRouter = useRouter as any;
 
 const mockApolloClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -37,20 +37,20 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('LoginForm Error Paths', () => {
-  const mockLogin = jest.fn();
-  const mockRegister = jest.fn();
-  const mockReplace = jest.fn();
+  const mockLogin = vi.fn();
+  const mockRegister = vi.fn();
+  const mockReplace = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseRouter.mockReturnValue({
       replace: mockReplace,
-      push: jest.fn(),
-      back: jest.fn(),
-      forward: jest.fn(),
-      refresh: jest.fn(),
-      prefetch: jest.fn(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      push: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      refresh: vi.fn(),
+      prefetch: vi.fn(),
+      
     } as any);
 
     mockUseAuth.mockReturnValue({
@@ -59,9 +59,9 @@ describe('LoginForm Error Paths', () => {
       token: null,
       login: mockLogin,
       register: mockRegister,
-      changePassword: jest.fn(),
-      forgotPassword: jest.fn(),
-      logout: jest.fn(),
+      changePassword: vi.fn(),
+      forgotPassword: vi.fn(),
+      logout: vi.fn(),
       loading: false,
       error: undefined,
     });

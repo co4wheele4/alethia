@@ -8,22 +8,22 @@ import { GraphQLError } from 'graphql';
 import { errorLinkHandler } from '../../services/apollo-client';
 
 // Mock the constants
-jest.mock('../../lib/constants', () => ({
+vi.mock('../../lib/constants', () => ({
   GRAPHQL_URL: 'http://localhost:4000/graphql',
 }));
 
 describe('errorLinkHandler Tests', () => {
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: any;
   let originalIs: typeof CombinedGraphQLErrors.is;
 
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     localStorage.clear();
     
     // Mock CombinedGraphQLErrors.is() to return true for objects with errors array
     originalIs = CombinedGraphQLErrors.is;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (CombinedGraphQLErrors as any).is = jest.fn((err: any) => {
+    
+    (CombinedGraphQLErrors as any).is = vi.fn((err: any) => {
       return err && typeof err === 'object' && Array.isArray(err.errors) && err.errors.length > 0;
     });
   });
@@ -31,7 +31,7 @@ describe('errorLinkHandler Tests', () => {
   afterEach(() => {
     consoleErrorSpy.mockRestore();
     // Restore original
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     (CombinedGraphQLErrors as any).is = originalIs;
   });
 
@@ -53,7 +53,7 @@ describe('errorLinkHandler Tests', () => {
     errorLinkHandler(error);
 
     expect(consoleErrorSpy).toHaveBeenCalled();
-    const errorCalls = consoleErrorSpy.mock.calls.filter(call => {
+    const errorCalls = consoleErrorSpy.mock.calls.filter((call: any[]) => {
       const msg = String(call[0]);
       return msg.includes('[GraphQL error]');
     });
@@ -100,7 +100,7 @@ describe('errorLinkHandler Tests', () => {
     errorLinkHandler(networkError);
 
     expect(consoleErrorSpy).toHaveBeenCalled();
-    const errorCalls = consoleErrorSpy.mock.calls.filter(call => {
+    const errorCalls = consoleErrorSpy.mock.calls.filter((call: any[]) => {
       const msg = String(call[0]);
       return msg.includes('[Network error]');
     });
@@ -112,9 +112,9 @@ describe('errorLinkHandler Tests', () => {
       extensions: { code: 'TEST_ERROR' },
     });
     // Manually set path and locations for testing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     (graphQLError as any).path = ['query', 'field'];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     (graphQLError as any).locations = [{ line: 1, column: 5 }];
 
     // Create error that will pass CombinedGraphQLErrors.is() check
@@ -130,7 +130,7 @@ describe('errorLinkHandler Tests', () => {
     errorLinkHandler(error);
 
     expect(consoleErrorSpy).toHaveBeenCalled();
-    const errorCalls = consoleErrorSpy.mock.calls.filter(call => {
+    const errorCalls = consoleErrorSpy.mock.calls.filter((call: any[]) => {
       const msg = String(call[0]);
       return msg.includes('[GraphQL error]');
     });

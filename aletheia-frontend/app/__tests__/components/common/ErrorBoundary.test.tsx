@@ -28,11 +28,11 @@ const ThrowErrorWithStack = () => {
 describe('ErrorBoundary', () => {
   beforeEach(() => {
     // Suppress console.error for error boundary tests
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should render children when no error occurs', () => {
@@ -76,7 +76,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('should call onError callback when error occurs', () => {
-    const onError = jest.fn();
+    const onError = vi.fn();
 
     render(
       <TestWrapper>

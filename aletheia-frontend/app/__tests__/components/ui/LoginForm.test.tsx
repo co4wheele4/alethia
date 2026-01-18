@@ -10,19 +10,22 @@ import { ApolloClient, InMemoryCache } from '@apollo/client';
 import * as reactDom from 'react-dom';
 
 // Mock useAuth hook
-jest.mock('../../../hooks/useAuth');
+vi.mock('../../../hooks/useAuth');
 
 // Mock useFormStatus to test the formStatus.pending branch
-jest.mock('react-dom', () => ({
-  ...jest.requireActual('react-dom'),
-  useFormStatus: jest.fn(() => ({ pending: false })),
-}));
+vi.mock('react-dom', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    useFormStatus: vi.fn(() => ({ pending: false })),
+  };
+});
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockUseAuth = useAuth as any;
 
 const mockApolloClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -32,22 +35,22 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 TestWrapper.displayName = 'TestWrapper';
 
 describe('LoginForm', () => {
-  const mockLogin = jest.fn();
-  const mockRegister = jest.fn();
+  const mockLogin = vi.fn();
+  const mockRegister = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset useFormStatus mock to default (pending: false)
-    (reactDom.useFormStatus as jest.Mock).mockReturnValue({ pending: false });
+    (reactDom.useFormStatus as any).mockReturnValue({ pending: false });
     mockUseAuth.mockReturnValue({
       token: null,
       isAuthenticated: false,
       isInitialized: true,
       login: mockLogin as (email: string, password: string) => Promise<string>,
       register: mockRegister as (email: string, password: string, name?: string) => Promise<string>,
-      changePassword: jest.fn() as (currentPassword: string, newPassword: string) => Promise<boolean>,
-      forgotPassword: jest.fn() as (email: string) => Promise<boolean>,
-      logout: jest.fn(),
+      changePassword: vi.fn() as (currentPassword: string, newPassword: string) => Promise<boolean>,
+      forgotPassword: vi.fn() as (email: string) => Promise<boolean>,
+      logout: vi.fn(),
       loading: false,
       error: undefined,
     });
@@ -434,7 +437,7 @@ describe('LoginForm', () => {
   });
 
   it('should handle forgot password form interaction', async () => {
-    const mockForgotPassword = jest.fn().mockResolvedValue(true);
+    const mockForgotPassword = vi.fn().mockResolvedValue(true);
     
     mockUseAuth.mockReturnValue({
       token: null,
@@ -442,9 +445,9 @@ describe('LoginForm', () => {
       isInitialized: true,
       login: mockLogin,
       register: mockRegister,
-      changePassword: jest.fn(),
+      changePassword: vi.fn(),
       forgotPassword: mockForgotPassword,
-      logout: jest.fn(),
+      logout: vi.fn(),
       loading: false,
       error: undefined,
     });
@@ -1008,7 +1011,7 @@ describe('LoginForm', () => {
 
   it('should use formStatus.pending when useFormStatus returns pending true', () => {
     // Mock useFormStatus to return pending: true to test the formStatus.pending branch
-    (reactDom.useFormStatus as jest.Mock).mockReturnValue({ pending: true });
+    (reactDom.useFormStatus as any).mockReturnValue({ pending: true });
 
     render(
       <TestWrapper>
@@ -1047,5 +1050,46 @@ describe('LoginForm', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
+  });
+
+  it('should handle non-Error objects in catch block', async () => {
+    // Test the branch where err is not an Error instance (line 134 false branch)
+    mockLogin.mockRejectedValue('string error');
+
+    render(
+      <TestWrapper>
+        <LoginForm />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole('button', { name: /login/i });
+
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      const alert = screen.queryByRole('alert');
+      expect(alert).toBeInTheDocument();
+      expect(alert).toHaveTextContent(/login failed/i);
+    });
+  });
+
+  it('should handle onFocus when not in register mode', async () => {
+    // Test the branch where isRegisterMode is false in onFocus (line 246 false branch)
+    render(
+      <TestWrapper>
+        <LoginForm />
+      </TestWrapper>
+    );
+
+    const passwordInput = screen.getByLabelText(/password/i);
+    // Focus the password field while in login mode
+    fireEvent.focus(passwordInput);
+
+    // Password requirements should NOT be shown
+    expect(screen.queryByText(/password requirements/i)).not.toBeInTheDocument();
   });
 });

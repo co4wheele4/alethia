@@ -122,12 +122,15 @@ function extractStats(output, testType) {
 
   if (!output) return stats;
 
-  if (testType === 'jest') {
-    // Jest output format examples:
+  if (testType === 'jest' || testType === 'vitest') {
+    // Jest/Vitest output format examples:
     // "Tests:       5 passed, 2 failed, 1 skipped, 8 total"
     // "Test Suites: 12 passed, 12 total"
     // "Tests:       56 passed, 56 total"
-    const testMatch = output.match(/Tests:\s+(\d+)\s+passed(?:,\s+(\d+)\s+failed)?(?:,\s+(\d+)\s+skipped)?(?:,\s+(\d+)\s+total)?/i);
+    // Vitest: "Tests  5 passed (5)"
+    const testMatch = output.match(/Tests:?\s+(\d+)\s+passed(?:,\s+(\d+)\s+failed)?(?:,\s+(\d+)\s+skipped)?(?:,\s+(\d+)\s+total)?/i) ||
+                     output.match(/Tests\s+(\d+)\s+passed/i);
+    
     if (testMatch) {
       stats.passed = parseInt(testMatch[1]) || 0;
       stats.failed = parseInt(testMatch[2]) || 0;
@@ -189,7 +192,12 @@ function displaySummary() {
     console.log(`   Duration: ${colors.gray}${durationStr}${colors.reset}`);
 
     // Determine test type
-    const testType = name.includes('E2E') && name.includes('Frontend') ? 'playwright' : 'jest';
+    let testType = 'jest';
+    if (name.includes('E2E') && name.includes('Frontend')) {
+      testType = 'playwright';
+    } else if (name.includes('Frontend') && name.includes('Unit')) {
+      testType = 'vitest';
+    }
     
     // Try to extract stats from output
     let stats = extractStats(result.output, testType);

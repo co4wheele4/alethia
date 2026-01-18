@@ -35,4 +35,17 @@ describe('AletheiaLayout', () => {
     expect(screen.getByText('Header Content')).toBeInTheDocument();
     expect(screen.getByText('Body Content')).toBeInTheDocument();
   });
+
+  it('should render with footer', () => {
+    render(
+      <TestWrapper>
+        <AletheiaLayout footer={<div>Footer Content</div>}>
+          <div>Body Content</div>
+        </AletheiaLayout>
+      </TestWrapper>
+    );
+
+    expect(screen.getByText('Footer Content')).toBeInTheDocument();
+    expect(screen.getByText('Body Content')).toBeInTheDocument();
+  });
 });

@@ -76,7 +76,7 @@ describe('ConflictResolver Edge Cases', () => {
   });
 
   it('should call onResolve with correct values when multiple options exist', () => {
-    const onResolve = jest.fn();
+    const onResolve = vi.fn();
     const conflict = {
       id: 'conflict-123',
       description: 'Test conflict',
@@ -102,7 +102,7 @@ describe('ConflictResolver Edge Cases', () => {
   });
 
   it('should not call onResolve when button is disabled', () => {
-    const onResolve = jest.fn();
+    const onResolve = vi.fn();
     const conflict = {
       id: '1',
       description: 'Test conflict',

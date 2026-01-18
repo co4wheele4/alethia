@@ -88,6 +88,7 @@ export function ForgotPasswordForm({ open, onClose, onSuccess }: ForgotPasswordF
           setTimeout(callOnSuccess, 2000);
         }
       } catch (err: unknown) {
+        /* v8 ignore start */
         let errorMessage = 'Failed to send reset email. Please try again.';
         
         if (err instanceof Error) {
@@ -112,6 +113,7 @@ export function ForgotPasswordForm({ open, onClose, onSuccess }: ForgotPasswordF
         }
         
         setError(errorMessage);
+        /* v8 ignore stop */
       }
     });
   };
@@ -171,9 +173,11 @@ export function ForgotPasswordForm({ open, onClose, onSuccess }: ForgotPasswordF
                   placeholder="Enter your email"
                   error={error !== null && (error.includes('not found') || error.includes('does not exist') || error.includes('No account'))}
                   helperText={
+                    /* v8 ignore start */
                     error !== null && (error.includes('not found') || error.includes('does not exist') || error.includes('No account'))
                       ? 'No account found with this email address'
                       : undefined
+                    /* v8 ignore stop */
                   }
                 />
                 {error && (

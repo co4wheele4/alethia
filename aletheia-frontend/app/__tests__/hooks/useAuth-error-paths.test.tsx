@@ -12,15 +12,15 @@ import * as authUtils from '../../lib/utils/auth';
 import { GraphQLError } from 'graphql';
 
 // Mock the auth utils
-jest.mock('../../lib/utils/auth', () => ({
-  setAuthToken: jest.fn(),
-  removeAuthToken: jest.fn(),
-  getAuthToken: jest.fn(() => null),
+vi.mock('../../lib/utils/auth', () => ({
+  setAuthToken: vi.fn(),
+  removeAuthToken: vi.fn(),
+  getAuthToken: vi.fn(() => null),
 }));
 
 // Mock Apollo Client with error scenarios
 // Apollo Link must return an Observable
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const createMockLink = (scenario: string) => {
   return new ApolloLink((operation: any) => {
     return new Observable((observer: any) => {
@@ -145,7 +145,7 @@ const createMockLink = (scenario: string) => {
     });
   });
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
+ 
 
 const createMockClient = (scenario: string) => {
   return new ApolloClient({
@@ -164,8 +164,8 @@ const wrapper = (scenario: string) => {
 
 describe('useAuth Error Paths', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (authUtils.getAuthToken as jest.Mock).mockReturnValue(null);
+    vi.clearAllMocks();
+    (authUtils.getAuthToken as any).mockReturnValue(null);
     localStorage.clear();
   });
 
@@ -244,7 +244,7 @@ describe('useAuth Error Paths', () => {
   it('should handle login with null data response', async () => {
      
     const mockLink = new ApolloLink(() => {
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+       
       return new Observable((observer: any) => {
         observer.next({ data: { login: null } });
         observer.complete();
@@ -268,7 +268,7 @@ describe('useAuth Error Paths', () => {
   it('should handle register with null data response', async () => {
      
     const mockLink = new ApolloLink(() => {
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+       
       return new Observable((observer: any) => {
         observer.next({ data: { register: null } });
         observer.complete();
@@ -291,7 +291,7 @@ describe('useAuth Error Paths', () => {
   it('should handle changePassword with null data response', async () => {
      
     const mockLink = new ApolloLink(() => {
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+       
       return new Observable((observer: any) => {
         observer.next({ data: { changePassword: null } });
         observer.complete();
@@ -314,7 +314,7 @@ describe('useAuth Error Paths', () => {
   it('should handle forgotPassword with null data response', async () => {
      
     const mockLink = new ApolloLink(() => {
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+       
       return new Observable((observer: any) => {
         observer.next({ data: { forgotPassword: null } });
         observer.complete();

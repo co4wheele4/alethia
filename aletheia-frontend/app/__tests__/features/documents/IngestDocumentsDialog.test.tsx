@@ -69,7 +69,7 @@ function createMockClient() {
 describe('IngestDocumentsDialog', () => {
   it('ingests manual text by creating document then chunks', async () => {
     const { client, calls } = createMockClient();
-    const onIngested = jest.fn();
+    const onIngested = vi.fn();
 
     render(
       <ApolloProvider client={client}>

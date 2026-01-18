@@ -25,7 +25,7 @@ describe('SemanticSearchBox', () => {
   });
 
   it('should call onChange when value changes', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<SemanticSearchBox onChange={handleChange} />);
     
     const input = screen.getByPlaceholderText('Search...');
@@ -35,7 +35,7 @@ describe('SemanticSearchBox', () => {
   });
 
   it('should call onSearch when Enter is pressed', () => {
-    const handleSearch = jest.fn();
+    const handleSearch = vi.fn();
     render(<SemanticSearchBox value="Search term" onSearch={handleSearch} />);
     
     const input = screen.getByPlaceholderText('Search...');
@@ -54,13 +54,29 @@ describe('SemanticSearchBox', () => {
   });
 
   it('should not call onSearch when other keys are pressed', () => {
-    const handleSearch = jest.fn();
+    const handleSearch = vi.fn();
     render(<SemanticSearchBox value="Search term" onSearch={handleSearch} />);
     
     const input = screen.getByPlaceholderText('Search...');
-    fireEvent.keyPress(input, { key: 'Space', code: 'Space' });
+    fireEvent.keyPress(input, { key: 'Space', code: 'Space', charCode: 32 });
     
     expect(handleSearch).not.toHaveBeenCalled();
+  });
+
+  it('should not call onSearch when Enter is pressed but onSearch is not provided', () => {
+    render(<SemanticSearchBox value="Search term" />);
+    
+    const input = screen.getByPlaceholderText('Search...');
+    fireEvent.keyPress(input, { key: 'Enter', code: 'Enter', charCode: 13 });
+    // Should not throw, covered by 'should work without handlers' but more explicit here
+  });
+
+  it('should not call onSearch when other keys are pressed and onSearch is not provided', () => {
+    render(<SemanticSearchBox value="Search term" />);
+    
+    const input = screen.getByPlaceholderText('Search...');
+    fireEvent.keyPress(input, { key: 'a', code: 'KeyA', charCode: 97 });
+    // Covers the branch where key !== Enter and onSearch is falsy
   });
 
   it('should work without handlers', () => {

@@ -23,13 +23,13 @@ describe('cache utilities', () => {
 
   describe('createCachedFunction', () => {
     it('should create a cached function', () => {
-      const fn = jest.fn((x: number) => x * 2);
+      const fn = vi.fn((x: number) => x * 2);
       const cachedFn = createCachedFunction(fn);
       expect(typeof cachedFn).toBe('function');
     });
 
     it('should return a function that can be called', () => {
-      const fn = jest.fn((x: number) => x * 2);
+      const fn = vi.fn((x: number) => x * 2);
       const cachedFn = createCachedFunction(fn);
       
       const result = cachedFn(5);

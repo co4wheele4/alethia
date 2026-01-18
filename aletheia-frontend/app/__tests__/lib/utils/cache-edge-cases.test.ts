@@ -6,12 +6,15 @@
 import { getCachedData, createCachedFunction } from '../../../lib/utils/cache';
 
 // Mock React's cache function to preserve function signatures in tests
-/* eslint-disable @typescript-eslint/no-explicit-any */
-jest.mock('react', () => ({
-  ...jest.requireActual('react'),
-  cache: <T extends (...args: any[]) => any>(fn: T): T => fn as T,
-}));
-/* eslint-enable @typescript-eslint/no-explicit-any */
+
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    cache: <T extends (...args: any[]) => any>(fn: T): T => fn as T,
+  };
+});
+ 
 
 describe('cache utilities Edge Cases', () => {
   describe('getCachedData - Edge Cases', () => {
@@ -65,7 +68,7 @@ describe('cache utilities Edge Cases', () => {
 
   describe('createCachedFunction - Edge Cases', () => {
     it('should handle function that returns undefined', () => {
-      const fn = jest.fn(() => undefined);
+      const fn = vi.fn(() => undefined);
       const cachedFn = createCachedFunction(fn);
       
       const result = (cachedFn as (arg: number) => undefined)(1);
@@ -74,7 +77,7 @@ describe('cache utilities Edge Cases', () => {
     });
 
     it('should handle function that returns null', () => {
-      const fn = jest.fn(() => null);
+      const fn = vi.fn(() => null);
       const cachedFn = createCachedFunction(fn);
       
       const result = (cachedFn as (arg: number) => null)(1);
@@ -83,7 +86,7 @@ describe('cache utilities Edge Cases', () => {
     });
 
     it('should handle function that throws error', () => {
-      const fn = jest.fn(() => {
+      const fn = vi.fn(() => {
         throw new Error('Function error');
       });
       const cachedFn = createCachedFunction(fn);
@@ -93,7 +96,7 @@ describe('cache utilities Edge Cases', () => {
     });
 
     it('should handle function with multiple arguments', () => {
-      const fn = jest.fn((a: number, b: number, c: string) => a + b + c);
+      const fn = vi.fn((a: number, b: number, c: string) => a + b + c);
       const cachedFn = createCachedFunction(fn);
       
       const result = cachedFn(1, 2, 'test');
@@ -102,7 +105,7 @@ describe('cache utilities Edge Cases', () => {
     });
 
     it('should handle function with no arguments', () => {
-      const fn = jest.fn(() => 'result');
+      const fn = vi.fn(() => 'result');
       const cachedFn = createCachedFunction(fn);
       
       const result = cachedFn();
@@ -111,7 +114,7 @@ describe('cache utilities Edge Cases', () => {
     });
 
     it('should handle async function', async () => {
-      const fn = jest.fn(async (x: number) => {
+      const fn = vi.fn(async (x: number) => {
         await new Promise(resolve => setTimeout(resolve, 10));
         return x * 2;
       });

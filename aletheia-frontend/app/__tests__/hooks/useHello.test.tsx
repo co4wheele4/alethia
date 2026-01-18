@@ -3,10 +3,26 @@
  */
 
 import { renderHook } from '@testing-library/react';
+import * as apolloReact from '@apollo/client/react';
 import { useHello } from '../../hooks/useHello';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
-import * as apolloReact from '@apollo/client/react';
+
+// Mock useQuery
+vi.mock('@apollo/client/react', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    useQuery: vi.fn(() => ({
+      data: undefined,
+      loading: false,
+      error: undefined,
+      refetch: vi.fn(),
+    })),
+  };
+});
+
+const { useQuery } = apolloReact;
 
 // Mock Apollo Client
 const mockClient = new ApolloClient({
@@ -28,6 +44,13 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('useHello', () => {
   it('should return hook with expected properties', () => {
+    vi.mocked(apolloReact.useQuery).mockReturnValue({
+      data: undefined,
+      loading: false,
+      error: undefined,
+      refetch: vi.fn(),
+    } as any);
+
     const { result } = renderHook(() => useHello(), { wrapper });
 
     expect(result.current).toHaveProperty('hello');
@@ -38,6 +61,13 @@ describe('useHello', () => {
   });
 
   it('should have loading state initially', () => {
+    vi.mocked(apolloReact.useQuery).mockReturnValue({
+      data: undefined,
+      loading: true,
+      error: undefined,
+      refetch: vi.fn(),
+    } as any);
+
     const { result } = renderHook(() => useHello(), { wrapper });
 
     // Initially loading might be true or false depending on query execution
@@ -46,12 +76,12 @@ describe('useHello', () => {
 
   it('should return hello when data exists', async () => {
     // Mock useQuery to return data
-    jest.spyOn(apolloReact, 'useQuery').mockReturnValue({
+    vi.mocked(useQuery).mockReturnValue({
       data: { hello: 'Hello World' },
       loading: false,
       error: undefined,
-      refetch: jest.fn(),
-    } as unknown as ReturnType<typeof apolloReact.useQuery>);
+      refetch: vi.fn(),
+    } as any);
 
     const { result } = renderHook(() => useHello(), { wrapper });
 
@@ -61,12 +91,12 @@ describe('useHello', () => {
 
   it('should return undefined when data does not exist', async () => {
     // Mock useQuery to return no data
-    jest.spyOn(apolloReact, 'useQuery').mockReturnValue({
+    vi.mocked(useQuery).mockReturnValue({
       data: undefined,
       loading: false,
       error: undefined,
-      refetch: jest.fn(),
-    } as unknown as ReturnType<typeof apolloReact.useQuery>);
+      refetch: vi.fn(),
+    } as any);
 
     const { result } = renderHook(() => useHello(), { wrapper });
 

@@ -1,9 +1,11 @@
-// Learn more: https://github.com/testing-library/jest-dom
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import '@testing-library/jest-dom'
+import { vi } from 'vitest'
 
 // Polyfills for MSW in Node.js environment
 // MSW requires these APIs to be available globally
 import { TextEncoder, TextDecoder } from 'util'
+// @ts-expect-error - whatwg-fetch is not a module but we need its types or it is fine to ignore
 import { fetch, Headers, Request, Response } from 'whatwg-fetch'
 
 // Set up polyfills before MSW is imported
@@ -18,13 +20,14 @@ Object.assign(globalThis, {
 
 // Polyfill for TransformStream (required by MSW)
 if (typeof globalThis.TransformStream === 'undefined') {
-  // Use a simple polyfill or skip MSW setup
   globalThis.TransformStream = class TransformStream {
+    readable: any
+    writable: any
     constructor() {
       this.readable = { getReader: () => ({ read: async () => ({ done: true }) }) }
       this.writable = { getWriter: () => ({ write: async () => {}, close: async () => {} }) }
     }
-  }
+  } as any
 }
 
 // Polyfill for BroadcastChannel (required by MSW)
@@ -35,25 +38,17 @@ if (typeof globalThis.BroadcastChannel === 'undefined') {
     close() {}
     addEventListener() {}
     removeEventListener() {}
-  }
+  } as any
 }
 
-// Setup MSW (Mock Service Worker) for API mocking
-// Note: MSW setup is optional - tests can work with or without it
-// Uncomment below to enable MSW for all tests
-// import { server } from './app/__tests__/mocks/server'
-// beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
-// afterEach(() => server.resetHandlers())
-// afterAll(() => server.close())
-
 // Mock Next.js router
-jest.mock('next/navigation', () => ({
+vi.mock('next/navigation', () => ({
   useRouter() {
     return {
-      push: jest.fn(),
-      replace: jest.fn(),
-      prefetch: jest.fn(),
-      back: jest.fn(),
+      push: vi.fn(),
+      replace: vi.fn(),
+      prefetch: vi.fn(),
+      back: vi.fn(),
     }
   },
   usePathname() {
@@ -66,15 +61,15 @@ jest.mock('next/navigation', () => ({
 
 // Mock localStorage
 const localStorageMock = (function() {
-  let store = {}
+  let store: Record<string, string> = {}
   return {
-    getItem(key) {
+    getItem(key: string) {
       return store[key] || null
     },
-    setItem(key, value) {
+    setItem(key: string, value: any) {
       store[key] = String(value)
     },
-    removeItem(key) {
+    removeItem(key: string) {
       delete store[key]
     },
     clear() {
@@ -87,16 +82,16 @@ const localStorageMock = (function() {
 if (typeof window !== 'undefined') {
   // Ensure RAF APIs exist (some components use them for hydration timing).
   if (typeof window.requestAnimationFrame !== 'function') {
-    window.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 0)
+    (window as any).requestAnimationFrame = (cb: any) => setTimeout(() => cb(Date.now()), 0)
   }
   if (typeof window.cancelAnimationFrame !== 'function') {
-    window.cancelAnimationFrame = (id) => clearTimeout(id)
+    (window as any).cancelAnimationFrame = (id: any) => clearTimeout(id)
   }
   if (typeof globalThis.requestAnimationFrame !== 'function') {
-    globalThis.requestAnimationFrame = window.requestAnimationFrame
+    (globalThis as any).requestAnimationFrame = window.requestAnimationFrame
   }
   if (typeof globalThis.cancelAnimationFrame !== 'function') {
-    globalThis.cancelAnimationFrame = window.cancelAnimationFrame
+    (globalThis as any).cancelAnimationFrame = window.cancelAnimationFrame
   }
 
   Object.defineProperty(window, 'localStorage', {
@@ -106,13 +101,13 @@ if (typeof window !== 'undefined') {
   // Mock window.matchMedia for theme hooks
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: jest.fn().mockImplementation((query) => ({
+    value: vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
       onchange: null,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     })),
   })
 }

@@ -23,7 +23,7 @@ describe('RelationshipEdge', () => {
   });
 
   it('should call onClick when clicked', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<RelationshipEdge fromId="node1" toId="node2" onClick={handleClick} />);
     
     const edge = screen.getByText(/node1.*→.*node2/i);

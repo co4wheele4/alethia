@@ -8,14 +8,14 @@ import { useAuth } from '../../../hooks/useAuth';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-jest.mock('../../../hooks/useAuth');
+vi.mock('../../../hooks/useAuth');
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
-const mockForgotPassword = jest.fn();
+const mockUseAuth = useAuth as any;
+const mockForgotPassword = vi.fn();
 
 const mockApolloClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -25,25 +25,29 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('ForgotPasswordForm', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseAuth.mockReturnValue({
       token: null,
       isAuthenticated: false,
       isInitialized: true,
-      login: jest.fn(),
-      register: jest.fn(),
-      changePassword: jest.fn(),
+      login: vi.fn(),
+      register: vi.fn(),
+      changePassword: vi.fn(),
       forgotPassword: mockForgotPassword,
-      logout: jest.fn(),
+      logout: vi.fn(),
       loading: false,
       error: undefined,
     });
   });
 
+  afterEach(() => {
+    
+  });
+
   it('should render dialog when open', () => {
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -54,7 +58,7 @@ describe('ForgotPasswordForm', () => {
   it('should not render when closed', () => {
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={false} onClose={jest.fn()} />
+        <ForgotPasswordForm open={false} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -64,7 +68,7 @@ describe('ForgotPasswordForm', () => {
   it('should validate email is required', async () => {
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -89,7 +93,7 @@ describe('ForgotPasswordForm', () => {
   it('should validate email format', async () => {
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -118,7 +122,7 @@ describe('ForgotPasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -137,7 +141,7 @@ describe('ForgotPasswordForm', () => {
     // Test that SubmitButton function is executed (line 26)
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -151,7 +155,7 @@ describe('ForgotPasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -171,13 +175,12 @@ describe('ForgotPasswordForm', () => {
   });
 
   it('should show success message on success', async () => {
-    jest.useFakeTimers();
     mockForgotPassword.mockResolvedValue(true);
 
-    const onSuccess = jest.fn();
+    const onSuccess = vi.fn();
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} onSuccess={onSuccess} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} onSuccess={onSuccess} />
       </TestWrapper>
     );
 
@@ -196,25 +199,21 @@ describe('ForgotPasswordForm', () => {
       expect(screen.getByText(/password reset email sent/i)).toBeInTheDocument();
     });
 
-    // Fast-forward time to trigger setTimeout callback (line 86-89)
-    // This executes the callOnSuccess function which calls onSuccess()
+    // Wait for the setTimeout callback (2000ms in the component)
     await act(async () => {
-      jest.advanceTimersByTime(2000);
+      await new Promise(resolve => setTimeout(resolve, 2100));
     });
 
-    // callOnSuccess function should have been executed, which calls onSuccess
+    // onSuccess should have been called
     expect(onSuccess).toHaveBeenCalledTimes(1);
-
-    jest.useRealTimers();
-  });
+  }, 10000);
 
   it('should not call onSuccess when not provided', async () => {
-    jest.useFakeTimers();
     mockForgotPassword.mockResolvedValue(true);
 
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -228,19 +227,16 @@ describe('ForgotPasswordForm', () => {
       expect(screen.getByText(/password reset email sent/i)).toBeInTheDocument();
     });
 
-    // Fast-forward time - the setTimeout should not execute because onSuccess is undefined
-    act(() => {
-      jest.advanceTimersByTime(2000);
+    // Wait to ensure no errors occur
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 500));
     });
     
-    // No errors should occur (onSuccess is undefined, so the if check should prevent calling it)
     expect(screen.getByText(/password reset email sent/i)).toBeInTheDocument();
-
-    jest.useRealTimers();
   });
 
   it('should close dialog when cancel is clicked', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <TestWrapper>
         <ForgotPasswordForm open={true} onClose={onClose} />
@@ -258,7 +254,7 @@ describe('ForgotPasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -285,7 +281,7 @@ describe('ForgotPasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -317,7 +313,7 @@ describe('ForgotPasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -340,7 +336,7 @@ describe('ForgotPasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -363,7 +359,7 @@ describe('ForgotPasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -382,7 +378,7 @@ describe('ForgotPasswordForm', () => {
   });
 
   it('should not close dialog when isPending is true', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     mockForgotPassword.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     render(
@@ -411,7 +407,7 @@ describe('ForgotPasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ForgotPasswordForm open={true} onClose={jest.fn()} />
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -426,6 +422,58 @@ describe('ForgotPasswordForm', () => {
       const sendingButton = screen.getByRole('button', { name: /sending/i });
       expect(sendingButton).toBeInTheDocument();
       expect(sendingButton).toBeDisabled();
+    });
+  });
+
+  it('should clear error and check specific error types', async () => {
+    // Test the branch where error is not null in onChange (line 163)
+    // and the error logic in TextField (line 172, 174)
+    mockForgotPassword.mockRejectedValue(new Error('User not found'));
+
+    render(
+      <TestWrapper>
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+
+    const submitButton = screen.getByRole('button', { name: /send reset email/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/no account found/i).length).toBeGreaterThan(0);
+    });
+
+    // Start typing - should clear error (line 163)
+    fireEvent.change(emailInput, { target: { value: 'new@example.com' } });
+    
+    await waitFor(() => {
+      expect(screen.queryByText(/no account found/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it('should handle non-Error objects in catch block', async () => {
+    // Test the branch where err is not an Error instance (line 90 false branch)
+    mockForgotPassword.mockRejectedValue('string error');
+
+    render(
+      <TestWrapper>
+        <ForgotPasswordForm open={true} onClose={vi.fn()} />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+
+    const submitButton = screen.getByRole('button', { name: /send reset email/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      const alert = screen.queryByRole('alert');
+      expect(alert).toBeInTheDocument();
+      expect(alert).toHaveTextContent(/failed to send reset email/i);
     });
   });
 });

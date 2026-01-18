@@ -8,14 +8,14 @@ import { useAuth } from '../../../hooks/useAuth';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-jest.mock('../../../hooks/useAuth');
+vi.mock('../../../hooks/useAuth');
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
-const mockChangePassword = jest.fn();
+const mockUseAuth = useAuth as any;
+const mockChangePassword = vi.fn();
 
 const mockApolloClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -25,16 +25,16 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('ChangePasswordForm', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseAuth.mockReturnValue({
       token: 'test-token',
       isAuthenticated: true,
       isInitialized: true,
-      login: jest.fn(),
-      register: jest.fn(),
+      login: vi.fn(),
+      register: vi.fn(),
       changePassword: mockChangePassword,
-      forgotPassword: jest.fn(),
-      logout: jest.fn(),
+      forgotPassword: vi.fn(),
+      logout: vi.fn(),
       loading: false,
       error: undefined,
     });
@@ -43,7 +43,7 @@ describe('ChangePasswordForm', () => {
   it('should render dialog when open', () => {
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -56,7 +56,7 @@ describe('ChangePasswordForm', () => {
   it('should not render when closed', () => {
     render(
       <TestWrapper>
-        <ChangePasswordForm open={false} onClose={jest.fn()} />
+        <ChangePasswordForm open={false} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -66,7 +66,7 @@ describe('ChangePasswordForm', () => {
   it('should validate required fields', async () => {
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -91,7 +91,7 @@ describe('ChangePasswordForm', () => {
   it('should validate password match', async () => {
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -131,7 +131,7 @@ describe('ChangePasswordForm', () => {
   it('should validate password requirements', async () => {
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -159,7 +159,7 @@ describe('ChangePasswordForm', () => {
   it('should call changePassword on valid submission', async () => {
     mockChangePassword.mockResolvedValue(true);
 
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <TestWrapper>
         <ChangePasswordForm open={true} onClose={onClose} />
@@ -188,7 +188,7 @@ describe('ChangePasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -215,8 +215,8 @@ describe('ChangePasswordForm', () => {
   it('should show success message and close on success', async () => {
     mockChangePassword.mockResolvedValue(true);
 
-    const onClose = jest.fn();
-    const onSuccess = jest.fn();
+    const onClose = vi.fn();
+    const onSuccess = vi.fn();
     render(
       <TestWrapper>
         <ChangePasswordForm open={true} onClose={onClose} onSuccess={onSuccess} />
@@ -248,7 +248,7 @@ describe('ChangePasswordForm', () => {
   it('should validate new password is different from current', async () => {
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -275,7 +275,7 @@ describe('ChangePasswordForm', () => {
   });
 
   it('should close dialog when cancel is clicked', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <TestWrapper>
         <ChangePasswordForm open={true} onClose={onClose} />
@@ -289,7 +289,7 @@ describe('ChangePasswordForm', () => {
   });
 
   it('should clear fields when dialog closes', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     const { rerender } = render(
       <TestWrapper>
         <ChangePasswordForm open={true} onClose={onClose} />
@@ -324,7 +324,7 @@ describe('ChangePasswordForm', () => {
   it('should validate new password is required', async () => {
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -347,7 +347,7 @@ describe('ChangePasswordForm', () => {
   it('should validate confirm password is required', async () => {
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -376,7 +376,7 @@ describe('ChangePasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -403,7 +403,7 @@ describe('ChangePasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -430,7 +430,7 @@ describe('ChangePasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -470,7 +470,7 @@ describe('ChangePasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -500,7 +500,7 @@ describe('ChangePasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -529,7 +529,7 @@ describe('ChangePasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -557,7 +557,7 @@ describe('ChangePasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -581,7 +581,7 @@ describe('ChangePasswordForm', () => {
   });
 
   it('should not close dialog when isPending is true', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     mockChangePassword.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     render(
@@ -610,7 +610,7 @@ describe('ChangePasswordForm', () => {
   it('should close dialog without onSuccess callback', async () => {
     mockChangePassword.mockResolvedValue(true);
 
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <TestWrapper>
         <ChangePasswordForm open={true} onClose={onClose} />
@@ -644,7 +644,7 @@ describe('ChangePasswordForm', () => {
 
     render(
       <TestWrapper>
-        <ChangePasswordForm open={true} onClose={jest.fn()} />
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>
     );
 
@@ -674,5 +674,66 @@ describe('ChangePasswordForm', () => {
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       });
     }
+  });
+
+  it('should handle non-Error objects in catch block', async () => {
+    // Test the branch where err is not an Error instance (line 122 false branch)
+    mockChangePassword.mockRejectedValue('string error');
+
+    render(
+      <TestWrapper>
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
+      </TestWrapper>
+    );
+
+    const currentPasswordInput = screen.getByLabelText(/current password/i);
+    const newPasswordInputs = screen.getAllByLabelText(/new password/i);
+    const newPasswordInput = newPasswordInputs[0];
+    const confirmPasswordInput = screen.getByLabelText(/confirm new password/i);
+
+    fireEvent.change(currentPasswordInput, { target: { value: 'CurrentPass123!' } });
+    fireEvent.change(newPasswordInput, { target: { value: 'NewPass123!' } });
+    fireEvent.change(confirmPasswordInput, { target: { value: 'NewPass123!' } });
+
+    const submitButton = screen.getByRole('button', { name: /change password/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      const alert = screen.queryByRole('alert');
+      expect(alert).toBeInTheDocument();
+      expect(alert).toHaveTextContent(/failed to change password/i);
+    });
+  });
+
+  it('should not close dialog when isPending is true in handleClose', async () => {
+    const onClose = vi.fn();
+    mockChangePassword.mockImplementation(() => new Promise(() => {})); // Never resolves
+
+    render(
+      <TestWrapper>
+        <ChangePasswordForm open={true} onClose={onClose} />
+      </TestWrapper>
+    );
+
+    const currentPasswordInput = screen.getByLabelText(/current password/i);
+    const newPasswordInputs = screen.getAllByLabelText(/new password/i);
+    const newPasswordInput = newPasswordInputs[0];
+    const confirmPasswordInput = screen.getByLabelText(/confirm new password/i);
+
+    fireEvent.change(currentPasswordInput, { target: { value: 'CurrentPass123!' } });
+    fireEvent.change(newPasswordInput, { target: { value: 'NewPass123!' } });
+    fireEvent.change(confirmPasswordInput, { target: { value: 'NewPass123!' } });
+
+    const submitButton = screen.getByRole('button', { name: /change password/i });
+    fireEvent.click(submitButton);
+
+    // Wait for pending state
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /changing password/i })).toBeDisabled();
+    });
+
+    // Try to close by finding the cancel button which should be disabled
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    expect(cancelButton).toBeDisabled();
   });
 });

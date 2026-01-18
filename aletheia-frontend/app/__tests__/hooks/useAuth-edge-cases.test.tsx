@@ -8,26 +8,31 @@
 
 import { renderHook } from '@testing-library/react';
 import { ApolloProvider } from '@apollo/client/react';
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloLink, Observable } from '@apollo/client';
 import { useAuth } from '../../hooks/useAuth';
 import * as authUtils from '../../lib/utils/auth';
 
 // Mock the auth utils
-jest.mock('../../lib/utils/auth', () => ({
-  setAuthToken: jest.fn(),
-  removeAuthToken: jest.fn(),
-  getAuthToken: jest.fn(() => null),
+vi.mock('../../lib/utils/auth', () => ({
+  setAuthToken: vi.fn(),
+  removeAuthToken: vi.fn(),
+  getAuthToken: vi.fn(() => null),
 }));
 
 // Create a basic mock client for testing hook structure
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const createMockClient = () => {
   return new ApolloClient({
-    link: undefined as any,
+    link: new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        observer.next({ data: {} } as any);
+        observer.complete();
+      });
+    }),
     cache: new InMemoryCache(),
   });
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
+ 
  
 
 const wrapper = (client: ApolloClient) => {
@@ -40,8 +45,8 @@ const wrapper = (client: ApolloClient) => {
 
 describe('useAuth Edge Cases', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (authUtils.getAuthToken as jest.Mock).mockReturnValue(null);
+    vi.clearAllMocks();
+    (authUtils.getAuthToken as any).mockReturnValue(null);
     localStorage.clear();
   });
 

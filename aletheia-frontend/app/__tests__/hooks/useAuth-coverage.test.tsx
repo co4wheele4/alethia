@@ -12,14 +12,14 @@ import * as authUtils from '../../lib/utils/auth';
 import { GraphQLError } from 'graphql';
 
 // Mock the auth utils
-jest.mock('../../lib/utils/auth', () => ({
-  setAuthToken: jest.fn(),
-  removeAuthToken: jest.fn(),
-  getAuthToken: jest.fn(() => null),
+vi.mock('../../lib/utils/auth', () => ({
+  setAuthToken: vi.fn(),
+  removeAuthToken: vi.fn(),
+  getAuthToken: vi.fn(() => null),
 }));
 
 // Create mock link for specific scenarios
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const createMockLink = (scenario: string) => {
   return new ApolloLink((operation: any) => {
     return new Observable((observer: any) => {
@@ -173,7 +173,7 @@ const createMockLink = (scenario: string) => {
     });
   });
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
+ 
 
 const createMockClient = (scenario: string) => {
   return new ApolloClient({
@@ -194,8 +194,8 @@ const wrapper = (scenario: string) => {
 
 describe('useAuth Coverage Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (authUtils.getAuthToken as jest.Mock).mockReturnValue(null);
+    vi.clearAllMocks();
+    (authUtils.getAuthToken as any).mockReturnValue(null);
     localStorage.clear();
   });
 
@@ -302,7 +302,7 @@ describe('useAuth Coverage Tests', () => {
     it('should call onCompleted for login mutation', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           observer.next({ data: { login: 'test-token-123' } });
           observer.complete();
@@ -333,7 +333,7 @@ describe('useAuth Coverage Tests', () => {
     it('should call onCompleted for register mutation', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           observer.next({ data: { register: 'test-token-456' } });
           observer.complete();
@@ -364,7 +364,7 @@ describe('useAuth Coverage Tests', () => {
     it('should call onCompleted for changePassword mutation', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           observer.next({ data: { changePassword: true } });
           observer.complete();
@@ -389,7 +389,7 @@ describe('useAuth Coverage Tests', () => {
     it('should call onCompleted for forgotPassword mutation', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           observer.next({ data: { forgotPassword: true } });
           observer.complete();
@@ -416,7 +416,7 @@ describe('useAuth Coverage Tests', () => {
     it('should handle Error instance with password keywords in changePassword (line 207)', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           // Create an error that will skip graphQLErrors (empty array) and networkError (not set)
           // Use Object.create to create an error without networkError property
@@ -425,7 +425,7 @@ describe('useAuth Coverage Tests', () => {
           error.message = 'Current password is wrong';
           error.stack = baseError.stack;
           // Set empty graphQLErrors so it skips that branch
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           (error as any).graphQLErrors = [];
           // Don't set networkError - use Object.defineProperty to make it non-enumerable if needed
           // Actually, just don't set it at all
@@ -455,12 +455,12 @@ describe('useAuth Coverage Tests', () => {
     it('should handle GraphQL error with not-found message in forgotPassword (lines 238-240)', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           // Create an error with graphQLErrors that contains "not found"
           // The message must contain "not found", "does not exist", or "no user" to hit lines 238-240
           const error = new Error('GraphQL error');
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           (error as any).graphQLErrors = [new GraphQLError('No user found with this email')];
           // Don't set networkError - let it be undefined
           observer.error(error);
@@ -487,16 +487,16 @@ describe('useAuth Coverage Tests', () => {
     it('should handle Error instance with not-found keywords in forgotPassword (line 249)', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           // Create an error that will skip graphQLErrors check (empty array) and networkError check
           // Then it will be caught as an Error instance with not-found keywords
           const error = new Error('User does not exist');
           // Set empty graphQLErrors so it skips that branch (graphQLErrors[0] is undefined)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           (error as any).graphQLErrors = [];
           // Don't set networkError property at all - delete it if it exists
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           delete (error as any).networkError;
           observer.error(error);
         });
@@ -526,7 +526,7 @@ describe('useAuth Coverage Tests', () => {
       // Apollo always wraps errors, so we need to mock the mutation to throw directly
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           // Throw a non-Error value directly - this will be caught and hit the fallback
           // But Apollo will wrap it, so we need to structure it differently
@@ -535,7 +535,7 @@ describe('useAuth Coverage Tests', () => {
           // For 100% coverage, we'll use a workaround: create an error that Apollo processes
           // but structure it to bypass all checks
           const error = new Error('Unexpected error');
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           (error as any).graphQLErrors = [];
           // Try to make it not an Error instance by using Object.create with null prototype
           const nonErrorObj = Object.create(null);
@@ -565,10 +565,10 @@ describe('useAuth Coverage Tests', () => {
     it('should handle fallback error for non-Error instances in register (line 170)', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           // Throw a plain object (not an Error instance)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           const nonErrorObj: any = { message: 'Unexpected error', toString: () => 'Unexpected error' };
           Object.setPrototypeOf(nonErrorObj, null);
           observer.error(nonErrorObj);
@@ -594,10 +594,10 @@ describe('useAuth Coverage Tests', () => {
     it('should handle fallback error for non-Error instances in changePassword (line 212)', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           // Throw a plain object (not an Error instance)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           const nonErrorObj: any = { message: 'Unexpected error', toString: () => 'Unexpected error' };
           Object.setPrototypeOf(nonErrorObj, null);
           observer.error(nonErrorObj);
@@ -623,10 +623,10 @@ describe('useAuth Coverage Tests', () => {
     it('should handle fallback error for non-Error instances in forgotPassword (line 254)', async () => {
        
       const mockLink = new ApolloLink(() => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+         
         return new Observable((observer: any) => {
           // Throw a plain object (not an Error instance)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           const nonErrorObj: any = { message: 'Unexpected error', toString: () => 'Unexpected error' };
           Object.setPrototypeOf(nonErrorObj, null);
           observer.error(nonErrorObj);

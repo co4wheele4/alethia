@@ -61,7 +61,7 @@ describe('ScenarioSwitcher Edge Cases', () => {
   });
 
   it('should handle rapid tab switching', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     const scenarios = [
       { id: 's1', label: 'Scenario 1' },
       { id: 's2', label: 'Scenario 2' },

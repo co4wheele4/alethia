@@ -28,7 +28,7 @@ describe('EntityNode', () => {
   });
 
   it('should call onClick when clicked', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<EntityNode onClick={handleClick} />);
     
     const node = screen.getByText('Entity');

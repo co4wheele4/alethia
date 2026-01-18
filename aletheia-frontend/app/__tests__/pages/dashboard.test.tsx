@@ -9,13 +9,13 @@ import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { ThemeProvider } from '../../hooks/useTheme';
 
-jest.mock('../../hooks/useAuth');
+vi.mock('../../hooks/useAuth');
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockUseAuth = useAuth as any;
 
 const mockApolloClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -29,28 +29,28 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('Dashboard Page', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isInitialized: true,
-      logout: jest.fn(),
+      logout: vi.fn(),
       token: 'test-token',
-      login: jest.fn(),
-      register: jest.fn(),
-      changePassword: jest.fn(),
-      forgotPassword: jest.fn(),
+      login: vi.fn(),
+      register: vi.fn(),
+      changePassword: vi.fn(),
+      forgotPassword: vi.fn(),
       loading: false,
       error: undefined,
     });
 
     // AppShell uses a double/triple RAF hydration gate; simulate it deterministically.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     (global as any).requestAnimationFrame = (cb: FrameRequestCallback) => {
       setTimeout(() => cb(0), 0);
       return 1;
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     (global as any).cancelAnimationFrame = () => {};
   });
 

@@ -26,7 +26,7 @@ describe('OverrideReasonInput', () => {
   });
 
   it('should call onChange when value changes', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<OverrideReasonInput onChange={handleChange} />);
     
     const input = screen.getByRole('textbox');

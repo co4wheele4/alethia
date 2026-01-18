@@ -5,18 +5,18 @@
 import createEmotionCache from '../../lib/emotion-cache';
 
 // Mock @emotion/cache
-jest.mock('@emotion/cache', () => {
-  return jest.fn(() => ({
+vi.mock('@emotion/cache', () => ({
+  default: vi.fn(() => ({
     // Mock cache object
     key: 'mui-style',
     insertionPoint: undefined,
     prepend: true,
-  }));
-});
+  })),
+}));
 
 describe('emotion-cache', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('createEmotionCache', () => {
@@ -28,7 +28,7 @@ describe('emotion-cache', () => {
 
     it('should create cache with prepend option', () => {
       const cache = createEmotionCache();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       expect((cache as any).prepend).toBe(true);
     });
 
@@ -54,7 +54,7 @@ describe('emotion-cache', () => {
 
       const cache = createEmotionCache();
       expect(cache).toBeDefined();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       expect((cache as any).insertionPoint).toBeUndefined();
     });
 

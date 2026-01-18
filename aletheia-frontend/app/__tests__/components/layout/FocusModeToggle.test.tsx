@@ -20,7 +20,7 @@ describe('FocusModeToggle', () => {
   });
 
   it('should call onChange when toggled', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<FocusModeToggle onChange={handleChange} />);
     
     const switchElement = screen.getByRole('switch');
@@ -30,7 +30,7 @@ describe('FocusModeToggle', () => {
   });
 
   it('should toggle from enabled to disabled', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<FocusModeToggle enabled={true} onChange={handleChange} />);
     
     const switchElement = screen.getByRole('switch');

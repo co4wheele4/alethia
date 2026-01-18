@@ -35,7 +35,7 @@ describe('SearchResultList', () => {
   });
 
   it('should call onResultClick when result is clicked', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     const results = [
       { id: '1', title: 'Result 1' },
     ];

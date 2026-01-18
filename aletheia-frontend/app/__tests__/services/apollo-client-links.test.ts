@@ -8,28 +8,28 @@ import { getAuthToken } from '../../lib/utils/auth';
 import { authLink, errorLink } from '../../services/apollo-client';
 
 // Mock the auth utilities
-jest.mock('../../lib/utils/auth', () => ({
-  getAuthToken: jest.fn(),
-  setAuthToken: jest.fn(),
-  removeAuthToken: jest.fn(),
+vi.mock('../../lib/utils/auth', () => ({
+  getAuthToken: vi.fn(),
+  setAuthToken: vi.fn(),
+  removeAuthToken: vi.fn(),
 }));
 
 // Mock the constants
-jest.mock('../../lib/constants', () => ({
+vi.mock('../../lib/constants', () => ({
   GRAPHQL_URL: 'http://localhost:4000/graphql',
 }));
 
 describe('Apollo Client Links', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
-    (getAuthToken as jest.Mock).mockReturnValue(null);
+    (getAuthToken as any).mockReturnValue(null);
   });
 
   describe('authLink', () => {
     it('should add authorization header when token exists', async () => {
       const token = 'test-token-123';
-      (getAuthToken as jest.Mock).mockReturnValue(token);
+      (getAuthToken as any).mockReturnValue(token);
 
       const mockRequest = {
         query: gql`query { hello }`,
@@ -53,7 +53,7 @@ describe('Apollo Client Links', () => {
       const link = ApolloLink.from([authLink, captureLink]);
 
       await new Promise<void>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        
         execute(link, mockRequest, {} as any).subscribe({
           next: () => resolve(),
           error: reject,
@@ -62,7 +62,7 @@ describe('Apollo Client Links', () => {
     });
 
     it('should not add authorization header when token does not exist', async () => {
-      (getAuthToken as jest.Mock).mockReturnValue(null);
+      (getAuthToken as any).mockReturnValue(null);
 
       const mockRequest = {
         query: gql`query { hello }`,
@@ -85,7 +85,7 @@ describe('Apollo Client Links', () => {
       const link = ApolloLink.from([authLink, captureLink]);
 
       await new Promise<void>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        
         execute(link, mockRequest, {} as any).subscribe({
           next: () => resolve(),
           error: reject,
@@ -95,7 +95,7 @@ describe('Apollo Client Links', () => {
 
     it('should preserve existing headers', async () => {
       const token = 'test-token-456';
-      (getAuthToken as jest.Mock).mockReturnValue(token);
+      (getAuthToken as any).mockReturnValue(token);
 
       const mockRequest = {
         query: gql`query { hello }`,
@@ -126,7 +126,7 @@ describe('Apollo Client Links', () => {
       const link = ApolloLink.from([authLink, captureLink]);
 
       await new Promise<void>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        
         execute(link, mockRequest, {} as any).subscribe({
           next: () => resolve(),
           error: reject,
@@ -136,10 +136,10 @@ describe('Apollo Client Links', () => {
   });
 
   describe('errorLink', () => {
-    let consoleErrorSpy: jest.SpyInstance;
+    let consoleErrorSpy: any;
 
     beforeEach(() => {
-      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -173,7 +173,7 @@ describe('Apollo Client Links', () => {
           // Since CombinedGraphQLErrors.is() is a type guard, we need the right structure
           // Actually, let's just create a CombinedGraphQLErrors instance if possible
           // Or use a mock that will pass the is() check
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           observer.error(error as any);
         });
       });
@@ -181,7 +181,7 @@ describe('Apollo Client Links', () => {
       const link = ApolloLink.from([errorLink, throwingLink]);
 
       await new Promise<void>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        
         const subscription = execute(link, mockRequest, {} as any).subscribe({
           next: () => reject(new Error('Should have failed')),
           error: () => {
@@ -217,7 +217,7 @@ describe('Apollo Client Links', () => {
             networkError: null,
             message: 'Unauthorized',
           };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           observer.error(error as any);
         });
       });
@@ -225,7 +225,7 @@ describe('Apollo Client Links', () => {
       const link = ApolloLink.from([errorLink, throwingLink]);
 
       await new Promise<void>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        
         const subscription = execute(link, mockRequest, {} as any).subscribe({
           next: () => reject(new Error('Should have failed')),
           error: () => {
@@ -258,7 +258,7 @@ describe('Apollo Client Links', () => {
             networkError: null,
             message: 'Invalid token',
           };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           observer.error(error as any);
         });
       });
@@ -266,7 +266,7 @@ describe('Apollo Client Links', () => {
       const link = ApolloLink.from([errorLink, throwingLink]);
 
       await new Promise<void>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        
         const subscription = execute(link, mockRequest, {} as any).subscribe({
           next: () => reject(new Error('Should have failed')),
           error: () => {
@@ -296,7 +296,7 @@ describe('Apollo Client Links', () => {
             networkError: networkError,
             message: 'Network error',
           };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           observer.error(error as any);
         });
       });
@@ -304,13 +304,13 @@ describe('Apollo Client Links', () => {
       const link = ApolloLink.from([errorLink, throwingLink]);
 
       await new Promise<void>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        
         const subscription = execute(link, mockRequest, {} as any).subscribe({
           next: () => reject(new Error('Should have failed')),
           error: () => {
             setTimeout(() => {
               expect(consoleErrorSpy).toHaveBeenCalled();
-              const errorCalls = consoleErrorSpy.mock.calls.filter(call => 
+              const errorCalls = consoleErrorSpy.mock.calls.filter((call: any[]) => 
                 call[0] && call[0].toString().includes('[Network error]')
               );
               expect(errorCalls.length).toBeGreaterThan(0);
@@ -327,9 +327,9 @@ describe('Apollo Client Links', () => {
         extensions: { code: 'TEST_ERROR' },
       });
       // Manually set path and locations for testing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       (graphQLError as any).path = ['query', 'field'];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       (graphQLError as any).locations = [{ line: 1, column: 5 }];
 
       const mockRequest = {
@@ -344,7 +344,7 @@ describe('Apollo Client Links', () => {
             networkError: null,
             message: 'GraphQL error',
           };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           observer.error(error as any);
         });
       });
@@ -352,7 +352,7 @@ describe('Apollo Client Links', () => {
       const link = ApolloLink.from([errorLink, throwingLink]);
 
       await new Promise<void>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        
         const subscription = execute(link, mockRequest, {} as any).subscribe({
           next: () => reject(new Error('Should have failed')),
           error: () => {

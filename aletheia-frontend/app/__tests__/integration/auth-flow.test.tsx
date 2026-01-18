@@ -14,13 +14,13 @@ import { ThemeProvider } from '../../hooks/useTheme';
 import { MuiThemeProvider } from '../../providers/mui-theme-provider';
 
 // Mock useAuth hook
-jest.mock('../../hooks/useAuth');
+vi.mock('../../hooks/useAuth');
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockUseAuth = useAuth as any;
 
 const mockApolloClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -36,13 +36,13 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 TestWrapper.displayName = 'TestWrapper';
 
 describe('Authentication Flow Integration', () => {
-  const mockLogin = jest.fn();
-  const mockRegister = jest.fn();
-  const mockChangePassword = jest.fn();
-  const mockForgotPassword = jest.fn();
+  const mockLogin = vi.fn();
+  const mockRegister = vi.fn();
+  const mockChangePassword = vi.fn();
+  const mockForgotPassword = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isInitialized: true,
@@ -51,7 +51,7 @@ describe('Authentication Flow Integration', () => {
       register: mockRegister,
       changePassword: mockChangePassword,
       forgotPassword: mockForgotPassword,
-      logout: jest.fn(),
+      logout: vi.fn(),
       loading: false,
       error: undefined,
     });
@@ -161,7 +161,7 @@ describe('Authentication Flow Integration', () => {
     it('should complete change password flow successfully', async () => {
       mockChangePassword.mockResolvedValue(true);
 
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       render(
         <TestWrapper>
           <ChangePasswordForm open={true} onClose={handleClose} />
@@ -189,7 +189,7 @@ describe('Authentication Flow Integration', () => {
     });
 
     it('should validate password match in change password form', async () => {
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       render(
         <TestWrapper>
           <ChangePasswordForm open={true} onClose={handleClose} />
@@ -213,7 +213,7 @@ describe('Authentication Flow Integration', () => {
     it('should complete forgot password flow successfully', async () => {
       mockForgotPassword.mockResolvedValue(true);
 
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       render(
         <TestWrapper>
           <ForgotPasswordForm open={true} onClose={handleClose} />
@@ -236,7 +236,7 @@ describe('Authentication Flow Integration', () => {
     });
 
     it('should validate email format in forgot password form', async () => {
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       render(
         <TestWrapper>
           <ForgotPasswordForm open={true} onClose={handleClose} />

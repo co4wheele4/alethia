@@ -9,16 +9,16 @@ import { useAuth } from '../../hooks/useAuth';
 import * as authUtils from '../../lib/utils/auth';
 
 // Mock the auth utils
-jest.mock('../../lib/utils/auth', () => ({
-  setAuthToken: jest.fn(),
-  removeAuthToken: jest.fn(),
-  getAuthToken: jest.fn(() => null),
+vi.mock('../../lib/utils/auth', () => ({
+  setAuthToken: vi.fn(),
+  removeAuthToken: vi.fn(),
+  getAuthToken: vi.fn(() => null),
 }));
 
 // Mock Apollo Client
 const mockClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -28,8 +28,8 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('useAuth', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (authUtils.getAuthToken as jest.Mock).mockReturnValue(null);
+    vi.clearAllMocks();
+    (authUtils.getAuthToken as any).mockReturnValue(null);
     localStorage.clear();
   });
 
@@ -42,7 +42,7 @@ describe('useAuth', () => {
 
   it('should initialize with token from localStorage', async () => {
     const mockToken = 'mock-token';
-    (authUtils.getAuthToken as jest.Mock).mockReturnValue(mockToken);
+    (authUtils.getAuthToken as any).mockReturnValue(mockToken);
     
     const { result } = renderHook(() => useAuth(), { wrapper });
     
@@ -57,7 +57,7 @@ describe('useAuth', () => {
 
   it('should call logout and clear token', () => {
     const mockToken = 'mock-token';
-    (authUtils.getAuthToken as jest.Mock).mockReturnValue(mockToken);
+    (authUtils.getAuthToken as any).mockReturnValue(mockToken);
     
     const { result } = renderHook(() => useAuth(), { wrapper });
     

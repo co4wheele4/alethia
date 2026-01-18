@@ -22,7 +22,7 @@ describe('SummaryCard', () => {
   });
 
   it('should work with onExpand handler', () => {
-    const handleExpand = jest.fn();
+    const handleExpand = vi.fn();
     render(<SummaryCard onExpand={handleExpand} />);
     
     // Component doesn't currently call onExpand, but it accepts the prop

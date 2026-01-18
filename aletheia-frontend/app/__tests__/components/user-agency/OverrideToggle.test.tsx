@@ -25,7 +25,7 @@ describe('OverrideToggle', () => {
   });
 
   it('should call onChange when toggled', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<OverrideToggle onChange={handleChange} />);
     
     const switchElement = screen.getByRole('switch');
@@ -35,7 +35,7 @@ describe('OverrideToggle', () => {
   });
 
   it('should toggle from checked to unchecked', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<OverrideToggle checked={true} onChange={handleChange} />);
     
     const switchElement = screen.getByRole('switch');

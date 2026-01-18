@@ -32,7 +32,7 @@ describe('HumanOverrideButton Edge Cases', () => {
   });
 
   it('should handle multiple rapid clicks', () => {
-    const handleOverride = jest.fn();
+    const handleOverride = vi.fn();
     render(<HumanOverrideButton onOverride={handleOverride} />);
     
     const button = screen.getByRole('button', { name: /override ai result/i });

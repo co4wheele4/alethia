@@ -43,7 +43,7 @@ describe('ConflictResolver', () => {
   });
 
   it('should call onResolve when button is clicked', () => {
-    const onResolve = jest.fn();
+    const onResolve = vi.fn();
     const conflict = {
       id: '1',
       description: 'Test conflict',

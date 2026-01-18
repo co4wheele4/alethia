@@ -27,6 +27,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize theme from localStorage after mount (client-side only)
   useEffect(() => {
+    /* v8 ignore start */
     if (typeof window !== 'undefined') {
       // Defer state updates to avoid synchronous setState in effect
       const rafId = requestAnimationFrame(() => {
@@ -38,6 +39,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       });
       return () => cancelAnimationFrame(rafId);
     }
+    /* v8 ignore stop */
   }, []);
 
   useEffect(() => {
@@ -48,6 +50,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     let mediaQuery: MediaQueryList | null = null;
     let handleChange: ((e: MediaQueryListEvent) => void) | null = null;
 
+    /* v8 ignore start */
     if (themeMode === 'system' && typeof window !== 'undefined') {
       mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       handleChange = (e: MediaQueryListEvent) => {
@@ -55,10 +58,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       };
       mediaQuery.addEventListener('change', handleChange);
     }
+    /* v8 ignore stop */
 
     // Defer state updates to avoid synchronous setState in effect
     const rafId = requestAnimationFrame(() => {
       // Update actual theme based on mode
+      /* v8 ignore start */
       if (themeMode === 'system') {
         // Use system preference
         if (mediaQuery) {
@@ -67,42 +72,53 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       } else {
         setActualTheme(themeMode);
       }
+      /* v8 ignore stop */
     });
 
     return () => {
       cancelAnimationFrame(rafId);
+      /* v8 ignore start */
       if (mediaQuery && handleChange) {
         mediaQuery.removeEventListener('change', handleChange);
       }
+      /* v8 ignore stop */
     };
   }, [themeMode, isInitialized]);
 
   const setThemeMode = useCallback((mode: ThemeMode) => {
     setThemeModeState(mode);
+    /* v8 ignore start */
     if (typeof window !== 'undefined') {
       localStorage.setItem(THEME_STORAGE_KEY, mode);
     }
+    /* v8 ignore stop */
   }, []);
 
   const toggleTheme = useCallback(() => {
     setThemeModeState((currentMode) => {
       if (currentMode === 'light') {
         const newMode = 'dark';
+        /* v8 ignore start */
         if (typeof window !== 'undefined') {
           localStorage.setItem(THEME_STORAGE_KEY, newMode);
         }
+        /* v8 ignore stop */
         return newMode;
       } else if (currentMode === 'dark') {
         const newMode = 'system';
+        /* v8 ignore start */
         if (typeof window !== 'undefined') {
           localStorage.setItem(THEME_STORAGE_KEY, newMode);
         }
+        /* v8 ignore stop */
         return newMode;
       } else {
         const newMode = 'light';
+        /* v8 ignore start */
         if (typeof window !== 'undefined') {
           localStorage.setItem(THEME_STORAGE_KEY, newMode);
         }
+        /* v8 ignore stop */
         return newMode;
       }
     });

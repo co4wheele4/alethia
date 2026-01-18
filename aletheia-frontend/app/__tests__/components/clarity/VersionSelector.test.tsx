@@ -44,7 +44,7 @@ describe('VersionSelector', () => {
   });
 
   it('should call onVersionChange when version is selected', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     const versions = [
       { id: 'v1', label: 'Version 1' },
       { id: 'v2', label: 'Version 2' },

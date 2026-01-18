@@ -5,13 +5,13 @@
 import { createApolloClient } from '../../services/apollo-client';
 
 // Mock dependencies before importing the module
-jest.mock('../../lib/utils/auth', () => ({
-  getAuthToken: jest.fn(() => null),
-  setAuthToken: jest.fn(),
-  removeAuthToken: jest.fn(),
+vi.mock('../../lib/utils/auth', () => ({
+  getAuthToken: vi.fn(() => null),
+  setAuthToken: vi.fn(),
+  removeAuthToken: vi.fn(),
 }));
 
-jest.mock('../../lib/constants', () => ({
+vi.mock('../../lib/constants', () => ({
   GRAPHQL_URL: 'http://localhost:4000/graphql',
 }));
 
@@ -21,28 +21,28 @@ describe('Apollo Client SSR Guard', () => {
   beforeEach(() => {
     // Save original window
     originalWindow = global.window;
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
     // Restore original window
     if (originalWindow !== undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       (global as any).window = originalWindow;
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       delete (global as any).window;
     }
   });
 
   it('should throw error when window is undefined (SSR guard)', () => {
     // Save window reference
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     const windowBackup = (global as any).window;
     
     // Try to delete window to simulate SSR
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       delete (global as any).window;
     } catch {
       // If we can't delete it, try using a getter that returns undefined
@@ -74,14 +74,14 @@ describe('Apollo Client SSR Guard', () => {
     }
 
     // Restore window
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     (global as any).window = windowBackup;
   });
 
   it('should create client when window is defined', () => {
     // Ensure window is defined (should be by default in JSDOM)
     if (typeof window === 'undefined') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       (global as any).window = {};
     }
 

@@ -26,7 +26,7 @@ describe('DetailDrawer', () => {
   });
 
   it('should call onClose when drawer is closed', () => {
-    const handleClose = jest.fn();
+    const handleClose = vi.fn();
     render(<DetailDrawer open={true} onClose={handleClose} />);
     
     // MUI Drawer closes via backdrop click or escape key

@@ -4,26 +4,27 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { ApolloClientProvider } from '../../providers/apollo-provider';
 import { getApolloClient } from '../../services/apollo-client';
 
 // Mock apollo-client service
-jest.mock('../../services/apollo-client', () => ({
-  getApolloClient: jest.fn(),
+vi.mock('../../services/apollo-client', () => ({
+  getApolloClient: vi.fn(),
 }));
 
-const mockGetApolloClient = getApolloClient as jest.MockedFunction<typeof getApolloClient>;
+const mockGetApolloClient = getApolloClient as any;
 
 describe('ApolloClientProvider', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should render children', () => {
     const mockClient = {
-      query: jest.fn(),
-      mutate: jest.fn(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      query: vi.fn(),
+      mutate: vi.fn(),
+      
     } as any;
 
     mockGetApolloClient.mockReturnValue(mockClient);
@@ -37,28 +38,23 @@ describe('ApolloClientProvider', () => {
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
 
-  it('should create SSR client when window is undefined', () => {
-    const originalWindow = global.window;
-    // @ts-expect-error - intentionally setting to undefined
-    delete global.window;
-
-    render(
+  it('should handle SSR environment', () => {
+    // Use renderToString to simulate SSR instead of deleting window
+    const html = renderToString(
       <ApolloClientProvider>
         <div>Content</div>
       </ApolloClientProvider>
     );
 
-    // Should render without errors (SSR client is created)
-    expect(screen.getByText('Content')).toBeInTheDocument();
-
-    global.window = originalWindow;
+    // Should render without errors
+    expect(html).toContain('Content');
   });
 
   it('should use getApolloClient on client side', () => {
     const mockClient = {
-      query: jest.fn(),
-      mutate: jest.fn(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      query: vi.fn(),
+      mutate: vi.fn(),
+      
     } as any;
 
     mockGetApolloClient.mockReturnValue(mockClient);
@@ -70,13 +66,11 @@ describe('ApolloClientProvider', () => {
     );
 
     // getApolloClient should be called on client side
-    if (typeof window !== 'undefined') {
-      expect(mockGetApolloClient).toHaveBeenCalled();
-    }
+    expect(mockGetApolloClient).toHaveBeenCalled();
   });
 
   it('should handle error when creating Apollo Client', () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     
     mockGetApolloClient.mockImplementation(() => {
       throw new Error('Failed to create client');
@@ -96,9 +90,9 @@ describe('ApolloClientProvider', () => {
 
   it('should provide Apollo context to children', () => {
     const mockClient = {
-      query: jest.fn(),
-      mutate: jest.fn(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      query: vi.fn(),
+      mutate: vi.fn(),
+      
     } as any;
 
     mockGetApolloClient.mockReturnValue(mockClient);

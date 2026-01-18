@@ -1,7 +1,8 @@
+import { jwtDecode } from 'jwt-decode';
 import { getUserIdFromToken } from '../../../lib/utils/jwt';
 
-jest.mock('jwt-decode', () => ({
-  jwtDecode: jest.fn(),
+vi.mock('jwt-decode', () => ({
+  jwtDecode: vi.fn(),
 }));
 
 describe('jwt utils', () => {
@@ -15,22 +16,19 @@ describe('jwt utils', () => {
   });
 
   it('returns sub when jwtDecode succeeds', () => {
-    const { jwtDecode } = jest.requireMock('jwt-decode') as { jwtDecode: jest.Mock };
-    jwtDecode.mockReturnValue({ sub: 'user-123' });
+    vi.mocked(jwtDecode).mockReturnValue({ sub: 'user-123' });
 
     expect(getUserIdFromToken('a.b.c')).toBe('user-123');
   });
 
   it('returns null when jwtDecode succeeds but sub is missing', () => {
-    const { jwtDecode } = jest.requireMock('jwt-decode') as { jwtDecode: jest.Mock };
-    jwtDecode.mockReturnValue({ email: 'x@example.com' });
+    vi.mocked(jwtDecode).mockReturnValue({ email: 'x@example.com' });
 
     expect(getUserIdFromToken('a.b.c')).toBeNull();
   });
 
   it('returns null when jwtDecode throws', () => {
-    const { jwtDecode } = jest.requireMock('jwt-decode') as { jwtDecode: jest.Mock };
-    jwtDecode.mockImplementation(() => {
+    vi.mocked(jwtDecode).mockImplementation(() => {
       throw new Error('bad token');
     });
 

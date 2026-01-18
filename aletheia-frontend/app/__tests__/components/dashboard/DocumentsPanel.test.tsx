@@ -68,6 +68,27 @@ describe('DocumentsPanel', () => {
     expect(screen.getByRole('link', { name: /open library/i })).toHaveAttribute('href', '/documents');
   });
 
+  it('should sort documents by creation date descending', async () => {
+    const client = createMockClient([
+      { id: 'doc-1', title: 'Oldest doc', createdAt: new Date('2026-01-01T00:00:00Z').toISOString() },
+      { id: 'doc-2', title: 'Newest doc', createdAt: new Date('2026-01-02T00:00:00Z').toISOString() },
+    ]);
+    render(
+      <ApolloProvider client={client}>
+        <DocumentsPanel userId="user-1" />
+      </ApolloProvider>
+    );
+
+    await waitFor(() => {
+      const list = screen.getByLabelText('documents-list');
+      const items = list.querySelectorAll('a');
+      // The items in the list should be the documents
+      // Newest should be first in the list
+      expect(items[0]).toHaveTextContent('Newest doc');
+      expect(items[1]).toHaveTextContent('Oldest doc');
+    });
+  });
+
   it('should show empty-state message when user has no documents', async () => {
     const client = createMockClient([]);
     render(
@@ -80,6 +101,28 @@ describe('DocumentsPanel', () => {
       expect(
         screen.getByText(/no documents yet\. add a source/i),
       ).toBeInTheDocument();
+    });
+  });
+
+  it('should show error message when query fails', async () => {
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        observer.error(new Error('Failed to fetch documents'));
+      });
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    render(
+      <ApolloProvider client={client}>
+        <DocumentsPanel userId="user-1" />
+      </ApolloProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to fetch documents')).toBeInTheDocument();
     });
   });
 });

@@ -157,6 +157,24 @@ The frontend connects to the backend GraphQL API at:
 
 Make sure the backend is running and CORS is properly configured.
 
+## Testing
+
+This project uses **Vitest** for unit and component testing, and **Playwright** for E2E testing.
+
+### Unit & Component Tests
+
+- `npm run test` - Run all unit and component tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:cov` - Run tests with coverage report
+
+Tests are located in `app/__tests__/` and follow the `*.test.tsx` or `*.test.ts` naming convention.
+
+### E2E Tests
+
+- `npm run test:e2e` - Run Playwright E2E tests
+
+E2E tests are located in the `e2e/` directory.
+
 ## TypeScript
 
 This project uses TypeScript. Type definitions should be added to `app/types/` directory.

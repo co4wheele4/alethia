@@ -8,13 +8,13 @@ import { useHello } from '../../../hooks/useHello';
 import { ApolloProvider } from '@apollo/client/react';
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-jest.mock('../../../hooks/useHello');
+vi.mock('../../../hooks/useHello');
 
-const mockUseHello = useHello as jest.MockedFunction<typeof useHello>;
+const mockUseHello = useHello as any;
 
 const mockApolloClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -25,7 +25,7 @@ TestWrapper.displayName = 'TestWrapper';
 
 describe('GraphQLExample', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should render loading state', () => {
@@ -33,7 +33,7 @@ describe('GraphQLExample', () => {
       hello: undefined,
       loading: true,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -51,7 +51,7 @@ describe('GraphQLExample', () => {
       hello: undefined,
       loading: false,
       error: mockError,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -69,7 +69,7 @@ describe('GraphQLExample', () => {
       hello: 'Hello World',
       loading: false,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -82,7 +82,7 @@ describe('GraphQLExample', () => {
   });
 
   it('should call refetch when retry button is clicked', () => {
-    const mockRefetch = jest.fn();
+    const mockRefetch = vi.fn();
     const mockError = { message: 'Error' } as Error;
     mockUseHello.mockReturnValue({
       hello: undefined,
@@ -104,7 +104,7 @@ describe('GraphQLExample', () => {
   });
 
   it('should call refetch when refetch button is clicked', () => {
-    const mockRefetch = jest.fn();
+    const mockRefetch = vi.fn();
     mockUseHello.mockReturnValue({
       hello: 'Hello',
       loading: false,
@@ -130,7 +130,7 @@ describe('GraphQLExample', () => {
       hello: undefined,
       loading: false,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -145,11 +145,11 @@ describe('GraphQLExample', () => {
   it('should show "No data" when hello is null', () => {
     // Test the branch where hello is null (line 42: hello || 'No data')
     mockUseHello.mockReturnValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       hello: null as any,
       loading: false,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(

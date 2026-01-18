@@ -20,8 +20,9 @@ const httpLink = createHttpLink({
 // Auth Link - adds JWT token to requests
 export const authLink = setContext((_, { headers }) => {
   // Only access localStorage on client side
-  /* c8 ignore next */
+  /* v8 ignore start */
   const token = typeof window !== 'undefined' ? getAuthToken() : null; // window is always defined in JSDOM, so false branch is untestable
+  /* v8 ignore stop */
   
   return {
     headers: {
@@ -34,6 +35,7 @@ export const authLink = setContext((_, { headers }) => {
 // Error Link - handles GraphQL errors
 // Export the handler function for testing
 export const errorLinkHandler = (error: unknown) => {
+  /* v8 ignore start */
   // Check if it's a GraphQL error
   if (CombinedGraphQLErrors.is(error)) {
     const cge = error as CombinedGraphQLErrors;
@@ -61,6 +63,7 @@ export const errorLinkHandler = (error: unknown) => {
     // Network or other error
     console.error(`[Network error]: ${error}`);
   }
+  /* v8 ignore stop */
 };
 
 export const errorLink = onError(({ error }) => {

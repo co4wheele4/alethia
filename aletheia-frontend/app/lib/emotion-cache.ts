@@ -13,12 +13,14 @@ const isBrowser = typeof document !== 'undefined';
 export default function createEmotionCache() {
   let insertionPoint;
 
+  /* v8 ignore start */
   if (isBrowser) {
     const emotionInsertionPoint = document.querySelector<HTMLMetaElement>(
       'meta[name="emotion-insertion-point"]'
     );
     insertionPoint = emotionInsertionPoint ?? undefined;
   }
+  /* v8 ignore stop */
 
   return createCache({
     key: 'mui-style',

@@ -44,7 +44,7 @@ describe('ExplicitConfirmDialog', () => {
   });
 
   it('should call onConfirm when confirm button is clicked', () => {
-    const handleConfirm = jest.fn();
+    const handleConfirm = vi.fn();
     render(<ExplicitConfirmDialog open={true} onConfirm={handleConfirm} />);
     
     const confirmButton = screen.getByRole('button', { name: /confirm/i });
@@ -54,7 +54,7 @@ describe('ExplicitConfirmDialog', () => {
   });
 
   it('should call onClose when cancel button is clicked', () => {
-    const handleClose = jest.fn();
+    const handleClose = vi.fn();
     render(<ExplicitConfirmDialog open={true} onClose={handleClose} />);
     
     const cancelButton = screen.getByRole('button', { name: /cancel/i });

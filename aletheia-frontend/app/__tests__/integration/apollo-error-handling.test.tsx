@@ -10,15 +10,15 @@ import { ThemeProvider } from '../../hooks/useTheme';
 import { MuiThemeProvider } from '../../providers/mui-theme-provider';
 import * as authUtils from '../../lib/utils/auth';
 
-jest.mock('../../hooks/useHello');
+vi.mock('../../hooks/useHello');
 
-const mockUseHello = useHello as jest.MockedFunction<typeof useHello>;
+const mockUseHello = useHello as any;
 
 // Mock auth utils
-jest.mock('../../lib/utils/auth', () => ({
-  getAuthToken: jest.fn(() => null),
-  setAuthToken: jest.fn(),
-  removeAuthToken: jest.fn(),
+vi.mock('../../lib/utils/auth', () => ({
+  getAuthToken: vi.fn(() => null),
+  setAuthToken: vi.fn(),
+  removeAuthToken: vi.fn(),
 }));
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -31,8 +31,8 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('Apollo Client Error Handling Integration', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (authUtils.getAuthToken as jest.Mock).mockReturnValue(null);
+    vi.clearAllMocks();
+    (authUtils.getAuthToken as any).mockReturnValue(null);
   });
 
   it('should handle GraphQL errors in components', async () => {
@@ -41,7 +41,7 @@ describe('Apollo Client Error Handling Integration', () => {
       hello: undefined,
       loading: false,
       error: mockError,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -60,7 +60,7 @@ describe('Apollo Client Error Handling Integration', () => {
       hello: undefined,
       loading: false,
       error: networkError,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -78,7 +78,7 @@ describe('Apollo Client Error Handling Integration', () => {
       hello: undefined,
       loading: true,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(
@@ -95,7 +95,7 @@ describe('Apollo Client Error Handling Integration', () => {
       hello: 'Hello World',
       loading: false,
       error: undefined,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     });
 
     render(

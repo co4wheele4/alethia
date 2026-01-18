@@ -7,14 +7,14 @@ import { OptimisticButton } from '../../../components/ui/OptimisticButton';
 
 describe('OptimisticButton', () => {
   it('should render button with children', () => {
-    const action = jest.fn();
+    const action = vi.fn();
     render(<OptimisticButton action={action}>Click Me</OptimisticButton>);
 
     expect(screen.getByRole('button', { name: /click me/i })).toBeInTheDocument();
   });
 
   it('should call action when clicked', async () => {
-    const action = jest.fn<Promise<void>, []>().mockResolvedValue(undefined);
+    const action = vi.fn().mockResolvedValue(undefined);
     render(<OptimisticButton action={action}>Click Me</OptimisticButton>);
 
     const button = screen.getByRole('button', { name: /click me/i });
@@ -26,7 +26,7 @@ describe('OptimisticButton', () => {
   });
 
   it('should show optimistic label while pending', async () => {
-    const action = jest.fn<Promise<void>, []>(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
     render(
       <OptimisticButton action={action} optimisticLabel="Processing...">
         Submit
@@ -43,7 +43,7 @@ describe('OptimisticButton', () => {
 
   it('should show children when optimisticState is false', () => {
     // Test the branch where optimisticState is false (line 49: optimisticState && optimisticLabel ? optimisticLabel : children)
-    const action = jest.fn();
+    const action = vi.fn();
     render(
       <OptimisticButton action={action} optimisticLabel="Processing...">
         Submit
@@ -57,7 +57,7 @@ describe('OptimisticButton', () => {
 
   it('should show children when optimisticLabel is not provided', async () => {
     // Test the branch where optimisticLabel is undefined (line 49)
-    const action = jest.fn<Promise<void>, []>(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
     render(
       <OptimisticButton action={action}>
         Submit
@@ -74,7 +74,7 @@ describe('OptimisticButton', () => {
   });
 
   it('should be disabled while pending', async () => {
-    const action = jest.fn<Promise<void>, []>(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
     render(<OptimisticButton action={action}>Submit</OptimisticButton>);
 
     const button = screen.getByRole('button', { name: /submit/i });
@@ -87,7 +87,7 @@ describe('OptimisticButton', () => {
 
   it('should be disabled when optimisticState is true', async () => {
     // Test the branch where optimisticState is true (line 47: disabled={isPending || optimisticState || buttonProps.disabled})
-    const action = jest.fn<Promise<void>, []>(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
     render(<OptimisticButton action={action}>Submit</OptimisticButton>);
 
     const button = screen.getByRole('button', { name: /submit/i });
@@ -100,7 +100,7 @@ describe('OptimisticButton', () => {
   });
 
   it('should respect disabled prop', () => {
-    const action = jest.fn();
+    const action = vi.fn();
     render(
       <OptimisticButton action={action} disabled>
         Submit
@@ -112,7 +112,7 @@ describe('OptimisticButton', () => {
   });
 
   it('should pass through other button props', () => {
-    const action = jest.fn();
+    const action = vi.fn();
     render(
       <OptimisticButton action={action} variant="outlined" color="primary">
         Submit

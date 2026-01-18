@@ -12,7 +12,7 @@ describe('WhyPanel', () => {
   });
 
   it('should call onExplain when button is clicked', () => {
-    const handleExplain = jest.fn();
+    const handleExplain = vi.fn();
     render(<WhyPanel onExplain={handleExplain} />);
     
     const button = screen.getByRole('button', { name: /why am i seeing this\?/i });
@@ -43,7 +43,7 @@ describe('WhyPanel', () => {
   });
 
   it('should render both button and explanation', () => {
-    const handleExplain = jest.fn();
+    const handleExplain = vi.fn();
     const explanation = 'Test explanation';
     render(<WhyPanel onExplain={handleExplain} explanation={explanation} />);
     

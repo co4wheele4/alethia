@@ -17,7 +17,7 @@ describe('SourceBadge', () => {
   });
 
   it('should call onClick when clicked', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<SourceBadge source="Test Source" onClick={handleClick} />);
     
     const badge = screen.getByText('Test Source');

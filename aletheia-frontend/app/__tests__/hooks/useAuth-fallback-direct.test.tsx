@@ -10,23 +10,22 @@ import { useAuth } from '../../hooks/useAuth';
 import * as authUtils from '../../lib/utils/auth';
 
 // Mock the auth utils
-jest.mock('../../lib/utils/auth', () => ({
-  setAuthToken: jest.fn(),
-  removeAuthToken: jest.fn(),
-  getAuthToken: jest.fn(() => null),
+vi.mock('../../lib/utils/auth', () => ({
+  setAuthToken: vi.fn(),
+  removeAuthToken: vi.fn(),
+  getAuthToken: vi.fn(() => null),
 }));
 
 // Mock useMutation to return mutations that throw non-Error values
-jest.mock('@apollo/client/react', () => {
-  const actual = jest.requireActual('@apollo/client/react');
+vi.mock('@apollo/client/react', async (importOriginal) => {
+  const actual = await importOriginal<any>();
   return {
     ...actual,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
     useMutation: (_mutation: any, _options?: any) => {
       // Return a mutation function that throws a plain object (not an Error instance)
       const mutationFn = async () => {
         // Throw a plain object to trigger fallback paths
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        
         const nonErrorObj: any = { message: 'Unexpected error', toString: () => 'Unexpected error' };
         Object.setPrototypeOf(nonErrorObj, null);
         throw nonErrorObj;
@@ -37,8 +36,8 @@ jest.mock('@apollo/client/react', () => {
 });
 
 const mockClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -48,8 +47,8 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('useAuth Fallback Paths (Direct Mock)', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (authUtils.getAuthToken as jest.Mock).mockReturnValue(null);
+    vi.clearAllMocks();
+    (authUtils.getAuthToken as any).mockReturnValue(null);
     localStorage.clear();
   });
 

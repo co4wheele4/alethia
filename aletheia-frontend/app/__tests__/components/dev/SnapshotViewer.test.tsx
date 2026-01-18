@@ -25,7 +25,7 @@ describe('SnapshotViewer', () => {
   });
 
   it('should render take snapshot button when onTakeSnapshot is provided', () => {
-    const handleSnapshot = jest.fn();
+    const handleSnapshot = vi.fn();
     render(<SnapshotViewer onTakeSnapshot={handleSnapshot} />);
     
     expect(screen.getByRole('button', { name: /take snapshot/i })).toBeInTheDocument();
@@ -37,7 +37,7 @@ describe('SnapshotViewer', () => {
   });
 
   it('should call onTakeSnapshot when button is clicked', () => {
-    const handleSnapshot = jest.fn();
+    const handleSnapshot = vi.fn();
     render(<SnapshotViewer onTakeSnapshot={handleSnapshot} />);
     
     const button = screen.getByRole('button', { name: /take snapshot/i });

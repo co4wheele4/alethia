@@ -16,8 +16,8 @@ import { MuiThemeProvider } from '../../../providers/mui-theme-provider';
 import { useAuth } from '../../../hooks/useAuth';
 
 // Mock useAuth for this test
-jest.mock('../../../hooks/useAuth');
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+vi.mock('../../../hooks/useAuth');
+const mockUseAuth = useAuth as any;
 
 // Setup MSW for this test suite (commented out until polyfills are fixed)
 // setupMSW();
@@ -33,20 +33,20 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('LoginForm with MSW', () => {
-  const mockLogin = jest.fn();
-  const mockRegister = jest.fn();
+  const mockLogin = vi.fn();
+  const mockRegister = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isInitialized: true,
       token: null,
       login: mockLogin,
       register: mockRegister,
-      changePassword: jest.fn(),
-      forgotPassword: jest.fn(),
-      logout: jest.fn(),
+      changePassword: vi.fn(),
+      forgotPassword: vi.fn(),
+      logout: vi.fn(),
       loading: false,
       error: undefined,
     });

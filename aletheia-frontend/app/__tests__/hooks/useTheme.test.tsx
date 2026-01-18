@@ -30,15 +30,15 @@ Object.defineProperty(window, 'localStorage', {
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });
 
@@ -156,22 +156,22 @@ describe('useTheme', () => {
       matches: true, // Dark mode (line 48: mediaQuery.matches ? 'dark' : 'light')
       media: '(prefers-color-scheme: dark)',
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn((event: string, handler: (e: MediaQueryListEvent) => void) => {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn((event: string, handler: (e: MediaQueryListEvent) => void) => {
         // Store handler for later use
         if (event === 'change') {
           mockMediaQueryList._handler = handler;
         }
       }),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
       _handler: null as ((e: MediaQueryListEvent) => void) | null,
     };
 
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      value: jest.fn().mockImplementation(() => mockMediaQueryList),
+      value: vi.fn().mockImplementation(() => mockMediaQueryList),
     });
 
     const { result } = renderHook(() => useTheme(), { wrapper });
@@ -200,21 +200,21 @@ describe('useTheme', () => {
       matches: false, // Light mode (line 48: mediaQuery.matches ? 'dark' : 'light')
       media: '(prefers-color-scheme: dark)',
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn((event: string, handler: (e: MediaQueryListEvent) => void) => {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn((event: string, handler: (e: MediaQueryListEvent) => void) => {
         if (event === 'change') {
           mockMediaQueryList._handler = handler;
         }
       }),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
       _handler: null as ((e: MediaQueryListEvent) => void) | null,
     };
 
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      value: jest.fn().mockImplementation(() => mockMediaQueryList),
+      value: vi.fn().mockImplementation(() => mockMediaQueryList),
     });
 
     const { result } = renderHook(() => useTheme(), { wrapper });

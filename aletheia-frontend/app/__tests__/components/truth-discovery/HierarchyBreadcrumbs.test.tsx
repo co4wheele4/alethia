@@ -26,7 +26,7 @@ describe('HierarchyBreadcrumbs', () => {
   });
 
   it('should call onNavigate when breadcrumb is clicked', () => {
-    const handleNavigate = jest.fn();
+    const handleNavigate = vi.fn();
     const path = [
       { id: '1', label: 'Level 1' },
       { id: '2', label: 'Level 2' },

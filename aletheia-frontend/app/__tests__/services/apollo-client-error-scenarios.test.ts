@@ -7,10 +7,10 @@ import { getApolloClient } from '../../services/apollo-client';
 import * as authUtils from '../../lib/utils/auth';
 
 // Mock auth utils
-jest.mock('../../lib/utils/auth', () => ({
-  getAuthToken: jest.fn(() => null),
-  setAuthToken: jest.fn(),
-  removeAuthToken: jest.fn(),
+vi.mock('../../lib/utils/auth', () => ({
+  getAuthToken: vi.fn(() => null),
+  setAuthToken: vi.fn(),
+  removeAuthToken: vi.fn(),
 }));
 
 // Mock localStorage
@@ -36,14 +36,14 @@ Object.defineProperty(window, 'localStorage', {
 
 describe('Apollo Client Error Scenarios', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorageMock.clear();
-    (authUtils.getAuthToken as jest.Mock).mockReturnValue(null);
+    (authUtils.getAuthToken as any).mockReturnValue(null);
   });
 
   it('should handle GraphQL errors with Unauthorized message', () => {
     if (typeof window !== 'undefined') {
-      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
       
       const client = getApolloClient();
       
@@ -59,8 +59,8 @@ describe('Apollo Client Error Scenarios', () => {
 
   it('should handle GraphQL errors with Invalid token message', () => {
     if (typeof window !== 'undefined') {
-      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-      const removeItemSpy = jest.spyOn(localStorageMock, 'removeItem');
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const removeItemSpy = vi.spyOn(localStorageMock, 'removeItem');
       
       const client = getApolloClient();
       expect(client).toBeDefined();
@@ -75,7 +75,7 @@ describe('Apollo Client Error Scenarios', () => {
 
   it('should include auth token in headers when token exists', () => {
     if (typeof window !== 'undefined') {
-      (authUtils.getAuthToken as jest.Mock).mockReturnValue('test-token-123');
+      (authUtils.getAuthToken as any).mockReturnValue('test-token-123');
       
       const client = getApolloClient();
       expect(client).toBeDefined();
@@ -88,7 +88,7 @@ describe('Apollo Client Error Scenarios', () => {
 
   it('should not include auth token when token is null', () => {
     if (typeof window !== 'undefined') {
-      (authUtils.getAuthToken as jest.Mock).mockReturnValue(null);
+      (authUtils.getAuthToken as any).mockReturnValue(null);
       
       const client = getApolloClient();
       expect(client).toBeDefined();
@@ -100,7 +100,7 @@ describe('Apollo Client Error Scenarios', () => {
 
   it('should handle network errors', () => {
     if (typeof window !== 'undefined') {
-      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
       
       const client = getApolloClient();
       expect(client).toBeDefined();

@@ -7,13 +7,13 @@ import { getApolloClient } from '../../services/apollo-client';
 import * as authUtils from '../../lib/utils/auth';
 
 // Mock auth utils
-jest.mock('../../lib/utils/auth', () => ({
-  getAuthToken: jest.fn(() => null),
+vi.mock('../../lib/utils/auth', () => ({
+  getAuthToken: vi.fn(() => null),
 }));
 
 describe('apollo-client Edge Cases', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset the singleton client
     if (typeof window !== 'undefined') {
       // Clear the cached client
@@ -38,7 +38,7 @@ describe('apollo-client Edge Cases', () => {
 
   it('should include auth token in headers when token exists', () => {
     if (typeof window !== 'undefined') {
-      (authUtils.getAuthToken as jest.Mock).mockReturnValue('test-token-123');
+      (authUtils.getAuthToken as any).mockReturnValue('test-token-123');
       
       const client = getApolloClient();
       expect(client).toBeDefined();
@@ -51,7 +51,7 @@ describe('apollo-client Edge Cases', () => {
 
   it('should work without auth token', () => {
     if (typeof window !== 'undefined') {
-      (authUtils.getAuthToken as jest.Mock).mockReturnValue(null);
+      (authUtils.getAuthToken as any).mockReturnValue(null);
       
       const client = getApolloClient();
       expect(client).toBeDefined();

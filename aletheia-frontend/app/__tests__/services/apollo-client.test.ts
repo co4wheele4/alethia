@@ -7,9 +7,9 @@ import { getApolloClient } from '../../services/apollo-client';
 describe('apollo-client', () => {
   beforeEach(() => {
     // Clear any cached client
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset the singleton by accessing the module
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should create Apollo Client instance', () => {

@@ -17,7 +17,7 @@ describe('HumanOverrideButton', () => {
   });
 
   it('should call onOverride when clicked', () => {
-    const handleOverride = jest.fn();
+    const handleOverride = vi.fn();
     render(<HumanOverrideButton onOverride={handleOverride} />);
     
     const button = screen.getByRole('button', { name: /override ai result/i });

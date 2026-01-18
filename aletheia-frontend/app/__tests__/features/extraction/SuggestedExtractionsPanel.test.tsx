@@ -70,7 +70,7 @@ describe('SuggestedExtractionsPanel', () => {
   });
 
   it('calls proposeExtraction when Propose button is clicked', async () => {
-    const onRefresh = jest.fn();
+    const onRefresh = vi.fn();
     const client = createMockClient({
       'ProposeExtraction': { proposeExtraction: [] }
     });
@@ -89,7 +89,7 @@ describe('SuggestedExtractionsPanel', () => {
   });
 
   it('calls acceptSuggestion when Accept button is clicked', async () => {
-    const onRefresh = jest.fn();
+    const onRefresh = vi.fn();
     const client = createMockClient({
       'AcceptSuggestion': { acceptSuggestion: { id: 's1', status: 'ACCEPTED' } }
     });
@@ -108,7 +108,7 @@ describe('SuggestedExtractionsPanel', () => {
   });
 
   it('calls rejectSuggestion when Reject button is clicked', async () => {
-    const onRefresh = jest.fn();
+    const onRefresh = vi.fn();
     const client = createMockClient({
       'RejectSuggestion': { rejectSuggestion: { id: 's1', status: 'REJECTED' } }
     });

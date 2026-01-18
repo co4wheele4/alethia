@@ -13,13 +13,13 @@ import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { ThemeProvider } from '../../hooks/useTheme';
 import { MuiThemeProvider } from '../../providers/mui-theme-provider';
 
-jest.mock('../../hooks/useAuth');
+vi.mock('../../hooks/useAuth');
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockUseAuth = useAuth as any;
 
 const mockApolloClient = new ApolloClient({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  link: undefined as any,
+  
+  link: { request: vi.fn() } as any,
   cache: new InMemoryCache(),
 });
 
@@ -35,21 +35,21 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 TestWrapper.displayName = 'TestWrapper';
 
 describe('Form Validation Flow Integration', () => {
-  const mockLogin = jest.fn();
-  const mockChangePassword = jest.fn();
-  const mockForgotPassword = jest.fn();
+  const mockLogin = vi.fn();
+  const mockChangePassword = vi.fn();
+  const mockForgotPassword = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isInitialized: true,
       token: null,
       login: mockLogin,
-      register: jest.fn(),
+      register: vi.fn(),
       changePassword: mockChangePassword,
       forgotPassword: mockForgotPassword,
-      logout: jest.fn(),
+      logout: vi.fn(),
       loading: false,
       error: undefined,
     });
@@ -135,7 +135,7 @@ describe('Form Validation Flow Integration', () => {
 
   describe('Change Password Form Validation', () => {
     it('should validate all required fields', async () => {
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       render(
         <TestWrapper>
           <ChangePasswordForm open={true} onClose={handleClose} />
@@ -176,7 +176,7 @@ describe('Form Validation Flow Integration', () => {
     }, 20000);
 
     it('should validate password match', async () => {
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       render(
         <TestWrapper>
           <ChangePasswordForm open={true} onClose={handleClose} />
@@ -203,7 +203,7 @@ describe('Form Validation Flow Integration', () => {
     });
 
     it('should validate password requirements', async () => {
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       render(
         <TestWrapper>
           <ChangePasswordForm open={true} onClose={handleClose} />
@@ -228,7 +228,7 @@ describe('Form Validation Flow Integration', () => {
     });
 
     it('should validate new password is different from current', async () => {
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       render(
         <TestWrapper>
           <ChangePasswordForm open={true} onClose={handleClose} />
@@ -255,7 +255,7 @@ describe('Form Validation Flow Integration', () => {
 
   describe('Forgot Password Form Validation', () => {
     it('should validate email is required', async () => {
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       const { container } = render(
         <TestWrapper>
           <ForgotPasswordForm open={true} onClose={handleClose} />
@@ -302,7 +302,7 @@ describe('Form Validation Flow Integration', () => {
     }, 15000);
 
     it('should validate email format', async () => {
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       const { container } = render(
         <TestWrapper>
           <ForgotPasswordForm open={true} onClose={handleClose} />
@@ -393,7 +393,7 @@ describe('Form Validation Flow Integration', () => {
     });
 
     it('should handle multiple validation errors sequentially', async () => {
-      const handleClose = jest.fn();
+      const handleClose = vi.fn();
       render(
         <TestWrapper>
           <ChangePasswordForm open={true} onClose={handleClose} />

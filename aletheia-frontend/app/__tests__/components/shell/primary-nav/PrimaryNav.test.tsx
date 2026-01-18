@@ -1,13 +1,14 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { usePathname } from 'next/navigation';
 import { PrimaryNav } from '../../../../components/shell/primary-nav/PrimaryNav';
 
-jest.mock('next/navigation', () => ({
-  usePathname: jest.fn(),
+vi.mock('next/navigation', () => ({
+  usePathname: vi.fn(),
 }));
 
-jest.mock('next/link', () => ({
+vi.mock('next/link', () => ({
   __esModule: true,
   default: ({
     href,
@@ -22,12 +23,9 @@ jest.mock('next/link', () => ({
 
 describe('PrimaryNav', () => {
   it('renders items, highlights selected route, and calls onNavigate on click', async () => {
-    const { usePathname } = jest.requireMock('next/navigation') as {
-      usePathname: jest.Mock;
-    };
-    usePathname.mockReturnValue('/documents/123');
+    vi.mocked(usePathname).mockReturnValue('/documents/123');
 
-    const onNavigate = jest.fn();
+    const onNavigate = vi.fn();
     const user = userEvent.setup();
 
     render(
@@ -49,10 +47,7 @@ describe('PrimaryNav', () => {
   });
 
   it('renders without footer and without onNavigate', () => {
-    const { usePathname } = jest.requireMock('next/navigation') as {
-      usePathname: jest.Mock;
-    };
-    usePathname.mockReturnValue('/dashboard');
+    vi.mocked(usePathname).mockReturnValue('/dashboard');
 
     render(
       <PrimaryNav

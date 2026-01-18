@@ -3,19 +3,19 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Header } from '../../../components/shell/Header';
 
-jest.mock('../../../components/ui/ThemeToggle', () => ({
+vi.mock('../../../components/ui/ThemeToggle', () => ({
   ThemeToggle: () => <div data-testid="theme-toggle" />,
 }));
 
-jest.mock('../../../components/layout/ServerHeader', () => ({
+vi.mock('../../../components/layout/ServerHeader', () => ({
   ServerHeader: () => <span>ServerHeader</span>,
 }));
 
 describe('Header', () => {
   it('renders title and optional actions, and supports mobile nav + logout', async () => {
     const user = userEvent.setup();
-    const onOpenMobileNav = jest.fn();
-    const onLogout = jest.fn();
+    const onOpenMobileNav = vi.fn();
+    const onLogout = vi.fn();
 
     render(
       <Header

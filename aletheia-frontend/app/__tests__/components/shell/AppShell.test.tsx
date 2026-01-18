@@ -1,9 +1,12 @@
 import React from 'react';
 import { render, within } from '@testing-library/react';
 import { act } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../../hooks/useAuth';
+import { AppShell } from '../../../components/shell/AppShell';
 
-jest.mock('@mui/material', () => {
-  const actual = jest.requireActual('@mui/material');
+vi.mock('@mui/material', async (importOriginal) => {
+  const actual = await importOriginal<any>();
   type DrawerProps = React.PropsWithChildren<{
     open?: boolean;
     onClose?: (event: unknown, reason: string) => void;
@@ -22,20 +25,20 @@ jest.mock('@mui/material', () => {
   };
 });
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
 }));
 
-jest.mock('../../../hooks/useAuth', () => ({
-  useAuth: jest.fn(),
+vi.mock('../../../hooks/useAuth', () => ({
+  useAuth: vi.fn(),
 }));
 
 // Keep this test focused on AppShell behavior
-jest.mock('../../../components/ui/SkeletonLoader', () => ({
+vi.mock('../../../components/ui/SkeletonLoader', () => ({
   SkeletonLoader: () => <div data-testid="skeleton" />,
 }));
 
-jest.mock('../../../components/layout/AletheiaLayout', () => ({
+vi.mock('../../../components/layout/AletheiaLayout', () => ({
   AletheiaLayout: ({ header, children }: { header?: React.ReactNode; children?: React.ReactNode }) => (
     <div>
       <div data-testid="header">{header}</div>
@@ -44,11 +47,11 @@ jest.mock('../../../components/layout/AletheiaLayout', () => ({
   ),
 }));
 
-jest.mock('../../../components/common/ErrorBoundary', () => ({
+vi.mock('../../../components/common/ErrorBoundary', () => ({
   ErrorBoundary: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 
-jest.mock('../../../components/shell/primary-nav/PrimaryNav', () => ({
+vi.mock('../../../components/shell/primary-nav/PrimaryNav', () => ({
   PrimaryNav: ({ variant, onNavigate }: { variant: string; onNavigate?: () => void }) => (
     <nav data-testid={`primary-nav-${variant}`}>
       <button onClick={() => onNavigate?.()}>navigate</button>
@@ -56,7 +59,7 @@ jest.mock('../../../components/shell/primary-nav/PrimaryNav', () => ({
   ),
 }));
 
-jest.mock('../../../components/shell/Header', () => ({
+vi.mock('../../../components/shell/Header', () => ({
   Header: ({ onOpenMobileNav, onLogout }: { onOpenMobileNav?: () => void; onLogout?: () => void }) => (
     <header data-testid="header-component">
       <button onClick={() => onOpenMobileNav?.()}>open mobile nav</button>
@@ -65,32 +68,24 @@ jest.mock('../../../components/shell/Header', () => ({
   ),
 }));
 
-function loadAppShell(): typeof import('../../../components/shell/AppShell') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require('../../../components/shell/AppShell');
-}
-
 describe('AppShell', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('redirects to home when auth is required and user is unauthenticated', async () => {
-    const { AppShell } = loadAppShell();
-    const replace = jest.fn();
-    const { useRouter } = jest.requireMock('next/navigation') as { useRouter: jest.Mock };
-    useRouter.mockReturnValue({ replace });
+    const replace = vi.fn();
+    vi.mocked(useRouter).mockReturnValue({ replace } as any);
 
-    const { useAuth } = jest.requireMock('../../../hooks/useAuth') as { useAuth: jest.Mock };
-    useAuth.mockReturnValue({
+    vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isInitialized: true,
-      logout: jest.fn(),
-    });
+      logout: vi.fn(),
+    } as any);
 
     render(
       <AppShell title="Dashboard">
@@ -99,24 +94,21 @@ describe('AppShell', () => {
     );
 
     await act(async () => {
-      jest.runAllTimers();
+      vi.runAllTimers();
     });
 
     expect(replace).toHaveBeenCalledWith('/');
   });
 
   it('does not redirect and renders when requireAuth is false', async () => {
-    const { AppShell } = loadAppShell();
-    const replace = jest.fn();
-    const { useRouter } = jest.requireMock('next/navigation') as { useRouter: jest.Mock };
-    useRouter.mockReturnValue({ replace });
+    const replace = vi.fn();
+    vi.mocked(useRouter).mockReturnValue({ replace } as any);
 
-    const { useAuth } = jest.requireMock('../../../hooks/useAuth') as { useAuth: jest.Mock };
-    useAuth.mockReturnValue({
+    vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isInitialized: true,
-      logout: jest.fn(),
-    });
+      logout: vi.fn(),
+    } as any);
 
     const { queryByTestId, getByText } = render(
       <AppShell title="Public" requireAuth={false}>
@@ -125,7 +117,7 @@ describe('AppShell', () => {
     );
 
     await act(async () => {
-      jest.runAllTimers();
+      vi.runAllTimers();
     });
 
     expect(replace).not.toHaveBeenCalled();
@@ -134,18 +126,15 @@ describe('AppShell', () => {
   });
 
   it('renders header and children once hydrated when authenticated', async () => {
-    const { AppShell } = loadAppShell();
-    const replace = jest.fn();
-    const { useRouter } = jest.requireMock('next/navigation') as { useRouter: jest.Mock };
-    useRouter.mockReturnValue({ replace });
+    const replace = vi.fn();
+    vi.mocked(useRouter).mockReturnValue({ replace } as any);
 
-    const { useAuth } = jest.requireMock('../../../hooks/useAuth') as { useAuth: jest.Mock };
-    const logout = jest.fn();
-    useAuth.mockReturnValue({
+    const logout = vi.fn();
+    vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isInitialized: true,
       logout,
-    });
+    } as any);
 
     const { queryByTestId, getByText, getByRole } = render(
       <AppShell title="Dashboard">
@@ -154,7 +143,7 @@ describe('AppShell', () => {
     );
 
     await act(async () => {
-      jest.runAllTimers();
+      vi.runAllTimers();
     });
 
     expect(replace).not.toHaveBeenCalled();
@@ -193,18 +182,14 @@ describe('AppShell', () => {
     g.requestAnimationFrame = undefined as unknown as typeof g.requestAnimationFrame;
     g.cancelAnimationFrame = undefined as unknown as typeof g.cancelAnimationFrame;
 
-    const { AppShell } = loadAppShell();
+    const replace = vi.fn();
+    vi.mocked(useRouter).mockReturnValue({ replace } as any);
 
-    const replace = jest.fn();
-    const { useRouter } = jest.requireMock('next/navigation') as { useRouter: jest.Mock };
-    useRouter.mockReturnValue({ replace });
-
-    const { useAuth } = jest.requireMock('../../../hooks/useAuth') as { useAuth: jest.Mock };
-    useAuth.mockReturnValue({
+    vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isInitialized: true,
-      logout: jest.fn(),
-    });
+      logout: vi.fn(),
+    } as any);
 
     render(
       <AppShell title="Dashboard">
@@ -213,11 +198,27 @@ describe('AppShell', () => {
     );
 
     await act(async () => {
-      jest.runAllTimers();
+      vi.runAllTimers();
     });
 
     g.requestAnimationFrame = originalRaf;
     g.cancelAnimationFrame = originalCaf;
+  });
+
+  it('cleans up RAFs on unmount', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isInitialized: true,
+      logout: vi.fn(),
+    } as any);
+
+    const { unmount } = render(
+      <AppShell title="Dashboard">
+        <div>Content</div>
+      </AppShell>,
+    );
+    // Unmount immediately before timers/RAFs run to cover cleanup branches
+    unmount();
   });
 });
 

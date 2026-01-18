@@ -36,7 +36,7 @@ describe('ErrorBanner', () => {
   });
 
   it('should call onClose when close button is clicked', () => {
-    const handleClose = jest.fn();
+    const handleClose = vi.fn();
     render(<ErrorBanner onClose={handleClose} />);
     
     const closeButton = screen.getByRole('button', { name: /close/i });
