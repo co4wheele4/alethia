@@ -7,7 +7,8 @@ import { SuggestedExtractionsPanel } from '../../../features/extraction/componen
 function createMockClient(responses: Record<string, object>) {
   const link = new ApolloLink((operation) => {
     return new Observable((observer) => {
-      const data = responses[operation.operationName] || {};
+      const opName = operation.operationName;
+      const data = opName ? (responses[opName] || {}) : {};
       observer.next({ data });
       observer.complete();
     });
