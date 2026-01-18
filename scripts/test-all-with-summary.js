@@ -24,12 +24,12 @@ const colors = {
 
 // Test results storage
 const results = {
-  'Frontend Linting': { status: 'pending', output: '', duration: 0 },
-  'Frontend Unit Tests': { status: 'pending', output: '', duration: 0 },
-  'Frontend E2E Tests': { status: 'pending', output: '', duration: 0 },
-  'Backend Linting': { status: 'pending', output: '', duration: 0 },
-  'Backend Unit Tests': { status: 'pending', output: '', duration: 0 },
-  'Backend E2E Tests': { status: 'pending', output: '', duration: 0 },
+  'Frontend Linting': { status: 'pending', output: '', duration: 0, coverage: null },
+  'Frontend Unit Tests': { status: 'pending', output: '', duration: 0, coverage: null },
+  'Frontend E2E Tests': { status: 'pending', output: '', duration: 0, coverage: null },
+  'Backend Linting': { status: 'pending', output: '', duration: 0, coverage: null },
+  'Backend Unit Tests': { status: 'pending', output: '', duration: 0, coverage: null },
+  'Backend E2E Tests': { status: 'pending', output: '', duration: 0, coverage: null },
 };
 
 /**
@@ -91,6 +91,12 @@ function runTest(name, command, cwd) {
         duration: parseFloat(duration),
         exitCode: code,
       };
+
+      if (code !== 0) {
+        console.log(`\n${colors.red}${colors.bright}✗ ${name} FAILED (Exit Code: ${code})${colors.reset}`);
+      } else {
+        console.log(`\n${colors.green}${colors.bright}✓ ${name} PASSED${colors.reset}`);
+      }
       
       resolve(code === 0);
     });
@@ -118,6 +124,7 @@ function extractStats(output, testType) {
     skipped: 0,
     total: 0,
     failingFiles: [],
+    coverage: null,
   };
 
   if (!output) return stats;
@@ -146,6 +153,18 @@ function extractStats(output, testType) {
         stats.total = parseInt(altMatch[4]) || stats.passed + stats.failed + stats.skipped;
       }
     }
+
+    // Extract coverage
+    // Format: All files |   97.22 |   83.33 |   94.11 |   97.22 |
+    const coverageMatch = output.match(/All files\s+\|\s+([\d.]+)\s+\|\s+([\d.]+)\s+\|\s+([\d.]+)\s+\|\s+([\d.]+)\s+\|/);
+    if (coverageMatch) {
+      stats.coverage = {
+        statements: coverageMatch[1],
+        branches: coverageMatch[2],
+        functions: coverageMatch[3],
+        lines: coverageMatch[4],
+      };
+    }
   } else if (testType === 'playwright') {
     // Playwright output format: "5 passed (8.8s)" or "20 passed, 5 skipped"
     const playwrightMatch = output.match(/(\d+)\s+passed(?:,\s+(\d+)\s+failed)?(?:,\s+(\d+)\s+skipped)?/i);
@@ -154,6 +173,29 @@ function extractStats(output, testType) {
       stats.failed = parseInt(playwrightMatch[2]) || 0;
       stats.skipped = parseInt(playwrightMatch[3]) || 0;
       stats.total = stats.passed + stats.failed + stats.skipped;
+    }
+
+    // Extract failing playwright tests
+    const pwFailMatch = output.matchAll(/\d+\)\s+\[[^\]]+\]\s+›\s+([^\n]+)/g);
+    for (const match of pwFailMatch) {
+      if (match[1] && !stats.failingFiles.includes(match[1])) {
+        stats.failingFiles.push(match[1]);
+      }
+    }
+  } else if (testType === 'lint') {
+    // ESLint format: "✖ 5 problems (5 errors, 0 warnings)"
+    const lintMatch = output.match(/✖\s+(\d+)\s+problems?\s+\((\d+)\s+errors?/i);
+    if (lintMatch) {
+      stats.failed = parseInt(lintMatch[2]) || 0;
+      stats.total = stats.failed;
+    }
+    
+    // Extract files with lint errors
+    const lintFileMatches = output.matchAll(/^([^\s\n]+\.[jt]sx?)/gm);
+    for (const match of lintFileMatches) {
+      if (match[1] && !match[1].includes('node_modules') && !stats.failingFiles.includes(match[1])) {
+        stats.failingFiles.push(match[1]);
+      }
     }
   }
 
@@ -197,6 +239,8 @@ function displaySummary() {
       testType = 'playwright';
     } else if (name.includes('Frontend') && name.includes('Unit')) {
       testType = 'vitest';
+    } else if (name.includes('Linting')) {
+      testType = 'lint';
     }
     
     // Try to extract stats from output
@@ -229,6 +273,11 @@ function displaySummary() {
       allStats.failingFiles.forEach((file) => {
         console.log(`      ${colors.red}✗${colors.reset} ${file}`);
       });
+    }
+
+    // Display coverage if available
+    if (allStats.coverage) {
+      console.log(`   Coverage: ${colors.cyan}${allStats.coverage.lines}% lines${colors.reset}, ${colors.cyan}${allStats.coverage.functions}% functions${colors.reset}, ${colors.cyan}${allStats.coverage.statements}% statements${colors.reset}`);
     }
 
     totalDuration += result.duration;
@@ -290,7 +339,7 @@ async function main() {
     },
     {
       name: 'Frontend Unit Tests',
-      command: 'npm run test',
+      command: 'npm run test:cov',
       cwd: frontendDir,
     },
     {
@@ -305,12 +354,12 @@ async function main() {
     },
     {
       name: 'Backend Unit Tests',
-      command: 'npm run test',
+      command: 'npm run test:cov',
       cwd: backendDir,
     },
     {
       name: 'Backend E2E Tests',
-      command: 'npm run test:e2e',
+      command: 'npm run test:e2e:cov',
       cwd: backendDir,
     },
   ];

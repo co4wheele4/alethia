@@ -476,4 +476,67 @@ describe('ForgotPasswordForm', () => {
       expect(alert).toHaveTextContent(/failed to send reset email/i);
     });
   });
+
+  it('should check all user not found error variations', async () => {
+    // Test the different error message variations that trigger the user not found branch
+    const variations = [
+      'User not found',
+      'User does not exist',
+      'No account with this email',
+    ];
+
+    for (const errorMsg of variations) {
+      mockForgotPassword.mockRejectedValueOnce(new Error(errorMsg));
+
+      const { unmount } = render(
+        <TestWrapper>
+          <ForgotPasswordForm open={true} onClose={vi.fn()} />
+        </TestWrapper>
+      );
+
+      const emailInput = screen.getByLabelText(/email address/i);
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+
+      const submitButton = screen.getByRole('button', { name: /send reset email/i });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getAllByText(/no account found/i).length).toBeGreaterThan(0);
+      });
+      
+      unmount();
+    }
+  });
+
+  it('should test handleClose when isPending is true', async () => {
+    const onClose = vi.fn();
+    mockForgotPassword.mockImplementation(() => new Promise(() => {})); // Never resolves
+
+    render(
+      <TestWrapper>
+        <ForgotPasswordForm open={true} onClose={onClose} />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+
+    const submitButton = screen.getByRole('button', { name: /send reset email/i });
+    fireEvent.click(submitButton);
+
+    // Wait for pending state
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /sending/i })).toBeDisabled();
+    });
+
+    // Try to close - should not call onClose because isPending is true
+    // We can't click the cancel button because it's disabled, but we can try to trigger the Dialog's onClose directly
+    const dialog = screen.getByRole('dialog');
+    // MUI Dialog onClose is usually triggered via backdrop click or Escape key
+    // We can simulate a direct call to the handleClose via the Dialog's onClose prop
+    // In RTL, we can't easily access the props of a rendered component, but we can simulate the event
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

@@ -736,4 +736,96 @@ describe('ChangePasswordForm', () => {
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     expect(cancelButton).toBeDisabled();
   });
+
+  it('should check all current password error variations', async () => {
+    const variations = [
+      'Current password is incorrect',
+      'Current password',
+    ];
+
+    for (const errorMsg of variations) {
+      mockChangePassword.mockRejectedValueOnce(new Error(errorMsg));
+
+      const { unmount } = render(
+        <TestWrapper>
+          <ChangePasswordForm open={true} onClose={vi.fn()} />
+        </TestWrapper>
+      );
+
+      const currentPasswordInput = screen.getByLabelText(/current password/i);
+      const newPasswordInputs = screen.getAllByLabelText(/new password/i);
+      const newPasswordInput = newPasswordInputs[0];
+      const confirmPasswordInput = screen.getByLabelText(/confirm new password/i);
+
+      fireEvent.change(currentPasswordInput, { target: { value: 'CurrentPass123!' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'NewPass123!' } });
+      fireEvent.change(confirmPasswordInput, { target: { value: 'NewPass123!' } });
+
+      const submitButton = screen.getByRole('button', { name: /change password/i });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.queryAllByText(/current password is incorrect/i).length).toBeGreaterThan(0);
+      });
+      
+      unmount();
+    }
+  });
+
+  it('should test confirm password validation branches', async () => {
+    const { rerender } = render(
+      <TestWrapper>
+        <ChangePasswordForm open={true} onClose={vi.fn()} />
+      </TestWrapper>
+    );
+
+    const newPasswordInput = screen.getAllByLabelText(/new password/i)[0];
+    const confirmPasswordInput = screen.getByLabelText(/confirm new password/i);
+
+    // Branch 1: confirmPassword.length === 0
+    fireEvent.change(newPasswordInput, { target: { value: 'NewPass123!' } });
+    fireEvent.change(confirmPasswordInput, { target: { value: '' } });
+    expect(screen.queryByText(/passwords do not match/i)).not.toBeInTheDocument();
+
+    // Branch 2: confirmPassword.length > 0 AND newPassword === confirmPassword
+    fireEvent.change(confirmPasswordInput, { target: { value: 'NewPass123!' } });
+    expect(screen.queryByText(/passwords do not match/i)).not.toBeInTheDocument();
+
+    // Branch 3: confirmPassword.length > 0 AND newPassword !== confirmPassword
+    fireEvent.change(confirmPasswordInput, { target: { value: 'Different' } });
+    expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
+  });
+
+  it('should test handleClose when isPending is true via Escape key', async () => {
+    const onClose = vi.fn();
+    mockChangePassword.mockImplementation(() => new Promise(() => {})); // Never resolves
+
+    render(
+      <TestWrapper>
+        <ChangePasswordForm open={true} onClose={onClose} />
+      </TestWrapper>
+    );
+
+    const currentPasswordInput = screen.getByLabelText(/current password/i);
+    const newPasswordInputs = screen.getAllByLabelText(/new password/i);
+    const newPasswordInput = newPasswordInputs[0];
+    const confirmPasswordInput = screen.getByLabelText(/confirm new password/i);
+
+    fireEvent.change(currentPasswordInput, { target: { value: 'CurrentPass123!' } });
+    fireEvent.change(newPasswordInput, { target: { value: 'NewPass123!' } });
+    fireEvent.change(confirmPasswordInput, { target: { value: 'NewPass123!' } });
+
+    const submitButton = screen.getByRole('button', { name: /change password/i });
+    fireEvent.click(submitButton);
+
+    // Wait for pending state
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /changing password/i })).toBeDisabled();
+    });
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
