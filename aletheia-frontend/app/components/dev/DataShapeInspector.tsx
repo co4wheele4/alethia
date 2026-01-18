@@ -26,7 +26,12 @@ export function DataShapeInspector(props: DataShapeInspectorProps) {
           <Typography variant="subtitle2" gutterBottom>
             Expected Shape:
           </Typography>
-          <pre style={{ fontSize: '0.875rem' }}>{JSON.stringify(shape, null, 2)}</pre>
+          <Typography 
+            component="pre" 
+            sx={{ fontSize: '0.875rem', fontFamily: 'monospace', m: 0 }}
+          >
+            {JSON.stringify(shape, null, 2)}
+          </Typography>
         </Box>
       )}
       {data != null && (
@@ -34,9 +39,12 @@ export function DataShapeInspector(props: DataShapeInspectorProps) {
           <Typography variant="subtitle2" gutterBottom>
             Actual Data:
           </Typography>
-          <pre style={{ fontSize: '0.875rem' }}>
+          <Typography 
+            component="pre" 
+            sx={{ fontSize: '0.875rem', fontFamily: 'monospace', m: 0 }}
+          >
             {typeof data === 'string' ? data : JSON.stringify(data as Record<string, unknown>, null, 2)}
-          </pre>
+          </Typography>
         </Box>
       )}
     </Box>

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemText } from '@mui/material';
 
 export interface ActionSummaryFooterProps {
   // TODO: Define props
@@ -25,16 +25,19 @@ export function ActionSummaryFooter(props: ActionSummaryFooterProps) {
       )}
       {consequences.length > 0 && (
         <Box>
-          <Typography variant="subtitle2" gutterBottom>
+          <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
             Consequences:
           </Typography>
-          <ul style={{ margin: 0, paddingLeft: 20 }}>
+          <List dense sx={{ p: 0 }}>
             {consequences.map((consequence, index) => (
-              <li key={index}>
-                <Typography variant="body2">{consequence}</Typography>
-              </li>
+              <ListItem key={index} sx={{ p: 0, display: 'list-item', ml: 3, listStyleType: 'disc' }}>
+                <ListItemText 
+                  primary={consequence} 
+                  primaryTypographyProps={{ variant: 'body2' }} 
+                />
+              </ListItem>
             ))}
-          </ul>
+          </List>
         </Box>
       )}
     </Box>

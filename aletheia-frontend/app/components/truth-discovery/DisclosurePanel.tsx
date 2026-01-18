@@ -31,7 +31,7 @@ export function DisclosurePanel(props: DisclosurePanelProps) {
       </AccordionSummary>
       <AccordionDetails>
         {/* TODO: Implement disclosure panel content */}
-        {children || <p>DisclosurePanel - TODO: Implement</p>}
+        {children || <Typography variant="body2">DisclosurePanel - TODO: Implement</Typography>}
       </AccordionDetails>
     </Accordion>
   );

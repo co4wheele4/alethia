@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 export interface KnowledgeNodeProps {
   // TODO: Define props
@@ -20,7 +20,7 @@ export function KnowledgeNode(_props: KnowledgeNodeProps) {
   return (
     <Box>
       {/* TODO: Implement expandable node with lazy loading */}
-      <p>KnowledgeNode - TODO: Implement</p>
+      <Typography variant="body1">KnowledgeNode - TODO: Implement</Typography>
     </Box>
   );
 }

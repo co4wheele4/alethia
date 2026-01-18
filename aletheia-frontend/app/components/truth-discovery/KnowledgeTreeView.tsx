@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 // TODO: Define props when implementing the component
 export interface KnowledgeTreeViewProps {
@@ -18,7 +18,7 @@ export function KnowledgeTreeView(_props?: KnowledgeTreeViewProps) {
   return (
     <Box>
       {/* TODO: Implement tree/graph hybrid view */}
-      <p>KnowledgeTreeView - TODO: Implement</p>
+      <Typography variant="body1">KnowledgeTreeView - TODO: Implement</Typography>
     </Box>
   );
 }

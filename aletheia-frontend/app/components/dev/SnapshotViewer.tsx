@@ -38,9 +38,12 @@ export function SnapshotViewer(props: SnapshotViewerProps) {
             maxHeight: 400,
           }}
         >
-          <pre style={{ margin: 0, fontSize: '0.875rem' }}>
+          <Typography 
+            component="pre" 
+            sx={{ margin: 0, fontSize: '0.875rem', fontFamily: 'monospace' }}
+          >
             {JSON.stringify(snapshot, null, 2)}
-          </pre>
+          </Typography>
         </Box>
       ) : (
         <Typography variant="body2" color="text.secondary">

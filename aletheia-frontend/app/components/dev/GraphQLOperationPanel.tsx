@@ -49,20 +49,36 @@ export function GraphQLOperationPanel(props: GraphQLOperationPanelProps) {
             </Tabs>
             <Box sx={{ mt: 2 }}>
               {selectedTab === 0 && (
-                <pre style={{ fontSize: '0.875rem' }}>{op.operation}</pre>
+                <Typography 
+                  component="pre" 
+                  sx={{ fontSize: '0.875rem', fontFamily: 'monospace', m: 0 }}
+                >
+                  {op.operation}
+                </Typography>
               )}
               {selectedTab === 1 && (
-                <pre style={{ fontSize: '0.875rem' }}>
+                <Typography 
+                  component="pre" 
+                  sx={{ fontSize: '0.875rem', fontFamily: 'monospace', m: 0 }}
+                >
                   {JSON.stringify(op.variables, null, 2)}
-                </pre>
+                </Typography>
               )}
               {selectedTab === 2 && (
-                <pre style={{ fontSize: '0.875rem' }}>
+                <Typography 
+                  component="pre" 
+                  sx={{ fontSize: '0.875rem', fontFamily: 'monospace', m: 0 }}
+                >
                   {JSON.stringify(op.response, null, 2)}
-                </pre>
+                </Typography>
               )}
               {selectedTab === 3 && op.error && (
-                <pre style={{ fontSize: '0.875rem', color: 'error.main' }}>{op.error}</pre>
+                <Typography 
+                  component="pre" 
+                  sx={{ fontSize: '0.875rem', fontFamily: 'monospace', color: 'error.main', m: 0 }}
+                >
+                  {op.error}
+                </Typography>
               )}
             </Box>
           </AccordionDetails>

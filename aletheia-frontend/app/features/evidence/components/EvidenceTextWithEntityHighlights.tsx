@@ -115,7 +115,7 @@ export function EvidenceTextWithEntityHighlights(props: {
         }}
       >
         {segments.map((seg, i) => {
-          if (seg.kind !== 'entity') return <span key={i}>{seg.value}</span>;
+          if (seg.kind !== 'entity') return <Typography key={i} component="span">{seg.value}</Typography>;
 
           const e = seg.entity;
           const confidenceLabel =

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Breadcrumbs, Link } from '@mui/material';
+import { Breadcrumbs, Link, Typography } from '@mui/material';
 
 export interface HierarchyBreadcrumbsProps {
   // TODO: Define props
@@ -19,7 +19,7 @@ export function HierarchyBreadcrumbs(props: HierarchyBreadcrumbsProps) {
   return (
     <Breadcrumbs>
       {/* TODO: Implement breadcrumb navigation */}
-      {path.length === 0 && <span>HierarchyBreadcrumbs - TODO: Implement</span>}
+      {path.length === 0 && <Typography variant="body2">HierarchyBreadcrumbs - TODO: Implement</Typography>}
       {path.map((item) => (
         <Link
           key={item.id}

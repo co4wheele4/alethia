@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Drawer, Box } from '@mui/material';
+import { Drawer, Box, Typography } from '@mui/material';
 
 export interface DetailDrawerProps {
   // TODO: Define props
@@ -22,7 +22,7 @@ export function DetailDrawer(props: DetailDrawerProps) {
     <Drawer anchor={anchor} open={open} onClose={onClose}>
       <Box sx={{ width: 400, p: 2 }}>
         {/* TODO: Implement detail drawer */}
-        {children || <p>DetailDrawer - TODO: Implement</p>}
+        {children || <Typography variant="body1">DetailDrawer - TODO: Implement</Typography>}
       </Box>
     </Drawer>
   );

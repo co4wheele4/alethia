@@ -85,7 +85,7 @@ export function EvidenceHighlightLayer(props: EvidenceHighlightLayerProps) {
               {p.value}
             </mark>
           ) : (
-            <span key={i}>{p.value}</span>
+            <Typography key={i} component="span">{p.value}</Typography>
           )
         )}
       </Typography>

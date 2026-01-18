@@ -27,7 +27,12 @@ export function StateInspector(props: StateInspectorProps) {
           <Typography>UI State</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <pre>{JSON.stringify(uiState, null, 2)}</pre>
+          <Typography 
+            component="pre" 
+            sx={{ fontSize: '0.875rem', fontFamily: 'monospace', m: 0 }}
+          >
+            {JSON.stringify(uiState, null, 2)}
+          </Typography>
         </AccordionDetails>
       </Accordion>
       <Accordion>
@@ -35,7 +40,12 @@ export function StateInspector(props: StateInspectorProps) {
           <Typography>Data State</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <pre>{JSON.stringify(dataState, null, 2)}</pre>
+          <Typography 
+            component="pre" 
+            sx={{ fontSize: '0.875rem', fontFamily: 'monospace', m: 0 }}
+          >
+            {JSON.stringify(dataState, null, 2)}
+          </Typography>
         </AccordionDetails>
       </Accordion>
     </Box>
