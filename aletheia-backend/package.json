@@ -28,7 +28,8 @@
     "test:e2e:seed": "node scripts/seed-test.js",
     "test:e2e:full": "npm run test:e2e:setup && npm run test:e2e",
     "test:e2e:full:cov": "npm run test:e2e:setup && npm run test:e2e:cov",
-    "test:all": "npm run test && npm run test:e2e",
+    "test:all": "npm run lint && npm run test && npm run test:e2e",
+    "test:complete": "node ../scripts/test-all-with-summary.js",
     "check:e2e": "node scripts/check-e2e-tests.js",
     "prepare": "husky"
   },

@@ -24,8 +24,10 @@ const colors = {
 
 // Test results storage
 const results = {
+  'Frontend Linting': { status: 'pending', output: '', duration: 0 },
   'Frontend Unit Tests': { status: 'pending', output: '', duration: 0 },
   'Frontend E2E Tests': { status: 'pending', output: '', duration: 0 },
+  'Backend Linting': { status: 'pending', output: '', duration: 0 },
   'Backend Unit Tests': { status: 'pending', output: '', duration: 0 },
   'Backend E2E Tests': { status: 'pending', output: '', duration: 0 },
 };
@@ -274,6 +276,11 @@ async function main() {
   // Run all test suites sequentially
   const tests = [
     {
+      name: 'Frontend Linting',
+      command: 'npm run lint',
+      cwd: frontendDir,
+    },
+    {
       name: 'Frontend Unit Tests',
       command: 'npm run test',
       cwd: frontendDir,
@@ -282,6 +289,11 @@ async function main() {
       name: 'Frontend E2E Tests',
       command: 'npm run test:e2e',
       cwd: frontendDir,
+    },
+    {
+      name: 'Backend Linting',
+      command: 'npm run lint',
+      cwd: backendDir,
     },
     {
       name: 'Backend Unit Tests',
