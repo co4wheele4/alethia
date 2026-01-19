@@ -26,7 +26,7 @@ describe('OptimisticButton', () => {
   });
 
   it('should show optimistic label while pending', async () => {
-    const action = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = vi.fn<() => Promise<void>>(() => new Promise(resolve => setTimeout(resolve, 100)));
     render(
       <OptimisticButton action={action} optimisticLabel="Processing...">
         Submit
@@ -57,7 +57,7 @@ describe('OptimisticButton', () => {
 
   it('should show children when optimisticLabel is not provided', async () => {
     // Test the branch where optimisticLabel is undefined (line 49)
-    const action = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = vi.fn<() => Promise<void>>(() => new Promise(resolve => setTimeout(resolve, 100)));
     render(
       <OptimisticButton action={action}>
         Submit
@@ -74,7 +74,7 @@ describe('OptimisticButton', () => {
   });
 
   it('should be disabled while pending', async () => {
-    const action = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = vi.fn<() => Promise<void>>(() => new Promise(resolve => setTimeout(resolve, 100)));
     render(<OptimisticButton action={action}>Submit</OptimisticButton>);
 
     const button = screen.getByRole('button', { name: /submit/i });
@@ -87,7 +87,7 @@ describe('OptimisticButton', () => {
 
   it('should be disabled when optimisticState is true', async () => {
     // Test the branch where optimisticState is true (line 47: disabled={isPending || optimisticState || buttonProps.disabled})
-    const action = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const action = vi.fn<() => Promise<void>>(() => new Promise(resolve => setTimeout(resolve, 100)));
     render(<OptimisticButton action={action}>Submit</OptimisticButton>);
 
     const button = screen.getByRole('button', { name: /submit/i });
