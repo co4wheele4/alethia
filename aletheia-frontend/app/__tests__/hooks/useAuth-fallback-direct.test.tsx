@@ -21,7 +21,7 @@ vi.mock('@apollo/client/react', async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
-    useMutation: (_mutation: any, _options?: any) => {
+    useMutation: () => {
       // Return a mutation function that throws a plain object (not an Error instance)
       const mutationFn = async () => {
         // Throw a plain object to trigger fallback paths

@@ -773,7 +773,7 @@ describe('ChangePasswordForm', () => {
   });
 
   it('should test confirm password validation branches', async () => {
-    const { rerender } = render(
+    render(
       <TestWrapper>
         <ChangePasswordForm open={true} onClose={vi.fn()} />
       </TestWrapper>

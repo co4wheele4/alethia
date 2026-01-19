@@ -23,7 +23,7 @@ vi.mock('../../lib/utils/auth', () => ({
 
 const createMockClient = () => {
   return new ApolloClient({
-    link: new ApolloLink((operation) => {
+    link: new ApolloLink(() => {
       return new Observable((observer) => {
         observer.next({ data: {} } as any);
         observer.complete();
