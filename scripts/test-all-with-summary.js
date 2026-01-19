@@ -25,6 +25,7 @@ const colors = {
 // Test results storage
 const results = {
   'Frontend Linting': { status: 'pending', output: '', duration: 0, coverage: null },
+  'Frontend Type Checking': { status: 'pending', output: '', duration: 0, coverage: null },
   'Frontend Unit Tests': { status: 'pending', output: '', duration: 0, coverage: null },
   'Frontend E2E Tests': { status: 'pending', output: '', duration: 0, coverage: null },
   'Backend Linting': { status: 'pending', output: '', duration: 0, coverage: null },
@@ -197,6 +198,25 @@ function extractStats(output, testType) {
         stats.failingFiles.push(match[1]);
       }
     }
+  } else if (testType === 'type-check') {
+    // TypeScript format: "app/file.ts(10,5): error TS1234: Message"
+    const errorMatch = output.matchAll(/error TS\d+:/g);
+    let count = 0;
+    for (const match of errorMatch) {
+      count++;
+    }
+    if (count > 0) {
+      stats.failed = count;
+      stats.total = count;
+    }
+
+    // Extract files with type errors
+    const typeFileMatches = output.matchAll(/^([^\s\n(]+\.[jt]sx?)/gm);
+    for (const match of typeFileMatches) {
+      if (match[1] && !match[1].includes('node_modules') && !stats.failingFiles.includes(match[1])) {
+        stats.failingFiles.push(match[1]);
+      }
+    }
   }
 
   // Extract failing test file names (Jest format: "FAIL app/__tests__/hooks/useAuth.test.tsx")
@@ -241,6 +261,8 @@ function displaySummary() {
       testType = 'vitest';
     } else if (name.includes('Linting')) {
       testType = 'lint';
+    } else if (name.includes('Type Checking')) {
+      testType = 'type-check';
     }
     
     // Try to extract stats from output
@@ -335,6 +357,11 @@ async function main() {
     {
       name: 'Frontend Linting',
       command: 'npm run lint',
+      cwd: frontendDir,
+    },
+    {
+      name: 'Frontend Type Checking',
+      command: 'npm run type-check',
       cwd: frontendDir,
     },
     {
