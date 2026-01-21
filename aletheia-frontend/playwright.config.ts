@@ -95,6 +95,11 @@ export default defineConfig({
     // Use production server for Playwright stability on Windows.
     // (Dev server can occasionally crash/hang under Playwright load.)
     command: 'npm run build && npm run start',
+    // Ensure MSW is authoritative in integration tests.
+    env: {
+      ...process.env,
+      NEXT_PUBLIC_MSW: 'enabled',
+    },
     url: 'http://127.0.0.1:3030',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

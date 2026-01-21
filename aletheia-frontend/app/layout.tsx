@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ApolloClientProvider } from "./providers/apollo-provider";
 import { MuiThemeProvider } from "./providers/mui-theme-provider";
+import { MSWProvider } from "./providers/msw-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +40,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <MuiThemeProvider>
-          <ApolloClientProvider>{children}</ApolloClientProvider>
+          <MSWProvider>
+            <ApolloClientProvider>{children}</ApolloClientProvider>
+          </MSWProvider>
         </MuiThemeProvider>
       </body>
     </html>

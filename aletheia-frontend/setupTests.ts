@@ -1,14 +1,26 @@
 import '@testing-library/jest-dom'
-import { afterEach, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
+import { server } from './app/lib/test-utils/server'
 
 /* ------------------------------------------------------------------
  * Test lifecycle hygiene
  * ------------------------------------------------------------------ */
 
+beforeAll(() => {
+  // MSW is the source of truth for all tests (no backend required).
+  // Fail fast if a test triggers an unhandled network request.
+  server.listen({ onUnhandledRequest: 'error' })
+})
+
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  server.resetHandlers()
+})
+
+afterAll(() => {
+  server.close()
 })
 
 /* ------------------------------------------------------------------
