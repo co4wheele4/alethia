@@ -17,6 +17,7 @@
     "build": "npm run build --workspaces",
     "build:backend": "npm run build --workspace=aletheia-backend",
     "build:frontend": "npm run build --workspace=aletheia-frontend",
+    "postinstall": "node scripts/install-git-hooks.js",
     "start": "npm run start:dev --workspaces --if-present",
     "start:dev": "npm run start:dev --workspaces --if-present",
     "start:backend": "npm run start:dev --workspace=aletheia-backend",

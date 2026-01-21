@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+# Pre-push hook to run tests before pushing.
+# This is installed into .git/hooks/pre-push by scripts/install-git-hooks.js
+
+echo "Running pre-push checks..."
+
+# Run frontend test pipeline (includes unit tests).
+npm run test:frontend
+
+echo "Pre-push checks passed."
+

@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+set -e
 
-npm run lint && npm run test:complete
+# Run frontend unit tests (and associated checks) before push.
+# Note: This file is only used if your git hooksPath points at `.husky/`.
+npm run test:frontend
 
