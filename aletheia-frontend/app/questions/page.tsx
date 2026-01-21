@@ -24,9 +24,9 @@ import {
   Typography,
 } from '@mui/material';
 
-import { AppShell } from '../components/shell';
-import { useAuth } from '../hooks/useAuth';
-import { getUserIdFromToken } from '../lib/utils/jwt';
+import { AppShell } from '../components/layout';
+import { useAuth } from '../features/auth/hooks/useAuth';
+import { getUserIdFromToken } from '../features/auth/utils/jwt';
 import { QuestionScopeDocumentsQueryContainer } from '../features/questions/components/QuestionScopeDocumentsQueryContainer';
 import { QuestionEntityConstraintsQueryContainer } from '../features/questions/components/QuestionEntityConstraintsQueryContainer';
 

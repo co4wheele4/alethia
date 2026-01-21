@@ -110,7 +110,7 @@ export function IntakeStep(props: {
                 >
                   <Box sx={{ minWidth: 0 }}>
                     <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
-                      {(it.kind === 'file' ? it.file.name : it.title) ?? 'File'}
+                      {it.file.name ?? 'File'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Will be reviewed before ingestion.

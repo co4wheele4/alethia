@@ -110,7 +110,7 @@ export function ProvenanceInspector(props: ProvenanceInspectorProps) {
                 Source kind
               </Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {String(parsed0.provenance.source?.kind ?? 'unknown')}
+                {String(parsed0.provenance.source?.kind || 'unknown')}
               </Typography>
             </Box>
             <Box>
@@ -139,7 +139,7 @@ export function ProvenanceInspector(props: ProvenanceInspectorProps) {
                   URL
                 </Typography>
                 <Typography variant="body2" sx={{ fontFamily: 'var(--font-geist-mono)' }}>
-                  {String(parsed0.provenance.source?.url ?? '')}
+                  {String(parsed0.provenance.source?.url || '')}
                 </Typography>
               </Box>
             ) : null}

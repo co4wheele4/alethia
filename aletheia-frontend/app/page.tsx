@@ -1,11 +1,11 @@
 'use client';
 
-import { LoginForm } from './components/ui/LoginForm';
-import { useAuth } from './hooks/useAuth';
+import { LoginForm } from './features/auth/components/LoginForm';
+import { useAuth } from './features/auth/hooks/useAuth';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Container, Typography, Paper, AppBar, Toolbar } from '@mui/material';
-import { ThemeToggle } from './components/ui/ThemeToggle';
+import { ThemeToggle } from './components/primitives/ThemeToggle';
 
 export default function Home() {
   // useAuth uses Apollo hooks, so it must be called inside ApolloProvider

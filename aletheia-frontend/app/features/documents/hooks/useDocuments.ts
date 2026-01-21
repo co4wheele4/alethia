@@ -61,9 +61,9 @@ function upsertIntoDocumentsByUser(
   cache.updateQuery<DocumentsByUserData, DocumentsByUserVars>(
     { query: DOCUMENTS_BY_USER_QUERY, variables: { userId } },
     (existing) => {
-      const prev = existing?.documentsByUser ?? [];
+      const prev = existing?.documentsByUser || [];
       const already = prev.some((d) => d.id === normalizedDoc.id);
-      if (already) return existing ?? { documentsByUser: prev };
+      if (already) return existing;
       return { documentsByUser: [...prev, normalizedDoc] };
     }
   );
@@ -73,7 +73,7 @@ function removeFromDocumentsByUser(cache: ApolloCache, userId: string, id: strin
   cache.updateQuery<DocumentsByUserData, DocumentsByUserVars>(
     { query: DOCUMENTS_BY_USER_QUERY, variables: { userId } },
     (existing) => {
-      const prev = existing?.documentsByUser ?? [];
+      const prev = existing?.documentsByUser || [];
       return { documentsByUser: prev.filter((d) => d.id !== id) };
     }
   );

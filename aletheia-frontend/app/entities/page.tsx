@@ -1,6 +1,6 @@
 'use client';
 
-import { AppShell } from '../components/shell';
+import { AppShell } from '../components/layout';
 import { EntityList } from '../features/entities/components/EntityList';
 
 export default function EntitiesPage() {

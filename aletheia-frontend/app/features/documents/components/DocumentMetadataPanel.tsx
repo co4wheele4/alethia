@@ -5,7 +5,7 @@ import { Alert, Box, Button, Typography } from '@mui/material';
 
 import type { DocumentChunkItem, DocumentHeader } from '../hooks/useDocumentChunks';
 import { parseProvenanceFromChunk0 } from '../provenance';
-import { ImmutableRecordBadge } from '../../../components/integrity/ImmutableRecordBadge';
+import { ImmutableRecordBadge } from '../../integrity/components/ImmutableRecordBadge';
 
 export interface DocumentMetadataPanelProps {
   document: DocumentHeader | null;

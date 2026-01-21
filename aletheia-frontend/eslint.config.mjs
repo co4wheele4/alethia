@@ -13,7 +13,7 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["app/__tests__/**/*.{ts,tsx}"],
+    files: ["**/*.test.{ts,tsx}", "**/__tests__/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
     },

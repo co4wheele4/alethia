@@ -22,12 +22,17 @@ test.describe('Evidence', () => {
     await page.goto('/evidence');
     await expect(page.getByText('Evidence Explorer')).toBeVisible({ timeout: 20000 });
 
-    // Document index and entity list should be populated from mocks
-    await expect(page.getByRole('list', { name: 'explorer-documents' })).toBeVisible();
-    await expect(page.getByText('Getting Started').first()).toBeVisible({ timeout: 15000 });
+    // Ensure lists are loaded and visible
+    await expect(page.getByText(/Document Index/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Entity List/i)).toBeVisible({ timeout: 15000 });
 
+    // Documents and entities should be populated from mocks
+    await expect(page.getByText(/Getting Started/i).first()).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText(/Test Entity/i).first()).toBeVisible({ timeout: 20000 });
+
+    // The lists themselves should be visible
+    await expect(page.getByRole('list', { name: 'explorer-documents' })).toBeVisible();
     await expect(page.getByRole('list', { name: 'explorer-entities' })).toBeVisible();
-    await expect(page.getByText('Test Entity').first()).toBeVisible({ timeout: 15000 });
   });
 });
 

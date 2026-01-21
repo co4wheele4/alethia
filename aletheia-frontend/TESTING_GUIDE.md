@@ -6,7 +6,7 @@ This guide outlines the testing strategy and best practices for the Aletheia fro
 
 We follow industry-standard testing practices:
 
-- **Jest** → Test runner (fast, reliable, well-integrated with Next.js)
+- **Vitest** → Test runner (fast, near-instant startup, built-in mocking)
 - **React Testing Library** → Component and integration tests
 - **MSW (Mock Service Worker)** → API mocking
 - **Playwright** → E2E tests
@@ -73,7 +73,7 @@ We follow industry-standard testing practices:
 3. **Don't mock React internals**
    ```tsx
    // ❌ Bad
-   jest.mock('react', () => ({ ... }))
+   vi.mock('react', () => ({ ... }))
    ```
 
 4. **Don't overuse snapshots**
@@ -170,7 +170,7 @@ MSW intercepts network requests at the service worker level, providing realistic
 
 ### Setup
 
-Handlers are defined in `app/__tests__/mocks/handlers.ts` and automatically loaded in `jest.setup.js`.
+Handlers are defined in `app/lib/test-utils/handlers.ts` and automatically loaded in `vitest.setup.ts`.
 
 ### Usage in Tests
 
@@ -220,7 +220,7 @@ We aim for:
 - **Functions**: 100%
 - **Lines**: 100%
 
-Current coverage is tracked in `jest.config.js` with thresholds.
+Current coverage is tracked in `vitest.config.ts` with thresholds.
 
 ## Best Practices Checklist
 
@@ -237,6 +237,7 @@ Current coverage is tracked in `jest.config.js` with thresholds.
 
 ## Resources
 
+- [Vitest Docs](https://vitest.dev/)
 - [React Testing Library Docs](https://testing-library.com/react)
 - [MSW Docs](https://mswjs.io/)
 - [Playwright Docs](https://playwright.dev/)

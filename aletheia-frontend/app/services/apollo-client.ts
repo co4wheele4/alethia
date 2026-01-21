@@ -9,7 +9,7 @@ import { ApolloClient, InMemoryCache, createHttpLink, from, CombinedGraphQLError
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { GRAPHQL_URL } from '../lib/constants';
-import { getAuthToken } from '../lib/utils/auth';
+import { getAuthToken } from '../features/auth/utils/auth';
 
 // HTTP Link
 const httpLink = createHttpLink({

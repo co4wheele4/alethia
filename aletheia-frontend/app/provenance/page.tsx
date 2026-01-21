@@ -3,10 +3,9 @@
 import { useMemo, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
-import { AppShell } from '../components/shell';
-import { ContentSurface } from '../components/layout';
-import { useAuth } from '../hooks/useAuth';
-import { getUserIdFromToken } from '../lib/utils/jwt';
+import { AppShell, ContentSurface } from '../components/layout';
+import { useAuth } from '../features/auth/hooks/useAuth';
+import { getUserIdFromToken } from '../features/auth/utils/jwt';
 import { useDocuments } from '../features/documents/hooks/useDocuments';
 import { ProvenanceInspector } from '../features/provenance/components/ProvenanceInspector';
 import { SelectedDocumentHeaderQueryContainer } from '../features/documents/components/SelectedDocumentHeaderQueryContainer';

@@ -27,7 +27,7 @@
     "dev": "npm run start:all",
     "test": "node scripts/test-all-with-summary.js",
     "test:backend": "npm run test:all --workspace=aletheia-backend",
-    "test:frontend": "npm run test --workspace=aletheia-frontend",
+    "test:frontend": "npm run lint:frontend && npm run test --workspace=aletheia-frontend",
     "test:unit": "node scripts/test-all-with-summary.js",
     "test:e2e": "jest --config test/jest-e2e.json",
     "test:e2e:backend": "jest --config test/jest-e2e.json --testPathPattern=test/e2e/backend",

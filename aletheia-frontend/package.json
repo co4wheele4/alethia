@@ -12,7 +12,7 @@
     "lint:fix": "npx eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "type-check": "npx tsc --noEmit",
-    "test": "vitest run --coverage",
+    "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:all": "npm run lint && npm run type-check && npm run test && npm run test:e2e",

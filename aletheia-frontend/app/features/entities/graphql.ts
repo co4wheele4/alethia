@@ -7,35 +7,46 @@
 
 import { gql } from '@apollo/client';
 
+export const ENTITY_BASIC_FIELDS = gql`
+  fragment EntityBasicFields on Entity {
+    __typename
+    id
+    name
+    type
+    mentionCount
+  }
+`;
+
+export const MENTION_FIELDS = gql`
+  fragment MentionFields on EntityMention {
+    __typename
+    id
+    startOffset
+    endOffset
+    spanText
+    confidence
+  }
+`;
+
 export const ENTITIES_QUERY = gql`
   query Entities {
     entities {
-      __typename
-      id
-      name
-      type
-      mentionCount
+      ...EntityBasicFields
     }
   }
+  ${ENTITY_BASIC_FIELDS}
 `;
 
 export const ENTITY_QUERY = gql`
   query Entity($id: String!) {
     entity(id: $id) {
-      __typename
-      id
-      name
-      type
-      mentionCount
+      ...EntityBasicFields
       outgoing {
         __typename
         id
         relation
         to {
-          __typename
-          id
-          name
-          type
+          ...EntityBasicFields
         }
         evidence {
           __typename
@@ -64,18 +75,9 @@ export const ENTITY_QUERY = gql`
             evidenceId
             mentionId
             mention {
-              __typename
-              id
-              startOffset
-              endOffset
-              excerpt
-              spanText
-              confidence
+              ...MentionFields
               entity {
-                __typename
-                id
-                name
-                type
+                ...EntityBasicFields
               }
             }
           }
@@ -86,10 +88,7 @@ export const ENTITY_QUERY = gql`
         id
         relation
         from {
-          __typename
-          id
-          name
-          type
+          ...EntityBasicFields
         }
         evidence {
           __typename
@@ -118,30 +117,16 @@ export const ENTITY_QUERY = gql`
             evidenceId
             mentionId
             mention {
-              __typename
-              id
-              startOffset
-              endOffset
-              excerpt
-              spanText
-              confidence
+              ...MentionFields
               entity {
-                __typename
-                id
-                name
-                type
+                ...EntityBasicFields
               }
             }
           }
         }
       }
       mentions {
-        __typename
-        id
-        startOffset
-        endOffset
-        spanText
-        confidence
+        ...MentionFields
         chunk {
           __typename
           id
@@ -158,5 +143,6 @@ export const ENTITY_QUERY = gql`
       }
     }
   }
+  ${ENTITY_BASIC_FIELDS}
+  ${MENTION_FIELDS}
 `;
-

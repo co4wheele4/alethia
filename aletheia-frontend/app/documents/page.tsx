@@ -7,10 +7,9 @@
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
 
-import { useAuth } from '../hooks/useAuth';
-import { getUserIdFromToken } from '../lib/utils/jwt';
-import { ContentSurface } from '../components/layout';
-import { AppShell } from '../components/shell';
+import { useAuth } from '../features/auth/hooks/useAuth';
+import { getUserIdFromToken } from '../features/auth/utils/jwt';
+import { ContentSurface, AppShell } from '../components/layout';
 import { DocumentsDashboard } from '../features/documents/components/DocumentsDashboard';
 
 function DocumentsPageInner() {

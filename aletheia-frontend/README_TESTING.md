@@ -4,10 +4,11 @@
 
 Your Aletheia frontend now uses the recommended testing stack:
 
-### 1. **Jest** - Test Runner ✅
-- Fast, reliable test execution
-- Well-integrated with Next.js
-- Coverage reporting configured
+### 1. **Vitest** - Test Runner ✅
+- Fast, near-instant startup via Vite
+- Jest-compatible API
+- Native ESM support
+- Built-in mocking and coverage
 
 ### 2. **React Testing Library** - Component/Integration Tests ✅
 - Tests user-visible behavior
@@ -17,10 +18,10 @@ Your Aletheia frontend now uses the recommended testing stack:
 ### 3. **MSW (Mock Service Worker)** - API Mocking ✅
 - Realistic API mocking at the network level
 - No need to modify application code
-- Handlers defined in `app/__tests__/mocks/handlers.ts`
-- Automatically loaded in all tests via `jest.setup.js`
+- Handlers defined in `app/lib/test-utils/handlers.ts`
+- Automatically loaded in all tests via `vitest.setup.ts`
 
-### 4. **Playwright** - E2E Tests ✅
+### 4. **Playwright** - End-to-End Tests ✅
 - Cross-browser testing (Chromium, Firefox, WebKit)
 - Real browser environment
 - Example tests in `e2e/example.spec.ts`
@@ -77,9 +78,9 @@ server.use(
 
 ## Files Created
 
-- `app/__tests__/mocks/handlers.ts` - MSW request handlers
-- `app/__tests__/mocks/server.ts` - MSW server setup for Jest
-- `app/__tests__/mocks/browser.ts` - MSW worker setup for browser
+- `app/lib/test-utils/handlers.ts` - MSW request handlers
+- `app/lib/test-utils/server.ts` - MSW server setup for Vitest
+- `app/lib/test-utils/browser.ts` - MSW worker setup for browser
 - `playwright.config.ts` - Playwright configuration
 - `e2e/example.spec.ts` - Example E2E tests
 - `TESTING_GUIDE.md` - Comprehensive testing guide
@@ -92,17 +93,12 @@ server.use(
 
 1. **Migrate existing tests to use MSW** (optional)
    - Replace manual Apollo Client mocks with MSW handlers
-   - See `app/__tests__/components/ui/LoginForm-msw.test.tsx` for example
+   - See `app/features/auth/__tests__/LoginForm-msw.test.tsx` for example
 
 2. **Add more E2E tests**
    - Critical user flows
    - Cross-browser compatibility
    - Mobile viewports
-
-3. **Consider Vitest migration** (optional)
-   - Faster than Jest
-   - Better ESM support
-   - Can be done incrementally
 
 ## Documentation
 

@@ -177,7 +177,7 @@ export function EvidenceExplorer(props: { userId: string | null }) {
   }
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '360px 1fr 520px' }, gap: 2 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '300px 1fr', xl: '360px 1fr 520px' }, gap: 2 }}>
       {/* Left: Indexes */}
       <ContentSurface>
         <Typography variant="h6" gutterBottom>

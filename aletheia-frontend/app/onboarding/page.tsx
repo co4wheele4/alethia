@@ -1,6 +1,6 @@
 'use client';
 
-import { AppShell } from '../components/shell';
+import { AppShell } from '../components/layout';
 import { ContentSurface } from '../components/layout';
 import { OnboardingWizard } from '../features/onboarding';
 

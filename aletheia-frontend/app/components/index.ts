@@ -1,46 +1,27 @@
 /**
  * Aletheia Components Registry
- * Main index file that exports all components organized by category
- * 
- * Usage:
- *   import { KnowledgeTreeView, WhyPanel } from '@/components';
- *   import { TruthDiscovery } from '@/components/truth-discovery';
+ * Main index file that exports shared components
  */
 
-// Truth Discovery
-export * from './truth-discovery';
+// Common shared components
+export * from './common/ErrorBoundary';
 
-// Clarity & Sense-Making
-export * from './clarity';
-
-// Integrity & Trust
-export * from './integrity';
-
-// User Agency
-export * from './user-agency';
-
-// Layout
+// Layout components
 export * from './layout';
 
-// Application Shell
-export * from './shell';
+// Primitive UI components
+export * from './primitives/OptimisticButton';
+export * from './primitives/SkeletonLoader';
+export * from './primitives/ThemeToggle';
 
-// Search & Discovery
-export * from './search';
-
-// Ethical UX
-export * from './ethical';
-
-// Developer-Facing Truth
-export * from './dev';
-
-// Supergraph & AI-Ready
-export * from './supergraph';
-
-// AI Components
-export * from './ai';
-
-// Legacy UI components (existing)
-export { LoginForm } from './ui/LoginForm';
-export { ThemeToggle } from './ui/ThemeToggle';
-export { GraphQLExample } from './ui/GraphQLExample';
+// Export from features for backward compatibility or central access if needed
+export * from '../features/entities/components';
+export * from '../features/clarity/components';
+export * from '../features/integrity/components';
+export * from '../features/user-agency/components';
+export * from '../features/search/components';
+export * from '../features/ethical/components';
+export * from '../features/dev/components';
+export * from '../features/supergraph/components';
+export * from '../features/analysis/components';
+export { LoginForm } from '../features/auth/components/LoginForm';

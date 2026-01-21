@@ -1,8 +1,8 @@
 'use client';
 
-import { AppShell } from '../components/shell';
-import { useAuth } from '../hooks/useAuth';
-import { getUserIdFromToken } from '../lib/utils/jwt';
+import { AppShell } from '../components/layout';
+import { useAuth } from '../features/auth/hooks/useAuth';
+import { getUserIdFromToken } from '../features/auth/utils/jwt';
 import { AnalysisWorkspace } from '../features/analysis/components/AnalysisWorkspace';
 
 export default function AnalysisPage() {

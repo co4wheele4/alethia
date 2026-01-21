@@ -41,7 +41,7 @@
    - And many more across 10 categories
 
 4. **Testing** ✅
-   - 836 unit tests (Jest + React Testing Library)
+   - 836 unit tests (Vitest + React Testing Library)
    - 25 E2E tests (Playwright)
    - 100% test coverage
    - MSW handlers for GraphQL mocking

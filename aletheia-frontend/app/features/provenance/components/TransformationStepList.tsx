@@ -2,7 +2,7 @@
 
 import { Box, Divider, Typography } from '@mui/material';
 
-import { StatusPill } from '../../../components/clarity/StatusPill';
+import { StatusPill } from '../../clarity/components/StatusPill';
 
 export type TransformationStep = {
   key: string;

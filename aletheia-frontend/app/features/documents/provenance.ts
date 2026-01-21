@@ -52,8 +52,11 @@ function unquote(v: string): string {
   return trimmed;
 }
 
-function toNumberOrString(v: string): number | string {
+function toNumberOrStringOrBool(v: string): number | string | boolean | null {
   const s = unquote(v);
+  if (s === 'null') return null;
+  if (s === 'true') return true;
+  if (s === 'false') return false;
   if (!s) return '';
   const n = Number(s);
   return Number.isFinite(n) && String(n) === s ? n : s;
@@ -82,14 +85,14 @@ export function parseProvenanceFromChunk0(chunk0Content: string): {
     if (!line.trim()) continue;
     const m = /^(\s*)([A-Za-z0-9_]+):\s*(.*)$/.exec(line);
     if (!m) continue;
-    const indent = m[1]?.length ?? 0;
-    const key = m[2] ?? '';
-    const rawVal = m[3] ?? '';
+    const indent = m[1].length;
+    const key = m[2];
+    const rawVal = m[3];
 
     if (indent === 0) {
       inSource = key === 'source' && rawVal.trim() === '';
       if (!inSource) {
-        (prov as Record<string, unknown>)[key] = toNumberOrString(rawVal);
+        (prov as Record<string, unknown>)[key] = toNumberOrStringOrBool(rawVal);
       } else {
         prov.source = prov.source ?? {};
       }
@@ -98,8 +101,7 @@ export function parseProvenanceFromChunk0(chunk0Content: string): {
 
     // Nested under `source:` (we only support one level).
     if (inSource && indent >= 2) {
-      prov.source = prov.source ?? {};
-      (prov.source as Record<string, unknown>)[key] = toNumberOrString(rawVal);
+      (prov.source as Record<string, unknown>)[key] = toNumberOrStringOrBool(rawVal);
     }
   }
 

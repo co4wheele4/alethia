@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 
-import { AppShell } from '../../components/shell';
+import { AppShell } from '../../components/layout';
 import { useEntity } from '../../features/entities/hooks/useEntity';
 import { EntityDetailView } from '../../features/entities/components/EntityDetailView';
 

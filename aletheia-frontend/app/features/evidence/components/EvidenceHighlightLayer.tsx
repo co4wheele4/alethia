@@ -50,10 +50,10 @@ export function EvidenceHighlightLayer(props: EvidenceHighlightLayerProps) {
     const out: Array<{ kind: 'text' | 'hit'; value: string }> = [];
     let last = 0;
     for (const m of text.matchAll(re)) {
-      const idx = m.index ?? 0;
+      const idx = m.index;
       if (idx > last) out.push({ kind: 'text', value: text.slice(last, idx) });
-      out.push({ kind: 'hit', value: text.slice(idx, idx + (m[0]?.length ?? 0)) });
-      last = idx + (m[0]?.length ?? 0);
+      out.push({ kind: 'hit', value: text.slice(idx, idx + m[0].length) });
+      last = idx + m[0].length;
     }
     if (last < text.length) out.push({ kind: 'text', value: text.slice(last) });
     return out.length ? out : [{ kind: 'text' as const, value: text }];

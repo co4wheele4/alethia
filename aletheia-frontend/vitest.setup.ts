@@ -110,4 +110,14 @@ if (typeof window !== 'undefined') {
       dispatchEvent: vi.fn(),
     })),
   })
+
+  // Mock crypto for sha256 generation
+  Object.defineProperty(window, 'crypto', {
+    value: {
+      subtle: {
+        digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
+      },
+      randomUUID: () => 'test-uuid',
+    },
+  })
 }

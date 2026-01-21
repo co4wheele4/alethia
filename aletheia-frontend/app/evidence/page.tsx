@@ -1,8 +1,8 @@
 'use client';
 
-import { AppShell } from '../components/shell';
-import { useAuth } from '../hooks/useAuth';
-import { getUserIdFromToken } from '../lib/utils/jwt';
+import { AppShell } from '../components/layout';
+import { useAuth } from '../features/auth/hooks/useAuth';
+import { getUserIdFromToken } from '../features/auth/utils/jwt';
 import { EvidenceExplorer } from '../features/evidence/components/EvidenceExplorer';
 
 export default function EvidencePage() {

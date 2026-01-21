@@ -37,15 +37,13 @@ export default defineConfig({
       '**/.next/**',
       '**/e2e/**',
       '**/app/__tests__/mocks/**',
+      '**/app/lib/test-utils/**',
     ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
       include: [
-        'app/components/**/*.{js,jsx,ts,tsx}',
-        'app/hooks/**/*.{js,jsx,ts,tsx}',
-        'app/services/**/*.{js,jsx,ts,tsx}',
-        'app/lib/**/*.{js,jsx,ts,tsx}',
+        'app/**/*.{js,jsx,ts,tsx}',
       ],
       exclude: [
         'app/**/*.d.ts',
@@ -53,8 +51,9 @@ export default defineConfig({
         'app/**/page.tsx',
         'app/**/*.stories.{js,jsx,ts,tsx}',
         'app/**/__tests__/**',
+        'app/**/test-utils/**',
+        'app/**/mocks/**',
         'app/providers/**',
-        'app/features/**',
         'app/error.tsx',
         'app/not-found.tsx',
         '**/index.ts',

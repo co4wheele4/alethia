@@ -14,7 +14,7 @@
 import Link from 'next/link';
 import { Box, Button, Typography } from '@mui/material';
 
-import { AppShell } from '../components/shell';
+import { AppShell } from '../components/layout';
 
 export default function DashboardPage() {
   return (

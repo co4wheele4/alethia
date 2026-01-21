@@ -33,8 +33,13 @@ export function DeleteDocumentMutationContainer(props: {
     busy: state.loading,
     error: state.error ?? null,
     deleteDocument: async (id: string) => {
-      const res = await mutate({ variables: { id } });
-      return res.data?.deleteDocument?.id ?? null;
+      try {
+        const res = await mutate({ variables: { id } });
+        return res.data?.deleteDocument?.id ?? null;
+      } catch {
+        // useMutation state.error will be updated automatically
+        return null;
+      }
     },
   });
 }

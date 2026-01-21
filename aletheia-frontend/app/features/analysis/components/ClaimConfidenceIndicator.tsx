@@ -2,7 +2,7 @@
 
 import { Box, Typography } from '@mui/material';
 
-import { ConfidenceMeter } from '../../../components/clarity/ConfidenceMeter';
+import { ConfidenceMeter } from '../../clarity/components/ConfidenceMeter';
 
 export interface ClaimConfidenceIndicatorProps {
   /**

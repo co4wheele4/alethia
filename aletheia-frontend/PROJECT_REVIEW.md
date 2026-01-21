@@ -27,7 +27,7 @@ The Aletheia Frontend is a Next.js 16 application with React 19 that provides a 
 - **GraphQL Client**: Apollo Client 4.0.13 (properly configured for React 19)
 - **Styling**: Material-UI (MUI) v7 + Tailwind CSS 4
 - **TypeScript**: 5.x (ES2022 target)
-- **Testing**: Jest + React Testing Library + Playwright
+- **Testing**: Vitest + React Testing Library + Playwright
 - **Form Validation**: React 19 useFormStatus + HTML5 validation
 
 ### Implementation Status
@@ -110,7 +110,7 @@ The Aletheia Frontend is a Next.js 16 application with React 19 that provides a 
    - Error handling could be more sophisticated
 
 5. **Testing**
-   - ✅ Unit tests (Jest + React Testing Library)
+   - ✅ Unit tests (Vitest + React Testing Library)
    - ✅ E2E tests (Playwright)
    - ✅ 100% coverage enforced
 
@@ -215,7 +215,7 @@ aletheia-frontend/
 ## 🧪 Testing Status
 
 ### Current State ✅ **EXCELLENT**
-- ✅ **Testing Framework**: Jest + React Testing Library configured
+- ✅ **Testing Framework**: Vitest + React Testing Library configured
 - ✅ **Unit Tests**: 836 tests across 127 test suites (all passing)
 - ✅ **E2E Tests**: 25 Playwright tests (all passing)
 - ✅ **Test Coverage**: 100% statements, 100% branches, 100% functions, 100% lines
@@ -255,7 +255,7 @@ aletheia-frontend/
 - **Form validation**: `zod` or `yup`
 - **UI components**: `@radix-ui` or `shadcn/ui` (optional)
 - **Date handling**: `date-fns` or `dayjs`
-- **Testing**: `jest`, `@testing-library/react`, `@testing-library/jest-dom`
+- **Testing**: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`
 - **Error handling**: Error boundary library or custom implementation
 
 ---
@@ -362,9 +362,9 @@ The backend provides extensive GraphQL operations that are not yet integrated:
 ### Medium Priority
 
 1. **Testing Infrastructure**
-   - Set up Jest/React Testing Library
+   - Set up Vitest/React Testing Library
    - Write tests for critical paths
-   - Add E2E tests
+   - Add E2E tests (Playwright)
 
 2. **GraphQL Integration**
    - Generate TypeScript types from GraphQL schema
@@ -476,7 +476,7 @@ The project demonstrates good engineering practices and has all the necessary in
 
 ### January 12, 2026
 - ✅ **Comprehensive Testing Infrastructure**
-  - Added 836 unit tests across 127 test suites (Jest + React Testing Library)
+  - Added 836 unit tests across 127 test suites (Vitest + React Testing Library)
   - Added 25 E2E tests using Playwright
   - Achieved 100% test coverage (statements, branches, functions, lines)
   - Configured MSW (Mock Service Worker) for GraphQL API mocking

@@ -12,8 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 
-import { useAuth } from '../../hooks/useAuth';
-import { getUserIdFromToken } from '../../lib/utils/jwt';
+import { useAuth } from '../auth/hooks/useAuth';
+import { getUserIdFromToken } from '../auth/utils/jwt';
 import { importUrlToText } from '../documents/ingestion/urlImport';
 import { parseFileToText } from '../documents/ingestion/fileParsers';
 import { IngestionStatusStepper } from '../documents/components/IngestionStatusStepper';
@@ -99,7 +99,7 @@ const INITIAL: OnboardingState = {
   ingestion: { state: 'idle', currentIndex: 0, results: [] },
 };
 
-function reducer(state: OnboardingState, action: Action): OnboardingState {
+export function reducer(state: OnboardingState, action: Action): OnboardingState {
   switch (action.type) {
     case 'NAVIGATE': {
       return {
@@ -121,7 +121,7 @@ function reducer(state: OnboardingState, action: Action): OnboardingState {
           id: newId(),
           kind: 'file' as const,
           file,
-          title: file.name.replace(/\.[^.]+$/, ''),
+          title: (file.name ?? '').replace(/\.[^.]+$/, ''),
           provenance: { type: null, label: '', confirmed: false },
         })),
       ];
