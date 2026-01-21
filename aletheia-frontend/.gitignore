@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/coverage-tmp*/
 
 # Playwright
 /test-results/
