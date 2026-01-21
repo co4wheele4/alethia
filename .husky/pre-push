@@ -1,7 +1,21 @@
 #!/usr/bin/env sh
 set -e
 
-# Run frontend unit tests (and associated checks) before push.
-# Note: This file is only used if your git hooksPath points at `.husky/`.
-npm run test:frontend
+# Run from repo root (git may invoke hooks from subdirs)
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$ROOT"
+
+echo "pre-push: running backend unit tests..."
+npm --workspace=aletheia-backend run test
+
+echo "pre-push: running backend e2e tests..."
+npm --workspace=aletheia-backend run test:e2e
+
+echo "pre-push: running frontend unit tests..."
+npm --workspace=aletheia-frontend run test:unit
+
+echo "pre-push: running frontend e2e tests..."
+npm --workspace=aletheia-frontend run test:e2e
+
+echo "pre-push: all checks passed."
 

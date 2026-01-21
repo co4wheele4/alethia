@@ -4,10 +4,20 @@ set -e
 # Pre-push hook to run tests before pushing.
 # This is installed into .git/hooks/pre-push by scripts/install-git-hooks.js
 
-echo "Running pre-push checks..."
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$ROOT"
 
-# Run frontend test pipeline (includes unit tests).
-npm run test:frontend
+echo "pre-push: running backend unit tests..."
+npm --workspace=aletheia-backend run test
 
-echo "Pre-push checks passed."
+echo "pre-push: running backend e2e tests..."
+npm --workspace=aletheia-backend run test:e2e
+
+echo "pre-push: running frontend unit tests..."
+npm --workspace=aletheia-frontend run test:unit
+
+echo "pre-push: running frontend e2e tests..."
+npm --workspace=aletheia-frontend run test:e2e
+
+echo "pre-push: all checks passed."
 
