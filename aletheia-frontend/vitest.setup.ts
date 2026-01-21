@@ -1,123 +1,142 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import { afterEach, vi } from 'vitest'
+import { cleanup } from '@testing-library/react'
 
-// Polyfills for MSW in Node.js environment
-// MSW requires these APIs to be available globally
+/* ------------------------------------------------------------------
+ * Test lifecycle hygiene
+ * ------------------------------------------------------------------ */
+
+afterEach(() => {
+  cleanup()
+  vi.clearAllMocks()
+})
+
+/* ------------------------------------------------------------------
+ * Node / Web API polyfills required by MSW
+ * ------------------------------------------------------------------ */
+
 import { TextEncoder, TextDecoder } from 'util'
-// @ts-expect-error - whatwg-fetch is not a module but we need its types or it is fine to ignore
-import { fetch, Headers, Request, Response } from 'whatwg-fetch'
 
-// Set up polyfills before MSW is imported
+// whatwg-fetch provides runtime fetch, but typings are imperfect.
+// We explicitly bind globals instead of suppressing TS globally.
+import 'whatwg-fetch'
+
 Object.assign(globalThis, {
   TextEncoder,
   TextDecoder,
-  fetch,
-  Headers,
-  Request,
-  Response,
 })
 
-// Polyfill for TransformStream (required by MSW)
+/**
+ * Enforce correctness: if streaming APIs are required,
+ * tests must provide a real polyfill instead of silently succeeding.
+ */
 if (typeof globalThis.TransformStream === 'undefined') {
-  globalThis.TransformStream = class TransformStream {
-    readable: any
-    writable: any
-    constructor() {
-      this.readable = { getReader: () => ({ read: async () => ({ done: true }) }) }
-      this.writable = { getWriter: () => ({ write: async () => {}, close: async () => {} }) }
-    }
-  } as any
+  throw new Error(
+    'TransformStream is required by MSW streaming. ' +
+      'Provide a proper polyfill (e.g. web-streams-polyfill) or disable streaming tests.'
+  )
 }
 
-// Polyfill for BroadcastChannel (required by MSW)
 if (typeof globalThis.BroadcastChannel === 'undefined') {
-  globalThis.BroadcastChannel = class BroadcastChannel {
-    constructor() {}
-    postMessage() {}
-    close() {}
-    addEventListener() {}
-    removeEventListener() {}
-  } as any
+  class StrictBroadcastChannel {
+    readonly name: string
+    onmessage: ((this: BroadcastChannel, ev: MessageEvent) => void) | null = null
+
+    constructor(name: string) {
+      this.name = name
+    }
+
+    postMessage = vi.fn()
+    close = vi.fn()
+    addEventListener = vi.fn()
+    removeEventListener = vi.fn()
+    dispatchEvent = vi.fn(() => false)
+  }
+
+  // Explicitly attach
+  ;(globalThis as unknown as { BroadcastChannel: typeof BroadcastChannel }).BroadcastChannel =
+    StrictBroadcastChannel as unknown as typeof BroadcastChannel
 }
 
-// Mock Next.js router
+/* ------------------------------------------------------------------
+ * Next.js App Router mocks (complete, strict)
+ * ------------------------------------------------------------------ */
+
 vi.mock('next/navigation', () => ({
-  useRouter() {
-    return {
-      push: vi.fn(),
-      replace: vi.fn(),
-      prefetch: vi.fn(),
-      back: vi.fn(),
-    }
-  },
-  usePathname() {
-    return '/'
-  },
-  useSearchParams() {
-    return new URLSearchParams()
-  },
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+  redirect: vi.fn(),
+  notFound: vi.fn(),
 }))
 
-// Mock localStorage
-const localStorageMock = (function() {
-  let store: Record<string, string> = {}
-  return {
-    getItem(key: string) {
-      return store[key] || null
-    },
-    setItem(key: string, value: any) {
-      store[key] = String(value)
-    },
-    removeItem(key: string) {
-      delete store[key]
-    },
-    clear() {
-      store = {}
-    }
-  }
-})()
+/* ------------------------------------------------------------------
+ * jsdom-specific browser APIs
+ * ------------------------------------------------------------------ */
 
-// Some tests run under non-jsdom environments; guard window usage.
 if (typeof window !== 'undefined') {
-  // Ensure RAF APIs exist (some components use them for hydration timing).
+  // requestAnimationFrame / cancelAnimationFrame (some components rely on these)
   if (typeof window.requestAnimationFrame !== 'function') {
-    (window as any).requestAnimationFrame = (cb: any) => setTimeout(() => cb(Date.now()), 0)
+    window.requestAnimationFrame = (cb: FrameRequestCallback) =>
+      window.setTimeout(() => cb(Date.now()), 0) as unknown as number
   }
   if (typeof window.cancelAnimationFrame !== 'function') {
-    (window as any).cancelAnimationFrame = (id: any) => clearTimeout(id)
+    window.cancelAnimationFrame = (id: number) => window.clearTimeout(id)
   }
+
   if (typeof globalThis.requestAnimationFrame !== 'function') {
-    (globalThis as any).requestAnimationFrame = window.requestAnimationFrame
+    globalThis.requestAnimationFrame = window.requestAnimationFrame.bind(window)
   }
   if (typeof globalThis.cancelAnimationFrame !== 'function') {
-    (globalThis as any).cancelAnimationFrame = window.cancelAnimationFrame
+    globalThis.cancelAnimationFrame = window.cancelAnimationFrame.bind(window)
   }
 
-  Object.defineProperty(window, 'localStorage', {
-    value: localStorageMock,
-  })
+  // matchMedia (theme hooks/components often assume it exists)
+  if (typeof window.matchMedia !== 'function') {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string): MediaQueryList =>
+        ({
+          matches: false,
+          media: query,
+          onchange: null,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          addListener: vi.fn(), // legacy
+          removeListener: vi.fn(), // legacy
+          dispatchEvent: vi.fn(),
+        }) as unknown as MediaQueryList,
+    })
+  }
 
-  // Mock window.matchMedia for theme hooks
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
-  })
+  // crypto.subtle.digest (sha-256 helpers + tests expect deterministic output)
+  const cryptoMock = {
+    subtle: { digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)) },
+    randomUUID: () => 'test-uuid',
+  } as unknown as Crypto
 
-  // Mock crypto for sha256 generation
-  Object.defineProperty(window, 'crypto', {
-    value: {
-      subtle: {
-        digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
-      },
-      randomUUID: () => 'test-uuid',
-    },
-  })
+  const installCrypto = (target: typeof globalThis) => {
+    const desc = Object.getOwnPropertyDescriptor(target, 'crypto')
+    if (!desc || desc.configurable) {
+      Object.defineProperty(target, 'crypto', { value: cryptoMock, configurable: true })
+      return
+    }
+
+    if (desc.writable) {
+      ;(target as unknown as { crypto: Crypto }).crypto = cryptoMock
+      return
+    }
+
+    throw new Error('Test environment requires writable global crypto for sha256 mocks.')
+  }
+
+  installCrypto(globalThis)
+  installCrypto(window as unknown as typeof globalThis)
 }

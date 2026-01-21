@@ -64,6 +64,7 @@
     "source-map-js": "^1.2.1",
     "tailwindcss": "^4.1.18",
     "typescript": "^5",
+    "web-streams-polyfill": "^4.2.0",
     "whatwg-fetch": "^3.6.20"
   },
   "msw": {
