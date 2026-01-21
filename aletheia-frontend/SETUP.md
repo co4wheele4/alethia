@@ -31,7 +31,7 @@ This file should NOT be committed to git (it's already in .gitignore).
    ```
 
 5. **Open your browser**:
-   Navigate to `http://localhost:3001`
+   Navigate to `http://localhost:3030`
 
 ## Making GraphQL Calls
 
@@ -121,7 +121,7 @@ The authentication is handled automatically by the Apollo Client configuration i
 
 Make sure the backend CORS configuration includes your frontend URL. The backend is configured to allow:
 - `http://localhost:3000`
-- `http://localhost:3001`
+- `http://localhost:3030`
 
 ### Connection Errors
 

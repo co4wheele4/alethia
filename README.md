@@ -42,7 +42,7 @@ npm run start:all
 
 This will start:
 - Backend on `http://localhost:3000` (or configured port)
-- Frontend on `http://localhost:3001` (Next.js default)
+- Frontend on `http://localhost:3030` (configured in `aletheia-frontend/package.json`)
 
 #### Run Projects Separately
 

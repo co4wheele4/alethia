@@ -3,8 +3,8 @@
 ## Current Status
 
 ✅ JWT authentication is set up and working
-⚠️ Password validation is **not yet implemented** - authentication currently only checks if user exists by email
-✅ Login mutation is **public** (no auth required) - you can call it directly
+✅ Password validation is implemented (bcrypt password hashes)
+✅ Login and register mutations are **public** (no auth required) - you can call them directly
 
 ## Getting a JWT Token
 
@@ -14,13 +14,11 @@ In GraphQL Playground, use the login mutation:
 
 ```graphql
 mutation Login {
-  login(email: "alice@example.com", password: "any-password") {
-    access_token
-  }
+  login(email: "alice@example.com", password: "password123")
 }
 ```
 
-**Note:** Since password validation isn't implemented yet, you can use any password. The system only checks if a user with that email exists.
+**Note:** `login` returns a JWT string. Credentials are validated against the stored `passwordHash` using bcrypt.
 
 ### Step 2: Copy the Token
 
@@ -65,8 +63,19 @@ query GetUser($userId: String!) {
 
 ## Available Users
 
-Check what users exist by first creating one or checking the seed data. If you seeded the database, you might have:
-- `alice@example.com` (from seed.ts)
+If you don’t know a valid password for an existing user, register a new account first (see below) and then login with those credentials.
+
+### Register (Public)
+
+```graphql
+mutation Register {
+  register(email: "alice@example.com", password: "password123", name: "Alice")
+}
+```
+
+Password rules:
+- Minimum length: 8 characters
+- Stored as bcrypt hash (12 rounds)
 
 ## Creating a User (Requires ADMIN role)
 
@@ -77,7 +86,7 @@ If you need to create a user first, you'll need an admin token. For testing, you
 1. **Login to get token:**
 ```graphql
 mutation {
-  login(email: "alice@example.com", password: "any")
+  login(email: "alice@example.com", password: "password123")
 }
 ```
 

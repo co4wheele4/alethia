@@ -20,7 +20,7 @@ The application loads environment variables using NestJS `ConfigModule`:
 **Optional Variables**:
 - `PORT` - Server port (default: 3000)
 - `NODE_ENV` - Environment mode (development/production/test)
-- `ALLOWED_ORIGINS` - CORS allowed origins (default: localhost:3000, localhost:3001)
+- `ALLOWED_ORIGINS` - CORS allowed origins (default: localhost:3000, localhost:3030)
 - `JWT_SECRET` - JWT secret key (optional, has default for development)
 - `JWT_EXPIRES_IN` - JWT expiration (default: '7d')
 
@@ -74,7 +74,7 @@ All hardcoded values found are **fallbacks only** and include warnings:
   - Fallback if `process.env.PORT` not set
   - Safe default for development
 
-- `ALLOWED_ORIGINS`: `['http://localhost:3000', 'http://localhost:3001']`
+- `ALLOWED_ORIGINS`: `['http://localhost:3000', 'http://localhost:3030']`
   - Fallback if `process.env.ALLOWED_ORIGINS` not set
   - Safe default for local development
 
@@ -117,22 +117,22 @@ All hardcoded values found are **fallbacks only** and include warnings:
 
 ### `.env` (Production/Development)
 ```env
-DATABASE_URL="postgresql://user:password@localhost:7432/devdb?schema=public"
+DATABASE_URL="postgresql://user:password@localhost:5432/devdb?schema=public"
 OPENAI_API_KEY="your-openai-api-key"
 PORT=3000
 NODE_ENV=development
-ALLOWED_ORIGINS="http://localhost:3000,http://localhost:3001"
+ALLOWED_ORIGINS="http://localhost:3000,http://localhost:3030"
 JWT_SECRET="your-jwt-secret-key"
 JWT_EXPIRES_IN="7d"
 ```
 
 ### `.env.test` (Tests)
 ```env
-DATABASE_URL="postgresql://user:password@localhost:7432/aletheia_test?schema=public"
+DATABASE_URL="postgresql://user:password@localhost:5432/aletheia_test?schema=public"
 OPENAI_API_KEY="dummy-key-for-testing"
 PORT=3000
 NODE_ENV=test
-ALLOWED_ORIGINS="http://localhost:3000,http://localhost:3001"
+ALLOWED_ORIGINS="http://localhost:3000,http://localhost:3030"
 JWT_SECRET="test-jwt-secret-key"
 JWT_EXPIRES_IN="7d"
 ```

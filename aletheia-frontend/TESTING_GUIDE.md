@@ -8,8 +8,10 @@ We follow industry-standard testing practices:
 
 - **Vitest** → Test runner (fast, near-instant startup, built-in mocking)
 - **React Testing Library** → Component and integration tests
-- **MSW (Mock Service Worker)** → API mocking
+- **MSW (Mock Service Worker)** → API mocking for unit/integration tests (Node-based in Vitest)
 - **Playwright** → E2E tests
+
+Note: E2E tests use Playwright route interception (see `e2e/helpers/`), not MSW service workers.
 
 ## Testing Philosophy
 
@@ -45,7 +47,7 @@ We follow industry-standard testing practices:
 4. **Use MSW for API mocking**
    ```tsx
    // ✅ Good - realistic API mocking
-   import { server } from '../mocks/server'
+  import { server } from '@/app/lib/test-utils/server'
    server.use(
      graphql.mutation('Login', () => {
        return HttpResponse.json({ data: { login: 'token' } })
@@ -166,7 +168,7 @@ test('should complete login and navigate to dashboard', async ({ page }) => {
 
 ## MSW (Mock Service Worker)
 
-MSW intercepts network requests at the service worker level, providing realistic API mocking.
+In unit/integration tests, MSW runs in **Node mode** (no browser/service worker), intercepting requests at the network layer to provide realistic API mocking.
 
 ### Setup
 
@@ -175,7 +177,7 @@ Handlers are defined in `app/lib/test-utils/handlers.ts` and automatically loade
 ### Usage in Tests
 
 ```tsx
-import { server } from '../mocks/server'
+import { server } from '@/app/lib/test-utils/server'
 import { graphql, HttpResponse } from 'msw'
 
 test('handles API error', async () => {

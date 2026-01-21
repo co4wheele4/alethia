@@ -55,7 +55,7 @@ React hook that provides:
 ```typescript
 'use client';
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 
 const MY_QUERY = gql`
@@ -79,7 +79,7 @@ export function MyComponent() {
 ```typescript
 'use client';
 
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 
 const LOGIN_MUTATION = gql`
@@ -142,7 +142,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 
 The backend is configured to accept requests from:
 - `http://localhost:3000`
-- `http://localhost:3001`
+- `http://localhost:3030`
 
 If you change the frontend port, update the backend CORS configuration in `aletheia-backend/src/main.ts`.
 
@@ -150,7 +150,7 @@ If you change the frontend port, update the backend CORS configuration in `aleth
 
 1. Start the backend: `npm run start:backend`
 2. Start the frontend: `npm run start:frontend`
-3. Open `http://localhost:3001`
+3. Open `http://localhost:3030`
 4. You should see the "GraphQL Query Example" section showing data from the backend
 5. Try logging in with valid credentials
 

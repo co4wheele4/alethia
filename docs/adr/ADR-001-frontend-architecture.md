@@ -34,7 +34,7 @@ The architecture will emphasize:
 ## Chosen Stack
 
 ### Core Framework
-- **React 18** – Component-based UI with hooks
+- **React 19** – Component-based UI with hooks
 - **Next.js (App Router)** – Routing, SSR/SSG, layouts, and edge-readiness
 - **TypeScript (strict mode)** – Type safety and maintainability
 
@@ -44,7 +44,7 @@ The architecture will emphasize:
 - **GraphQL Fragments** – Reusable, explicit data shapes
 
 ### UI & Styling
-- **Material UI (MUI v5)** – Consistent design system
+- **Material UI (MUI v7)** – Consistent design system
 - **Theme-based styling** – Light/dark modes and brand alignment
 - **Custom layout primitives** – Panels, split views, inspectors
 
@@ -54,8 +54,8 @@ The architecture will emphasize:
 - **URL State (search params)** – Shareable navigation state
 
 ### Testing
-- **React Testing Library** – Unit/component tests
-- **Playwright or Cypress** – E2E tests
+- **Vitest + React Testing Library** – Unit/component tests
+- **Playwright** – E2E tests
 - **MSW (Mock Service Worker)** – GraphQL mocking
 
 ---

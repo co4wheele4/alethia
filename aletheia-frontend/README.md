@@ -45,7 +45,7 @@ npm run dev
 npm run start:frontend
 ```
 
-The app will be available at `http://localhost:3001` (or the configured port).
+The app will be available at `http://localhost:3030` (configured in `package.json`).
 
 ## Project Structure
 
@@ -92,7 +92,7 @@ export const MY_QUERY = gql`
 ```typescript
 'use client';
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { MY_QUERY } from '../lib/graphql/queries';
 
 export function useMyQuery() {

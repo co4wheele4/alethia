@@ -9,7 +9,13 @@ mutation Login {
 }
 ```
 
-**Note:** Password validation isn't implemented yet, so any password works. Just needs a valid email.
+**Note:** Passwords are validated against the stored `passwordHash`. If you don't have a valid account yet, register one first:
+
+```graphql
+mutation Register {
+  register(email: "alice@example.com", password: "password123", name: "Alice")
+}
+```
 
 **Response:**
 ```json

@@ -1,14 +1,14 @@
 # ADR-002: Frontend Build and Test Tooling
 
 ## Status
-Proposed
+Implemented
 
 ## Date
-2026-01-XX
+2026-01-12
 
 ## Context
 
-The Aletheia frontend is currently implemented as a **Next.js application** with a **Jest-based unit testing setup**, Playwright for E2E tests, and a growing shared component library. While Jest is functional, it introduces:
+The Aletheia frontend is implemented as a **Next.js application** with **Vitest** for unit/component tests and Playwright for E2E tests. This ADR captures the decision and rationale for adopting Vitest (historically the project used Jest).
 
 - Slower test startup and execution times
 - Higher configuration overhead (Babel/SWC/JSDOM alignment)
@@ -27,10 +27,10 @@ We will adopt the following tooling strategy:
 
 - **Next.js remains the production build framework**
 - **Vite is introduced for local test bundling only**
-- **Vitest replaces Jest for unit and component tests**
+- **Vitest is the unit/component test runner**
 - **Playwright remains the E2E testing solution**
 
-Jest will be fully removed once parity is achieved.
+Jest has been removed after reaching parity.
 
 ## Rationale
 
@@ -80,4 +80,4 @@ Jest will be fully removed once parity is achieved.
 
 ## Decision Outcome
 
-Adopted pending successful migration of existing test suite with no loss of coverage or confidence.
+Implemented. The Jest suite was migrated to Vitest with no loss of coverage or confidence, and Playwright remains the E2E solution.

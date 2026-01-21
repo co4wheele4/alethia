@@ -10,12 +10,12 @@
 - Code review checklist
 
 ### 2. **Pull Request Template** (optional)
-- Not currently included in this repo
-- Recommended if you want consistent reviewer/test checklists
+- Included in this repo at `.github/pull_request_template.md`
+- Use it for consistent reviewer/test checklists
 
 ### 3. **CI/CD Pipeline** (optional)
-- Not currently included in this repo
-- Recommended if you want automated lint/test enforcement on PRs
+- Included in this repo under `.github/workflows/`
+- Provides automated lint/test enforcement on PRs
 
 ### 4. **E2E Test Checker Script** (`scripts/check-e2e-tests.js`)
 - Can be run manually: `npm run check:e2e`
@@ -105,7 +105,7 @@ Edit `scripts/check-e2e-tests.js`:
 ## 📊 Monitoring
 
 ### Test Coverage
-- **Unit Tests**: Tracked in `coverage/` (enforced at 90%+)
+- **Unit Tests**: Tracked in `coverage/` (enforced at 100%)
 - **E2E Tests**: Tracked in `coverage-e2e/` (for reference)
 - **CI Integration**: Optional (not configured in this repo)
 
@@ -120,7 +120,7 @@ Edit `scripts/check-e2e-tests.js`:
 2. **Set Up Git Hooks** (Optional): Choose one of the options above
 3. **Run Initial Check**: `npm run check:e2e` to see current status
 4. **Update PR Template**: Customize `.github/pull_request_template.md` if needed
-   - Note: no PR template is currently included in this repo
+   - Note: a PR template is included
 
 ## 📝 Notes
 

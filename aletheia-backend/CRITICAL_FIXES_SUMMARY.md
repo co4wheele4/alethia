@@ -127,7 +127,7 @@ Both filters are registered globally in `src/main.ts`.
    - User validation logic
    - JWT token generation
    - Token validation
-   - **Note**: Password field needs to be added to User model for full implementation
+   - Password hashing + verification implemented via `passwordHash` (bcrypt)
 
 3. **JwtStrategy** (`jwt.strategy.ts`):
    - Passport JWT strategy implementation
@@ -202,7 +202,7 @@ The following packages were added:
    - Updated GraphQL context for authentication
 
 3. **`package.json`**:
-   - Fixed Prisma version mismatch (6.19.1)
+   - Updated Prisma to `7.2.0`
    - Added all new dependencies
    - All dependencies are up-to-date with latest stable versions
 
@@ -210,22 +210,13 @@ The following packages were added:
 
 ## 🚀 Next Steps
 
-### To Complete Authentication:
+### Authentication (Implemented)
 
-1. **Add password field to User model**:
-   ```prisma
-   model User {
-     // ... existing fields
-     password String @map("password") // Add this
-   }
-   ```
+- Login/Register validate credentials using bcrypt against `passwordHash`
+- Minimum password length enforced (8 characters)
 
-2. **Update AuthService**:
-   - Uncomment bcrypt import
-   - Implement password hashing on user creation
-   - Implement password verification on login
+### Protect Resolvers
 
-3. **Protect Resolvers**:
    - Add `@UseGuards(JwtAuthGuard)` to sensitive resolvers
    - Consider creating role-based guards if needed
 
@@ -261,7 +252,7 @@ DATABASE_URL=postgresql://user:password@localhost:5432/aletheia
 OPENAI_API_KEY=your_key_here
 JWT_SECRET=your-secret-key-change-in-production
 JWT_EXPIRES_IN=7d
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3030
 PORT=3000
 NODE_ENV=development
 ```
@@ -292,9 +283,9 @@ All critical security issues have been addressed:
 4. ✅ **Security Headers** - Protection against common vulnerabilities
 5. ✅ **CORS** - Proper cross-origin configuration
 6. ✅ **Rate Limiting** - DoS protection
-7. ✅ **Authentication** - JWT infrastructure ready (needs password field)
+7. ✅ **Authentication** - JWT login/register implemented with password hashing/verification
 
-The application is now significantly more secure and production-ready. The authentication system is in place but requires adding a password field to the User model to be fully functional.
+The application is now significantly more secure and production-ready, with authentication fully functional.
 
 ---
 

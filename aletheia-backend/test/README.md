@@ -15,9 +15,9 @@ This directory contains end-to-end (e2e) tests for the Aletheia backend.
    ```bash
    npm run test:e2e:setup
    ```
-   Or manually:
+   Or manually (equivalent):
    ```bash
-   dotenv -e .env.test -- npx prisma migrate deploy
+   npx dotenv-cli -e .env.test -- npx prisma migrate deploy
    ```
 
 ## Running Tests

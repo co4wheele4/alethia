@@ -216,7 +216,7 @@ aletheia/
 - [x] GraphQL client setup
 - [x] Zero security vulnerabilities
 - [x] Error boundaries (ErrorBoundary component)
-- [x] Testing infrastructure (Jest + React Testing Library + Playwright)
+- [x] Testing infrastructure (Vitest + React Testing Library + Playwright)
 - [x] Comprehensive test coverage (100%)
 - [x] Dashboard page implemented
 - [x] 80+ UI components across 10 categories
@@ -228,28 +228,26 @@ aletheia/
 ## 📚 Documentation
 
 ### Backend ✅
-- Comprehensive README.md
-- PROJECT_REVIEW.md (detailed analysis)
-- Testing guidelines
-- E2E test documentation
+- [README.md](./aletheia-backend/README.md)
+- [PROJECT_REVIEW.md](./aletheia-backend/PROJECT_REVIEW.md)
+- Testing + E2E docs under `aletheia-backend/test/`
 - Code comments where appropriate
 
 ### Frontend ✅
-- README.md
-- SETUP.md
-- GRAPHQL_SETUP.md
-- FRONTEND_STATUS.md
-- PROJECT_REVIEW.md
+- [README.md](./aletheia-frontend/README.md)
+- [SETUP.md](./aletheia-frontend/SETUP.md)
+- [FRONTEND_STATUS.md](./aletheia-frontend/FRONTEND_STATUS.md)
+- [PROJECT_REVIEW.md](./aletheia-frontend/PROJECT_REVIEW.md)
+- [TESTING_GUIDE.md](./aletheia-frontend/TESTING_GUIDE.md)
 
 ---
 
 ## 🚀 Recommendations
 
 ### Immediate (High Priority)
-1. **Frontend**: Add testing infrastructure (Jest + React Testing Library)
-2. **Frontend**: Implement route protection/guards
-3. **Frontend**: Add error boundaries
-4. **Frontend**: Implement user dashboard
+1. **Frontend**: Implement route protection/guards (as needed for gated routes)
+2. **Frontend**: Implement core CRUD interfaces (ready for implementation)
+3. **Frontend**: Expand dashboard functionality (beyond initial dashboard route)
 
 ### Short-term (Medium Priority)
 1. **Frontend**: Add form validation (zod/react-hook-form)
@@ -277,8 +275,7 @@ The **Aletheia** monorepo demonstrates **excellent engineering practices**:
 - **Security**: JWT auth, RBAC, rate limiting, input validation
 
 ### Areas for Growth
-- **Frontend**: Needs feature implementation and testing infrastructure
-- **Frontend**: Missing some production features (error boundaries, route guards)
+- **Frontend**: Continue feature implementation (CRUD flows, UX polish, route guards where needed)
 - **Both**: Could benefit from enhanced monitoring and observability
 
 ### Overall Grade: **A** (Excellent)
@@ -291,12 +288,10 @@ The backend is **production-ready** and the frontend has a **strong foundation**
 
 1. **This Week**:
    - Deploy backend to staging ✅ (All checks passing)
-   - Add frontend testing infrastructure
-   - Implement route protection
+   - Implement route protection (if/where needed)
 
 2. **This Month**:
-   - Implement core frontend features
-   - Add comprehensive testing to frontend
+   - Implement core frontend features (CRUD flows)
    - Complete user dashboard
 
 3. **Next Quarter**:

@@ -38,7 +38,7 @@
 - Entity relationship management
 - Document chunking and embedding support
 - AI query processing with OpenAI integration
-- **100% test coverage** (unit tests: 389 tests, e2e tests: 51 tests)
+- **100% test coverage** (unit tests: 395 tests, e2e tests: 56 tests)
 - Type-safe database queries with Prisma
 
 ## Prerequisites
@@ -212,12 +212,17 @@ query {
 aletheia-backend/
 ├── src/
 │   ├── app/              # Main application module
+│   ├── auth/             # Authentication & authorization
+│   ├── common/           # Shared utilities (filters, guards, dataloaders)
+│   ├── config/           # Configuration & validation
 │   ├── graphql/
 │   │   ├── inputs/       # GraphQL input types
 │   │   ├── models/       # GraphQL model types
 │   │   └── resolvers/    # GraphQL resolvers
+│   ├── ingestion/        # Document ingestion & extraction
 │   ├── openai/           # OpenAI service integration
 │   └── prisma/           # Prisma service
+│   └── test-utils/       # Test utilities and mock factories
 ├── prisma/
 │   ├── schema.prisma     # Database schema
 │   ├── migrations/       # Database migrations

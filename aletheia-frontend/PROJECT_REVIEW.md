@@ -84,10 +84,10 @@ The Aletheia Frontend is a Next.js 16 application with React 19 that provides a 
 ### ⚠️ Areas for Improvement
 
 1. **Limited Feature Implementation**
-   - Only 2 GraphQL operations implemented (Hello, Login)
+   - Core auth GraphQL operations implemented (Hello, Login, Register, ChangePassword, ForgotPassword)
    - No CRUD interfaces for any entities
-   - Missing user dashboard/authenticated views
-   - No integration with backend features (Lessons, Documents, Entities, etc.)
+   - Dashboard route exists; expand with real domain data and workflows
+   - Limited integration with backend domain features (Lessons, Documents, Entities, etc.)
 
 2. **Missing Critical Features**
    - ✅ Error boundaries (ErrorBoundary component)
@@ -121,28 +121,22 @@ The Aletheia Frontend is a Next.js 16 application with React 19 that provides a 
 ```
 aletheia-frontend/
 ├── app/
-│   ├── components/
-│   │   ├── ui/              ✅ 2 components (LoginForm, GraphQLExample)
-│   │   └── layout/          ⚠️ Empty directory
-│   ├── hooks/               ✅ 2 hooks (useAuth, useHello)
-│   ├── lib/
-│   │   ├── constants.ts     ✅ Basic constants
-│   │   ├── constants/       ⚠️ Empty directory
-│   │   ├── graphql/         ✅ queries.ts (2 operations)
-│   │   └── utils/           ✅ auth.ts utilities
-│   ├── providers/           ✅ Apollo provider
-│   ├── services/            ✅ Apollo client config
-│   ├── types/               ⚠️ Empty directory
-│   ├── layout.tsx           ✅ Root layout with Apollo provider
-│   └── page.tsx             ✅ Home page (basic)
+│   ├── components/          # Shared components (UI + layout + primitives)
+│   ├── features/            # Feature modules (co-located UI/hooks/tests)
+│   ├── hooks/               # Shared hooks (auth, theme, etc.)
+│   ├── lib/                 # Shared utilities (GraphQL docs, helpers, test utils)
+│   ├── providers/           # App-wide providers (Apollo, theme, etc.)
+│   ├── services/            # API/service wrappers (Apollo client)
+│   └── ... route folders ...# (dashboard, documents, evidence, etc.)
+├── e2e/                     # Playwright end-to-end tests
 ├── public/                  ✅ Static assets
 ├── package.json             ✅ Dependencies configured
 ├── tsconfig.json            ✅ TypeScript config (strict mode)
-├── next.config.ts           ⚠️ Minimal configuration
+├── next.config.ts           ✅ Next.js configuration
 └── eslint.config.mjs        ✅ ESLint configured
 ```
 
-**Assessment**: ✅ Good foundation, but many directories are empty indicating early stage
+**Assessment**: ✅ Well-structured and feature-oriented; the main remaining work is expanding domain flows (beyond auth) to use the backend API.
 
 ---
 
@@ -164,7 +158,7 @@ aletheia-frontend/
 ### Recommendations
 1. Consider using httpOnly cookies for token storage in production
 2. Implement Content Security Policy headers
-3. Add input validation/sanitization library (e.g., zod, yup)
+3. Use `zod` (already included) for consistent client-side validation (consider integrating with `react-hook-form` via `@hookform/resolvers`)
 4. Implement route guards for protected pages
 
 ---
@@ -243,7 +237,7 @@ aletheia-frontend/
 ### Core Dependencies ✅
 - **Next.js**: 16.1.1 ✅ (Latest stable)
 - **React**: 19.2.3 ✅ (Latest)
-- **Apollo Client**: 4.0.11 ✅ (Stable)
+- **Apollo Client**: 4.0.13 ✅ (Latest patch)
 - **GraphQL**: 16.12.0 ✅
 - **TypeScript**: 5.x ✅
 
@@ -252,11 +246,9 @@ aletheia-frontend/
 - **0 vulnerabilities** ✅
 
 ### Missing Dependencies (Consider Adding)
-- **Form validation**: `zod` or `yup`
+- **Form validation**: Prefer `zod` (already included) + `@hookform/resolvers` (already included)
 - **UI components**: `@radix-ui` or `shadcn/ui` (optional)
 - **Date handling**: `date-fns` or `dayjs`
-- **Testing**: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`
-- **Error handling**: Error boundary library or custom implementation
 
 ---
 
@@ -330,7 +322,7 @@ The backend provides extensive GraphQL operations that are not yet integrated:
 - `askAi` (AI query functionality)
 - And more...
 
-**Feature Coverage**: ~2% (only Hello query and Login mutation implemented)
+**Feature Coverage**: Still focused on authentication today (Hello + auth mutations). Most broader domain CRUD and exploration flows (Lessons/Documents/Entities/Evidence) remain to be integrated.
 
 ---
 
@@ -345,7 +337,7 @@ The backend provides extensive GraphQL operations that are not yet integrated:
    - Protected routes and redirects
 
 2. **Error Handling**
-   - Add error boundaries
+   - Expand error boundaries coverage across key routes/feature shells (ErrorBoundary exists)
    - Global error handling
    - Toast notifications for user feedback
 
@@ -355,16 +347,15 @@ The backend provides extensive GraphQL operations that are not yet integrated:
    - Handle auth expiration
 
 4. **Form Validation**
-   - Add validation library (zod/yup)
+   - Standardize on `zod` + `@hookform/resolvers` for form schemas (both already included)
    - Improve form UX
    - Client-side validation
 
 ### Medium Priority
 
-1. **Testing Infrastructure**
-   - Set up Vitest/React Testing Library
-   - Write tests for critical paths
-   - Add E2E tests (Playwright)
+1. **Testing Expansion**
+   - Add E2E tests for new domain workflows as they’re implemented
+   - Keep unit/integration coverage aligned with new GraphQL operations
 
 2. **GraphQL Integration**
    - Generate TypeScript types from GraphQL schema
@@ -409,17 +400,17 @@ The backend provides extensive GraphQL operations that are not yet integrated:
 - [x] Basic authentication
 - [x] GraphQL client setup
 - [x] Zero security vulnerabilities
-- [ ] Error boundaries
+- [x] Error boundaries
 - [ ] Route protection
 - [ ] Form validation
 - [ ] Loading states
 - [ ] Error handling (user-facing)
-- [ ] Testing infrastructure
+- [x] Testing infrastructure
 - [ ] Feature implementation (dashboard, CRUD)
 - [ ] Performance optimization
 - [ ] Documentation complete
 
-**Current Status**: ~40% production ready (foundation complete, features missing)
+**Current Status**: Foundation + auth + testing are production-grade; remaining work is primarily feature implementation (domain CRUD/exploration), route protection decisions, and UX polish (loading states, user-facing error handling).
 
 ---
 
@@ -433,15 +424,14 @@ The **Aletheia Frontend** has a **solid foundation** with:
 - ✅ Authentication infrastructure
 - ✅ Zero security vulnerabilities
 
-However, it's in an **early development stage** with:
-- ⚠️ Minimal feature implementation (~2% of backend API used)
-- ⚠️ Missing critical features (error boundaries, route protection)
-- ⚠️ No testing infrastructure
-- ⚠️ Limited user-facing functionality
+However, broader **domain feature integration** is still in progress:
+- ⚠️ Limited use of backend domain APIs (Lessons/Documents/Entities/Evidence)
+- ⚠️ Route protection/guards (decide per route and UX)
+- ⚠️ UX polish: global loading states, user-facing error handling/toasts, form validation
 
-### Overall Grade: **B** (Good foundation, needs feature development)
+### Overall Grade: **A-** (Strong foundation, features next)
 
-The project demonstrates good engineering practices and has all the necessary infrastructure in place. The next phase should focus on implementing core features that leverage the comprehensive backend API.
+The project demonstrates strong engineering practices with comprehensive testing and a modern stack. The next phase should focus on implementing core features that leverage the backend’s domain model.
 
 ---
 
@@ -450,13 +440,11 @@ The project demonstrates good engineering practices and has all the necessary in
 1. **Immediate** (Next Sprint):
    - Implement user dashboard
    - Add route protection
-   - Create error boundaries
    - Expand GraphQL integration
 
 2. **Short-term** (1-2 Sprints):
    - Lessons management interface
    - Documents management interface
-   - Testing infrastructure
    - Form validation
 
 3. **Medium-term** (3-4 Sprints):

@@ -1,10 +1,10 @@
 # ADR-003: Frontend Testing Strategy
 
 ## Status
-Proposed
+Implemented
 
 ## Date
-2026-01-XX
+2026-01-12
 
 ## Context
 
@@ -16,7 +16,7 @@ Aletheia’s frontend supports:
 
 The complexity of user flows requires a **layered testing strategy** that balances speed, confidence, and maintainability.
 
-Historically, the test suite relied heavily on Jest-based unit tests, with Playwright added later for E2E validation. This ADR formalizes testing responsibilities and boundaries.
+Historically, the test suite relied heavily on Jest-based unit tests, with Playwright added later for E2E validation. The current implementation uses Vitest for unit/integration tests and Playwright for E2E. This ADR formalizes testing responsibilities and boundaries.
 
 ## Decision
 
@@ -131,4 +131,4 @@ Snapshot testing is explicitly discouraged except for low-level, stable primitiv
 
 ## Decision Outcome
 
-Approved pending Vitest migration (ADR-002).
+Implemented. Vitest is used for unit/integration tests and Playwright is used for E2E, with the three-layer strategy enforced in CI.

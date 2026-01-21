@@ -124,7 +124,7 @@ aletheia-frontend/
 
 - **Framework**: Next.js 16.1.1 (App Router)
 - **React**: 19.2.3
-- **GraphQL Client**: Apollo Client 4.0.11
+- **GraphQL Client**: Apollo Client 4.0.13
 - **Styling**: Tailwind CSS 4
 - **Language**: TypeScript 5
 - **Build Tool**: Next.js (Turbopack in dev)

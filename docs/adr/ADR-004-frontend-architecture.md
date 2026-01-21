@@ -1,10 +1,10 @@
 # ADR-004: Frontend Architecture Overview
 
 ## Status
-Proposed
+Implemented
 
 ## Date
-2026-01-XX
+2026-01-12
 
 ## Context
 
@@ -41,27 +41,24 @@ The frontend must remain:
 
 ## High-Level Structure
 
-src/
-├── app/ # Next.js App Router
-├── features/
-│ ├── documents/
-│ ├── entities/
-│ ├── relationships/
-│ ├── wizard/
-│ └── search/
-├── components/
-│ ├── primitives/
-│ └── layout/
-├── graphql/
-│ ├── queries/
-│ ├── mutations/
-│ └── fragments/
-├── hooks/
-├── state/
-├── styles/
-├── test/
-│ ├── msw/
-│ └── setup/
+app/
+├── analysis/            # Analysis route(s)
+├── components/          # Shared components
+├── dashboard/           # Dashboard route(s)
+├── documents/           # Documents route(s)
+├── entities/            # Entities route(s)
+├── evidence/            # Evidence route(s)
+├── features/            # Feature modules (UI + hooks + tests)
+├── hooks/               # Shared hooks
+├── lib/                 # Shared utilities (Apollo client, helpers)
+├── onboarding/          # Onboarding flows
+├── providers/           # Context providers
+├── services/            # API/service wrappers
+├── styles/              # Global styles
+└── types/               # Type declarations
+
+e2e/                      # Playwright end-to-end tests
+public/                   # Static assets
 
 ## Core Domains
 
