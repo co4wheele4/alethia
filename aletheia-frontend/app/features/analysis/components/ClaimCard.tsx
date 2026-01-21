@@ -3,7 +3,7 @@
 import { Box, Divider, Typography } from '@mui/material';
 
 import type { AiQueryResult } from '../hooks/useAskAi';
-import { ClaimConfidenceIndicator } from './ClaimConfidenceIndicator';
+import { ClaimScoreIndicator } from './ClaimScoreIndicator';
 import { ClaimEvidenceStack } from './ClaimEvidenceStack';
 
 export interface ClaimCardProps {
@@ -42,7 +42,7 @@ export function ClaimCard(props: ClaimCardProps) {
 
       <Divider sx={{ my: 2 }} />
 
-      <ClaimConfidenceIndicator score={claim.score ?? null} />
+      <ClaimScoreIndicator score={claim.score ?? null} />
 
       <Divider sx={{ my: 2 }} />
 

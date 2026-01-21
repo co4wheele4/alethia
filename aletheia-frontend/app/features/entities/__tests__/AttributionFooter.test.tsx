@@ -12,13 +12,12 @@ describe('AttributionFooter', () => {
   it('renders all info when provided', () => {
     render(
       <TestWrapper>
-        <AttributionFooter timestamp="2023-01-01" origin="Test Origin" confidence={90} />
+        <AttributionFooter timestamp="2023-01-01" origin="Test Origin" />
       </TestWrapper>
     );
 
     expect(screen.getByText(/Updated: 2023-01-01/i)).toBeInTheDocument();
     expect(screen.getByText(/Source: Test Origin/i)).toBeInTheDocument();
-    expect(screen.getByText(/Confidence: 90%/i)).toBeInTheDocument();
   });
 
   it('renders fallback when no info provided', () => {

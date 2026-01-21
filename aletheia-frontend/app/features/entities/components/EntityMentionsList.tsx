@@ -109,8 +109,7 @@ export function EntityMentionsList(props: {
               </AccordionSummary>
               <AccordionDetails>
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                  Entity: {entityName} • Type: {entityType || 'unknown'} • Confidence: unknown • Mentions (entity):{' '}
-                  {mentionCount}
+                  Entity: {entityName} • Type: {entityType || 'unknown'} • Mentions (entity): {mentionCount}
                 </Typography>
                 <EvidenceHighlightLayer
                   text={m.chunk.content}

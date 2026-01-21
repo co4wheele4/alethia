@@ -21,10 +21,11 @@ export const MENTION_FIELDS = gql`
   fragment MentionFields on EntityMention {
     __typename
     id
+    entityId
+    chunkId
     startOffset
     endOffset
-    spanText
-    confidence
+    excerpt
   }
 `;
 

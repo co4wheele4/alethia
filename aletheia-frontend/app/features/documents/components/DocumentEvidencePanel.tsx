@@ -77,7 +77,7 @@ export function DocumentEvidencePanel(props: {
               <ListItemButton key={e.id} component={Link} href={`/entities/${e.id}`} sx={{ borderRadius: 1 }}>
                 <ListItemText
                   primary={e.name}
-                  secondary={`Type: ${e.type || 'unknown'} • Mentions: ${e.mentionCount} • Confidence: unknown`}
+                  secondary={`Type: ${e.type || 'unknown'} • Mentions: ${e.mentionCount}`}
                   secondaryTypographyProps={{ variant: 'caption' }}
                 />
               </ListItemButton>

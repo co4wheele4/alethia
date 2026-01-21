@@ -35,11 +35,11 @@ export type EntityRelationship = {
       mention: {
         __typename?: 'EntityMention';
         id: string;
+        entityId: string;
+        chunkId: string;
         startOffset?: number | null;
         endOffset?: number | null;
         excerpt?: string | null;
-        spanText?: string | null;
-        confidence?: number | null;
         entity: { __typename?: 'Entity'; id: string; name: string; type: string };
       };
     }>;
@@ -49,10 +49,11 @@ export type EntityRelationship = {
 export type EntityMention = {
   __typename?: 'EntityMention';
   id: string;
+  entityId: string;
+  chunkId: string;
   startOffset?: number | null;
   endOffset?: number | null;
-  spanText?: string | null;
-  confidence?: number | null;
+  excerpt?: string | null;
   chunk: {
     __typename?: 'DocumentChunk';
     id: string;

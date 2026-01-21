@@ -13,7 +13,6 @@ describe('SourcePopover', () => {
     const source = {
       origin: 'Test Origin',
       timestamp: '2023-01-01',
-      confidence: 95,
     };
     
     // Create a dummy anchor element
@@ -28,7 +27,6 @@ describe('SourcePopover', () => {
     expect(screen.getByText(/Source Information/i)).toBeInTheDocument();
     expect(screen.getByText(/Origin: Test Origin/i)).toBeInTheDocument();
     expect(screen.getByText(/Time: 2023-01-01/i)).toBeInTheDocument();
-    expect(screen.getByText(/Confidence: 95%/i)).toBeInTheDocument();
   });
 
   it('renders correctly with partial source info', () => {
@@ -41,6 +39,5 @@ describe('SourcePopover', () => {
 
     expect(screen.getByText(/Origin: Only Origin/i)).toBeInTheDocument();
     expect(screen.queryByText(/Time:/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Confidence:/i)).not.toBeInTheDocument();
   });
 });

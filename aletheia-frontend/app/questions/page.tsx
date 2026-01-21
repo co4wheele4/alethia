@@ -257,7 +257,7 @@ export default function QuestionsPage() {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Pending: requires GraphQL response shape with claims → supporting chunks → source documents and
-                per-source confidence. Default behavior is “show more evidence”.
+                per-source attribution. Default behavior is “show more evidence”.
               </Typography>
             </Box>
           </Box>

@@ -32,14 +32,14 @@ describe('ClaimCard', () => {
     expect(screen.getByText(/AI-generated hypothesis/i)).toBeInTheDocument();
   });
 
-  it('renders confidence indicator', () => {
+  it('renders model score indicator', () => {
     render(
       <TestWrapper>
         <ClaimCard claim={mockClaim as any} />
       </TestWrapper>
     );
 
-    expect(screen.getAllByText(/Confidence/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/model score/i)).toBeInTheDocument();
   });
 
   it('handles missing score', () => {

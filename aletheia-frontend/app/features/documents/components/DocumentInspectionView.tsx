@@ -30,7 +30,6 @@ function buildHighlightEntities(chunks: DocumentChunkItem[]): HighlightableEntit
         name: e.name,
         type: e.type,
         mentionCount: (prev?.mentionCount ?? 0) + 1,
-        confidence: null, // not provided by API
       });
     }
   }

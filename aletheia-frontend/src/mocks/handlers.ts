@@ -27,6 +27,28 @@ function assertOffsets(start: number | null | undefined, end: number | null | un
   if (s < 0 || e <= s) fail(`${label} has invalid offsets (start=${s}, end=${e})`);
 }
 
+function assertNoConfidence(value: unknown, path = 'root', seen = new Set<object>()) {
+  if (value === null || value === undefined) return;
+
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i += 1) {
+      assertNoConfidence(value[i], `${path}[${i}]`, seen);
+    }
+    return;
+  }
+
+  if (typeof value !== 'object') return;
+  if (seen.has(value as object)) return;
+  seen.add(value as object);
+
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (k.toLowerCase() === 'confidence') {
+      fail(`Unexpected field "confidence" at ${path}.${k}`);
+    }
+    assertNoConfidence(v, `${path}.${k}`, seen);
+  }
+}
+
 function asDocumentById(id: string) {
   const doc = fixture.documents.find((d) => d.id === id);
   if (!doc) return null;
@@ -122,21 +144,29 @@ function listRelationships() {
 export const handlers = [
   // Trust UI (read-only) contracts
   graphql.query('ListDocuments', () => {
-    return HttpResponse.json({ data: { documents: listDocuments() } });
+    const data = { documents: listDocuments() };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
   }),
 
   graphql.query('GetDocumentById', ({ variables }) => {
     const id = assertPresent((variables as { id?: string } | undefined)?.id, 'GetDocumentById.variables.id');
     const doc = asDocumentById(id);
-    return HttpResponse.json({ data: { document: doc } });
+    const data = { document: doc };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
   }),
 
   graphql.query('ListEntities', () => {
-    return HttpResponse.json({ data: { entities: listEntities() } });
+    const data = { entities: listEntities() };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
   }),
 
   graphql.query('ListRelationships', () => {
-    return HttpResponse.json({ data: { entityRelationships: listRelationships() } });
+    const data = { entityRelationships: listRelationships() };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
   }),
 
   // Existing app-level auth contracts used by tests/components

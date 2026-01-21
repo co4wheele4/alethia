@@ -9,7 +9,7 @@ import type { EntityDetail } from '../hooks/useEntity';
  * EntityRelationshipGraph
  *
  * Purposefully not a “graph visualization” yet: we avoid introducing a force graph
- * that can imply structure or confidence not supported by evidence/UX.
+ * that can imply structure or certainty not supported by evidence/UX.
  *
  * This component renders relationships as explicit, inspectable edges.
  */

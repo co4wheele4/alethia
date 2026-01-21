@@ -13,10 +13,11 @@ const mockEntity = {
   mentions: [
     {
       id: 'm1',
+      entityId: 'e1',
+      chunkId: 'c1',
       startOffset: 0,
       endOffset: 5,
-      spanText: 'Test',
-      confidence: 0.9,
+      excerpt: 'Test',
       chunk: {
         id: 'c1',
         chunkIndex: 0,

@@ -18,10 +18,6 @@ export type HighlightableEntity = {
   name: string;
   type: string;
   mentionCount: number;
-  /**
-   * If not provided by API, pass null/undefined and UI will show "unknown".
-   */
-  confidence?: number | null;
 };
 
 type Match = {
@@ -118,8 +114,6 @@ export function EvidenceTextWithEntityHighlights(props: {
           if (seg.kind !== 'entity') return <Typography key={i} component="span">{seg.value}</Typography>;
 
           const e = seg.entity;
-          const confidenceLabel =
-            typeof e.confidence === 'number' ? `${Math.round(e.confidence * 100)}%` : 'unknown';
 
           return (
             <Tooltip
@@ -130,7 +124,6 @@ export function EvidenceTextWithEntityHighlights(props: {
                 <Box sx={{ display: 'grid', gap: 0.25 }}>
                   <Box>Entity: {e.name}</Box>
                   <Box>Type: {e.type || 'unknown'}</Box>
-                  <Box>Confidence: {confidenceLabel}</Box>
                   <Box>Mentions (in this document): {e.mentionCount}</Box>
                 </Box>
               }

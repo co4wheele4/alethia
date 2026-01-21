@@ -8,8 +8,8 @@ import type { ReactNode } from 'react'
 const TestWrapper = ({ children }: { children: ReactNode }) => <ThemeProvider>{children}</ThemeProvider>
 
 const entities: HighlightableEntity[] = [
-  { id: 'e1', name: 'John Doe', type: 'Person', mentionCount: 1, confidence: 0.95 },
-  { id: 'e2', name: 'ACME Corp', type: 'Organization', mentionCount: 2, confidence: null },
+  { id: 'e1', name: 'John Doe', type: 'Person', mentionCount: 1 },
+  { id: 'e2', name: 'ACME Corp', type: 'Organization', mentionCount: 2 },
 ]
 
 describe('EvidenceTextWithEntityHighlights', () => {
@@ -38,7 +38,7 @@ describe('EvidenceTextWithEntityHighlights', () => {
     expect(onEntityClick).toHaveBeenCalledWith('e1')
   })
 
-  it('shows tooltip details (confidence percent + unknown)', async () => {
+  it('shows tooltip details', async () => {
     const user = userEvent.setup()
     render(
       <TestWrapper>
@@ -48,12 +48,10 @@ describe('EvidenceTextWithEntityHighlights', () => {
 
     await user.hover(screen.getByText('John Doe'))
     expect(await screen.findByText(/Entity:\s*John Doe/i)).toBeInTheDocument()
-    expect(screen.getByText(/Confidence:\s*95%/i)).toBeInTheDocument()
 
     await user.unhover(screen.getByText('John Doe'))
     await user.hover(screen.getByText('ACME Corp'))
     expect(await screen.findByText(/Entity:\s*ACME Corp/i)).toBeInTheDocument()
-    expect(screen.getByText(/Confidence:\s*unknown/i)).toBeInTheDocument()
   })
 
   it('renders plain text if no entities match', () => {

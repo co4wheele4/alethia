@@ -10,7 +10,6 @@ import { Chip } from '@mui/material';
 export interface SourceBadgeProps {
   // TODO: Define props
   source?: string;
-  confidence?: number;
   onClick?: () => void;
 }
 

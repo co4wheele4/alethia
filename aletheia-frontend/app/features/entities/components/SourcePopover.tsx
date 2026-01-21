@@ -15,7 +15,6 @@ export interface SourcePopoverProps {
   source?: {
     origin?: string;
     timestamp?: string;
-    confidence?: number;
   };
 }
 
@@ -37,9 +36,6 @@ export function SourcePopover(props: SourcePopoverProps) {
         <Typography variant="subtitle2">Source Information</Typography>
         {source?.origin && <Typography variant="body2">Origin: {source.origin}</Typography>}
         {source?.timestamp && <Typography variant="body2">Time: {source.timestamp}</Typography>}
-        {source?.confidence !== undefined && (
-          <Typography variant="body2">Confidence: {source.confidence}%</Typography>
-        )}
       </Box>
     </Popover>
   );

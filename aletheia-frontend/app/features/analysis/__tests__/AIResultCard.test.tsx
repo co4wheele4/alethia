@@ -16,11 +16,6 @@ describe('AIResultCard', () => {
     expect(screen.getByText('Test result')).toBeInTheDocument();
   });
 
-  it('should render with confidence', () => {
-    render(<AIResultCard confidence={85} />);
-    expect(screen.getByText(/confidence: 85%/i)).toBeInTheDocument();
-  });
-
   it('should render with explanation', () => {
     render(<AIResultCard explanation="This is the explanation" />);
     expect(screen.getByText('Explanation:')).toBeInTheDocument();
@@ -41,13 +36,11 @@ describe('AIResultCard', () => {
     render(
       <AIResultCard
         result="Complete result"
-        confidence={90}
         explanation="Full explanation"
       />
     );
     
     expect(screen.getByText('Complete result')).toBeInTheDocument();
-    expect(screen.getByText(/confidence: 90%/i)).toBeInTheDocument();
     expect(screen.getByText('Full explanation')).toBeInTheDocument();
   });
 });

@@ -45,6 +45,8 @@ function makeEntityDetail(overrides?: Partial<EntityDetail>): EntityDetail {
       {
         __typename: 'EntityMention',
         id: 'm1',
+        entityId: 'e1',
+        chunkId: 'c1',
         startOffset: 0,
         endOffset: 5,
         chunk: {
@@ -59,6 +61,8 @@ function makeEntityDetail(overrides?: Partial<EntityDetail>): EntityDetail {
       {
         __typename: 'EntityMention',
         id: 'm2',
+        entityId: 'e1',
+        chunkId: 'c1',
         startOffset: null,
         endOffset: null,
         chunk: {
@@ -73,6 +77,8 @@ function makeEntityDetail(overrides?: Partial<EntityDetail>): EntityDetail {
       {
         __typename: 'EntityMention',
         id: 'm3',
+        entityId: 'e1',
+        chunkId: 'c2',
         startOffset: null,
         endOffset: null,
         chunk: {
@@ -513,6 +519,8 @@ describe('EvidenceExplorer', () => {
     const mention = (i: number) => ({
       __typename: 'EntityMention' as const,
       id: `m-${i}`,
+      entityId: 'e1',
+      chunkId: 'c0',
       startOffset: null,
       endOffset: null,
       chunk: {
@@ -528,6 +536,8 @@ describe('EvidenceExplorer', () => {
     const mentionWithNullishContent = {
       __typename: 'EntityMention' as const,
       id: 'm-nullish-content',
+      entityId: 'e1',
+      chunkId: 'c-null',
       startOffset: null,
       endOffset: null,
       chunk: {

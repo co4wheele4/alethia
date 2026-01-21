@@ -160,6 +160,8 @@ describe('EvidencePanel', () => {
       {
         __typename: 'EntityMention',
         id: 'm1',
+        entityId: 'e1',
+        chunkId: 'c1',
         entity: { __typename: 'Entity', id: 'e1', name: 'Entity One', type: 'Person' },
       },
     ]

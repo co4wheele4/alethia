@@ -18,8 +18,8 @@ export type { ReasoningStepsListProps, ReasoningStep } from './ReasoningStepsLis
 export { TruthStateIndicator } from './TruthStateIndicator';
 export type { TruthStateIndicatorProps, TruthState } from './TruthStateIndicator';
 
-export { ConfidenceMeter } from './ConfidenceMeter';
-export type { ConfidenceMeterProps } from './ConfidenceMeter';
+export { ScoreMeter } from './ScoreMeter';
+export type { ScoreMeterProps } from './ScoreMeter';
 
 export { StatusPill } from './StatusPill';
 export type { StatusPillProps } from './StatusPill';

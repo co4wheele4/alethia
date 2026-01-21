@@ -33,7 +33,13 @@ const TestWrapper = ({ children }: { children: ReactNode }) => <ThemeProvider>{c
 const mockDoc: DocumentHeader = { id: 'd1', title: 'Test Doc', createdAt: '2023-01-01T12:00:00Z', __typename: 'Document' }
 
 function mention(id: string, entity: { id: string; name: string; type: string }): EntityMentionItem {
-  return { id, entity: { ...entity, __typename: 'Entity' }, __typename: 'EntityMention' }
+  return {
+    __typename: 'EntityMention',
+    id,
+    entityId: entity.id,
+    chunkId: 'chunk-unknown',
+    entity: { ...entity, __typename: 'Entity' },
+  }
 }
 
 function chunk(overrides: Partial<DocumentChunkItem> & Pick<DocumentChunkItem, 'id' | 'chunkIndex' | 'content'>): DocumentChunkItem {

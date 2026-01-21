@@ -5,11 +5,34 @@
 
 'use client';
 
-import { ApolloClient, InMemoryCache, createHttpLink, from, CombinedGraphQLErrors } from '@apollo/client';
+import { ApolloClient, ApolloLink, InMemoryCache, createHttpLink, from, CombinedGraphQLErrors } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
+import { Observable } from '@apollo/client/utilities';
 import { GRAPHQL_URL } from '../lib/constants';
 import { getAuthToken } from '../features/auth/utils/auth';
+
+function assertNoConfidence(value: unknown, path = 'root', seen = new Set<object>()) {
+  if (value === null || value === undefined) return;
+
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i += 1) {
+      assertNoConfidence(value[i], `${path}[${i}]`, seen);
+    }
+    return;
+  }
+
+  if (typeof value !== 'object') return;
+  if (seen.has(value as object)) return;
+  seen.add(value as object);
+
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (k.toLowerCase() === 'confidence') {
+      throw new Error(`[GraphQL contract] Unexpected field "confidence" at ${path}.${k}`);
+    }
+    assertNoConfidence(v, `${path}.${k}`, seen);
+  }
+}
 
 // HTTP Link
 const httpLink = createHttpLink({
@@ -70,6 +93,21 @@ export const errorLink = onError(({ error }) => {
   errorLinkHandler(error);
 });
 
+const noConfidenceLink = new ApolloLink((operation, forward) => {
+  return new Observable((observer) => {
+    const sub = forward(operation).subscribe({
+      next: (result) => {
+        assertNoConfidence((result as { data?: unknown } | null | undefined)?.data, 'result.data');
+        observer.next(result);
+      },
+      error: (err) => observer.error(err),
+      complete: () => observer.complete(),
+    });
+
+    return () => sub.unsubscribe();
+  });
+});
+
 // Create Apollo Client (lazy initialization to avoid SSR issues)
 let _apolloClient: ApolloClient | null = null;
 
@@ -84,7 +122,7 @@ export function createApolloClient(): ApolloClient {
 
   // Create full client with auth/error links
   return new ApolloClient({
-    link: from([errorLink, authLink, httpLink]),
+    link: from([errorLink, noConfidenceLink, authLink, httpLink]),
     cache: new InMemoryCache({
       typePolicies: {
         /* istanbul ignore next */

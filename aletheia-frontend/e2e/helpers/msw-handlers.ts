@@ -32,6 +32,28 @@ let chunksStore: Record<
 let entitiesStore: Array<{ id: string; name: string; type: string; mentionCount: number }> = [];
 let entityDetailStore: Record<string, Record<string, unknown> | null> = {};
 
+function assertNoConfidence(value: unknown, path = 'root', seen = new Set<object>()) {
+  if (value === null || value === undefined) return;
+
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i += 1) {
+      assertNoConfidence(value[i], `${path}[${i}]`, seen);
+    }
+    return;
+  }
+
+  if (typeof value !== 'object') return;
+  if (seen.has(value as object)) return;
+  seen.add(value as object);
+
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (k.toLowerCase() === 'confidence') {
+      throw new Error(`[E2E contract] Unexpected field "confidence" at ${path}.${k}`);
+    }
+    assertNoConfidence(v, `${path}.${k}`, seen);
+  }
+}
+
 /**
  * Setup GraphQL route handlers for Playwright
  * This intercepts GraphQL requests and returns mock responses
@@ -121,10 +143,11 @@ export async function setupGraphQLMocks(route: Route) {
                 {
                   __typename: 'EntityMention',
                   id: 'mention-1',
+                  entityId: 'entity-1',
+                  chunkId: 'chunk-doc-1-1',
                   startOffset: 17,
                   endOffset: 28,
-                  spanText: 'Test Entity',
-                  confidence: 0.9,
+                  excerpt: 'Test Entity',
                   chunk: {
                     __typename: 'DocumentChunk',
                     id: 'chunk-doc-1-1',
@@ -460,6 +483,7 @@ export async function setupGraphQLMocks(route: Route) {
         return;
     }
 
+    assertNoConfidence(response.body, 'response.body');
     await route.fulfill({
       status: response.status,
       contentType: 'application/json',

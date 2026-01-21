@@ -14,26 +14,6 @@ describe('AIResultCard Edge Cases', () => {
     expect(container).toBeInTheDocument();
   });
 
-  it('should handle confidence of 0', () => {
-    render(<AIResultCard confidence={0} />);
-    expect(screen.getByText(/confidence: 0%/i)).toBeInTheDocument();
-  });
-
-  it('should handle confidence of 100', () => {
-    render(<AIResultCard confidence={100} />);
-    expect(screen.getByText(/confidence: 100%/i)).toBeInTheDocument();
-  });
-
-  it('should handle confidence outside 0-100 range', () => {
-    render(<AIResultCard confidence={150} />);
-    expect(screen.getByText(/confidence: 150%/i)).toBeInTheDocument();
-  });
-
-  it('should handle negative confidence', () => {
-    render(<AIResultCard confidence={-10} />);
-    expect(screen.getByText(/confidence: -10%/i)).toBeInTheDocument();
-  });
-
   it('should handle empty string explanation', () => {
     render(<AIResultCard explanation="" />);
     // Empty string is falsy, should show warning
