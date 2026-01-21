@@ -43,7 +43,7 @@ describe('useDocumentChunks hooks', () => {
     it('fetches document header', async () => {
       const { result } = renderHook(() => useDocumentHeader('d1'), {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks} addTypename={true}>
+          <MockedProvider mocks={mocks}>
             {children}
           </MockedProvider>
         ),
@@ -58,7 +58,7 @@ describe('useDocumentChunks hooks', () => {
     it('handles null documentId', async () => {
       const { result } = renderHook(() => useDocumentHeader(null), {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={[]} addTypename={true}>
+          <MockedProvider mocks={[]}>
             {children}
           </MockedProvider>
         ),
@@ -73,7 +73,7 @@ describe('useDocumentChunks hooks', () => {
     it('fetches document chunks', async () => {
       const { result } = renderHook(() => useChunksByDocument('d1'), {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks} addTypename={true}>
+          <MockedProvider mocks={mocks}>
             {children}
           </MockedProvider>
         ),
@@ -89,7 +89,7 @@ describe('useDocumentChunks hooks', () => {
     it('handles null documentId', async () => {
       const { result } = renderHook(() => useChunksByDocument(null), {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={[]} addTypename={true}>
+          <MockedProvider mocks={[]}>
             {children}
           </MockedProvider>
         ),
@@ -104,7 +104,7 @@ describe('useDocumentChunks hooks', () => {
     it('fetches both (deprecated)', async () => {
       const { result } = renderHook(() => useDocumentDetails('d1'), {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={[...mocks, ...mocks]} addTypename={true}>
+          <MockedProvider mocks={[...mocks, ...mocks]}>
             {children}
           </MockedProvider>
         ),
@@ -124,7 +124,7 @@ describe('useDocumentChunks hooks', () => {
     it('handles null documentId', async () => {
       const { result } = renderHook(() => useDocumentDetails(null), {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={[]} addTypename={true}>
+          <MockedProvider mocks={[]}>
             {children}
           </MockedProvider>
         ),

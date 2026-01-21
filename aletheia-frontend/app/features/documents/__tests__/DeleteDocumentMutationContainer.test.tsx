@@ -48,7 +48,7 @@ describe('DeleteDocumentMutationContainer', () => {
     );
 
     render(
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mocks={mocks}>
         <TestComponent />
       </MockedProvider>
     );
@@ -77,10 +77,10 @@ describe('DeleteDocumentMutationContainer', () => {
       },
     ];
 
-    let capturedError: Error | null = null;
+    let capturedError: any = null;
 
     const Inner = ({ error, deleteDocument }: { 
-      error: Error | null; 
+      error: any; 
       deleteDocument: (id: string) => Promise<string | null> 
     }) => {
       useEffect(() => {
@@ -100,7 +100,7 @@ describe('DeleteDocumentMutationContainer', () => {
     );
 
     render(
-      <MockedProvider mocks={errorMocks} addTypename={false}>
+      <MockedProvider mocks={errorMocks}>
         <TestComponent />
       </MockedProvider>
     );
@@ -111,7 +111,7 @@ describe('DeleteDocumentMutationContainer', () => {
     });
 
     await waitFor(() => expect(capturedError).not.toBe(null));
-    expect(capturedError?.message).toContain('Mutation failed');
+    expect(String(capturedError?.message ?? '')).toContain('Mutation failed');
   });
 
   it('handles null response from mutation', async () => {
@@ -144,7 +144,7 @@ describe('DeleteDocumentMutationContainer', () => {
     );
 
     render(
-      <MockedProvider mocks={nullMocks} addTypename={false}>
+      <MockedProvider mocks={nullMocks}>
         <TestComponent />
       </MockedProvider>
     );

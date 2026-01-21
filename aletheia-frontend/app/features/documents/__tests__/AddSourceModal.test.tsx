@@ -14,7 +14,7 @@ vi.mock('../components/IngestDocumentsDialog', () => ({
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       {children}
     </MockedProvider>
   </ThemeProvider>

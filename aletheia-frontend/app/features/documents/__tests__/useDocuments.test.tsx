@@ -37,7 +37,7 @@ describe('useDocuments', () => {
   it('should fetch documents', async () => {
     const { result } = renderHook(() => useDocuments('u1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} addTypename={true}>
+        <MockedProvider mocks={mocks}>
           {children}
         </MockedProvider>
       ),
@@ -51,7 +51,7 @@ describe('useDocuments', () => {
   it('should call create mutation', async () => {
     const { result } = renderHook(() => useDocuments('u1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} addTypename={true}>
+        <MockedProvider mocks={mocks}>
           {children}
         </MockedProvider>
       ),
@@ -59,18 +59,19 @@ describe('useDocuments', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    let newDoc;
+    let newDoc: { title: string } | null | undefined;
     await act(async () => {
       newDoc = await result.current.createDocument('New Doc');
     });
 
-    expect(newDoc.title).toBe('New Doc');
+    expect(newDoc).toBeDefined();
+    expect(newDoc?.title).toBe('New Doc');
   });
 
   it('should call delete mutation', async () => {
     const { result } = renderHook(() => useDocuments('u1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} addTypename={true}>
+        <MockedProvider mocks={mocks}>
           {children}
         </MockedProvider>
       ),
@@ -89,7 +90,7 @@ describe('useDocuments', () => {
   it('useDocumentsInternal with skipList', () => {
     const { result } = renderHook(() => useDocumentsInternal('u1', { skipList: true }), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]} addTypename={true}>
+        <MockedProvider mocks={[]}>
           {children}
         </MockedProvider>
       ),
@@ -102,7 +103,7 @@ describe('useDocuments', () => {
   it('createDocument should not crash if userId is null', async () => {
     const { result } = renderHook(() => useDocuments(null), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]} addTypename={true}>
+        <MockedProvider mocks={[]}>
           {children}
         </MockedProvider>
       ),
@@ -115,7 +116,7 @@ describe('useDocuments', () => {
   it('deleteDocument should not crash if userId is null', async () => {
     const { result } = renderHook(() => useDocuments(null), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]} addTypename={true}>
+        <MockedProvider mocks={[]}>
           {children}
         </MockedProvider>
       ),
@@ -142,7 +143,7 @@ describe('useDocuments', () => {
     ];
     const { result } = renderHook(() => useDocuments('u1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={emptyMock} addTypename={true}>
+        <MockedProvider mocks={emptyMock}>
           {children}
         </MockedProvider>
       ),
@@ -168,7 +169,7 @@ describe('useDocuments', () => {
     ];
     const { result } = renderHook(() => useDocuments('u1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={emptyMock} addTypename={true}>
+        <MockedProvider mocks={emptyMock}>
           {children}
         </MockedProvider>
       ),
@@ -194,7 +195,7 @@ describe('useDocuments', () => {
     ];
     const { result } = renderHook(() => useDocuments('u1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={existingMock} addTypename={true}>
+        <MockedProvider mocks={existingMock}>
           {children}
         </MockedProvider>
       ),
@@ -218,7 +219,7 @@ describe('useDocuments', () => {
     ];
     const { result } = renderHook(() => useDocumentsInternal('u1', { skipList: true }), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mockData} addTypename={false}>
+        <MockedProvider mocks={mockData}>
           {children}
         </MockedProvider>
       ),
@@ -240,7 +241,7 @@ describe('useDocuments', () => {
     ];
     const { result } = renderHook(() => useDocumentsInternal('u1', { skipList: true }), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mockData} addTypename={true}>
+        <MockedProvider mocks={mockData}>
           {children}
         </MockedProvider>
       ),

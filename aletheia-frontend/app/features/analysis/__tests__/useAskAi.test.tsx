@@ -35,7 +35,7 @@ describe('useAskAi', () => {
   it('should call mutation and return result', async () => {
     const { result } = renderHook(() => useAskAi(), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} addTypename={true}>
+        <MockedProvider mocks={mocks}>
           {children}
         </MockedProvider>
       ),
@@ -55,7 +55,7 @@ describe('useAskAi', () => {
             variables: { userId: 'u1', query: 'test query' },
           },
           result: { data: null },
-        }]} addTypename={false}>
+        }]}>
           {children}
         </MockedProvider>
       ),

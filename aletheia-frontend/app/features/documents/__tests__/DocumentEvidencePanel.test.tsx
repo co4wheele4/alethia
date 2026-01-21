@@ -22,7 +22,7 @@ vi.mock('../../extraction/components/SuggestedExtractionsPanel', () => ({
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mocks={[]}>
       {children}
     </MockedProvider>
   </ThemeProvider>
@@ -34,6 +34,7 @@ const mockChunks = [
     id: 'c1',
     chunkIndex: 0,
     content: 'chunk 0',
+    aiSuggestions: [],
     mentions: [
       { id: 'm1', entity: { id: 'e1', name: 'E1', type: 'Person' } }
     ]
@@ -63,6 +64,7 @@ describe('DocumentEvidencePanel', () => {
       id: `c${i}`,
       chunkIndex: i,
       content: `chunk ${i}`,
+      aiSuggestions: [],
       mentions: [{ id: `m${i}`, entity: { id: `e${i}`, name: `E${i}`, type: 'Person' } }]
     }));
 
@@ -89,7 +91,7 @@ describe('DocumentEvidencePanel', () => {
       <TestWrapper>
         <DocumentEvidencePanel
           document={mockDoc as any}
-          chunks={[{ id: 'c1', chunkIndex: 0, content: 'no mentions', mentions: [] }]}
+          chunks={[{ id: 'c1', chunkIndex: 0, content: 'no mentions', mentions: [], aiSuggestions: [] }]}
         />
       </TestWrapper>
     );
@@ -107,6 +109,7 @@ describe('DocumentEvidencePanel', () => {
               id: 'c1',
               chunkIndex: 0,
               content: 'chunk 0',
+              aiSuggestions: [],
               mentions: [{ id: 'm1', entity: { id: 'e1', name: 'E1', type: '' } }]
             }
           ]}
@@ -122,7 +125,7 @@ describe('DocumentEvidencePanel', () => {
       <TestWrapper>
         <DocumentEvidencePanel
           document={mockDoc as any}
-          chunks={[{ id: 'c1', chunkIndex: 0, content: 'no mentions', mentions: null }]}
+          chunks={[{ id: 'c1', chunkIndex: 0, content: 'no mentions', mentions: null, aiSuggestions: [] } as any]}
         />
       </TestWrapper>
     );

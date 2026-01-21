@@ -38,7 +38,7 @@ describe('useAiQueriesByUser', () => {
   it('should fetch and return queries', async () => {
     const { result } = renderHook(() => useAiQueriesByUser('u1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} addTypename={true}>
+        <MockedProvider mocks={mocks}>
           {children}
         </MockedProvider>
       ),
@@ -57,7 +57,7 @@ describe('useAiQueriesByUser', () => {
   it('should skip if no userId', () => {
     const { result } = renderHook(() => useAiQueriesByUser(null), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]} addTypename={false}>
+        <MockedProvider mocks={[]}>
           {children}
         </MockedProvider>
       ),

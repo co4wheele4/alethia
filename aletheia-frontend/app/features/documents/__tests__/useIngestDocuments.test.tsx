@@ -32,15 +32,15 @@ describe('useIngestDocuments', () => {
   it('should orchestrate ingestion', async () => {
     const { result } = renderHook(() => useIngestDocuments('u1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} addTypename={true}>{children}</MockedProvider>
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
       ),
     });
-    let ingestResult;
+    let ingestResult: { documentId: string; chunksCreated: number } | null = null;
     await act(async () => {
       ingestResult = await result.current.ingestOne({ title: 'Test Doc', text: 'Hello world', source: { kind: 'manual' } });
     });
     await waitFor(() => expect(result.current.progress.state).toBe('done'));
-    expect(ingestResult?.documentId).toBe('d1');
+    expect((ingestResult as any)?.documentId).toBe('d1');
   });
 
   it('should split large text into chunks with paragraph breaks', async () => {
@@ -69,7 +69,7 @@ describe('useIngestDocuments', () => {
             request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
             result: { data: { documentsByUser: [] } },
           }
-        ]} addTypename={true}>{children}</MockedProvider>
+        ]}>{children}</MockedProvider>
       ),
     });
 
@@ -85,7 +85,7 @@ describe('useIngestDocuments', () => {
 
   it('should handle empty title or text error', async () => {
     const { result } = renderHook(() => useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={[]} addTypename={true}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mocks={[]}>{children}</MockedProvider>,
     });
     
     // Empty title
@@ -118,7 +118,7 @@ describe('useIngestDocuments', () => {
       }
     ];
     const { result } = renderHook(() => useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={failMocks} addTypename={true}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mocks={failMocks}>{children}</MockedProvider>,
     });
     
     let ingestResult;
@@ -132,7 +132,7 @@ describe('useIngestDocuments', () => {
 
   it('should handle missing userId', async () => {
     const { result } = renderHook(() => useIngestDocuments(null), {
-      wrapper: ({ children }) => <MockedProvider mocks={[]} addTypename={true}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mocks={[]}>{children}</MockedProvider>,
     });
     await act(async () => { await result.current.ingestOne({ title: 'T', text: 'H', source: { kind: 'manual' } }); });
     expect(result.current.progress.state).toBe('error');
@@ -159,7 +159,7 @@ describe('useIngestDocuments', () => {
       },
     ];
     const { result } = renderHook(() => useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={fileMocks} addTypename={true}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mocks={fileMocks}>{children}</MockedProvider>,
     });
     await act(async () => { await result.current.ingestOne({ title: 'F', text: 'H', source: fileSource }); });
     await waitFor(() => expect(result.current.progress.state).toBe('done'));
@@ -184,7 +184,7 @@ describe('useIngestDocuments', () => {
       },
     ];
     const { result } = renderHook(() => useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={urlMocks} addTypename={true}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mocks={urlMocks}>{children}</MockedProvider>,
     });
     await act(async () => { await result.current.ingestOne({ title: 'U', text: 'H', source: urlSource }); });
     await waitFor(() => expect(result.current.progress.state).toBe('done'));
@@ -213,14 +213,14 @@ describe('useIngestDocuments', () => {
       // @ts-expect-error - mocking missing API
       globalThis.crypto.subtle = { digest: () => Promise.reject(new Error('fail')) };
       const { result } = renderHook(() => useIngestDocuments('u1'), {
-        wrapper: ({ children }) => <MockedProvider mocks={errorMocks} addTypename={true}>{children}</MockedProvider>,
+        wrapper: ({ children }) => <MockedProvider mocks={errorMocks}>{children}</MockedProvider>,
       });
-      let ingestResult;
+      let ingestResult: { documentId: string; chunksCreated: number } | null = null;
       await act(async () => {
         ingestResult = await result.current.ingestOne({ title: 'Test Doc', text: 'Hello world', source: { kind: 'manual' } });
       });
       await waitFor(() => expect(result.current.progress.state).toBe('done'));
-      expect(ingestResult?.documentId).toBe('d1');
+      expect((ingestResult as any)?.documentId).toBe('d1');
     } finally {
       // @ts-expect-error - restoring API
       globalThis.crypto.subtle = originalSubtle;
@@ -247,7 +247,7 @@ describe('useIngestDocuments', () => {
     try {
       vi.stubGlobal('crypto', { subtle: undefined });
       const { result } = renderHook(() => useIngestDocuments('u1'), {
-        wrapper: ({ children }) => <MockedProvider mocks={errorMocks} addTypename={true}>{children}</MockedProvider>,
+        wrapper: ({ children }) => <MockedProvider mocks={errorMocks}>{children}</MockedProvider>,
       });
       await act(async () => {
         await result.current.ingestOne({ title: 'Test Doc', text: 'Hello world', source: { kind: 'manual' } });
@@ -269,7 +269,7 @@ describe('useIngestDocuments', () => {
 
   it('should handle reset', () => {
     const { result } = renderHook(() => useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={[]} addTypename={true}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mocks={[]}>{children}</MockedProvider>,
     });
     act(() => {
       result.current.reset();
@@ -295,7 +295,7 @@ describe('useIngestDocuments', () => {
       },
     ];
     const { result } = renderHook(() => useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={mocksWithSpecial} addTypename={true}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mocks={mocksWithSpecial}>{children}</MockedProvider>,
     });
     await act(async () => {
       await result.current.ingestOne({ title: 'T', text: 'H', source });
@@ -322,7 +322,7 @@ describe('useIngestDocuments', () => {
       },
     ];
     const { result } = renderHook(() => useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={mocksWithNulls} addTypename={true}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mocks={mocksWithNulls}>{children}</MockedProvider>,
     });
     await act(async () => {
       await result.current.ingestOne({ title: 'T', text: 'H', source });

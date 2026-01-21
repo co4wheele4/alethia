@@ -44,7 +44,7 @@ describe('useDocumentIndex', () => {
   it('fetches and computes index items', async () => {
     const { result } = renderHook(() => useDocumentIndex('u1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} addTypename={false}>
+        <MockedProvider mocks={mocks}>
           {children}
         </MockedProvider>
       ),
@@ -62,7 +62,7 @@ describe('useDocumentIndex', () => {
   it('skips query if no userId', () => {
     const { result } = renderHook(() => useDocumentIndex(null), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]} addTypename={false}>
+        <MockedProvider mocks={[]}>
           {children}
         </MockedProvider>
       ),
@@ -79,7 +79,7 @@ describe('useDocumentIndex', () => {
         id: 'd2',
         title: 'Empty',
         createdAt: '2023-01-02T12:00:00Z',
-        chunks: null
+        chunks: null as any
       }
     ];
 
@@ -88,7 +88,7 @@ describe('useDocumentIndex', () => {
         <MockedProvider mocks={[{
           request: { query: DOCUMENT_INDEX_BY_USER_QUERY, variables: { userId: 'u2' } },
           result: { data: { documentsByUser: emptyDocs } }
-        }]} addTypename={false}>
+        }]}>
           {children}
         </MockedProvider>
       ),
@@ -111,7 +111,7 @@ describe('useDocumentIndex', () => {
             __typename: 'DocumentChunk',
             id: 'c1',
             chunkIndex: 0,
-            mentions: null
+            mentions: null as any
           }
         ]
       }
@@ -122,7 +122,7 @@ describe('useDocumentIndex', () => {
         <MockedProvider mocks={[{
           request: { query: DOCUMENT_INDEX_BY_USER_QUERY, variables: { userId: 'u3' } },
           result: { data: { documentsByUser: docsWithNullMentions } }
-        }]} addTypename={false}>
+        }]}>
           {children}
         </MockedProvider>
       ),
@@ -148,7 +148,7 @@ describe('useDocumentIndex', () => {
               {
                 __typename: 'EntityMention',
                 id: 'm1',
-                entity: { __typename: 'Entity', id: null, name: 'E1', type: 'Person', mentionCount: 0 }
+                entity: { __typename: 'Entity', id: null as any, name: 'E1', type: 'Person', mentionCount: 0 }
               }
             ]
           }
@@ -161,7 +161,7 @@ describe('useDocumentIndex', () => {
         <MockedProvider mocks={[{
           request: { query: DOCUMENT_INDEX_BY_USER_QUERY, variables: { userId: 'u4' } },
           result: { data: { documentsByUser: docsWithIncompleteMention } }
-        }]} addTypename={false}>
+        }]}>
           {children}
         </MockedProvider>
       ),

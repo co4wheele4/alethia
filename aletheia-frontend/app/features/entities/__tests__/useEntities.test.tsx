@@ -22,7 +22,7 @@ describe('useEntities hook', () => {
   it('should fetch entities', async () => {
     const { result } = renderHook(() => useEntities(), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} addTypename={true}>
+        <MockedProvider mocks={mocks}>
           {children}
         </MockedProvider>
       ),

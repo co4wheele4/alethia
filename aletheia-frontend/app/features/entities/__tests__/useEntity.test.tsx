@@ -54,7 +54,7 @@ describe('useEntity', () => {
   it('should fetch entity details', async () => {
     const { result } = renderHook(() => useEntity('e1'), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} addTypename={true}>
+        <MockedProvider mocks={mocks}>
           {children}
         </MockedProvider>
       ),
@@ -70,7 +70,7 @@ describe('useEntity', () => {
   it('should skip if no entityId', () => {
     const { result } = renderHook(() => useEntity(null), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={[]} addTypename={true}>
+        <MockedProvider mocks={[]}>
           {children}
         </MockedProvider>
       ),

@@ -250,7 +250,15 @@ describe('OnboardingWizard', () => {
 
   it('should handle URL preview and ingestion', async () => {
     mockIngestOne.mockResolvedValue({ documentId: 'doc-123' });
-    mockImportUrlToText.mockResolvedValue({ text: 'URL content', title: 'URL Title', fetchedUrl: 'https://ex.com' });
+    mockImportUrlToText.mockResolvedValue({
+      text: 'URL content',
+      title: 'URL Title',
+      fetchedUrl: 'https://ex.com',
+      contentType: 'text/html',
+      publisher: null,
+      publishedAtIso: null,
+      author: null,
+    });
 
     render(
       <TestWrapper>
@@ -404,7 +412,15 @@ describe('OnboardingWizard', () => {
   it('should handle ingestion failure states for files and URLs', async () => {
     mockIngestOne.mockResolvedValue(null);
     mockParseFileToText.mockResolvedValue({ text: 'content', title: 'title' });
-    mockImportUrlToText.mockResolvedValue({ text: 'content', title: 'title', fetchedUrl: 'http://a.com' });
+    mockImportUrlToText.mockResolvedValue({
+      text: 'content',
+      title: 'title',
+      fetchedUrl: 'http://a.com',
+      contentType: 'text/html',
+      publisher: null,
+      publishedAtIso: null,
+      author: null,
+    });
 
     const { unmount } = render(<TestWrapper><ThemeProvider><OnboardingWizard /></ThemeProvider></TestWrapper>);
     
@@ -455,7 +471,7 @@ describe('OnboardingWizard', () => {
 
   it('should fallback to filename or URL if both titles are missing in commitIngestion', async () => {
     mockIngestOne.mockResolvedValue({ documentId: 'd1' });
-    mockParseFileToText.mockResolvedValue({ text: 'content', title: null });
+    mockParseFileToText.mockResolvedValue({ text: 'content', title: '' });
     render(
       <TestWrapper>
         <ThemeProvider>
@@ -650,7 +666,15 @@ describe('OnboardingWizard', () => {
   });
 
   it('should handle URL item title update from preview when item title is empty', async () => {
-    mockImportUrlToText.mockResolvedValue({ text: 'c', title: 'Extracted URL Title', fetchedUrl: 'https://ex.com' });
+    mockImportUrlToText.mockResolvedValue({
+      text: 'c',
+      title: 'Extracted URL Title',
+      fetchedUrl: 'https://ex.com',
+      contentType: 'text/html',
+      publisher: null,
+      publishedAtIso: null,
+      author: null,
+    });
     render(<TestWrapper><ThemeProvider><OnboardingWizard /></ThemeProvider></TestWrapper>);
     
     fireEvent.click(screen.getByRole('button', { name: /go to Document intake/i }));
@@ -708,7 +732,15 @@ describe('OnboardingWizard', () => {
 
   it('should fallback to URL if both titles are missing in commitIngestion', async () => {
     mockIngestOne.mockResolvedValue({ documentId: 'd1' });
-    mockImportUrlToText.mockResolvedValue({ text: 'content', title: null, fetchedUrl: 'https://ex.com' });
+    mockImportUrlToText.mockResolvedValue({
+      text: 'content',
+      title: '',
+      fetchedUrl: 'https://ex.com',
+      contentType: 'text/html',
+      publisher: null,
+      publishedAtIso: null,
+      author: null,
+    });
     render(<TestWrapper><ThemeProvider><OnboardingWizard /></ThemeProvider></TestWrapper>);
     
     fireEvent.click(screen.getByRole('button', { name: /go to Document intake/i }));
@@ -760,7 +792,15 @@ describe('OnboardingWizard', () => {
 
   it('should handle URL preview with missing text and real Error objects', async () => {
     // Test imported.text ?? '' branches (lines 258, 260)
-    mockImportUrlToText.mockResolvedValue({ text: null as any, title: 'No Text', fetchedUrl: 'https://null.com' });
+    mockImportUrlToText.mockResolvedValue({
+      text: null as any,
+      title: 'No Text',
+      fetchedUrl: 'https://null.com',
+      contentType: 'text/html',
+      publisher: null,
+      publishedAtIso: null,
+      author: null,
+    });
     render(<TestWrapper><ThemeProvider><OnboardingWizard /></ThemeProvider></TestWrapper>);
     
     fireEvent.click(screen.getByRole('button', { name: /go to Document intake/i }));
@@ -787,7 +827,15 @@ describe('OnboardingWizard', () => {
     });
 
     // For commit catch
-    mockImportUrlToText.mockResolvedValue({ text: 'c', title: 't', fetchedUrl: 'https://ex.com' });
+    mockImportUrlToText.mockResolvedValue({
+      text: 'c',
+      title: 't',
+      fetchedUrl: 'https://ex.com',
+      contentType: 'text/html',
+      publisher: null,
+      publishedAtIso: null,
+      author: null,
+    });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /Fetch & preview/i }));
     });

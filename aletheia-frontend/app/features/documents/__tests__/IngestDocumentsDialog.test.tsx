@@ -561,7 +561,6 @@ describe('IngestDocumentsDialog', () => {
 
   it('handles missing crypto.subtle in sha256HexOfFile', async () => {
     const originalSubtle = globalThis.crypto.subtle;
-    // @ts-expect-error - testing missing API
     delete (globalThis.crypto as { subtle?: unknown }).subtle;
 
     mockParseFileToText.mockResolvedValue({ title: 'Parsed File', text: 'Parsed content' });
@@ -628,7 +627,6 @@ describe('IngestDocumentsDialog', () => {
   });
 
   it('handles sha256HexOfFile rejection', async () => {
-    // @ts-expect-error - testing hash failure
     vi.spyOn(globalThis.crypto.subtle, 'digest').mockRejectedValue(new Error('Hash fail'));
 
     mockParseFileToText.mockResolvedValue({ title: 'Parsed File', text: 'Parsed content' });

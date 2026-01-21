@@ -161,7 +161,8 @@ describe('fileParsers', () => {
     });
 
     it('handles DOCX with null value', async () => {
-      mammoth.extractRawText.mockResolvedValueOnce({ value: null as any, messages: [] });
+      const mockExtractRawText = mammoth.extractRawText as unknown as ReturnType<typeof vi.fn>;
+      mockExtractRawText.mockResolvedValueOnce({ value: null as any, messages: [] });
       const file = new File([new ArrayBuffer(10)], 'test.docx');
       const result = await parseFileToText(file);
       expect(result.text).toBe('');
