@@ -367,12 +367,12 @@ async function main() {
     },
     {
       name: 'Frontend Unit Tests',
-      command: 'npm run test:cov',
+      command: 'npm run test:unit:cov',
       cwd: frontendDir,
     },
     {
       name: 'Frontend E2E Tests',
-      command: 'npm run test:e2e',
+      command: 'npx playwright test',
       cwd: frontendDir,
     },
     {
