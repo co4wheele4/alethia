@@ -29,6 +29,7 @@ const results = {
   'Frontend Unit Tests': { status: 'pending', output: '', duration: 0, coverage: null },
   'Frontend E2E Tests': { status: 'pending', output: '', duration: 0, coverage: null },
   'Backend Linting': { status: 'pending', output: '', duration: 0, coverage: null },
+  'Backend Type Checking': { status: 'pending', output: '', duration: 0, coverage: null },
   'Backend Unit Tests': { status: 'pending', output: '', duration: 0, coverage: null },
   'Backend E2E Tests': { status: 'pending', output: '', duration: 0, coverage: null },
 };
@@ -377,6 +378,11 @@ async function main() {
     {
       name: 'Backend Linting',
       command: 'npm run lint',
+      cwd: backendDir,
+    },
+    {
+      name: 'Backend Type Checking',
+      command: 'npm run type-check',
       cwd: backendDir,
     },
     {
