@@ -9,7 +9,7 @@
  */
 'use client';
 
-import { AppShell, ContentSurface } from '../components/layout';
+import { AppShell } from '../components/layout';
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
@@ -45,11 +45,9 @@ function DocumentsPageInner() {
 export default function DocumentsPage() {
   return (
     <AppShell title="Documents">
-      <ContentSurface>
-        <Suspense fallback={null}>
-          <DocumentsPageInner />
-        </Suspense>
-      </ContentSurface>
+      <Suspense fallback={null}>
+        <DocumentsPageInner />
+      </Suspense>
     </AppShell>
   );
 }

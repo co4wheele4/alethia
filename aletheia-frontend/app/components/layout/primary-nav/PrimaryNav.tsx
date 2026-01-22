@@ -10,6 +10,7 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
+import { alpha, lighten } from '@mui/material/styles';
 
 export type PrimaryNavItem = {
   href: string;
@@ -41,7 +42,9 @@ export function PrimaryNav(props: PrimaryNavProps) {
         display: variant === 'desktop' ? { xs: 'none', md: 'flex' } : 'flex',
         flexDirection: 'column',
         height: '100%',
-        bgcolor: 'background.paper',
+        // Translucent surface: ~20% lighter than the main background, so the global bg
+        // (including the image) remains visible while the nav stays readable.
+        bgcolor: (theme) => alpha(lighten(theme.palette.background.default, 0.2), 0.72),
       }}
     >
       <Box sx={{ px: 2, py: 2 }}>
