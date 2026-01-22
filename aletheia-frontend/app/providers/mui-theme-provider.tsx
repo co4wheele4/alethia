@@ -19,7 +19,7 @@ function getEmotionCache() {
 }
 
 function getTheme(mode: 'light' | 'dark') {
-  return createTheme({
+  const theme = createTheme({
     palette: {
       mode,
       primary: {
@@ -29,7 +29,43 @@ function getTheme(mode: 'light' | 'dark') {
         main: '#dc2626', // red-600
       },
     },
+    components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          html: {
+            // Let MUI own the base background so it matches the theme toggle.
+            backgroundColor: mode === 'dark' ? '#0a0a0a' : '#ffffff',
+            minHeight: '100vh',
+          },
+          body: {
+            // Make body transparent so the background image layer is visible.
+            backgroundColor: 'transparent',
+            minHeight: '100vh',
+            position: 'relative',
+          },
+          // Ensure app content stays above the background layer.
+          'body > *': {
+            position: 'relative',
+            zIndex: 1,
+          },
+          // Global background image layer (does not affect content opacity)
+          'body::before': {
+            content: '""',
+            position: 'fixed',
+            inset: 0,
+            backgroundImage: 'url("/images/aletheiabg.png")',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            backgroundSize: 'cover',
+            opacity: 0.3,
+            pointerEvents: 'none',
+            zIndex: 0,
+          },
+        },
+      },
+    },
   });
+  return theme;
 }
 
 function MuiThemeProviderInner({

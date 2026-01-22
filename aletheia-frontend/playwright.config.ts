@@ -95,10 +95,13 @@ export default defineConfig({
     // Use production server for Playwright stability on Windows.
     // (Dev server can occasionally crash/hang under Playwright load.)
     command: 'npm run build && npm run start',
-    // Ensure MSW is authoritative in integration tests.
+    // IMPORTANT:
+    // Playwright E2E tests in this repo use `page.route` GraphQL interception (see `e2e/helpers/msw-handlers.ts`).
+    // Therefore we must NOT enable the browser MSW service worker here, otherwise it will intercept `/graphql`
+    // before Playwright can, leading to unhandled-operation 500s and non-deterministic behavior.
     env: {
       ...process.env,
-      NEXT_PUBLIC_MSW: 'enabled',
+      NEXT_PUBLIC_MSW: 'disabled',
     },
     url: 'http://127.0.0.1:3030',
     reuseExistingServer: !process.env.CI,

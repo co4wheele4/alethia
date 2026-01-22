@@ -1,102 +1,54 @@
 /**
- * Documents Index (read-only).
+ * Documents
  *
- * Phase constraint: no creation, no ingestion, no deletion. This route exists to answer:
- * "What data exists and where did it come from?"
+ * Production route that hosts the existing Documents dashboard UI:
+ * - list + filter
+ * - ingestion entrypoint
+ * - deletion
+ * - inspection (chunks + mentions)
  */
 'use client';
 
-import Link from 'next/link';
-import { useQuery } from '@apollo/client/react';
-import { Alert, Box, LinearProgress, List, ListItemButton, ListItemText, Typography } from '@mui/material';
-
 import { AppShell, ContentSurface } from '../components/layout';
-import { LIST_DOCUMENTS_QUERY } from '@/src/graphql';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 
-type ListDocumentsResult = {
-  documents: Array<{
-    id: string;
-    title: string;
-    createdAt: string;
-    sourceType: string | null;
-    sourceLabel: string | null;
-    source: { requestedUrl?: string | null; fetchedUrl?: string | null; filename?: string | null } | null;
-    chunks: Array<{ id: string }>;
-  }>;
-};
+import { useAuth } from '../features/auth/hooks/useAuth';
+import { getUserIdFromToken } from '../features/auth/utils/jwt';
+import { DocumentsDashboard } from '../features/documents/components/DocumentsDashboard';
 
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toISOString().slice(0, 10);
-}
+function DocumentsPageInner() {
+  const { token } = useAuth();
+  const userId = getUserIdFromToken(token);
 
-function statusOf(d: ListDocumentsResult['documents'][number]) {
-  if (!d.source) return 'UNSOURCED';
-  if (d.chunks.length === 0) return 'EMPTY';
-  return 'READY';
+  const params = useSearchParams();
+
+  const initialIngestOpen = params.get('ingest') === '1';
+  const initialSelectedId = params.get('documentId');
+  const initialChunkIndex = (() => {
+    const raw = params.get('chunk');
+    if (!raw) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  })();
+
+  return (
+    <DocumentsDashboard
+      userId={userId}
+      initialIngestOpen={initialIngestOpen}
+      initialSelectedId={initialSelectedId}
+      initialChunkIndex={initialChunkIndex}
+    />
+  );
 }
 
 export default function DocumentsPage() {
-  const { data, loading, error } = useQuery<ListDocumentsResult>(LIST_DOCUMENTS_QUERY);
-  const documents = data?.documents ?? [];
-
   return (
     <AppShell title="Documents">
       <ContentSurface>
-        <Typography variant="h6" gutterBottom>
-          Documents
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Browse ingested documents and inspect provenance. This is a read-only trust surface.
-        </Typography>
-
-        {loading ? (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Loading documents…
-            </Typography>
-            <LinearProgress />
-          </Box>
-        ) : null}
-
-        {error ? (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error.message}
-          </Alert>
-        ) : null}
-
-        {!loading && !error && documents.length === 0 ? (
-          <Alert severity="info">No documents found.</Alert>
-        ) : null}
-
-        {!loading && !error && documents.length > 0 ? (
-          <List dense aria-label="documents-list">
-            {documents
-              .slice()
-              .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-              .map((d) => {
-                const provenanceHint =
-                  d.source?.requestedUrl ?? d.source?.fetchedUrl ?? d.source?.filename ?? d.sourceLabel ?? 'unknown';
-                return (
-                  <ListItemButton
-                    key={d.id}
-                    component={Link}
-                    href={`/documents/${d.id}`}
-                    sx={{ borderRadius: 1, mb: 0.5 }}
-                  >
-                    <ListItemText
-                      primary={d.title}
-                      secondary={[
-                        `Source: ${d.sourceType ?? 'UNKNOWN'} • ${provenanceHint}`,
-                        `Created: ${formatDate(d.createdAt)} • Status: ${statusOf(d)} • Chunks: ${d.chunks.length}`,
-                      ].join('\n')}
-                    />
-                  </ListItemButton>
-                );
-              })}
-          </List>
-        ) : null}
+        <Suspense fallback={null}>
+          <DocumentsPageInner />
+        </Suspense>
       </ContentSurface>
     </AppShell>
   );

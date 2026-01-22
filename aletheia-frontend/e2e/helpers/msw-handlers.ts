@@ -15,6 +15,20 @@ function base64UrlEncode(input: string): string {
   return Buffer.from(input).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
+function varString(vars: Record<string, unknown> | undefined, key: string): string | undefined {
+  const v = vars?.[key];
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' && Number.isFinite(v)) return String(v);
+  return undefined;
+}
+
+function varNumber(vars: Record<string, unknown> | undefined, key: string): number | undefined {
+  const v = vars?.[key];
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  if (typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v))) return Number(v);
+  return undefined;
+}
+
 function createMockJwt(payload: Record<string, unknown>): string {
   const header = { alg: 'HS256', typ: 'JWT' };
   const encodedHeader = base64UrlEncode(JSON.stringify(header));
@@ -60,29 +74,47 @@ function assertNoConfidence(value: unknown, path = 'root', seen = new Set<object
  */
 export async function setupGraphQLMocks(route: Route) {
   const url = route.request().url();
+  const method = route.request().method();
   
   // Only intercept GraphQL requests
-  if (!url.includes('/graphql') || route.request().method() !== 'POST') {
+  if (!url.includes('/graphql') || (method !== 'POST' && method !== 'GET')) {
     await route.continue();
     return;
   }
 
   try {
-    // Get the request body
-    const body = await route.request().postData();
-    
-    if (!body) {
-      await route.fulfill({
-        status: 400,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          errors: [{ message: 'Invalid request body', extensions: { code: 'BAD_USER_INPUT' } }],
-        }),
-      });
-      return;
+    let parsedBody: {
+      operationName?: string;
+      query?: string;
+      variables?: Record<string, unknown>;
+    };
+
+    if (method === 'GET') {
+      const u = new URL(url);
+      const query = u.searchParams.get('query') ?? undefined;
+      const operationName = u.searchParams.get('operationName') ?? undefined;
+      const variablesRaw = u.searchParams.get('variables');
+      parsedBody = {
+        query,
+        operationName,
+        variables: variablesRaw ? (JSON.parse(variablesRaw) as Record<string, unknown>) : undefined,
+      };
+    } else {
+      // POST
+      const body = await route.request().postData();
+      if (!body) {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            errors: [{ message: 'Invalid request body', extensions: { code: 'BAD_USER_INPUT' } }],
+          }),
+        });
+        return;
+      }
+      parsedBody = JSON.parse(body);
     }
 
-    const parsedBody = JSON.parse(body);
     // Extract operation name from query string if not provided
     let operationName = parsedBody.operationName;
     if (!operationName && parsedBody.query) {
@@ -106,7 +138,8 @@ export async function setupGraphQLMocks(route: Route) {
         break;
 
       case 'Login': {
-        const { email, password } = parsedBody.variables || {};
+        const email = varString(parsedBody.variables, 'email');
+        const password = varString(parsedBody.variables, 'password');
         if (email === 'test@example.com' && password === 'password123') {
           // Reset per-login to keep tests isolated/deterministic
           documentsStore = [
@@ -189,7 +222,7 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'Register': {
-        const { email } = parsedBody.variables || {};
+        const email = varString(parsedBody.variables, 'email');
         if (email === 'exists@example.com') {
           response = {
             status: 400,
@@ -214,7 +247,7 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'ChangePassword': {
-        const { currentPassword } = parsedBody.variables || {};
+        const currentPassword = varString(parsedBody.variables, 'currentPassword');
         if (currentPassword === 'wrong-password') {
           response = {
             status: 401,
@@ -239,7 +272,7 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'ForgotPassword': {
-        const { email } = parsedBody.variables || {};
+        const email = varString(parsedBody.variables, 'email');
         if (email === 'notfound@example.com') {
           response = {
             status: 404,
@@ -275,6 +308,51 @@ export async function setupGraphQLMocks(route: Route) {
         break;
       }
 
+      case 'ListDocuments': {
+        response = {
+          status: 200,
+          body: {
+            data: {
+              documents: documentsStore.map((d) => {
+                const chunks = chunksStore[d.id] ?? [];
+                const sourceId = `source-${d.id}`;
+                return {
+                  __typename: 'Document',
+                  id: d.id,
+                  title: d.title,
+                  createdAt: d.createdAt,
+                  sourceType: 'URL',
+                  sourceLabel: 'example.com',
+                  source: {
+                    __typename: 'DocumentSource',
+                    id: sourceId,
+                    kind: 'URL',
+                    ingestedAt: d.createdAt,
+                    accessedAt: d.createdAt,
+                    publishedAt: null,
+                    author: null,
+                    publisher: null,
+                    filename: null,
+                    mimeType: null,
+                    sizeBytes: null,
+                    requestedUrl: 'https://example.com/getting-started',
+                    fetchedUrl: 'https://example.com/getting-started',
+                    contentSha256: null,
+                    fileSha256: null,
+                    lastModifiedMs: null,
+                  },
+                  chunks: chunks.map((c) => ({
+                    __typename: 'DocumentChunk',
+                    id: c.id,
+                  })),
+                };
+              }),
+            },
+          },
+        };
+        break;
+      }
+
       case 'DocumentIndexByUser': {
         // Documents index used by the evidence-first Documents library UI.
         response = {
@@ -300,7 +378,7 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'Document': {
-        const { id } = parsedBody.variables || {};
+        const id = varString(parsedBody.variables, 'id');
         const doc = documentsStore.find((d) => d.id === id);
         response = {
           status: 200,
@@ -321,7 +399,7 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'ChunksByDocument': {
-        const { documentId } = parsedBody.variables || {};
+        const documentId = varString(parsedBody.variables, 'documentId') ?? '';
         response = {
           status: 200,
           body: {
@@ -340,7 +418,7 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'Chunk0ByDocument': {
-        const { documentId } = parsedBody.variables || {};
+        const documentId = varString(parsedBody.variables, 'documentId') ?? '';
         const doc = documentsStore.find((d) => d.id === documentId);
         const chunk0 = (chunksStore[documentId] ?? []).find((c) => c.chunkIndex === 0) ?? null;
         response = {
@@ -388,7 +466,7 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'Entity': {
-        const { id } = parsedBody.variables || {};
+        const id = varString(parsedBody.variables, 'id');
         response = {
           status: 200,
           body: {
@@ -401,7 +479,7 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'CreateDocument': {
-        const { title } = parsedBody.variables || {};
+        const title = varString(parsedBody.variables, 'title') ?? '';
         const newDoc = {
           id: `doc-${documentsStore.length + 1}`,
           title,
@@ -421,15 +499,16 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'CreateChunk': {
-        const { documentId, chunkIndex, content } = parsedBody.variables || {};
-        const docExists = documentsStore.some((d) => d.id === documentId);
-        if (!docExists) {
+        const documentId = varString(parsedBody.variables, 'documentId');
+        const chunkIndex = varNumber(parsedBody.variables, 'chunkIndex') ?? 0;
+        const content = varString(parsedBody.variables, 'content') ?? '';
+        if (!documentId || !documentsStore.some((d) => d.id === documentId)) {
           response = {
             status: 400,
             body: {
               errors: [
                 {
-                  message: `Document not found: ${String(documentId)}`,
+                  message: `Document not found: ${String(documentId ?? '')}`,
                   extensions: { code: 'BAD_USER_INPUT' },
                 },
               ],
@@ -437,12 +516,13 @@ export async function setupGraphQLMocks(route: Route) {
           };
           break;
         }
+        const docId = documentId;
         const newChunk = {
-          id: `chunk-${String(documentId)}-${String(chunkIndex)}`,
-          chunkIndex: Number(chunkIndex) || 0,
-          content: String(content ?? ''),
+          id: `chunk-${String(docId)}-${String(chunkIndex)}`,
+          chunkIndex,
+          content,
         };
-        chunksStore[documentId] = [...(chunksStore[documentId] ?? []), newChunk].sort(
+        chunksStore[docId] = [...(chunksStore[docId] ?? []), newChunk].sort(
           (a, b) => a.chunkIndex - b.chunkIndex
         );
         response = {
@@ -454,7 +534,7 @@ export async function setupGraphQLMocks(route: Route) {
                 id: newChunk.id,
                 chunkIndex: newChunk.chunkIndex,
                 content: newChunk.content,
-                documentId: String(documentId),
+                documentId: String(docId),
               },
             },
           },
@@ -463,7 +543,7 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'DeleteDocument': {
-        const { id } = parsedBody.variables || {};
+        const id = varString(parsedBody.variables, 'id') ?? '';
         documentsStore = documentsStore.filter((d) => d.id !== id);
         delete chunksStore[id];
         response = {
@@ -478,8 +558,57 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       default:
-        // Unknown operation, continue with actual request
-        await route.continue();
+        // Some clients omit `operationName` in the request body. Fall back to a simple query-shape match
+        // for the small set of operations used in our E2E suite.
+        if (typeof parsedBody.query === 'string' && parsedBody.query.includes('documentsByUser')) {
+          const wantsChunks = parsedBody.query.includes('chunks {') || parsedBody.query.includes('chunks{');
+          if (wantsChunks) {
+            response = {
+              status: 200,
+              body: {
+                data: {
+                  documentsByUser: documentsStore.map((d) => ({
+                    __typename: 'Document',
+                    id: d.id,
+                    title: d.title,
+                    createdAt: d.createdAt,
+                    chunks: (chunksStore[d.id] ?? []).map((c) => ({
+                      __typename: 'DocumentChunk',
+                      id: c.id,
+                      chunkIndex: c.chunkIndex,
+                      mentions: [],
+                    })),
+                  })),
+                },
+              },
+            };
+            break;
+          }
+
+          response = {
+            status: 200,
+            body: {
+              data: {
+                documentsByUser: documentsStore,
+              },
+            },
+          };
+          break;
+        }
+
+        // Unknown operation: fail loudly to preserve the "no real backend" contract in E2E.
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            errors: [
+              {
+                message: `Unhandled GraphQL operation in E2E mocks: ${String(operationName ?? '(missing operationName)')}`,
+                extensions: { code: 'E2E_UNHANDLED_OPERATION' },
+              },
+            ],
+          }),
+        });
         return;
     }
 
