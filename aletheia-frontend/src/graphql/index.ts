@@ -14,6 +14,7 @@ export { ENTITY_RELATIONSHIP_CONTRACT_FRAGMENT } from './fragments/entityRelatio
 
 export { LIST_DOCUMENTS_QUERY } from './queries/listDocuments.query';
 export { GET_DOCUMENT_BY_ID_QUERY } from './queries/getDocumentById.query';
+export { GET_DOCUMENT_INTELLIGENCE_QUERY } from './queries/getDocumentIntelligence.query';
 export { DOCUMENTS_INDEX_QUERY } from './queries/documentsIndex.query';
 export { LIST_ENTITIES_QUERY } from './queries/listEntities.query';
 export { LIST_RELATIONSHIPS_QUERY } from './queries/listRelationships.query';

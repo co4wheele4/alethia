@@ -15,8 +15,6 @@ import { DocumentDetailsPane } from './DocumentDetailsPane';
 import { IngestDocumentsDialog } from './IngestDocumentsDialog';
 import { DocumentIndexQueryContainer } from './DocumentIndexQueryContainer';
 import { DeleteDocumentMutationContainer } from './DeleteDocumentMutationContainer';
-import { SelectedDocumentHeaderQueryContainer } from './SelectedDocumentHeaderQueryContainer';
-import { SelectedDocumentChunksQueryContainer } from './SelectedDocumentChunksQueryContainer';
 
 export function DocumentsDashboard({
   userId,
@@ -84,22 +82,7 @@ export function DocumentsDashboard({
                     </Alert>
                   ) : null}
 
-                  <SelectedDocumentHeaderQueryContainer documentId={selectedId}>
-                    {({ document, loading: docLoading, error: docError }) => (
-                      <SelectedDocumentChunksQueryContainer documentId={selectedId}>
-                        {({ chunks, loading: chunksLoading, error: chunksError }) => (
-                          <DocumentDetailsPane
-                            selectedId={selectedId}
-                            document={document}
-                            chunks={chunks}
-                            loading={docLoading || chunksLoading}
-                            error={docError ?? chunksError}
-                            initialChunkIndex={initialChunkIndex ?? null}
-                          />
-                        )}
-                      </SelectedDocumentChunksQueryContainer>
-                    )}
-                  </SelectedDocumentHeaderQueryContainer>
+                  <DocumentDetailsPane selectedId={selectedId} initialChunkIndex={initialChunkIndex ?? null} />
                 </Box>
 
                 <IngestDocumentsDialog

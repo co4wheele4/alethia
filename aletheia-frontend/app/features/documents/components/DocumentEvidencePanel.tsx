@@ -15,7 +15,6 @@ import { Alert, Box, Button, Divider, List, ListItemButton, ListItemText, Typogr
 
 import type { DocumentChunkItem, DocumentHeader } from '../hooks/useDocumentChunks';
 import { DocumentMetadataPanel } from './DocumentMetadataPanel';
-import { SuggestedExtractionsPanel } from '../../extraction/components/SuggestedExtractionsPanel';
 
 type EntityIndexRow = {
   id: string;
@@ -48,7 +47,7 @@ export function DocumentEvidencePanel(props: {
   chunks: DocumentChunkItem[];
   selectedChunk?: DocumentChunkItem | null;
 }) {
-  const { document, chunks, selectedChunk } = props;
+  const { document, chunks } = props;
 
   const entities = useMemo(() => buildEntityIndex(chunks), [chunks]);
   const [visibleCount, setVisibleCount] = useState(50);
@@ -77,7 +76,7 @@ export function DocumentEvidencePanel(props: {
               <ListItemButton key={e.id} component={Link} href={`/entities/${e.id}`} sx={{ borderRadius: 1 }}>
                 <ListItemText
                   primary={e.name}
-                  secondary={`Type: ${e.type || 'unknown'} • Mentions: ${e.mentionCount}`}
+                  secondary={`Type: ${e.type ? e.type : '(missing)'} • Mentions: ${e.mentionCount}`}
                   secondaryTypographyProps={{ variant: 'caption' }}
                 />
               </ListItemButton>
@@ -100,15 +99,7 @@ export function DocumentEvidencePanel(props: {
         </Box>
       </Box>
 
-      {selectedChunk && (
-        <>
-          <Divider />
-          <SuggestedExtractionsPanel
-            chunkId={selectedChunk.id}
-            suggestions={selectedChunk.aiSuggestions ?? []}
-          />
-        </>
-      )}
+      {/* AI suggestion/extraction flows are intentionally not implemented in the schema-faithful, read-only UI. */}
     </Box>
   );
 }

@@ -141,7 +141,6 @@ function makeChunk(idx: number, content: string): DocumentChunkItem {
     chunkIndex: idx,
     content,
     mentions: [],
-    aiSuggestions: [],
   }
 }
 

@@ -27,31 +27,37 @@ export default function DashboardPage() {
           alignItems: 'flex-start',
           justifyContent: 'center',
           px: 2,
-          py: 6,
+          py: { xs: 3, sm: 4 },
         }}
       >
-        <Box sx={{ maxWidth: 720, width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Typography variant="h5">Sources precede conclusions.</Typography>
+        <Box sx={{ maxWidth: 920, width: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Typography variant="h6">Sources precede conclusions.</Typography>
           <Typography variant="body2" color="text.secondary">
             Start by inspecting documents as immutable evidence. Uncertainty stays visible; nothing is asserted without
             provenance.
           </Typography>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-            <Button component={Link} href="/documents" variant="contained" sx={{ textTransform: 'none' }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 0.5 }}>
+            <Button component={Link} href="/documents" variant="contained" size="small" sx={{ textTransform: 'none' }}>
               View documents
             </Button>
-            <Button component={Link} href="/documents?ingest=1" variant="outlined" sx={{ textTransform: 'none' }}>
+            <Button
+              component={Link}
+              href="/documents?ingest=1"
+              variant="outlined"
+              size="small"
+              sx={{ textTransform: 'none' }}
+            >
               Add source
             </Button>
-            <Button component={Link} href="/onboarding" variant="text" sx={{ textTransform: 'none' }}>
+            <Button component={Link} href="/onboarding" variant="text" size="small" sx={{ textTransform: 'none' }}>
               Onboarding wizard
             </Button>
           </Box>
 
           <Box
             sx={{
-              mt: 3,
+              mt: 2,
               border: '1px solid',
               borderColor: 'divider',
               borderRadius: 1,
@@ -60,7 +66,7 @@ export default function DashboardPage() {
               bgcolor: (theme) => alpha(lighten(theme.palette.background.default, 0.2), 0.72),
             }}
           >
-            <Box sx={{ px: 2, py: 2 }}>
+            <Box sx={{ px: 2, py: 1.75 }}>
               <Typography variant="subtitle2" sx={{ letterSpacing: 0.4 }}>
                 What Aletheia is
               </Typography>
@@ -71,7 +77,7 @@ export default function DashboardPage() {
 
             <Divider />
 
-            <Box sx={{ p: { xs: 3, sm: 4 } }}>
+            <Box sx={{ p: { xs: 2.5, sm: 3 } }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Aletheia is an evidence-first workspace for understanding information at scale without losing the
                 original source. It helps you move from “someone said something” to “here is the exact text, where it

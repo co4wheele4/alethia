@@ -18,7 +18,17 @@ export function Header(props: HeaderProps) {
   const { title, headerActions, showMobileNavButton, onOpenMobileNav, onLogout } = props;
 
   return (
-    <AppBar position="static" elevation={0}>
+    <AppBar
+      position="fixed"
+      elevation={0}
+      sx={{
+        // Keep header clickable above Drawer/Backdrop.
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: (theme) => theme.zIndex.modal + 10,
+      }}
+    >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
           {showMobileNavButton ? (

@@ -45,6 +45,8 @@ let chunksStore: Record<
 
 let entitiesStore: Array<{ id: string; name: string; type: string; mentionCount: number }> = [];
 let entityDetailStore: Record<string, Record<string, unknown> | null> = {};
+let mentionsStore: Array<Record<string, unknown>> = [];
+let relationshipsStore: Array<Record<string, unknown>> = [];
 
 function assertNoConfidence(value: unknown, path = 'root', seen = new Set<object>()) {
   if (value === null || value === undefined) return;
@@ -61,8 +63,12 @@ function assertNoConfidence(value: unknown, path = 'root', seen = new Set<object
   seen.add(value as object);
 
   for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-    if (k.toLowerCase() === 'confidence') {
-      throw new Error(`[E2E contract] Unexpected field "confidence" at ${path}.${k}`);
+    const key = k.toLowerCase();
+    if (key.includes('confidence')) {
+      throw new Error(`[E2E contract] Unexpected confidence field "${k}" at ${path}.${k}`);
+    }
+    if (key.includes('probability')) {
+      throw new Error(`[E2E contract] Unexpected probability field "${k}" at ${path}.${k}`);
     }
     assertNoConfidence(v, `${path}.${k}`, seen);
   }
@@ -141,9 +147,11 @@ export async function setupGraphQLMocks(route: Route) {
         const email = varString(parsedBody.variables, 'email');
         const password = varString(parsedBody.variables, 'password');
         if (email === 'test@example.com' && password === 'password123') {
+          const createdAt = new Date('2026-01-01T00:00:00Z').toISOString();
+          const sourceId = 'source-doc-1';
           // Reset per-login to keep tests isolated/deterministic
           documentsStore = [
-            { id: 'doc-1', title: 'Getting Started', createdAt: new Date('2026-01-01T00:00:00Z').toISOString() },
+            { id: 'doc-1', title: 'Getting Started', createdAt },
           ];
           chunksStore = {
             'doc-1': [
@@ -162,25 +170,39 @@ export async function setupGraphQLMocks(route: Route) {
 
           entitiesStore = [
             { id: 'entity-1', name: 'Test Entity', type: 'TestType', mentionCount: 1 },
+            { id: 'entity-2', name: 'Other Entity', type: 'TestType', mentionCount: 0 },
           ];
-          entityDetailStore = {
-            'entity-1': {
-              __typename: 'Entity',
-              id: 'entity-1',
-              name: 'Test Entity',
-              type: 'TestType',
-              mentionCount: 1,
-              outgoing: [],
-              incoming: [],
-              mentions: [
+
+          mentionsStore = [
+            {
+              __typename: 'EntityMention',
+              id: 'mention-1',
+              entityId: 'entity-1',
+              chunkId: 'chunk-doc-1-1',
+              startOffset: 20,
+              endOffset: 31,
+              excerpt: 'Test Entity',
+              entity: { __typename: 'Entity', id: 'entity-1', name: 'Test Entity', type: 'TestType', mentionCount: 1 },
+            },
+          ];
+
+          relationshipsStore = [
+            {
+              __typename: 'EntityRelationship',
+              id: 'rel-1',
+              relation: 'MENTIONS',
+              from: { __typename: 'Entity', id: 'entity-1', name: 'Test Entity', type: 'TestType', mentionCount: 1 },
+              to: { __typename: 'Entity', id: 'entity-2', name: 'Other Entity', type: 'TestType', mentionCount: 0 },
+              evidence: [
                 {
-                  __typename: 'EntityMention',
-                  id: 'mention-1',
-                  entityId: 'entity-1',
+                  __typename: 'EntityRelationshipEvidence',
+                  id: 'ev-1',
+                  kind: 'TEXT_SPAN',
+                  createdAt,
                   chunkId: 'chunk-doc-1-1',
-                  startOffset: 17,
-                  endOffset: 28,
-                  excerpt: 'Test Entity',
+                  startOffset: 20,
+                  endOffset: 31,
+                  quotedText: 'Test Entity',
                   chunk: {
                     __typename: 'DocumentChunk',
                     id: 'chunk-doc-1-1',
@@ -191,11 +213,81 @@ export async function setupGraphQLMocks(route: Route) {
                       __typename: 'Document',
                       id: 'doc-1',
                       title: 'Getting Started',
-                      createdAt: new Date('2026-01-01T00:00:00Z').toISOString(),
+                      createdAt,
+                      sourceType: 'URL',
+                      sourceLabel: 'example.com',
+                      source: {
+                        __typename: 'DocumentSource',
+                        id: sourceId,
+                        documentId: 'doc-1',
+                        kind: 'URL',
+                        ingestedAt: createdAt,
+                        accessedAt: createdAt,
+                        publishedAt: null,
+                        author: null,
+                        publisher: null,
+                        filename: null,
+                        mimeType: null,
+                        contentType: null,
+                        sizeBytes: null,
+                        requestedUrl: 'https://example.com/getting-started',
+                        fetchedUrl: 'https://example.com/getting-started',
+                        contentSha256: null,
+                        fileSha256: null,
+                        lastModifiedMs: null,
+                      },
+                    },
+                  },
+                  mentionLinks: [
+                    {
+                      __typename: 'EntityRelationshipEvidenceMention',
+                      evidenceId: 'ev-1',
+                      mentionId: 'mention-1',
+                      mention: mentionsStore[0],
+                    },
+                  ],
+                },
+              ],
+            },
+          ];
+
+          entityDetailStore = {
+            'entity-1': {
+              __typename: 'Entity',
+              id: 'entity-1',
+              name: 'Test Entity',
+              type: 'TestType',
+              mentionCount: 1,
+              outgoing: [relationshipsStore[0]],
+              incoming: [],
+              mentions: [
+                {
+                  ...mentionsStore[0],
+                  chunk: {
+                    __typename: 'DocumentChunk',
+                    id: 'chunk-doc-1-1',
+                    chunkIndex: 1,
+                    content: 'This chunk mentions Test Entity.',
+                    documentId: 'doc-1',
+                    document: {
+                      __typename: 'Document',
+                      id: 'doc-1',
+                      title: 'Getting Started',
+                      createdAt,
                     },
                   },
                 },
               ],
+            },
+            'entity-2': {
+              __typename: 'Entity',
+              id: 'entity-2',
+              name: 'Other Entity',
+              type: 'TestType',
+              mentionCount: 0,
+              outgoing: [],
+              incoming: [relationshipsStore[0]],
+              mentions: [],
             },
           };
 
@@ -326,6 +418,7 @@ export async function setupGraphQLMocks(route: Route) {
                   source: {
                     __typename: 'DocumentSource',
                     id: sourceId,
+                    documentId: d.id,
                     kind: 'URL',
                     ingestedAt: d.createdAt,
                     accessedAt: d.createdAt,
@@ -334,6 +427,7 @@ export async function setupGraphQLMocks(route: Route) {
                     publisher: null,
                     filename: null,
                     mimeType: null,
+                    contentType: null,
                     sizeBytes: null,
                     requestedUrl: 'https://example.com/getting-started',
                     fetchedUrl: 'https://example.com/getting-started',
@@ -353,6 +447,58 @@ export async function setupGraphQLMocks(route: Route) {
         break;
       }
 
+      case 'GetDocumentIntelligence': {
+        const id = varString(parsedBody.variables, 'id') ?? '';
+        const doc = documentsStore.find((d) => d.id === id) ?? null;
+        response = {
+          status: 200,
+          body: {
+            data: {
+              document: doc
+                ? {
+                    __typename: 'Document',
+                    id: doc.id,
+                    title: doc.title,
+                    createdAt: doc.createdAt,
+                    sourceType: 'URL',
+                    sourceLabel: 'example.com',
+                    source: {
+                      __typename: 'DocumentSource',
+                      id: `source-${doc.id}`,
+                      documentId: doc.id,
+                      kind: 'URL',
+                      ingestedAt: doc.createdAt,
+                      accessedAt: doc.createdAt,
+                      publishedAt: null,
+                      author: null,
+                      publisher: null,
+                      filename: null,
+                      mimeType: null,
+                      contentType: null,
+                      sizeBytes: null,
+                      requestedUrl: 'https://example.com/getting-started',
+                      fetchedUrl: 'https://example.com/getting-started',
+                      contentSha256: null,
+                      fileSha256: null,
+                      lastModifiedMs: null,
+                    },
+                    chunks: (chunksStore[doc.id] ?? []).map((c) => ({
+                      __typename: 'DocumentChunk',
+                      id: c.id,
+                      chunkIndex: c.chunkIndex,
+                      content: c.content,
+                      documentId: doc.id,
+                      mentions: mentionsStore.filter((m) => m.chunkId === c.id),
+                    })),
+                  }
+                : null,
+              entityRelationships: relationshipsStore,
+            },
+          },
+        };
+        break;
+      }
+
       case 'DocumentIndexByUser': {
         // Documents index used by the evidence-first Documents library UI.
         response = {
@@ -364,11 +510,13 @@ export async function setupGraphQLMocks(route: Route) {
                 id: d.id,
                 title: d.title,
                 createdAt: d.createdAt,
+                sourceType: 'URL',
+                sourceLabel: 'example.com',
                 chunks: (chunksStore[d.id] ?? []).map((c) => ({
                   __typename: 'DocumentChunk',
                   id: c.id,
                   chunkIndex: c.chunkIndex,
-                  mentions: [],
+                  mentions: mentionsStore.filter((m) => m.chunkId === c.id),
                 })),
               })),
             },
@@ -409,7 +557,7 @@ export async function setupGraphQLMocks(route: Route) {
                 id: c.id,
                 chunkIndex: c.chunkIndex,
                 content: c.content,
-                mentions: [],
+                mentions: mentionsStore.filter((m) => m.chunkId === c.id),
               })),
             },
           },
@@ -448,6 +596,24 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'Entities': {
+        response = {
+          status: 200,
+          body: {
+            data: {
+              entities: entitiesStore.map((e) => ({
+                __typename: 'Entity',
+                id: e.id,
+                name: e.name,
+                type: e.type,
+                mentionCount: e.mentionCount,
+              })),
+            },
+          },
+        };
+        break;
+      }
+
+      case 'ListEntities': {
         response = {
           status: 200,
           body: {
@@ -590,6 +756,54 @@ export async function setupGraphQLMocks(route: Route) {
             body: {
               data: {
                 documentsByUser: documentsStore,
+              },
+            },
+          };
+          break;
+        }
+
+        if (typeof parsedBody.query === 'string' && parsedBody.query.includes('entities')) {
+          response = {
+            status: 200,
+            body: {
+              data: {
+                entities: entitiesStore.map((e) => ({
+                  __typename: 'Entity',
+                  id: e.id,
+                  name: e.name,
+                  type: e.type,
+                  mentionCount: e.mentionCount,
+                })),
+              },
+            },
+          };
+          break;
+        }
+
+        if (typeof parsedBody.query === 'string' && parsedBody.query.includes('entityRelationships')) {
+          response = {
+            status: 200,
+            body: {
+              data: {
+                entityRelationships: relationshipsStore,
+              },
+            },
+          };
+          break;
+        }
+
+        if (typeof operationName === 'string' && operationName.toLowerCase().includes('entities')) {
+          response = {
+            status: 200,
+            body: {
+              data: {
+                entities: entitiesStore.map((e) => ({
+                  __typename: 'Entity',
+                  id: e.id,
+                  name: e.name,
+                  type: e.type,
+                  mentionCount: e.mentionCount,
+                })),
               },
             },
           };

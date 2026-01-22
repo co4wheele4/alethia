@@ -39,6 +39,8 @@ export type DocumentIndexDocument = {
   id: string;
   title: string;
   createdAt: string;
+  sourceType?: string | null;
+  sourceLabel?: string | null;
   chunks: DocumentIndexChunk[];
 };
 
@@ -46,6 +48,8 @@ export type DocumentIndexItem = {
   id: string;
   title: string;
   dateAddedIso: string;
+  sourceType?: string | null;
+  sourceLabel?: string | null;
   chunkCount: number;
   mentionCount: number;
   entityCount: number;
@@ -76,6 +80,8 @@ function computeIndexItem(doc: DocumentIndexDocument): DocumentIndexItem {
     id: doc.id,
     title: doc.title,
     dateAddedIso: doc.createdAt,
+    sourceType: doc.sourceType ?? null,
+    sourceLabel: doc.sourceLabel ?? null,
     chunkCount: chunks.length,
     mentionCount,
     entityCount: entityIds.size,

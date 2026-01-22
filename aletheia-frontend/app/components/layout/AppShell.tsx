@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, Drawer, Typography } from '@mui/material';
+import { Box, Container, Drawer, Typography } from '@mui/material';
 
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { SkeletonLoader } from '../primitives/SkeletonLoader';
-import { AletheiaLayout } from '../layout/AletheiaLayout';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { PrimaryNav, type PrimaryNavItem } from './primary-nav/PrimaryNav';
 import { Header } from './Header';
@@ -62,7 +61,7 @@ export function AppShell(props: AppShellProps) {
   const { isAuthenticated, isInitialized, logout } = useAuth();
   const { mounted, isHydrated } = useClientReady();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const openMobileNav = useCallback(() => setMobileNavOpen(true), []);
+  const toggleMobileNav = useCallback(() => setMobileNavOpen((current) => !current), []);
   const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
 
   const items: AppShellNavItem[] = useMemo(
@@ -91,43 +90,43 @@ export function AppShell(props: AppShellProps) {
 
   return (
     <ErrorBoundary>
-      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-        <PrimaryNav
-          items={items}
-          variant="desktop"
-          footer={
-            <Typography variant="caption" color="text.secondary">
-              Nothing is asserted without evidence. Uncertainty is shown explicitly.
-            </Typography>
-          }
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Header
+          title={title}
+          headerActions={headerActions}
+          showMobileNavButton
+          onOpenMobileNav={toggleMobileNav}
+          onLogout={requireAuth ? logout : undefined}
         />
 
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <AletheiaLayout
-            header={
-              <Header
-                title={title}
-                headerActions={headerActions}
-                showMobileNavButton
-                onOpenMobileNav={openMobileNav}
-                onLogout={requireAuth ? logout : undefined}
-              />
-            }
-          >
+        <Box component="main" sx={{ flex: 1, minWidth: 0, pt: { xs: '56px', sm: '64px' } }}>
+          <Container maxWidth="lg" sx={{ py: 3 }}>
             {children}
-          </AletheiaLayout>
+          </Container>
         </Box>
 
         <Drawer
           open={mobileNavOpen}
           onClose={closeMobileNav}
           ModalProps={{ keepMounted: true }}
-          sx={{ display: { xs: 'block', md: 'none' } }}
+          // Primary navigation lives in the hamburger on all breakpoints.
+          sx={{
+            display: 'block',
+            // Ensure drawer/backdrop start below the fixed header.
+            '& .MuiDrawer-paper': {
+              top: { xs: '56px', sm: '64px' },
+              height: { xs: 'calc(100% - 56px)', sm: 'calc(100% - 64px)' },
+            },
+            '& .MuiBackdrop-root': {
+              top: { xs: '56px', sm: '64px' },
+              height: { xs: 'calc(100% - 56px)', sm: 'calc(100% - 64px)' },
+            },
+          }}
         >
           <PrimaryNav
             items={items}
             variant="drawer"
-            ariaLabel="mobile primary navigation"
+            ariaLabel="primary navigation"
             onNavigate={closeMobileNav}
             footer={
               <Typography variant="caption" color="text.secondary">

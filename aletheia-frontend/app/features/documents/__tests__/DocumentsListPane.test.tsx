@@ -14,6 +14,8 @@ const mockDocuments = [
     id: 'd1',
     title: 'Doc 1',
     dateAddedIso: '2023-01-01T12:00:00Z',
+    sourceType: 'URL',
+    sourceLabel: 'example.com',
     chunkCount: 2,
     mentionCount: 5,
     entityCount: 3,
@@ -22,6 +24,8 @@ const mockDocuments = [
     id: 'd2',
     title: 'Doc 2',
     dateAddedIso: '2023-01-02T12:00:00Z',
+    sourceType: null,
+    sourceLabel: null,
     chunkCount: 0,
     mentionCount: 0,
     entityCount: 0,
@@ -30,6 +34,8 @@ const mockDocuments = [
     id: 'd3',
     title: 'Doc 3',
     dateAddedIso: '2023-01-03T12:00:00Z',
+    sourceType: 'MANUAL',
+    sourceLabel: null,
     chunkCount: 1,
     mentionCount: 0,
     entityCount: 0,
@@ -37,7 +43,7 @@ const mockDocuments = [
 ];
 
 describe('DocumentsListPane', () => {
-  it('renders a list of documents with correct processing status', () => {
+  it('renders a list of documents with provenance + counts', () => {
     const onSelect = vi.fn();
     const onDelete = vi.fn();
 
@@ -62,10 +68,13 @@ describe('DocumentsListPane', () => {
     expect(screen.getByText('Doc 2')).toBeInTheDocument();
     expect(screen.getByText('Doc 3')).toBeInTheDocument();
 
-    // Status checks
-    expect(screen.getByText(/Chunks \+ mentions ready/i)).toBeInTheDocument();
-    expect(screen.getByText(/No chunks \(ingestion incomplete\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Chunks ready \(no extracted mentions\)/i)).toBeInTheDocument();
+    // Provenance summary is explicit; missing values are shown as "(missing)"
+    expect(screen.getByText(/Source type:\s*URL/i)).toBeInTheDocument();
+    expect(screen.getByText(/Source type:\s*\(missing\)/i)).toBeInTheDocument();
+
+    // Counts are inspectable, not "status" guesses
+    expect(screen.getByText(/Chunks:\s*2\s*•\s*Mentions:\s*5\s*•\s*Entities:\s*3/i)).toBeInTheDocument();
+    expect(screen.getByText(/Chunks:\s*0\s*•\s*Mentions:\s*0\s*•\s*Entities:\s*0/i)).toBeInTheDocument();
   });
 
   it('handles document selection', () => {

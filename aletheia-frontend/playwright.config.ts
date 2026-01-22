@@ -104,7 +104,9 @@ export default defineConfig({
       NEXT_PUBLIC_MSW: 'disabled',
     },
     url: 'http://127.0.0.1:3030',
-    reuseExistingServer: !process.env.CI,
+    // Do not reuse an existing dev server: it may have MSW enabled, which would intercept `/graphql`
+    // before Playwright route interception and cause unhandled-operation failures.
+    reuseExistingServer: false,
     timeout: 120 * 1000,
   },
 });

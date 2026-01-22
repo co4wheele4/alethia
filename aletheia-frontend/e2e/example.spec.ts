@@ -154,6 +154,40 @@ test.describe('Documents (Dashboard)', () => {
     await documentsList.locator('button[aria-label="Delete Playwright Doc"]').click();
     await expect(documentsList.getByText('Playwright Doc')).toHaveCount(0);
   });
+
+  test('should render document intelligence (provenance, mentions, relationship evidence)', async ({ page }) => {
+    test.setTimeout(60_000);
+
+    await page.goto('/');
+    await page.waitForSelector('input[name="email"]', { timeout: 10000 });
+
+    // Login (mocked)
+    await page.locator('input[name="email"]').fill('test@example.com');
+    await page.locator('input[name="password"]').fill('password123');
+    await page.getByRole('button', { name: /^login$/i }).click();
+    await page.waitForURL(/\/dashboard/, { timeout: 20000 });
+
+    await page.goto('/documents');
+    await expect(page.getByRole('heading', { name: 'Documents' })).toBeVisible({ timeout: 10000 });
+
+    // The selected document should render its metadata/provenance
+    await expect(page.getByRole('heading', { name: /getting started/i })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText('Source type: URL', { exact: true })).toBeVisible({ timeout: 20000 });
+
+    // Mentions are rendered via offsets -> a <mark> span exists
+    await expect(page.locator('mark', { hasText: 'Test Entity' }).first()).toBeVisible({ timeout: 20000 });
+
+    // Entity list and mention drill-down
+    const entitiesList = page.getByRole('list', { name: 'document-entities' });
+    await entitiesList.getByText('Test Entity').click();
+    await expect(page.getByText(/Mention ID:\s*mention-1/i)).toBeVisible({ timeout: 20000 });
+
+    // Relationship evidence drill-down
+    const relList = page.getByRole('list', { name: 'document-relationships' });
+    await relList.getByText(/Test Entity.*MENTIONS.*Other Entity/i).click();
+    await expect(page.getByText(/Evidence ID:\s*ev-1/i)).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText(/mention:mention-1/i)).toBeVisible({ timeout: 20000 });
+  });
 });
 
 test.describe('Form Validation', () => {

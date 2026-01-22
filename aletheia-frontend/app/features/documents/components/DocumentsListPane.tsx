@@ -47,12 +47,6 @@ export function DocumentsListPane(props: {
     onOpenIngest,
   } = props;
 
-  const statusLabelFor = (doc: DocumentIndexItem) => {
-    if (doc.chunkCount === 0) return 'No chunks (ingestion incomplete)';
-    if (doc.mentionCount === 0) return 'Chunks ready (no extracted mentions)';
-    return 'Chunks + mentions ready';
-  };
-
   const [visibleCount, setVisibleCount] = useState(25);
   const visible = useMemo(() => documents.slice(0, visibleCount), [documents, visibleCount]);
   const canLoadMore = documents.length > visible.length;
@@ -122,16 +116,14 @@ export function DocumentsListPane(props: {
                     {doc.title}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                    Source type: unknown (not provided by API)
+                    Source type: {doc.sourceType ?? '(missing)'}
+                    {doc.sourceLabel ? ` • ${doc.sourceLabel}` : ''}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
                     Date added: {new Date(doc.dateAddedIso).toLocaleString()}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                    Processing status: {statusLabelFor(doc)}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                    Entity count: {doc.entityCount}
+                    Chunks: {doc.chunkCount} • Mentions: {doc.mentionCount} • Entities: {doc.entityCount}
                   </Typography>
                 </Box>
               }

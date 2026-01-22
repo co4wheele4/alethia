@@ -3,12 +3,12 @@ import { DocumentDetailsPane } from '../components/DocumentDetailsPane';
 import { ThemeProvider } from '../../../hooks/useTheme';
 import { vi } from 'vitest';
 
-vi.mock('../components/DocumentInspectionView', () => ({
-  DocumentInspectionView: (props: any) => (
-    <div data-testid="inspection-view">
-      Inspection View: {props.document?.title ?? 'None'}
+vi.mock('../components/DocumentDetailPanel', () => ({
+  DocumentDetailPanel: (props: any) => (
+    <div data-testid="detail-panel">
+      Detail Panel: {props.documentId ?? '(none)'} • chunk={String(props.initialChunkIndex ?? '(none)')}
     </div>
-  )
+  ),
 }));
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -18,49 +18,11 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('DocumentDetailsPane', () => {
-  it('renders loading state', () => {
-    render(
-      <TestWrapper>
-        <DocumentDetailsPane
-          selectedId="d1"
-          document={null}
-          chunks={[]}
-          loading={true}
-          error={null}
-          initialChunkIndex={null}
-        />
-      </TestWrapper>
-    );
-
-    expect(screen.getByText(/Loading document evidence/i)).toBeInTheDocument();
-  });
-
-  it('renders error state', () => {
-    render(
-      <TestWrapper>
-        <DocumentDetailsPane
-          selectedId="d1"
-          document={null}
-          chunks={[]}
-          loading={false}
-          error={new Error('Test error')}
-          initialChunkIndex={null}
-        />
-      </TestWrapper>
-    );
-
-    expect(screen.getByText(/Test error/i)).toBeInTheDocument();
-  });
-
   it('renders instructions when no document selected', () => {
     render(
       <TestWrapper>
         <DocumentDetailsPane
           selectedId={null}
-          document={null}
-          chunks={[]}
-          loading={false}
-          error={null}
           initialChunkIndex={null}
         />
       </TestWrapper>
@@ -70,24 +32,17 @@ describe('DocumentDetailsPane', () => {
     expect(screen.getByText(/Select a document on the left/i)).toBeInTheDocument();
   });
 
-  it('renders document details when available', () => {
-    const mockDoc = { id: 'd1', title: 'Test Doc', createdAt: '2023-01-01T12:00:00Z' };
-    const mockChunks = [{ id: 'c1', chunkIndex: 0, content: 'chunk content' }];
-
+  it('renders detail panel when a document is selected', () => {
     render(
       <TestWrapper>
         <DocumentDetailsPane
           selectedId="d1"
-          document={mockDoc as any}
-          chunks={mockChunks as any}
-          loading={false}
-          error={null}
-          initialChunkIndex={null}
+          initialChunkIndex={5}
         />
       </TestWrapper>
     );
 
-    expect(screen.getByText('Test Doc')).toBeInTheDocument();
-    expect(screen.getByTestId('inspection-view')).toHaveTextContent('Inspection View: Test Doc');
+    expect(screen.getByTestId('detail-panel')).toHaveTextContent('Detail Panel: d1');
+    expect(screen.getByTestId('detail-panel')).toHaveTextContent('chunk=5');
   });
 });

@@ -41,9 +41,8 @@ vi.mock('../components/DocumentsListPane', () => ({
 vi.mock('../components/DocumentDetailsPane', () => ({
   DocumentDetailsPane: (props: any) => (
     <div data-testid="details-pane">
-      Details Pane: {props.document?.title ?? 'None'}
-      {props.loading ? 'Loading...' : ''}
-      {props.error ? props.error.message : ''}
+      Details Pane: {String(props.selectedId ?? 'None')}
+      {typeof props.initialChunkIndex === 'number' ? ` • chunk=${props.initialChunkIndex}` : ''}
     </div>
   ),
 }));
@@ -141,7 +140,7 @@ describe('DocumentsDashboard', () => {
     expect(screen.getByText('Doc 2')).toBeInTheDocument();
 
     // Default selection is first doc
-    expect(screen.getByTestId('details-pane')).toHaveTextContent('Details Pane: Doc 1');
+    expect(screen.getByTestId('details-pane')).toHaveTextContent('Details Pane: d1');
 
     // Handle filter
     fireEvent.click(screen.getByText('Filter'));
@@ -157,7 +156,7 @@ describe('DocumentsDashboard', () => {
     );
 
     fireEvent.click(screen.getByText('Select D2'));
-    expect(screen.getByTestId('details-pane')).toHaveTextContent('Details Pane: Doc 2');
+    expect(screen.getByTestId('details-pane')).toHaveTextContent('Details Pane: d2');
   });
 
   it('handles document deletion', async () => {
@@ -189,7 +188,7 @@ describe('DocumentsDashboard', () => {
     });
 
     expect(screen.queryByTestId('ingest-dialog')).not.toBeInTheDocument();
-    expect(screen.getByTestId('details-pane')).toHaveTextContent('Details Pane: Doc 3');
+    expect(screen.getByTestId('details-pane')).toHaveTextContent('Details Pane: d3');
     expect(mockRefetch).toHaveBeenCalled();
   });
 
@@ -224,7 +223,7 @@ describe('DocumentsDashboard', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByTestId('details-pane')).toHaveTextContent('Details Pane: Doc 2');
+    expect(screen.getByTestId('details-pane')).toHaveTextContent('Details Pane: d2');
   });
 
   it('renders index error', () => {

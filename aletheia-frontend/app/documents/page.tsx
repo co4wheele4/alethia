@@ -14,14 +14,16 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { useAuth } from '../features/auth/hooks/useAuth';
+import { getAuthToken } from '../features/auth/utils/auth';
 import { getUserIdFromToken } from '../features/auth/utils/jwt';
 import { DocumentsDashboard } from '../features/documents/components/DocumentsDashboard';
 
 function DocumentsPageInner() {
-  const { token } = useAuth();
-  const userId = getUserIdFromToken(token);
-
+  const { token, isInitialized } = useAuth();
   const params = useSearchParams();
+  if (!isInitialized) return null;
+  const stableToken = token ?? getAuthToken();
+  const userId = getUserIdFromToken(stableToken);
 
   const initialIngestOpen = params.get('ingest') === '1';
   const initialSelectedId = params.get('documentId');

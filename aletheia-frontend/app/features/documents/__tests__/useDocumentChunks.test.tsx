@@ -29,7 +29,6 @@ const mocks = [
             content: 'chunk 0',
             documentId: 'd1',
             mentions: [],
-            aiSuggestions: [],
             __typename: 'DocumentChunk',
           },
         ],

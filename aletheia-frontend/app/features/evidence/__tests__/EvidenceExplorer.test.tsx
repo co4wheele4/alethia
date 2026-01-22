@@ -134,7 +134,7 @@ function makeEntityDetail(overrides?: Partial<EntityDetail>): EntityDetail {
 }
 
 const baseChunks: DocumentChunkItem[] = [
-  { __typename: 'DocumentChunk', id: 'c1', chunkIndex: 0, content: 'Hello world', mentions: [], aiSuggestions: [] },
+  { __typename: 'DocumentChunk', id: 'c1', chunkIndex: 0, content: 'Hello world', mentions: [] },
 ]
 
 const client = new ApolloClient({
@@ -502,15 +502,14 @@ describe('EvidenceExplorer', () => {
 
     // Chunks: >80 to trigger chunk cap alert, and out-of-order to ensure sorting memo runs.
     const manyChunks: DocumentChunkItem[] = [
-      { __typename: 'DocumentChunk', id: 'c2', chunkIndex: 2, content: 'c2', mentions: [], aiSuggestions: [] },
-      { __typename: 'DocumentChunk', id: 'c0', chunkIndex: 0, content: 'c0', mentions: [], aiSuggestions: [] },
+      { __typename: 'DocumentChunk', id: 'c2', chunkIndex: 2, content: 'c2', mentions: [] },
+      { __typename: 'DocumentChunk', id: 'c0', chunkIndex: 0, content: 'c0', mentions: [] },
       ...Array.from({ length: 79 }, (_, i) => ({
         __typename: 'DocumentChunk' as const,
         id: `cx-${i}`,
         chunkIndex: i + 3,
         content: `c${i + 3}`,
         mentions: [],
-        aiSuggestions: [],
       })),
     ]
     mockedUseChunksByDocument.mockReturnValue(makeUseChunksByDocumentResult({ chunks: manyChunks }))
@@ -760,7 +759,6 @@ describe('EvidenceExplorer', () => {
       id: 'c0',
       chunkIndex: 0,
       content: 'Hello',
-      aiSuggestions: [],
     } as unknown as DocumentChunkItem
     mockedUseChunksByDocument.mockReturnValue(
       makeUseChunksByDocumentResult({ chunks: [chunkWithoutMentions], loading: false, error: null })

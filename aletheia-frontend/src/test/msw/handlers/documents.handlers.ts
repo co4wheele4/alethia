@@ -4,6 +4,7 @@ import { Kind, type DocumentNode } from 'graphql';
 import { fixture } from '@/src/mocks/aletheia-fixtures';
 import { DOCUMENT_CORE_FRAGMENT } from '@/src/graphql';
 import { assertNoConfidence } from '@/src/test/msw/assertNoConfidence';
+import { buildRelationships } from '@/src/test/msw/buildRelationships';
 
 function fail(message: string): never {
   // Fail fast in tests and dev: surface contract breaks immediately.
@@ -121,6 +122,17 @@ export const documentHandlers = [
     const id = assertPresent((variables as { id?: string } | undefined)?.id, 'GetDocumentById.variables.id');
     const doc = asDocumentById(id);
     const data = { document: doc };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
+  graphql.query('GetDocumentIntelligence', ({ variables }) => {
+    const id = assertPresent(
+      (variables as { id?: string } | undefined)?.id,
+      'GetDocumentIntelligence.variables.id'
+    );
+    const doc = asDocumentById(id);
+    const data = { document: doc, entityRelationships: buildRelationships() };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });
   }),

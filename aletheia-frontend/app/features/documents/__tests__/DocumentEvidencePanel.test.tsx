@@ -6,7 +6,7 @@ import { vi } from 'vitest'
 import type { ReactNode } from 'react'
 import type { DocumentChunkItem, DocumentHeader } from '../hooks/useDocumentChunks'
 import type { DocumentMetadataPanelProps } from '../components/DocumentMetadataPanel'
-import type { AiExtractionSuggestionItem, EntityMentionItem } from '../hooks/useDocumentChunks'
+import type { EntityMentionItem } from '../hooks/useDocumentChunks'
 
 vi.mock('next/link', () => ({
   default: (props: { href: string; children: ReactNode }) => <a href={props.href}>{props.children}</a>,
@@ -16,14 +16,6 @@ vi.mock('../components/DocumentMetadataPanel', () => ({
   DocumentMetadataPanel: (props: DocumentMetadataPanelProps) => (
     <div data-testid="metadata-panel">
       Metadata: {props.document?.title ?? '(none)'} • Chunks: {props.chunks.length}
-    </div>
-  ),
-}))
-
-vi.mock('../../extraction/components/SuggestedExtractionsPanel', () => ({
-  SuggestedExtractionsPanel: (props: { chunkId: string; suggestions: AiExtractionSuggestionItem[] }) => (
-    <div data-testid="extractions-panel">
-      Extractions: {props.chunkId} • Suggestions: {props.suggestions.length}
     </div>
   ),
 }))
@@ -49,7 +41,6 @@ function chunk(overrides: Partial<DocumentChunkItem> & Pick<DocumentChunkItem, '
     chunkIndex: overrides.chunkIndex,
     content: overrides.content,
     mentions: overrides.mentions ?? [],
-    aiSuggestions: overrides.aiSuggestions ?? [],
   }
 }
 
@@ -58,7 +49,6 @@ const mockChunks: DocumentChunkItem[] = [
     id: 'c1',
     chunkIndex: 0,
     content: 'chunk 0',
-    aiSuggestions: [],
     mentions: [mention('m1', { id: 'e1', name: 'E1', type: 'Person' })],
   }),
 ]
@@ -77,7 +67,6 @@ describe('DocumentEvidencePanel', () => {
     )
 
     expect(screen.getByTestId('metadata-panel')).toHaveTextContent('Metadata: Test Doc')
-    expect(screen.getByTestId('extractions-panel')).toHaveTextContent('Extractions: c1')
 
     const entitiesList = screen.getByRole('list', { name: 'document-entities' })
     expect(within(entitiesList).getByText('E1')).toBeInTheDocument()
@@ -97,7 +86,6 @@ describe('DocumentEvidencePanel', () => {
         id: `c${i}`,
         chunkIndex: i,
         content: `chunk ${i}`,
-        aiSuggestions: [],
         mentions: [mention(`m${i}`, { id: `e${i}`, name: `E${i}`, type: 'Person' })],
       })
     )
@@ -126,7 +114,7 @@ describe('DocumentEvidencePanel', () => {
       <TestWrapper>
         <DocumentEvidencePanel
           document={mockDoc}
-          chunks={[chunk({ id: 'c1', chunkIndex: 0, content: 'no mentions', mentions: [], aiSuggestions: [] })]}
+          chunks={[chunk({ id: 'c1', chunkIndex: 0, content: 'no mentions', mentions: [] })]}
         />
       </TestWrapper>
     )
@@ -152,7 +140,7 @@ describe('DocumentEvidencePanel', () => {
       </TestWrapper>
     )
 
-    expect(screen.getByText(/Type:\s*unknown/i)).toBeInTheDocument()
+    expect(screen.getByText(/Type:\s*\(missing\)/i)).toBeInTheDocument()
   })
 
   it('handles chunks with null mentions', () => {
@@ -161,7 +149,6 @@ describe('DocumentEvidencePanel', () => {
       id: 'c1',
       chunkIndex: 0,
       content: 'no mentions',
-      aiSuggestions: [],
       // Explicitly null at runtime to cover `c.mentions ?? []` in buildEntityIndex.
       mentions: null,
     } as unknown as DocumentChunkItem
@@ -222,18 +209,4 @@ describe('DocumentEvidencePanel', () => {
     expect(screen.queryByRole('button', { name: /Load more entities/i })).not.toBeInTheDocument()
   })
 
-  it('passes aiSuggestions as an empty array when selectedChunk.aiSuggestions is nullish', () => {
-    const selectedChunk = {
-      ...mockChunks[0],
-      aiSuggestions: undefined,
-    } as unknown as DocumentChunkItem
-
-    render(
-      <TestWrapper>
-        <DocumentEvidencePanel document={mockDoc} chunks={mockChunks} selectedChunk={selectedChunk} />
-      </TestWrapper>
-    )
-
-    expect(screen.getByTestId('extractions-panel')).toHaveTextContent('Suggestions: 0')
-  })
 })
