@@ -207,7 +207,7 @@ export function useIngestDocuments(userId: string | null) {
 
       const header = toProvenanceHeader(input.source, { ingestedAtIso: new Date().toISOString(), contentSha256 });
       const chunkBodies = splitIntoChunks(rawText);
-      const contents = [`${header}${chunkBodies[0] ?? ''}`, ...chunkBodies.slice(1)];
+      const contents = [`${header}${chunkBodies[0]}`, ...chunkBodies.slice(1)];
 
       setProgress({
         state: 'running',

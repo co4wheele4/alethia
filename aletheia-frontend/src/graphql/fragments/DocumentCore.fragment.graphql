@@ -1,0 +1,8 @@
+fragment DocumentCore on Document {
+  __typename
+  id
+  title
+  sourceType
+  createdAt
+}
+

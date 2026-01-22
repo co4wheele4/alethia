@@ -1,6 +1,8 @@
 import { graphql, HttpResponse } from 'msw';
+import { Kind, type DocumentNode } from 'graphql';
 
 import { fixture } from '@/src/mocks/aletheia-fixtures';
+import { DOCUMENT_CORE_FRAGMENT } from '@/src/graphql';
 import { assertNoConfidence } from '@/src/test/msw/assertNoConfidence';
 
 function fail(message: string): never {
@@ -20,6 +22,39 @@ function assertOffsets(start: number | null | undefined, end: number | null | un
   const s = start;
   const e = end;
   if (s < 0 || e <= s) fail(`${label} has invalid offsets (start=${s}, end=${e})`);
+}
+
+function fragmentFieldNames(doc: DocumentNode, fragmentName: string): string[] {
+  const def = doc.definitions.find(
+    (d): d is Extract<typeof d, { kind: typeof Kind.FRAGMENT_DEFINITION }> =>
+      d.kind === Kind.FRAGMENT_DEFINITION && d.name.value === fragmentName
+  );
+  if (!def) fail(`Missing fragment definition "${fragmentName}"`);
+
+  const fields: string[] = [];
+  for (const sel of def.selectionSet.selections) {
+    if (sel.kind !== Kind.FIELD) fail(`Fragment "${fragmentName}" must contain only field selections`);
+    if (sel.selectionSet) fail(`Fragment "${fragmentName}" must not contain nested selections`);
+    fields.push(sel.name.value);
+  }
+  return fields;
+}
+
+const DOCUMENT_CORE_KEYS = new Set(fragmentFieldNames(DOCUMENT_CORE_FRAGMENT, 'DocumentCore'));
+
+function assertExactObjectKeys(value: unknown, allowed: Set<string>, label: string) {
+  if (value === null || value === undefined || typeof value !== 'object' || Array.isArray(value)) {
+    fail(`${label} must be an object`);
+  }
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj);
+
+  for (const k of keys) {
+    if (!allowed.has(k)) fail(`${label} contains undocumented field "${k}"`);
+  }
+  for (const k of allowed) {
+    if (!Object.prototype.hasOwnProperty.call(obj, k)) fail(`${label} is missing required field "${k}"`);
+  }
 }
 
 function asDocumentById(id: string) {
@@ -56,9 +91,28 @@ function listDocuments() {
   }));
 }
 
+function documentsIndex() {
+  // Return exactly the fields selected by `DocumentsIndex` (DocumentCore only).
+  const docs = fixture.documents.map((d) => ({
+    __typename: d.__typename,
+    id: d.id,
+    title: d.title,
+    sourceType: d.sourceType,
+    createdAt: d.createdAt,
+  }));
+  for (const d of docs) assertExactObjectKeys(d, DOCUMENT_CORE_KEYS, `DocumentsIndex.documents[${d.id}]`);
+  return docs;
+}
+
 export const documentHandlers = [
   graphql.query('ListDocuments', () => {
     const data = { documents: listDocuments() };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
+  graphql.query('DocumentsIndex', () => {
+    const data = { documents: documentsIndex() };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });
   }),

@@ -1,5 +1,5 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { useIngestDocuments, splitIntoChunks } from '../hooks/useIngestDocuments';
+import * as ingestModule from '../hooks/useIngestDocuments';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { CREATE_CHUNK_MUTATION, CREATE_DOCUMENT_MUTATION, DOCUMENTS_BY_USER_QUERY } from '../graphql';
 import { vi } from 'vitest';
@@ -30,7 +30,7 @@ describe('useIngestDocuments', () => {
   afterEach(() => { vi.restoreAllMocks(); });
 
   it('should orchestrate ingestion', async () => {
-    const { result } = renderHook(() => useIngestDocuments('u1'), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       ),
@@ -40,7 +40,7 @@ describe('useIngestDocuments', () => {
       ingestResult = await result.current.ingestOne({ title: 'Test Doc', text: 'Hello world', source: { kind: 'manual' } });
     });
     await waitFor(() => expect(result.current.progress.state).toBe('done'));
-    expect((ingestResult as any)?.documentId).toBe('d1');
+    expect(ingestResult).toEqual({ documentId: 'd1', chunksCreated: 1 });
   });
 
   it('should split large text into chunks with paragraph breaks', async () => {
@@ -50,7 +50,7 @@ describe('useIngestDocuments', () => {
     const chunk0 = `${header}${'A'.repeat(2100)}`;
     const chunk1 = 'B'.repeat(500);
 
-    const { result } = renderHook(() => useIngestDocuments('u1'), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => (
         <MockedProvider mocks={[
           {
@@ -84,18 +84,21 @@ describe('useIngestDocuments', () => {
   });
 
   it('should handle empty title or text error', async () => {
-    const { result } = renderHook(() => useIngestDocuments('u1'), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={[]}>{children}</MockedProvider>,
     });
     
     // Empty title
-    let ingestResult;
+    let ingestResult: { documentId: string; chunksCreated: number } | null = null;
     await act(async () => {
       ingestResult = await result.current.ingestOne({ title: '', text: 'Hello', source: { kind: 'manual' } });
     });
     expect(ingestResult).toBeNull();
     expect(result.current.progress.state).toBe('error');
-    expect((result.current.progress as any).message).toContain('Title is required');
+    expect(result.current.progress.state).toBe('error');
+    if (result.current.progress.state === 'error') {
+      expect(result.current.progress.message).toContain('Title is required');
+    }
 
     // Empty text
     await act(async () => {
@@ -103,7 +106,10 @@ describe('useIngestDocuments', () => {
     });
     expect(ingestResult).toBeNull();
     expect(result.current.progress.state).toBe('error');
-    expect((result.current.progress as any).message).toContain('No text content');
+    expect(result.current.progress.state).toBe('error');
+    if (result.current.progress.state === 'error') {
+      expect(result.current.progress.message).toContain('No text content');
+    }
   });
 
   it('should handle failed document creation', async () => {
@@ -117,21 +123,24 @@ describe('useIngestDocuments', () => {
         result: { data: { documentsByUser: [] } },
       }
     ];
-    const { result } = renderHook(() => useIngestDocuments('u1'), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={failMocks}>{children}</MockedProvider>,
     });
     
-    let ingestResult;
+    let ingestResult: { documentId: string; chunksCreated: number } | null = null;
     await act(async () => {
       ingestResult = await result.current.ingestOne({ title: 'Fail', text: 'Hello', source: { kind: 'manual' } });
     });
     expect(ingestResult).toBeNull();
     expect(result.current.progress.state).toBe('error');
-    expect((result.current.progress as any).message).toContain('Failed to create document');
+    expect(result.current.progress.state).toBe('error');
+    if (result.current.progress.state === 'error') {
+      expect(result.current.progress.message).toContain('Failed to create document');
+    }
   });
 
   it('should handle missing userId', async () => {
-    const { result } = renderHook(() => useIngestDocuments(null), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments(null), {
       wrapper: ({ children }) => <MockedProvider mocks={[]}>{children}</MockedProvider>,
     });
     await act(async () => { await result.current.ingestOne({ title: 'T', text: 'H', source: { kind: 'manual' } }); });
@@ -158,7 +167,7 @@ describe('useIngestDocuments', () => {
         result: { data: { documentsByUser: [] } },
       },
     ];
-    const { result } = renderHook(() => useIngestDocuments('u1'), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={fileMocks}>{children}</MockedProvider>,
     });
     await act(async () => { await result.current.ingestOne({ title: 'F', text: 'H', source: fileSource }); });
@@ -183,7 +192,7 @@ describe('useIngestDocuments', () => {
         result: { data: { documentsByUser: [] } },
       },
     ];
-    const { result } = renderHook(() => useIngestDocuments('u1'), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={urlMocks}>{children}</MockedProvider>,
     });
     await act(async () => { await result.current.ingestOne({ title: 'U', text: 'H', source: urlSource }); });
@@ -192,7 +201,6 @@ describe('useIngestDocuments', () => {
   });
 
   it('should handle sha256 error', async () => {
-    const originalSubtle = globalThis.crypto.subtle;
     const errorExpectedContent = `---\nsource:\n  kind: manual\n  provenanceType: \n  provenanceLabel: \n  provenanceConfirmed: \ningestedAt: ${JSON_DATE}\ncontentSha256: \n---\nHello world`;
     const errorMocks = [
       {
@@ -209,22 +217,21 @@ describe('useIngestDocuments', () => {
       },
     ];
 
-    try {
-      // @ts-expect-error - mocking missing API
-      globalThis.crypto.subtle = { digest: () => Promise.reject(new Error('fail')) };
-      const { result } = renderHook(() => useIngestDocuments('u1'), {
-        wrapper: ({ children }) => <MockedProvider mocks={errorMocks}>{children}</MockedProvider>,
-      });
-      let ingestResult: { documentId: string; chunksCreated: number } | null = null;
-      await act(async () => {
-        ingestResult = await result.current.ingestOne({ title: 'Test Doc', text: 'Hello world', source: { kind: 'manual' } });
-      });
-      await waitFor(() => expect(result.current.progress.state).toBe('done'));
-      expect((ingestResult as any)?.documentId).toBe('d1');
-    } finally {
-      // @ts-expect-error - restoring API
-      globalThis.crypto.subtle = originalSubtle;
-    }
+    const digestSpy = vi
+      .spyOn(globalThis.crypto.subtle, 'digest')
+      .mockRejectedValueOnce(new Error('fail'));
+
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
+      wrapper: ({ children }) => <MockedProvider mocks={errorMocks}>{children}</MockedProvider>,
+    });
+    let ingestResult: { documentId: string; chunksCreated: number } | null = null;
+    await act(async () => {
+      ingestResult = await result.current.ingestOne({ title: 'Test Doc', text: 'Hello world', source: { kind: 'manual' } });
+    });
+    await waitFor(() => expect(result.current.progress.state).toBe('done'));
+    expect(ingestResult).toEqual({ documentId: 'd1', chunksCreated: 1 });
+
+    digestSpy.mockRestore();
   });
 
   it('should handle missing crypto.subtle', async () => {
@@ -246,7 +253,7 @@ describe('useIngestDocuments', () => {
 
     try {
       vi.stubGlobal('crypto', { subtle: undefined });
-      const { result } = renderHook(() => useIngestDocuments('u1'), {
+      const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
         wrapper: ({ children }) => <MockedProvider mocks={errorMocks}>{children}</MockedProvider>,
       });
       await act(async () => {
@@ -259,16 +266,16 @@ describe('useIngestDocuments', () => {
   });
 
   it('splitIntoChunks should return empty array for empty text', () => {
-    expect(splitIntoChunks('')).toEqual([]);
-    expect(splitIntoChunks('   ')).toEqual([]);
+    expect(ingestModule.splitIntoChunks('')).toEqual([]);
+    expect(ingestModule.splitIntoChunks('   ')).toEqual([]);
   });
 
   it('splitIntoChunks should handle small text', () => {
-    expect(splitIntoChunks('Hello')).toEqual(['Hello']);
+    expect(ingestModule.splitIntoChunks('Hello')).toEqual(['Hello']);
   });
 
   it('should handle reset', () => {
-    const { result } = renderHook(() => useIngestDocuments('u1'), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={[]}>{children}</MockedProvider>,
     });
     act(() => {
@@ -294,7 +301,7 @@ describe('useIngestDocuments', () => {
         result: { data: { documentsByUser: [] } },
       },
     ];
-    const { result } = renderHook(() => useIngestDocuments('u1'), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={mocksWithSpecial}>{children}</MockedProvider>,
     });
     await act(async () => {
@@ -321,7 +328,7 @@ describe('useIngestDocuments', () => {
         result: { data: { documentsByUser: [] } },
       },
     ];
-    const { result } = renderHook(() => useIngestDocuments('u1'), {
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={mocksWithNulls}>{children}</MockedProvider>,
     });
     await act(async () => {
@@ -330,4 +337,31 @@ describe('useIngestDocuments', () => {
     await waitFor(() => expect(result.current.progress.state).toBe('done'));
     expect(result.current.progress.state).toBe('done');
   });
+
+  it('should escape newlines in YAML scalars without quoting', async () => {
+    const source = { kind: 'manual' as const, provenanceLabel: 'line1\nline2' };
+    const content = `---\nsource:\n  kind: manual\n  provenanceType: \n  provenanceLabel: line1\\nline2\n  provenanceConfirmed: \ningestedAt: ${JSON_DATE}\ncontentSha256: 0000000000000000000000000000000000000000000000000000000000000000\n---\nH`;
+    const mocksWithNewline = [
+      {
+        request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'NL' } },
+        result: { data: { createDocument: { id: 'd-nl', title: 'NL', createdAt: FIXED_DATE, __typename: 'Document' } } },
+      },
+      {
+        request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd-nl', chunkIndex: 0, content: content } },
+        result: { data: { createChunk: { id: 'c-nl', chunkIndex: 0, content: '...', documentId: 'd-nl', __typename: 'DocumentChunk' } } },
+      },
+      {
+        request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
+        result: { data: { documentsByUser: [] } },
+      },
+    ];
+    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
+      wrapper: ({ children }) => <MockedProvider mocks={mocksWithNewline}>{children}</MockedProvider>,
+    });
+    await act(async () => {
+      await result.current.ingestOne({ title: 'NL', text: 'H', source });
+    });
+    await waitFor(() => expect(result.current.progress.state).toBe('done'));
+  });
+
 });

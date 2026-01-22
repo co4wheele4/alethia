@@ -2,6 +2,16 @@ import '@testing-library/jest-dom'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { server } from './app/lib/test-utils/server'
+import { mkdirSync } from 'node:fs'
+import path from 'node:path'
+
+// Vitest (v8 coverage) writes temp coverage shards under `coverage/.tmp/` while tests run.
+// On Windows, this directory may not be created eagerly, which can crash the run with ENOENT.
+try {
+  mkdirSync(path.join(process.cwd(), 'coverage', '.tmp'), { recursive: true })
+} catch {
+  // If the environment disallows filesystem writes, coverage will fail anyway; keep test setup stable.
+}
 
 /* ------------------------------------------------------------------
  * Test lifecycle hygiene

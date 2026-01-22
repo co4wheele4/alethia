@@ -41,6 +41,9 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
+      // Windows reliability: avoid deleting the coverage directory while workers are writing shards.
+      // (CI workspaces are clean; in local runs, stale reports are acceptable.)
+      clean: false,
       reporter: ['text', 'lcov', 'html'],
       include: [
         'app/**/*.{js,jsx,ts,tsx}',

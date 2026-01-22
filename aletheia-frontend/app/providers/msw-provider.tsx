@@ -32,7 +32,7 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [shouldStart]);
 
   // Avoid rendering components that would hit the network before MSW is ready.
   if (!ready) return null;
