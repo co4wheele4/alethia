@@ -4,7 +4,7 @@ import { AppShell } from '../components/layout';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { getAuthToken } from '../features/auth/utils/auth';
 import { getUserIdFromToken } from '../features/auth/utils/jwt';
-import { EvidenceExplorer } from '../features/evidence/components/EvidenceExplorer';
+import { DocumentsEvidenceLayout } from '../features/evidence/components/DocumentsEvidenceLayout';
 
 export default function EvidencePage() {
   const { token, isInitialized } = useAuth();
@@ -14,7 +14,7 @@ export default function EvidencePage() {
 
   return (
     <AppShell title="Evidence">
-      <EvidenceExplorer userId={userId} />
+      <DocumentsEvidenceLayout userId={userId} />
     </AppShell>
   );
 }

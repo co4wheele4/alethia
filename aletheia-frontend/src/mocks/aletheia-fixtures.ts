@@ -54,7 +54,7 @@ export const fixture = {
               entityId: 'e_1',
               chunkId: 'chunk_1_0',
               startOffset: 0,
-              endOffset: 7,
+              endOffset: 8,
               excerpt: 'Aletheia',
               entity: {
                 __typename: 'Entity',

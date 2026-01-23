@@ -15,24 +15,35 @@ test.describe('Evidence', () => {
     await page.route('**/graphql', setupGraphQLMocks);
   });
 
-  test('renders evidence explorer after login', async ({ page }) => {
+  test('truth surface: select document → select entity → exact offset highlight + provenance', async ({ page }) => {
     test.setTimeout(60_000);
     await login(page);
 
     await page.goto('/evidence');
-    await expect(page.getByText('Evidence Explorer')).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText('Document Evidence Viewer')).toBeVisible({ timeout: 20000 });
 
-    // Ensure lists are loaded and visible
-    await expect(page.getByText(/Document Index/i)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/Entity List/i)).toBeVisible({ timeout: 15000 });
-
-    // Documents and entities should be populated from mocks
+    // Document list should be visible and populated from mocks.
+    await expect(page.getByRole('list', { name: 'truth-documents' })).toBeVisible();
     await expect(page.getByText(/Getting Started/i).first()).toBeVisible({ timeout: 20000 });
+
+    // Entity list is derived from explicit mentions in the selected document (via GetDocumentEvidenceView).
+    await expect(page.getByRole('list', { name: 'truth-entities' })).toBeVisible();
     await expect(page.getByText(/Test Entity/i).first()).toBeVisible({ timeout: 20000 });
 
-    // The lists themselves should be visible
-    await expect(page.getByRole('list', { name: 'explorer-documents' })).toBeVisible();
-    await expect(page.getByRole('list', { name: 'explorer-entities' })).toBeVisible();
+    // Select the entity and verify evidence panel opens with explicit linkage + provenance.
+    await page.getByText(/Test Entity/i).first().click();
+
+    await expect(page.getByTestId('truth-provenance')).toContainText('Getting Started');
+    await expect(page.getByTestId('truth-provenance')).toContainText('sourceType=URL');
+
+    // Evidence must be explicit: chunk + offsets.
+    await expect(page.getByText(/Chunk 1 • offsets 20–31/i)).toBeVisible();
+    await expect(page.getByText(/chunkId=chunk-doc-1-1/i)).toBeVisible();
+
+    // Highlight must match offsets exactly (no inferred snippet).
+    const mark = page.getByTestId('mention-highlight-mention-1');
+    await expect(mark).toBeVisible();
+    await expect(mark).toHaveText('Test Entity');
   });
 });
 

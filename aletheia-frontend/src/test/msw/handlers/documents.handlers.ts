@@ -78,6 +78,17 @@ function asDocumentById(id: string) {
   return doc;
 }
 
+function assertDocumentHasEvidence(doc: NonNullable<ReturnType<typeof asDocumentById>>) {
+  assertPresent(doc.chunks, 'Document.chunks');
+  // Widen the fixture's readonly tuple union into a stable array shape for checks.
+  const chunks: ReadonlyArray<{ mentions?: ReadonlyArray<unknown> | undefined }> = doc.chunks as unknown as ReadonlyArray<{
+    mentions?: ReadonlyArray<unknown> | undefined;
+  }>;
+  if (chunks.length === 0) fail('Document has no chunks (Truth Surface requires chunk text)');
+  const mentionCount = chunks.reduce((acc, c) => acc + (c.mentions?.length ?? 0), 0);
+  if (mentionCount === 0) fail('Document has no mentions (Truth Surface requires explicit mention evidence)');
+}
+
 function listDocuments() {
   // Return exactly the fields selected by `ListDocuments` (DocumentFragment + chunk id stubs).
   return fixture.documents.map((d) => ({
@@ -106,6 +117,31 @@ function documentsIndex() {
 }
 
 export const documentHandlers = [
+  graphql.query('DocumentsByUser', ({ variables }) => {
+    const userId = assertPresent((variables as { userId?: string } | undefined)?.userId, 'DocumentsByUser.variables.userId');
+    // This mock does not currently partition by user; it returns the deterministic fixture set.
+    // The important contract is: provenance and mention offsets must still be valid in the backing fixture.
+    void userId;
+
+    const data = {
+      documentsByUser: fixture.documents.map((d) => {
+        const full = asDocumentById(d.id);
+        if (!full) return null;
+        assertDocumentHasEvidence(full);
+        return {
+          __typename: full.__typename,
+          id: full.id,
+          title: full.title,
+          createdAt: full.createdAt,
+          sourceType: full.sourceType,
+          sourceLabel: full.sourceLabel,
+        };
+      }).filter(Boolean),
+    };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
   graphql.query('ListDocuments', () => {
     const data = { documents: listDocuments() };
     assertNoConfidence(data, 'data');
@@ -121,6 +157,18 @@ export const documentHandlers = [
   graphql.query('GetDocumentById', ({ variables }) => {
     const id = assertPresent((variables as { id?: string } | undefined)?.id, 'GetDocumentById.variables.id');
     const doc = asDocumentById(id);
+    const data = { document: doc };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
+  graphql.query('GetDocumentEvidenceView', ({ variables }) => {
+    const id = assertPresent(
+      (variables as { id?: string } | undefined)?.id,
+      'GetDocumentEvidenceView.variables.id'
+    );
+    const doc = asDocumentById(id);
+    if (doc) assertDocumentHasEvidence(doc);
     const data = { document: doc };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });

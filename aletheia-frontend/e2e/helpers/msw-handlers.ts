@@ -499,6 +499,57 @@ export async function setupGraphQLMocks(route: Route) {
         break;
       }
 
+      case 'GetDocumentEvidenceView': {
+        const id = varString(parsedBody.variables, 'id') ?? '';
+        const doc = documentsStore.find((d) => d.id === id) ?? null;
+        response = {
+          status: 200,
+          body: {
+            data: {
+              document: doc
+                ? {
+                    __typename: 'Document',
+                    id: doc.id,
+                    title: doc.title,
+                    createdAt: doc.createdAt,
+                    sourceType: 'URL',
+                    sourceLabel: 'example.com',
+                    source: {
+                      __typename: 'DocumentSource',
+                      id: `source-${doc.id}`,
+                      documentId: doc.id,
+                      kind: 'URL',
+                      ingestedAt: doc.createdAt,
+                      accessedAt: doc.createdAt,
+                      publishedAt: null,
+                      author: null,
+                      publisher: null,
+                      filename: null,
+                      mimeType: null,
+                      contentType: null,
+                      sizeBytes: null,
+                      requestedUrl: 'https://example.com/getting-started',
+                      fetchedUrl: 'https://example.com/getting-started',
+                      contentSha256: null,
+                      fileSha256: null,
+                      lastModifiedMs: null,
+                    },
+                    chunks: (chunksStore[doc.id] ?? []).map((c) => ({
+                      __typename: 'DocumentChunk',
+                      id: c.id,
+                      chunkIndex: c.chunkIndex,
+                      content: c.content,
+                      documentId: doc.id,
+                      mentions: mentionsStore.filter((m) => m.chunkId === c.id),
+                    })),
+                  }
+                : null,
+            },
+          },
+        };
+        break;
+      }
+
       case 'DocumentIndexByUser': {
         // Documents index used by the evidence-first Documents library UI.
         response = {
