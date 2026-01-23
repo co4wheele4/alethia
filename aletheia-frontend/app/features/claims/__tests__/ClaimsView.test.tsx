@@ -8,6 +8,7 @@ import * as claimsHook from '../hooks/useClaims';
 
 vi.mock('../../documents/hooks/useDocuments');
 vi.mock('../hooks/useClaims');
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 describe('ClaimsView', () => {
   it('shows login-gated message when userId is null', () => {

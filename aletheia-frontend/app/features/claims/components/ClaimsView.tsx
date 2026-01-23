@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Alert, Box, CircularProgress, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from '@mui/material';
 
 import { useDocuments } from '../../documents/hooks/useDocuments';
 import { useClaims } from '../hooks/useClaims';
@@ -10,6 +11,7 @@ import { ClaimsList } from './ClaimsList';
 
 export function ClaimsView(props: { userId: string | null }) {
   const { userId } = props;
+  const router = useRouter();
   const { documents, loading: docsLoading, error: docsError } = useDocuments(userId);
 
   const [scopeDocumentId, setScopeDocumentId] = useState<string>('__all__');
@@ -19,6 +21,10 @@ export function ClaimsView(props: { userId: string | null }) {
 
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   const selectedClaim = useMemo(() => claims.find((c) => c.id === selectedClaimId) ?? null, [claims, selectedClaimId]);
+
+  const [comparisonClaimIds, setComparisonClaimIds] = useState<string[]>([]);
+
+  const canCompare = comparisonClaimIds.length === 2 && comparisonClaimIds[0] && comparisonClaimIds[1];
 
   if (!userId) {
     return <Alert severity="info">Claims inspection is available after login.</Alert>;
@@ -74,7 +80,55 @@ export function ClaimsView(props: { userId: string | null }) {
           </Alert>
         ) : null}
 
-        <ClaimsList claims={claims} selectedClaimId={selectedClaimId} onSelectClaim={setSelectedClaimId} />
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+            Comparison (user-initiated)
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            Select exactly two claims to open a neutral side-by-side view. No conflict, agreement, or confidence is inferred.
+          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+            <Button
+              size="small"
+              variant="contained"
+              disabled={!canCompare}
+              onClick={() => {
+                if (!canCompare) return;
+                const left = encodeURIComponent(comparisonClaimIds[0]!);
+                const right = encodeURIComponent(comparisonClaimIds[1]!);
+                router.push(`/claims/compare?left=${left}&right=${right}`);
+              }}
+              aria-label="Open claim comparison"
+              sx={{ textTransform: 'none' }}
+            >
+              Compare selected ({comparisonClaimIds.length}/2)
+            </Button>
+            <Button
+              size="small"
+              variant="text"
+              disabled={comparisonClaimIds.length === 0}
+              onClick={() => setComparisonClaimIds([])}
+              sx={{ textTransform: 'none' }}
+            >
+              Clear
+            </Button>
+          </Stack>
+        </Box>
+
+        <ClaimsList
+          claims={claims}
+          selectedClaimId={selectedClaimId}
+          onSelectClaim={setSelectedClaimId}
+          comparisonClaimIds={comparisonClaimIds}
+          onToggleComparisonClaim={(claimId) => {
+            setComparisonClaimIds((prev) => {
+              if (prev.includes(claimId)) return prev.filter((id) => id !== claimId);
+              if (prev.length < 2) return [...prev, claimId];
+              // Keep selection bounded to two (user still controls which two).
+              return [prev[1]!, claimId];
+            });
+          }}
+        />
       </Box>
 
       <Box sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 2, p: 2, bgcolor: 'background.paper' }}>

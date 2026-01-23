@@ -22,7 +22,7 @@ export default defineConfig({
 
   // WebKit (and mobile WebKit) can be slow to start on Windows under load.
   // Increase the per-test timeout to reduce flaky "browserContext.newPage" failures.
-  timeout: 60 * 1000,
+  timeout: 90 * 1000,
   
   // Run tests in parallel
   fullyParallel: true,
@@ -35,7 +35,7 @@ export default defineConfig({
   
   // Opt out of parallel tests on CI
   // Also reduce parallelism on Windows to avoid browser startup timeouts.
-  workers: process.env.CI ? 1 : process.platform === 'win32' ? 4 : undefined,
+  workers: process.env.CI ? 1 : process.platform === 'win32' ? 2 : undefined,
 
   expect: {
     timeout: 15 * 1000,

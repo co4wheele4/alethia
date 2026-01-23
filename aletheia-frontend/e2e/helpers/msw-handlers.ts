@@ -47,6 +47,7 @@ let entitiesStore: Array<{ id: string; name: string; type: string; mentionCount:
 let entityDetailStore: Record<string, Record<string, unknown> | null> = {};
 let mentionsStore: Array<Record<string, unknown>> = [];
 let relationshipsStore: Array<Record<string, unknown>> = [];
+let claimsStore: Array<Record<string, unknown>> = [];
 
 function ensureSeeded() {
   if (documentsStore.length > 0) return;
@@ -184,6 +185,98 @@ function ensureSeeded() {
         },
       ],
     },
+  };
+
+  claimsStore = [
+    {
+      __typename: 'Claim',
+      id: 'claim-1',
+      text: 'Test Entity is mentioned in Getting Started.',
+      status: 'DRAFT',
+      createdAt,
+      evidence: [
+        {
+          __typename: 'ClaimEvidence',
+          id: 'cev-1',
+          claimId: 'claim-1',
+          documentId: 'doc-1',
+          createdAt,
+          mentionIds: ['mention-1'],
+          relationshipIds: [],
+        },
+      ],
+    },
+    {
+      __typename: 'Claim',
+      id: 'claim-2',
+      text: 'Getting Started contains a specific mention span for Test Entity.',
+      status: 'REVIEWED',
+      createdAt,
+      evidence: [
+        {
+          __typename: 'ClaimEvidence',
+          id: 'cev-2',
+          claimId: 'claim-2',
+          documentId: 'doc-1',
+          createdAt,
+          mentionIds: ['mention-1'],
+          relationshipIds: [],
+        },
+      ],
+    },
+  ];
+}
+
+function buildDocumentSource(documentId: string, createdAt: string) {
+  return {
+    __typename: 'DocumentSource',
+    id: `source-${documentId}`,
+    documentId,
+    kind: 'URL',
+    ingestedAt: createdAt,
+    accessedAt: createdAt,
+    publishedAt: null,
+    author: null,
+    publisher: null,
+    filename: null,
+    mimeType: null,
+    contentType: null,
+    sizeBytes: null,
+    requestedUrl: 'https://example.com/getting-started',
+    fetchedUrl: 'https://example.com/getting-started',
+    contentSha256: null,
+    fileSha256: null,
+    lastModifiedMs: null,
+  };
+}
+
+function buildDocumentCore(documentId: string) {
+  const doc = documentsStore.find((d) => d.id === documentId);
+  if (!doc) return null;
+  return {
+    __typename: 'Document',
+    id: doc.id,
+    title: doc.title,
+    createdAt: doc.createdAt,
+    sourceType: 'URL',
+    sourceLabel: 'example.com',
+    source: buildDocumentSource(doc.id, doc.createdAt),
+  };
+}
+
+function buildDocumentEvidenceView(documentId: string) {
+  const core = buildDocumentCore(documentId);
+  if (!core) return null;
+  return {
+    ...core,
+    chunks: (chunksStore[documentId] ?? []).map((c) => ({
+      __typename: 'DocumentChunk',
+      id: c.id,
+      chunkIndex: c.chunkIndex,
+      content: c.content,
+      documentId,
+      mentions: mentionsStore.filter((m) => m.chunkId === c.id),
+    })),
   };
 }
 
@@ -352,6 +445,7 @@ export async function setupGraphQLMocks(route: Route) {
           mentionsStore = [];
           relationshipsStore = [];
           entityDetailStore = {};
+          claimsStore = [];
           ensureSeeded();
 
           response = {
@@ -715,6 +809,65 @@ export async function setupGraphQLMocks(route: Route) {
                       },
                     }
                   : null,
+            },
+          },
+        };
+        break;
+      }
+
+      case 'ListClaims': {
+        ensureSeeded();
+        response = {
+          status: 200,
+          body: {
+            data: {
+              claims: claimsStore.map((c) => {
+                const evidence = (c as { evidence?: Array<{ documentId?: string }> }).evidence ?? [];
+                const docIds = Array.from(new Set(evidence.map((e) => String(e.documentId ?? '')).filter(Boolean)));
+                return {
+                  ...c,
+                  documents: docIds.map((id) => buildDocumentCore(id)).filter(Boolean),
+                };
+              }),
+            },
+          },
+        };
+        break;
+      }
+
+      case 'ClaimsByDocument': {
+        ensureSeeded();
+        const documentId = varString(parsedBody.variables, 'documentId') ?? '';
+        response = {
+          status: 200,
+          body: {
+            data: {
+              claimsByDocument: claimsStore
+                .filter((c) => (c as { evidence?: Array<{ documentId?: string }> }).evidence?.some((e) => e.documentId === documentId))
+                .map((c) => ({
+                  ...c,
+                  documents: [buildDocumentCore(documentId)].filter(Boolean),
+                })),
+            },
+          },
+        };
+        break;
+      }
+
+      case 'GetClaimsForComparison': {
+        ensureSeeded();
+        response = {
+          status: 200,
+          body: {
+            data: {
+              claims: claimsStore.map((c) => {
+                const evidence = (c as { evidence?: Array<{ documentId?: string }> }).evidence ?? [];
+                const docIds = Array.from(new Set(evidence.map((e) => String(e.documentId ?? '')).filter(Boolean)));
+                return {
+                  ...c,
+                  documents: docIds.map((id) => buildDocumentEvidenceView(id)).filter(Boolean),
+                };
+              }),
             },
           },
         };

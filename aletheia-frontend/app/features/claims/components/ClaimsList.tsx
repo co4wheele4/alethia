@@ -9,8 +9,10 @@ export function ClaimsList(props: {
   claims: Claim[];
   selectedClaimId: string | null;
   onSelectClaim: (claimId: string) => void;
+  comparisonClaimIds: string[];
+  onToggleComparisonClaim: (claimId: string) => void;
 }) {
-  const { claims, selectedClaimId, onSelectClaim } = props;
+  const { claims, selectedClaimId, onSelectClaim, comparisonClaimIds, onToggleComparisonClaim } = props;
 
   if (claims.length === 0) {
     return <Alert severity="info">No claims found for this scope.</Alert>;
@@ -23,7 +25,14 @@ export function ClaimsList(props: {
       </Typography>
       <List dense aria-label="claims-list">
         {claims.map((c) => (
-          <ClaimListItem key={c.id} claim={c} selected={c.id === selectedClaimId} onSelect={onSelectClaim} />
+          <ClaimListItem
+            key={c.id}
+            claim={c}
+            selected={c.id === selectedClaimId}
+            onSelect={onSelectClaim}
+            comparisonSelected={comparisonClaimIds.includes(c.id)}
+            onToggleComparison={onToggleComparisonClaim}
+          />
         ))}
       </List>
     </>

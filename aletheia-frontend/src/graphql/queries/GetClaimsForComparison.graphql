@@ -1,0 +1,70 @@
+query GetClaimsForComparison {
+  claims {
+    __typename
+    id
+    text
+    status
+    createdAt
+    evidence {
+      __typename
+      id
+      claimId
+      documentId
+      createdAt
+      mentionIds
+      relationshipIds
+    }
+    documents {
+      __typename
+      id
+      title
+      createdAt
+      sourceType
+      sourceLabel
+      source {
+        __typename
+        id
+        documentId
+        kind
+        ingestedAt
+        accessedAt
+        publishedAt
+        author
+        publisher
+        filename
+        mimeType
+        contentType
+        sizeBytes
+        requestedUrl
+        fetchedUrl
+        contentSha256
+        fileSha256
+        lastModifiedMs
+      }
+      chunks {
+        __typename
+        id
+        chunkIndex
+        content
+        documentId
+        mentions {
+          __typename
+          id
+          entityId
+          chunkId
+          startOffset
+          endOffset
+          excerpt
+          entity {
+            __typename
+            id
+            name
+            type
+            mentionCount
+          }
+        }
+      }
+    }
+  }
+}
+
