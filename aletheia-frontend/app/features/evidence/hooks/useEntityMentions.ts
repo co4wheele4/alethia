@@ -59,16 +59,8 @@ export function useEntityMentions(args: { document: EvidenceDocument | null; ent
       fail(`Selected entity "${entityId}" has no explicit mentions in this document`);
     }
 
-    for (const [chunkId, ranges] of Object.entries(rangesByChunkId)) {
+    for (const ranges of Object.values(rangesByChunkId)) {
       ranges.sort((a, b) => a.start - b.start || b.end - a.end);
-      // Truth Surface v1: overlapping mention spans are ambiguous → fail loudly.
-      for (let i = 1; i < ranges.length; i += 1) {
-        const prev = ranges[i - 1]!;
-        const cur = ranges[i]!;
-        if (cur.start < prev.end) {
-          fail(`Overlapping mention spans in chunk ${chunkId}: ${prev.mentionId} overlaps ${cur.mentionId}`);
-        }
-      }
     }
 
     mentions.sort((a, b) => a.chunkIndex - b.chunkIndex || a.startOffset - b.startOffset);

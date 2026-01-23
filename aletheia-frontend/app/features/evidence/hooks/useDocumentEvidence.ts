@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 
-import { GET_DOCUMENT_EVIDENCE_VIEW_QUERY } from '../graphql';
+import { GET_DOCUMENT_EVIDENCE_VIEW_QUERY } from '@/src/graphql';
 
 export type EvidenceDocumentSource = {
   __typename?: 'DocumentSource';

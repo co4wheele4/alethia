@@ -24,15 +24,6 @@ function assertValidRanges(text: string, ranges: MentionRange[]) {
       fail(`Invalid mention range for ${r.mentionId}: end=${r.end} > text.length=${text.length}`);
     }
   }
-
-  const sorted = ranges.slice().sort((a, b) => a.start - b.start || b.end - a.end);
-  for (let i = 1; i < sorted.length; i += 1) {
-    const prev = sorted[i - 1]!;
-    const cur = sorted[i]!;
-    if (cur.start < prev.end) {
-      fail(`Overlapping mention ranges are not allowed (chunk spans overlap: ${prev.mentionId} overlaps ${cur.mentionId})`);
-    }
-  }
 }
 
 export function MentionHighlightOverlay(props: {
@@ -50,37 +41,57 @@ export function MentionHighlightOverlay(props: {
   if (rs.length === 0) return <>{safeText}</>;
   assertValidRanges(safeText, rs);
 
-  const sorted = rs.slice().sort((a, b) => a.start - b.start || b.end - a.end);
+  // Overlapping spans can occur in real data. Evidence inspection must remain usable:
+  // we render a deterministic, non-destructive overlay by splitting the text into
+  // boundary-aligned segments and marking any segment covered by one-or-more mentions.
+  const boundaries = new Set<number>([0, safeText.length]);
+  for (const r of rs) {
+    boundaries.add(r.start);
+    boundaries.add(r.end);
+  }
+  const points = [...boundaries].sort((a, b) => a - b);
 
   const out: React.ReactNode[] = [];
-  let cursor = 0;
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const start = points[i]!;
+    const end = points[i + 1]!;
+    if (start === end) continue;
 
-  for (const r of sorted) {
-    if (cursor < r.start) out.push(safeText.slice(cursor, r.start));
+    const covering = rs
+      .filter((r) => r.start <= start && r.end >= end)
+      .map((r) => r.mentionId)
+      .slice()
+      .sort();
+
+    const segmentText = safeText.slice(start, end);
+    if (covering.length === 0) {
+      out.push(segmentText);
+      continue;
+    }
+
+    const single = covering.length === 1 ? covering[0]! : null;
 
     out.push(
       <Box
-        key={r.mentionId}
+        key={`${start}:${end}:${covering.join(',')}`}
         component="mark"
-        data-testid={`mention-highlight-${r.mentionId}`}
-        data-start={String(r.start)}
-        data-end={String(r.end)}
+        data-start={String(start)}
+        data-end={String(end)}
+        data-mentions={covering.join(',')}
+        data-testid={single ? `mention-highlight-${single}` : undefined}
         sx={{
           px: 0.25,
           borderRadius: 0.5,
-          bgcolor: 'rgba(25, 118, 210, 0.14)',
-          borderBottom: '1px solid rgba(25, 118, 210, 0.55)',
+          bgcolor: covering.length > 1 ? 'rgba(156, 39, 176, 0.14)' : 'rgba(25, 118, 210, 0.14)',
+          borderBottom: covering.length > 1 ? '1px solid rgba(156, 39, 176, 0.55)' : '1px solid rgba(25, 118, 210, 0.55)',
           ...highlightSx,
         }}
       >
-        {safeText.slice(r.start, r.end)}
+        {segmentText}
       </Box>
     );
-
-    cursor = r.end;
   }
 
-  if (cursor < safeText.length) out.push(safeText.slice(cursor));
   return <>{out}</>;
 }
 
