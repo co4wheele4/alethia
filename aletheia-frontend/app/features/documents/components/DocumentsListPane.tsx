@@ -11,6 +11,7 @@ import {
   IconButton,
   LinearProgress,
   List,
+  ListItem,
   ListItemButton,
   ListItemText,
   TextField,
@@ -103,44 +104,59 @@ export function DocumentsListPane(props: {
 
       <List dense aria-label="documents-list">
         {visible.map((doc) => (
-          <ListItemButton
+          <ListItem
             key={doc.id}
-            selected={doc.id === selectedId}
-            onClick={() => onSelect(doc.id)}
-            sx={{ borderRadius: 1 }}
+            // Ensure `scrollIntoViewIfNeeded()` doesn't place list items under the fixed AppBar (mobile).
+            sx={{
+              scrollMarginTop: 88,
+              position: 'relative',
+              '& .MuiListItemSecondaryAction-root': { zIndex: 3 },
+            }}
+            secondaryAction={
+              <IconButton
+                edge="end"
+                aria-label={`Delete ${doc.title}`}
+                onClick={() => {
+                  void onDelete(doc.id);
+                }}
+                disabled={busy}
+                data-testid={`delete-document-${doc.id}`}
+                sx={{ position: 'relative', zIndex: 3 }}
+              >
+                <DeleteIcon />
+              </IconButton>
+            }
           >
-            <ListItemText
-              primary={
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                    {doc.title}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                    Source type: {doc.sourceType ?? '(missing)'}
-                    {doc.sourceLabel ? ` • ${doc.sourceLabel}` : ''}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                    Date added: {new Date(doc.dateAddedIso).toLocaleString()}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                    Chunks: {doc.chunkCount} • Mentions: {doc.mentionCount} • Entities: {doc.entityCount}
-                  </Typography>
-                </Box>
-              }
-            />
-            <IconButton
-              edge="end"
-              aria-label={`Delete ${doc.title}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                void onDelete(doc.id);
-              }}
-              disabled={busy}
-              data-testid={`delete-document-${doc.id}`}
+            <ListItemButton
+              selected={doc.id === selectedId}
+              onClick={() => onSelect(doc.id)}
+              // Keep the primary button hit-target from covering the trailing delete action on touch layouts.
+              // (Some mobile browsers report the primary button intercepting clicks otherwise.)
+              sx={{ borderRadius: 1, position: 'relative', zIndex: 0, width: 'calc(100% - 72px)' }}
             >
-              <DeleteIcon />
-            </IconButton>
-          </ListItemButton>
+              <ListItemText
+                // Prevent the text subtree from overlapping/intercepting the secondaryAction hit-target (mobile).
+                sx={{ pointerEvents: 'none' }}
+                primary={
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                      {doc.title}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+                      Source type: {doc.sourceType ?? '(missing)'}
+                      {doc.sourceLabel ? ` • ${doc.sourceLabel}` : ''}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+                      Date added: {new Date(doc.dateAddedIso).toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+                      Chunks: {doc.chunkCount} • Mentions: {doc.mentionCount} • Entities: {doc.entityCount}
+                    </Typography>
+                  </Box>
+                }
+              />
+            </ListItemButton>
+          </ListItem>
         ))}
       </List>
 

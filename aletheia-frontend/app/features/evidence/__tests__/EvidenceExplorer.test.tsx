@@ -208,6 +208,8 @@ function makeUseChunksByDocumentResult(
 describe('EvidenceExplorer', () => {
   beforeEach(async () => {
     vi.restoreAllMocks()
+    // Prevent in-flight Apollo operations from slowing down `clearStore()` under full-suite load.
+    client.stop()
     await client.clearStore()
 
     mockedUseDocuments.mockReturnValue(makeUseDocumentsResult({ documents: baseDocs }))
@@ -652,7 +654,10 @@ describe('EvidenceExplorer', () => {
     // - doc1: has source but missing kind + missing provenanceConfirmed -> covers defaulting + "Confirmed:" omission
     // - doc2: null chunk0 -> sourceBadgeOf(null) early return
     // - doc3: provenance without source -> sourceBadgeOf returns null after parse
-    const querySpy = vi.spyOn(client, 'query')
+    const querySpy = vi
+      .spyOn(client, 'query')
+      // Default response for any unexpected extra prefetch calls (keeps the test deterministic under load).
+      .mockResolvedValue({ data: { chunk0ByDocument: null } } as unknown as ApolloQueryResult<unknown>)
       .mockResolvedValueOnce({
         data: {
           chunk0ByDocument: {
