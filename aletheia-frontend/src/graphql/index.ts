@@ -12,9 +12,20 @@ export { ENTITY_CONTRACT_FRAGMENT } from './fragments/entity.contract.fragment';
 export { ENTITY_MENTION_CONTRACT_FRAGMENT } from './fragments/entityMention.contract.fragment';
 export { ENTITY_RELATIONSHIP_CONTRACT_FRAGMENT } from './fragments/entityRelationship.contract.fragment';
 
+// Truth Surface v1 (Document → Evidence Viewer) fragments (prescriptive names)
+export { DOCUMENT_CORE_FIELDS } from './fragments/documentCoreFields.fragment';
+export { ENTITY_CORE_FIELDS } from './fragments/entityCoreFields.fragment';
+export { ENTITY_MENTION_EVIDENCE_FIELDS } from './fragments/entityMentionEvidenceFields.fragment';
+export { DOCUMENT_EVIDENCE_VIEW } from './fragments/documentEvidenceView.fragment';
+// Prescriptive aliases requested by Evidence Inspection UI spec
+export { DOCUMENT_EVIDENCE_FRAGMENT } from './fragments/documentEvidence.fragment';
+export { ENTITY_MENTION_FRAGMENT } from './fragments/entityMention.fragment';
+export { RELATIONSHIP_EVIDENCE_FRAGMENT } from './fragments/relationshipEvidence.fragment';
+
 export { LIST_DOCUMENTS_QUERY } from './queries/listDocuments.query';
 export { GET_DOCUMENT_BY_ID_QUERY } from './queries/getDocumentById.query';
 export { GET_DOCUMENT_INTELLIGENCE_QUERY } from './queries/getDocumentIntelligence.query';
+export { GET_DOCUMENT_EVIDENCE_VIEW_QUERY } from './queries/getDocumentEvidenceView.query';
 export { DOCUMENTS_INDEX_QUERY } from './queries/documentsIndex.query';
 export { LIST_ENTITIES_QUERY } from './queries/listEntities.query';
 export { LIST_RELATIONSHIPS_QUERY } from './queries/listRelationships.query';
