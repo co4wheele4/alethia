@@ -1,125 +1,195 @@
 # ADR-004: Frontend Architecture Overview
 
 ## Status
-Implemented
+Implemented (Updated)
 
 ## Date
-2026-01-12
+2026-01-10  
+Updated: 2026-01-22
 
 ## Context
 
-The Aletheia frontend is a **knowledge exploration and truth-disclosure interface** centered around documents, entities, relationships, and evidence. The system must support:
+Aletheia is a *truth disclosure system*, not an answer engine.
 
-- Incremental document ingestion
-- Provenance-aware entity extraction
-- Evidence-backed relationships
-- Wizard-driven onboarding
-- Scalable UI complexity without architectural erosion
+The frontend must:
+- Surface **what is claimed**
+- Expose **what evidence exists**
+- Enable users to inspect provenance and context
+- Avoid asserting truth, correctness, or belief
 
-The frontend must remain:
-- Modular
-- Testable
-- Evolvable as backend guarantees increase
+As the product evolved, it became necessary to explicitly distinguish **claims**, **evidence**, and **relationships** at the UI architecture level to prevent semantic collapse and epistemic overreach.
+
+This ADR defines the frontend’s architectural responsibilities and **hard UI boundaries** between claims and evidence.
+
+---
 
 ## Architectural Principles
 
-1. **Feature-Oriented Structure**
-   - Organize by domain capability, not by technical layer alone
-   - Features own their UI, hooks, GraphQL fragments, and tests
+1. **Disclosure over assertion**
+2. **Evidence-first navigation**
+3. **Schema-faithful rendering**
+4. **No inferred truth**
+5. **User judgment is primary**
 
-2. **Explicit Data Contracts**
-   - All data flows originate from GraphQL contracts
-   - UI does not infer backend meaning implicitly
+---
 
-3. **Composition Over Inheritance**
-   - UI is composed of primitives and feature components
-   - No deep component hierarchies
+## Core Semantic Separation (Hard Rule)
 
-4. **Testability as a First-Class Constraint**
-   - Every feature must be testable at unit and integration levels
-   - Architecture must enable MSW-based contract testing
+The frontend MUST maintain a strict separation between:
 
-## High-Level Structure
+| Concept | UI Meaning |
+|------|---------|
+| Claim | An assertion made in source material |
+| Evidence | Inspectable support related to a claim |
+| Relationship | A structured linkage derived from evidence |
 
-app/
-├── analysis/            # Analysis route(s)
-├── components/          # Shared components
-├── dashboard/           # Dashboard route(s)
-├── documents/           # Documents route(s)
-├── entities/            # Entities route(s)
-├── evidence/            # Evidence route(s)
-├── features/            # Feature modules (UI + hooks + tests)
-├── hooks/               # Shared hooks
-├── lib/                 # Shared utilities (Apollo client, helpers)
-├── onboarding/          # Onboarding flows
-├── providers/           # Context providers
-├── services/            # API/service wrappers
-├── styles/              # Global styles
-└── types/               # Type declarations
+The UI MUST NEVER:
+- Present claims as facts
+- Present evidence as endorsement
+- Collapse claims and evidence into a single view model
 
-e2e/                      # Playwright end-to-end tests
-public/                   # Static assets
+(See ADR-007.)
 
-## Core Domains
+---
 
-### Documents
-- Upload
-- Source type classification
-- Provenance metadata
-- Indexing lifecycle
+## UI Responsibility Matrix
 
-### Entities
-- Mentions with offsets
-- Confidence scoring
-- Cross-document references
+### Claims (Assertion Layer)
 
-### Relationships
-- Typed relationships
-- Evidence-backed assertions
-- Confidence aggregation
+Claims are rendered as **asserted statements**, not conclusions.
 
-### Wizard
-- Guided onboarding
-- Progressive disclosure
-- Backend-aware validation
+UI rules:
+- Always labeled as “Claim”
+- Attributed to a source (document, author, speaker)
+- Neutral language only
+- May coexist with contradictory claims
 
-## Data Flow
+Prohibited:
+- Truth badges
+- “Verified” language
+- Confidence indicators on claims (see ADR-006)
 
-User Action
-→ UI Component
-→ Feature Hook
-→ GraphQL Query/Mutation
-→ Typed Response
-→ Rendered View
+---
 
+### Evidence (Grounding Layer)
 
-No component accesses raw Apollo cache directly.
+Evidence is rendered as **inspectable grounding material**.
 
-## State Management
+UI rules:
+- Direct links to documents and text spans
+- Highlighted offsets when applicable
+- Navigable from claims and relationships
+- Renderable independently of claims
 
-- Apollo Client: server state
-- Local component state: UI-only concerns
-- No global client state store unless proven necessary
+Evidence UI answers:
+> “What supports or challenges this claim?”
 
-## Testing Alignment
+---
 
-This architecture explicitly supports ADR-002 and ADR-003:
-- Vitest for unit/integration
-- MSW for contract validation
-- Playwright for end-to-end confidence
+### Relationships (Derived Structure Layer)
+
+Relationships represent **structured interpretations**, not raw truth.
+
+UI rules:
+- Always explorable via evidence
+- Never displayed as conclusions
+- Always explainable (“Why does this relationship exist?”)
+
+Relationships MUST NOT:
+- Replace claims
+- Imply correctness
+- Be shown without evidence traversal
+
+---
+
+## Page-Level Architecture
+
+### Documents View
+
+Responsibilities:
+- Show document metadata and provenance
+- Allow ingestion, deletion, inspection
+- Serve as the primary evidence anchor
+
+Documents are **evidence containers**, not knowledge assertions.
+
+---
+
+### Claims View (if/when present)
+
+Responsibilities:
+- Display asserted claims
+- Attribute claims to documents or speakers
+- Enable navigation to evidence
+
+Claims are never summarized as truths.
+
+---
+
+### Entity & Relationship Views
+
+Responsibilities:
+- Show entities and relationships as **derived structures**
+- Always link back to evidence
+- Allow inspection of mention spans
+
+Entities and relationships are *navigational aids*, not conclusions.
+
+---
+
+## Data Flow Constraints
+
+- GraphQL is the single source of truth (ADR-005)
+- Frontend MUST NOT infer:
+  - Confidence
+  - Provenance
+  - Relationship strength
+- Missing schema guarantees block UI features
+
+---
+
+## Testing & Enforcement
+
+- Contract tests enforce schema faithfulness
+- UI tests ensure claims are labeled as assertions
+- MSW mocks must fail on uncontracted fields
+- E2E tests validate evidence inspection flows
+
+---
+
+## Relationship to Other ADRs
+
+- **ADR-005**: GraphQL Contract & Data Guarantees  
+- **ADR-006**: Confidence Semantics  
+- **ADR-007**: Claim Semantics vs Evidence Semantics  
+
+ADR-004 defines how these guarantees are **rendered and enforced** in the UI.
+
+---
 
 ## Consequences
 
 ### Positive
-- Predictable scaling
-- Clear feature ownership
-- Reduced coupling
-- Strong test guarantees
+- Prevents implicit truth claims
+- Preserves neutrality and trust
+- Enables adversarial and investigative use cases
+- Scales to contradictory knowledge
 
 ### Negative
-- Slightly higher upfront structure cost
-- Requires discipline to maintain boundaries
+- More UI complexity
+- Slower “answer-oriented” interactions
+
+These tradeoffs are deliberate and aligned with Aletheia’s purpose.
+
+---
 
 ## Decision Outcome
 
-Adopted as the guiding frontend architecture for Aletheia.
+The frontend is a **disclosure interface**, not a judge.
+
+Aletheia shows:
+- What is claimed
+- What evidence exists
+- Where it comes from
+
+It never tells the user what to believe.

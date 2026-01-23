@@ -1,27 +1,29 @@
 # ADR-005: GraphQL Contract & Data Guarantees
 
-## Status  
-**Implemented (Amended for Schema Fidelity)**
+## Status
+Implemented
 
-## Date  
-2026-01-12  
-**Amended:** 2026-01-21
+## Date
+2026-01-12
+
+## Related ADRs
+- **ADR-004**: Frontend Architecture Overview
+- **ADR-006**: Confidence Semantics
+- **ADR-007**: Claim Semantics vs Evidence Semantics
 
 ---
 
 ## Context
 
-Aletheia’s core value is *truth disclosure* (*aletheia*): surfacing claims, entities, and relationships **with explicit provenance and evidence**, and—**in the future**—confidence.
+Aletheia’s core value is *truth disclosure* (aletheia): surfacing **claims, entities, relationships, and evidence** with explicit provenance and inspectability.
 
-Early frontend assumptions and inferred data behavior create risk:
-- UI logic becomes coupled to backend implementation quirks
-- Data guarantees are implied rather than explicit
-- Testing becomes brittle or misleading
+Early frontend assumptions created risk:
+- Claims treated as facts
+- Evidence conflated with assertions
+- Confidence inferred or fabricated in UI
+- GraphQL fragments drifting from backend reality
 
-**Important clarification:**  
-The current backend GraphQL schema **does not expose confidence fields** on mentions, evidence, or relationships. Prisma explicitly marks mention confidence as legacy / ignored.
-
-This ADR formalizes **what the frontend is allowed to assume today**, while clearly deferring aspirational guarantees.
+This ADR formalizes **what the frontend is allowed to assume** about GraphQL responses and how those assumptions differ for **claims vs evidence**.
 
 ---
 
@@ -30,15 +32,16 @@ This ADR formalizes **what the frontend is allowed to assume today**, while clea
 The GraphQL API is the **single source of truth**.
 
 The frontend MUST:
-- Rely **only** on fields explicitly present in the GraphQL schema
-- Treat missing fields as **non-existent**, not optional
-- Fail fast if undocumented fields appear in responses or mocks
+- Distinguish **claims** from **evidence**
+- Use **schema-faithful GraphQL fragments**
+- Respect **confidence semantics as defined in ADR-006**
+- Enforce **claim vs evidence boundaries as defined in ADR-007**
 
-No frontend feature may assume backend capabilities beyond the schema.
+If the schema does not expose a field, the frontend MUST behave as if it does not exist.
 
 ---
 
-## Required Guarantees (Current, Enforced)
+## Required Guarantees
 
 ### Documents
 
@@ -48,28 +51,67 @@ Every `Document` MUST expose:
 - `title`
 - `sourceType` (UPLOAD, URL, API, MANUAL, etc.)
 - `createdAt`
+- `status` (INGESTED, PROCESSING, INDEXED, FAILED)
+- `provenanceSummary` (human-readable origin)
 
-If present in the schema, the following MAY be used:
-- `status`
-- provenance-related summary fields
-
-The frontend MUST NOT infer source type from file extension, upload flow, or UI context.
+The frontend MUST NOT infer source type or provenance from UI flow.
 
 ---
 
-### Entity Mentions
+## Claims (Assertion Layer)
 
-Every `EntityMention` MUST expose **only schema-defined fields**, which currently include:
+> Claims represent extracted or user-authored assertions.  
+> Claims are **not facts**. They are disputable statements.
+
+### Claim Guarantees
+
+Every `Claim` MUST expose:
 
 - `id`
-- `chunkId`
+- `text`
+- `sourceDocumentId`
+- `createdAt`
+- `status` (DRAFT, EXTRACTED, CONFIRMED, DISPUTED)
+
+### Explicit Non-Guarantees (ADR-006)
+
+Claims MUST NOT expose:
+- `confidence`
+- probabilistic weighting
+- inferred truthfulness
+
+The frontend MUST:
+- Render claims as assertions
+- Clearly label them as “Claim”
+- Avoid visual affordances implying factual certainty
+
+### Claim GraphQL Fragments
+
+Claim fragments MUST:
+- Contain **only assertion-level fields**
+- Never include evidence-level confidence or offsets
+- Be reusable without leaking evidence semantics
+
+---
+
+## Evidence (Grounding Layer)
+
+> Evidence grounds claims in observable source material.
+
+### Entity Mentions (Evidence Units)
+
+Every `EntityMention` MUST expose:
+
+- `entityId`
+- `documentId`
 - `startOffset`
 - `endOffset`
+- `textSnippet`
 
 Offsets MUST refer to the original document text.
 
-> ❌ `confidence` is **not available**  
-> ❌ `textSnippet` must be derived client-side from offsets and chunk text
+⚠️ **Confidence is NOT guaranteed** on mentions in the current schema  
+(see ADR-006). The frontend MUST NOT assume it exists.
 
 ---
 
@@ -80,93 +122,79 @@ Every `Entity` MUST expose:
 - `id`
 - `label`
 - `type`
+- `mentionCount`
 
-Derived values such as mention counts MAY be computed client-side.
-
-> ❌ No aggregate confidence is available or permitted
+`confidenceAggregate` MUST NOT be assumed unless explicitly added to the schema.
 
 ---
 
 ### Relationships
 
-Every `EntityRelationship` MUST expose (if present in schema):
+Every `EntityRelationship` MUST expose:
 
-- `id`
 - `sourceEntityId`
 - `targetEntityId`
-- `type`
+- `relationshipType`
+- `evidence[]`
 
-Relationship evidence MUST be explicit when relationships exist.
+Each `evidence` entry MUST reference:
+- A document
+- One or more mention IDs
 
-> ❌ No relationship confidence is available or permitted
-
----
-
-### Evidence
-
-Evidence MUST be explicit and traceable via:
-
-- Document
-- Chunk
-- Offset-based mentions
-
-Evidence MUST be renderable in the UI using:
-- Text spans
-- Highlighted offsets
-- Provenance metadata
+⚠️ Relationship confidence MUST NOT be assumed unless explicitly present in schema.
 
 ---
 
-## Explicitly Deferred Guarantees (Not Implemented)
+## Evidence Guarantees
 
-The following concepts are **intentionally deferred** and MUST NOT be assumed:
-
-- Mention-level confidence
-- Relationship confidence
-- Evidence confidence
-- Aggregate confidence scores
-
-These may be introduced **only** when:
-1. The backend schema exposes them explicitly
-2. A new ADR amends this contract
+- No relationship exists without evidence
+- Evidence MUST be renderable in the UI
+- Evidence MUST be traceable back to source text
+- Evidence MUST be navigable (offset-based highlighting)
 
 ---
 
 ## Frontend Rules
 
-- UI MUST NOT guess confidence, provenance strength, or relationship certainty
-- Explainability MUST be achieved through **traceability**, not probability
-- GraphQL fragments MUST remain schema-faithful
-- MSW mocks MUST fail if undeclared fields (e.g., `confidence`) appear
-- Missing guarantees MUST block feature completion
+### Fragment Discipline
 
----
+- **Claim fragments** and **Evidence fragments** MUST be separate
+- No fragment may mix assertion semantics with grounding semantics
+- Shared fragments are allowed **only** for structural identifiers (`id`, `createdAt`)
 
-## Testing Implications
+### UI Rules
 
-- Contract tests validate **absence and presence** of fields
-- MSW handlers enforce schema discipline
-- UI tests assert provenance and evidence visibility
-- Tests MUST fail if confidence appears prematurely
+- UI MUST NOT guess confidence, provenance, or strength
+- UI MUST block features that require missing guarantees
+- Evidence inspection MUST be possible wherever claims are shown
+
+### Testing Rules
+
+- GraphQL contract tests validate required fields
+- MSW mocks MUST fail if:
+  - Confidence appears prematurely
+  - Evidence is missing where required
+  - Claims expose forbidden fields
+- UI tests MUST assert evidence inspectability
 
 ---
 
 ## Consequences
 
 ### Positive
-- Strong schema discipline
-- Predictable UI behavior
-- High trust through traceability
-- Safe forward evolution of confidence features
+- Clear semantic boundaries
+- Reduced hallucinated certainty
+- Strong auditability
+- ADR-aligned UI behavior
 
 ### Negative
-- Some UX affordances deferred
-- Requires explicit backend/frontend coordination for schema changes
+- Slower feature rollout without schema changes
+- Higher upfront discipline required
 
 ---
 
 ## Decision Outcome
 
-Adopted as a **hard, schema-faithful contract** between frontend and backend.
+Adopted as a **hard contract** between frontend and backend.
 
-Confidence is recognized as a **future capability**, not a current guarantee.
+Any violation MUST be treated as a defect, not a workaround.
