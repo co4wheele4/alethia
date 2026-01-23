@@ -84,7 +84,7 @@ function getTheme(mode: 'light' | 'dark') {
       },
       MuiIconButton: {
         styleOverrides: {
-          root: ({ theme, ownerState }) => {
+          root: ({ theme }) => {
             const restBg = alpha(
               theme.palette.background.paper,
               theme.palette.mode === 'dark' ? 0.72 : 0.82

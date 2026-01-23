@@ -1,21 +1,31 @@
 'use client';
 
-import { AppBar, Box, Button, IconButton, Toolbar, Typography } from '@mui/material';
+import React from 'react';
+import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 
-import { ThemeToggle } from '../primitives/ThemeToggle';
 import { ServerHeader } from '../layout/ServerHeader';
 
 export interface HeaderProps {
   title: string;
   headerActions?: React.ReactNode;
   showMobileNavButton?: boolean;
-  onOpenMobileNav?: () => void;
-  onLogout?: () => void;
+  navMenuButtonId?: string;
+  navMenuId?: string;
+  navMenuOpen?: boolean;
+  onOpenMobileNav?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 export function Header(props: HeaderProps) {
-  const { title, headerActions, showMobileNavButton, onOpenMobileNav, onLogout } = props;
+  const {
+    title,
+    headerActions,
+    showMobileNavButton,
+    navMenuButtonId,
+    navMenuId,
+    navMenuOpen,
+    onOpenMobileNav,
+  } = props;
 
   return (
     <AppBar
@@ -32,7 +42,14 @@ export function Header(props: HeaderProps) {
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
           {showMobileNavButton ? (
-            <IconButton aria-label="Open navigation" onClick={onOpenMobileNav}>
+            <IconButton
+              id={navMenuButtonId}
+              aria-label="Open navigation"
+              aria-haspopup="menu"
+              aria-controls={navMenuOpen ? navMenuId : undefined}
+              aria-expanded={navMenuOpen ? 'true' : undefined}
+              onClick={(event) => onOpenMobileNav?.(event)}
+            >
               <MenuIcon />
             </IconButton>
           ) : null}
@@ -46,12 +63,9 @@ export function Header(props: HeaderProps) {
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {headerActions}
-          <ThemeToggle />
-          {onLogout ? (
-            <Button color="inherit" onClick={onLogout} sx={{ textTransform: 'none' }}>
-              Logout
-            </Button>
-          ) : null}
+          <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+            Nothing is asserted without evidence.
+          </Typography>
         </Box>
       </Toolbar>
     </AppBar>

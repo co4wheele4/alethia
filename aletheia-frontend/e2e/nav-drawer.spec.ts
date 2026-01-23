@@ -10,26 +10,26 @@ async function login(page: import('@playwright/test').Page) {
   await page.waitForURL(/\/dashboard/, { timeout: 20000 });
 }
 
-test.describe('Primary navigation drawer', () => {
+test.describe('Primary navigation menu', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/graphql', setupGraphQLMocks);
   });
 
-  test('hamburger toggles drawer open/close (drawer should not block hamburger)', async ({ page }) => {
+  test('hamburger toggles menu open/close (menu should not block hamburger)', async ({ page }) => {
     await login(page);
 
-    // Prefer attribute selector here because MUI's Modal can temporarily hide siblings
-    // from the accessibility tree while the drawer is open.
     const hamburger = page.locator('button[aria-label="Open navigation"]');
-    const nav = page.getByRole('navigation', { name: /primary navigation/i });
+    const menu = page.getByRole('menu', { name: /primary navigation/i });
+    const documentsItem = page.getByRole('menuitem', { name: /documents/i });
 
     // Open
     await hamburger.click();
-    await expect(nav).toBeVisible({ timeout: 10000 });
+    await expect(menu).toBeVisible({ timeout: 10000 });
+    await expect(documentsItem).toBeVisible({ timeout: 10000 });
 
-    // Close by clicking hamburger again (this fails if the open drawer/backdrop blocks clicks)
+    // Close by clicking hamburger again (this fails if the open menu blocks clicks)
     await hamburger.click();
-    await expect(nav).toBeHidden({ timeout: 10000 });
+    await expect(menu).toBeHidden({ timeout: 10000 });
   });
 });
 

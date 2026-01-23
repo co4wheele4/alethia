@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, within } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { act } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../features/auth/hooks/useAuth';
@@ -7,21 +7,13 @@ import { AppShell } from '../AppShell';
 
 vi.mock('@mui/material', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
-  type DrawerProps = React.PropsWithChildren<{
-    open?: boolean;
-    onClose?: (event: unknown, reason: string) => void;
-  }>;
   return {
     ...actual,
-    Drawer: ({ open, onClose, children }: DrawerProps) => {
+    Popper: ({ open, children }: React.PropsWithChildren<{ open?: boolean }>) => {
       if (!open) return null;
-      return (
-        <div data-testid="drawer">
-          <button onClick={() => onClose?.({}, 'backdropClick')}>close</button>
-          {children}
-        </div>
-      );
+      return <div data-testid="nav-menu">{children}</div>;
     },
+    ClickAwayListener: ({ children }: React.PropsWithChildren) => <>{children}</>,
   };
 });
 
@@ -29,8 +21,25 @@ vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
 }));
 
+vi.mock('next/link', () => ({
+  __esModule: true,
+  default: ({
+    href,
+    children,
+    ...props
+  }: React.PropsWithChildren<{ href: string } & React.AnchorHTMLAttributes<HTMLAnchorElement>>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 vi.mock('../../../features/auth/hooks/useAuth', () => ({
   useAuth: vi.fn(),
+}));
+
+vi.mock('../../primitives/ThemeToggle', () => ({
+  ThemeToggle: () => <div data-testid="theme-toggle" />,
 }));
 
 // Keep this test focused on AppShell behavior
@@ -51,19 +60,22 @@ vi.mock('../../common/ErrorBoundary', () => ({
   ErrorBoundary: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock('../primary-nav/PrimaryNav', () => ({
-  PrimaryNav: ({ variant, onNavigate }: { variant: string; onNavigate?: () => void }) => (
-    <nav data-testid={`primary-nav-${variant}`}>
-      <button onClick={() => onNavigate?.()}>navigate</button>
-    </nav>
-  ),
-}));
-
 vi.mock('../Header', () => ({
-  Header: ({ onOpenMobileNav, onLogout }: { onOpenMobileNav?: () => void; onLogout?: () => void }) => (
+  Header: ({
+    onOpenMobileNav,
+  }: {
+    onOpenMobileNav?: (event: unknown) => void;
+  }) => (
     <header data-testid="header-component">
-      <button onClick={() => onOpenMobileNav?.()}>open mobile nav</button>
-      {onLogout ? <button onClick={() => onLogout()}>logout</button> : null}
+      <button
+        onClick={() =>
+          onOpenMobileNav?.({
+            currentTarget: document.createElement('button'),
+          })
+        }
+      >
+        open mobile nav
+      </button>
     </header>
   ),
 }));
@@ -160,18 +172,11 @@ describe('AppShell', () => {
     await act(async () => {
       getByRole('button', { name: /open mobile nav/i }).click();
     });
-    expect(queryByTestId('drawer')).toBeInTheDocument();
-
-    await act(async () => {
-      const drawerNav = within(queryByTestId('drawer')!).getByTestId(
-        'primary-nav-drawer',
-      );
-      within(drawerNav).getByRole('button', { name: /^navigate$/i }).click();
-    });
+    expect(queryByTestId('nav-menu')).toBeInTheDocument();
 
     // Logout exists when requireAuth is true
     await act(async () => {
-      getByRole('button', { name: /^logout$/i }).click();
+      getByRole('menuitem', { name: /^logout$/i }).click();
     });
     expect(logout).toHaveBeenCalledTimes(1);
   });
