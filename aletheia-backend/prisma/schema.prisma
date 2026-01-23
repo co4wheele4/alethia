@@ -69,6 +69,7 @@ model Document {
 
   user   User            @relation(fields: [userId], references: [id])
   chunks DocumentChunk[]
+  claimEvidence ClaimEvidence[]
   /**
    * Source metadata is required for epistemic completeness, but is nullable for backward safety:
    * existing documents may predate structured source capture.
@@ -219,6 +220,7 @@ model EntityMention {
    * - It enables navigability from a relationship's evidence anchor to concrete mention IDs.
    */
   relationshipEvidenceLinks EntityRelationshipEvidenceMention[]
+  claimEvidenceLinks ClaimEvidenceMention[]
 
   entity Entity        @relation(fields: [entityId], references: [id])
   chunk  DocumentChunk @relation(fields: [chunkId], references: [id])
@@ -240,6 +242,7 @@ model EntityRelationship {
   from Entity @relation("FromEntity", fields: [fromEntity], references: [id])
   to   Entity @relation("ToEntity", fields: [toEntity], references: [id])
   evidence EntityRelationshipEvidence[]
+  claimEvidenceLinks ClaimEvidenceRelationship[]
 
   @@index([fromEntity])
   @@index([toEntity])
@@ -328,6 +331,85 @@ model AiQueryResult {
   @@index([createdAt])
   @@index([score])
   @@map("ai_query_results")
+}
+
+////////////////////
+// CLAIMS (READ-ONLY ASSERTION LAYER; ALWAYS GROUNDED IN EVIDENCE)
+////////////////////
+
+enum ClaimStatus {
+  DRAFT
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+model Claim {
+  id        String      @id @default(uuid()) @map("id")
+  text      String      @map("text")
+  status    ClaimStatus @default(DRAFT) @map("status")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  /**
+   * Grounding requirement:
+   * - Claims are higher-order assertions and MUST be inspectable via evidence anchors.
+   * - This relationship is required at the semantic level; API layers must fail loudly if empty.
+   */
+  evidence ClaimEvidence[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("claims")
+}
+
+model ClaimEvidence {
+  id         String   @id @default(uuid()) @map("id")
+  claimId    String   @map("claim_id")
+  documentId String   @map("document_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  claim    Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  /**
+   * Explicit, persisted linkage from this evidence anchor to concrete mention IDs.
+   * This enables document/offset evidence inspection without inference.
+   */
+  mentionLinks ClaimEvidenceMention[]
+
+  /**
+   * Explicit, persisted linkage from this evidence anchor to concrete relationship IDs.
+   * This enables traversal from claims to relationship evidence without implicit summarization.
+   */
+  relationshipLinks ClaimEvidenceRelationship[]
+
+  @@index([claimId])
+  @@index([documentId])
+  @@map("claim_evidence")
+}
+
+model ClaimEvidenceMention {
+  evidenceId String @map("evidence_id")
+  mentionId  String @map("mention_id")
+
+  evidence ClaimEvidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  mention  EntityMention @relation(fields: [mentionId], references: [id], onDelete: Cascade)
+
+  @@id([evidenceId, mentionId])
+  @@index([mentionId])
+  @@map("claim_evidence_mentions")
+}
+
+model ClaimEvidenceRelationship {
+  evidenceId     String @map("evidence_id")
+  relationshipId String @map("relationship_id")
+
+  evidence     ClaimEvidence     @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  relationship EntityRelationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
+
+  @@id([evidenceId, relationshipId])
+  @@index([relationshipId])
+  @@map("claim_evidence_relationships")
 }
 
 ////////////////////

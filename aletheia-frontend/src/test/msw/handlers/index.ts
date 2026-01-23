@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'msw';
 
 import { authHandlers } from './auth.handlers';
+import { claimHandlers } from './claims.handlers';
 import { documentHandlers } from './documents.handlers';
 import { entityHandlers } from './entities.handlers';
 import { relationshipHandlers } from './relationships.handlers';
@@ -20,6 +21,7 @@ export const handlers: RequestHandler[] = [
   ...documentHandlers,
   ...entityHandlers,
   ...relationshipHandlers,
+  ...claimHandlers,
   ...authHandlers,
 ];
 

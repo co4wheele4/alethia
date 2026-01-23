@@ -35,6 +35,48 @@ type AiQueryResult {
   score: Float!
 }
 
+type Claim {
+  createdAt: DateTime!
+
+  """Documents referenced by this claim, derived from evidence.documentId."""
+  documents: [Document!]!
+
+  """
+  Grounding anchors for this claim. Claims must never be returned without evidence.
+  """
+  evidence: [ClaimEvidence!]!
+  id: ID!
+  status: ClaimStatus!
+  text: String!
+}
+
+type ClaimEvidence {
+  claimId: ID!
+  createdAt: DateTime!
+  documentId: ID!
+  id: ID!
+
+  """
+  Explicit persisted mention IDs grounding this claim evidence (may be empty if relationshipIds are present).
+  """
+  mentionIds: [ID!]!
+
+  """
+  Explicit persisted relationship IDs grounding this claim evidence (may be empty if mentionIds are present).
+  """
+  relationshipIds: [ID!]!
+}
+
+"""
+Lifecycle state for a claim (presentation-only; does not imply truth or confidence).
+"""
+enum ClaimStatus {
+  ACCEPTED
+  DRAFT
+  REJECTED
+  REVIEWED
+}
+
 input CreateDocumentSourceInput {
   accessedAt: DateTime
   author: String
@@ -309,6 +351,16 @@ type Query {
   aiQueryResults: [AiQueryResult!]!
   chunk0ByDocument(documentId: String!): DocumentChunk
   chunksByDocument(documentId: String!): [DocumentChunk!]!
+
+  """
+  List claims visible in the current workspace (scoped via evidence -> documents).
+  """
+  claims: [Claim!]!
+
+  """
+  List claims grounded in a specific document (derived via claim evidence anchors).
+  """
+  claimsByDocument(documentId: String!): [Claim!]!
   document(id: String!): Document
   documentChunk(id: String!): DocumentChunk
   documentChunks: [DocumentChunk!]!

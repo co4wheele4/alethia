@@ -31,7 +31,7 @@ Note: E2E tests use Playwright route interception (see `e2e/helpers/`), not MSW 
 2. **Test user interactions**
    ```tsx
    // ✅ Good - tests what user sees and does
-   fireEvent.click(loginButton)
+   await userEvent.click(loginButton)
    await waitFor(() => {
      expect(screen.getByText('Welcome')).toBeInTheDocument()
    })
@@ -112,7 +112,7 @@ describe('LoginForm', () => {
   it('should display error message on invalid login', async () => {
     render(<LoginForm />);
     
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+    await userEvent.click(screen.getByRole('button', { name: /login/i }));
     
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(/email is required/i);
@@ -133,12 +133,10 @@ describe('Authentication Flow', () => {
     render(<LoginForm />);
     
     // Fill form
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' }
-    });
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com');
     
     // Submit
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+    await userEvent.click(screen.getByRole('button', { name: /login/i }));
     
     // Assert navigation
     await waitFor(() => {
@@ -216,13 +214,9 @@ npm run test:e2e:ui
 
 ## Coverage Goals
 
-We aim for:
-- **Statements**: 100%
-- **Branches**: 100%
-- **Functions**: 100%
-- **Lines**: 100%
+We aim for high coverage without distorting test intent.
 
-Current coverage is tracked in `vitest.config.ts` with thresholds.
+- **How to check current coverage**: run `npm run test:unit` (or `npm run test:cov`) and review the “All files” summary printed by Vitest.
 
 ## Best Practices Checklist
 

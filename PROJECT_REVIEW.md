@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The Aletheia project is a full-stack monorepo application for truth discovery using AI. The backend is production-ready with **100% test coverage**, comprehensive GraphQL API, and robust authentication. The frontend has a solid foundation with modern technologies, authentication infrastructure, and all critical issues resolved. Both projects are well-architected, follow best practices, and demonstrate excellent engineering quality.
+The Aletheia project is a full-stack monorepo application for truth discovery using AI. The backend is production-ready with strict test/coverage enforcement (Jest global coverage thresholds are set to 100%) and a comprehensive GraphQL API. The frontend is a modern Next.js + React application focused on evidence-first UX, with extensive unit coverage and a cross-browser Playwright E2E suite.
 
 ---
 
@@ -27,7 +27,8 @@ The Aletheia project is a full-stack monorepo application for truth discovery us
 - **Dependencies**: 0 vulnerabilities ✅
 - **Features**: Login, Register, ChangePassword, ForgotPassword, GraphQL integration ✅
 - **Components**: 80+ UI components across 10 categories ✅
-- **Testing**: 836 unit tests, 25 E2E tests, 100% coverage ✅
+- **Testing (latest run)**: 1195 unit tests (190 test files) + 65 E2E tests (Playwright) ✅
+- **Coverage (latest run)**: 96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines ✅
 - **SSR**: Hydration-safe authentication patterns ✅
 - **Status**: ✅ **Production Ready with Comprehensive Testing**
 
@@ -74,9 +75,9 @@ aletheia/
 
 ### Frontend Enhancements
 1. **Comprehensive Testing Infrastructure** ✅
-   - Added 836 unit tests across 127 test suites (all passing)
-   - Added 25 E2E tests using Playwright (all passing)
-   - Achieved 100% test coverage
+   - Vitest: 1195 unit tests across 190 test files (all passing)
+   - Playwright: 65 E2E tests across cross-browser + mobile projects (all passing)
+   - Coverage enabled (see “Overall Metrics” for latest summary)
    - Configured MSW (Mock Service Worker) for API mocking
    - Comprehensive test coverage for components, hooks, and services
 
@@ -175,9 +176,9 @@ aletheia/
 - Test infrastructure: Jest, Supertest, Test database
 
 ### Frontend ✅ **EXCELLENT**
-- **836 unit tests** across 127 test suites (all passing)
-- **25 E2E tests** using Playwright (all passing)
-- **100% test coverage** (statements, branches, functions, lines)
+- **1195 unit tests** across **190** test files (all passing)
+- **65 E2E tests** using Playwright (all passing)
+- **Coverage (latest run)**: 96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines
 - Comprehensive component, hook, and integration tests
 - MSW (Mock Service Worker) configured for API mocking
 - **Status**: Production-ready with comprehensive testing
@@ -217,7 +218,7 @@ aletheia/
 - [x] Zero security vulnerabilities
 - [x] Error boundaries (ErrorBoundary component)
 - [x] Testing infrastructure (Vitest + React Testing Library + Playwright)
-- [x] Comprehensive test coverage (100%)
+- [x] Comprehensive tests + coverage enabled (see “Testing Status”)
 - [x] Dashboard page implemented
 - [x] 80+ UI components across 10 categories
 - [ ] Route protection (can be added as needed)

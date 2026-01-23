@@ -33,17 +33,17 @@
 3. **Components** ✅ (80+ components)
    - **UI Components**: LoginForm, ChangePasswordForm, ForgotPasswordForm, ThemeToggle, OptimisticButton, GraphQLExample, ErrorBoundary
    - **AI Components**: AIRationalePanel, AIResultCard, HumanOverrideButton
-   - **Clarity Components**: WhyPanel, StatusPill, ConfidenceMeter, ReasoningStepsList, ChangeTimeline, etc.
-   - **Integrity Components**: SystemStatusPanel, ErrorBanner, ConfidenceTooltip, AuditView, etc.
+   - **Clarity Components**: WhyPanel, StatusPill, ReasoningStepsList, ChangeTimeline, etc.
+   - **Integrity Components**: SystemStatusPanel, ErrorBanner, AuditView, etc.
    - **Truth Discovery Components**: KnowledgeTreeView, KnowledgeNode, SummaryCard, DetailDrawer, etc.
    - **Search Components**: SemanticSearchBox, SearchResultList, KnowledgeGraphCanvas, etc.
    - **Layout Components**: AletheiaLayout, ContentSurface, ServerHeader, etc.
    - And many more across 10 categories
 
 4. **Testing** ✅
-   - 836 unit tests (Vitest + React Testing Library)
-   - 25 E2E tests (Playwright)
-   - 100% test coverage
+   - 1195 unit tests across 190 test files (Vitest + React Testing Library)
+   - 65 E2E tests (Playwright, cross-browser + mobile)
+   - Coverage enabled (latest run: 96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines)
    - MSW handlers for GraphQL mocking
 
 ## 📊 Code Quality
@@ -51,7 +51,7 @@
 - **TypeScript**: ✅ No compilation errors (strict mode)
 - **ESLint**: ✅ No linting errors
 - **Dependencies**: ✅ All up-to-date, 0 vulnerabilities
-- **Test Coverage**: ✅ 100% (836 unit tests, 25 E2E tests)
+- **Testing (latest run)**: ✅ 1195 unit tests + 65 E2E tests; coverage enabled (see above)
 - **Build**: ✅ Compiles successfully
 
 ## 🔍 Available Backend Capabilities (Not Yet Used)

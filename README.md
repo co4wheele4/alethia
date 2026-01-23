@@ -187,13 +187,13 @@ aletheia/
 
 ### Workspaces
 
-- **Backend** (`aletheia-backend`): NestJS GraphQL API with PostgreSQL, Prisma ORM, and **100% test coverage** (395 unit tests, 56 e2e tests)
-- **Frontend** (`aletheia-frontend`): Next.js 16 application with React 19, Apollo Client 4, MUI v7, and **100% test coverage** (836 unit tests, 25 e2e tests)
+- **Backend** (`aletheia-backend`): NestJS GraphQL API with PostgreSQL + Prisma. Jest enforces **100% global coverage thresholds** in config.
+- **Frontend** (`aletheia-frontend`): Next.js 16 + React 19 + Apollo Client 4 + MUI v7. Latest run: **1195 unit tests** (Vitest) + **65 E2E tests** (Playwright); coverage enabled (96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines).
 
 ## Project Status
 
-- ✅ **Backend**: Production ready with 100% test coverage (395 unit tests, 56 e2e tests)
-- ✅ **Frontend**: Production ready with 100% test coverage (836 unit tests, 25 e2e tests)
+- ✅ **Backend**: Production ready (Jest global coverage thresholds set to 100%)
+- ✅ **Frontend**: Production ready (1195 unit tests; 65 E2E tests; coverage enabled — see `aletheia-frontend/PROJECT_REVIEW.md`)
 - ✅ **Features**: Authentication fully functional (Login, Register, ChangePassword, ForgotPassword)
 - ✅ **Components**: 80+ UI components across 10 categories
 - ✅ **Monorepo**: Fully converted to true monorepo structure with npm workspaces

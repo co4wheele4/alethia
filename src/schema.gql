@@ -17,6 +17,31 @@ type AiQueryResult {
   score: Float!
 }
 
+enum ClaimStatus {
+  DRAFT
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+type ClaimEvidence {
+  claimId: ID!
+  createdAt: DateTime!
+  documentId: ID!
+  id: ID!
+  mentionIds: [ID!]!
+  relationshipIds: [ID!]!
+}
+
+type Claim {
+  createdAt: DateTime!
+  documents: [Document!]!
+  evidence: [ClaimEvidence!]!
+  id: ID!
+  status: ClaimStatus!
+  text: String!
+}
+
 input CreateEntityInput {
   name: String!
   type: String!
@@ -251,6 +276,8 @@ type Query {
   aiQuery(id: String!): AiQuery
   aiQueryResult(id: String!): AiQueryResult
   aiQueryResults: [AiQueryResult!]!
+  claims: [Claim!]!
+  claimsByDocument(documentId: String!): [Claim!]!
   chunk0ByDocument(documentId: String!): DocumentChunk
   chunksByDocument(documentId: String!): [DocumentChunk!]!
   document(id: String!): Document

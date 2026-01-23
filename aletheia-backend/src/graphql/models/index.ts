@@ -15,3 +15,5 @@ export {
 } from './entity-relationship-evidence.model';
 export { EntityRelationshipEvidenceMention } from './entity-relationship-evidence-mention.model';
 export { AiExtractionSuggestion } from './ai-extraction-suggestion.model';
+export { Claim, ClaimStatus } from './claim.model';
+export { ClaimEvidence } from './claim-evidence.model';

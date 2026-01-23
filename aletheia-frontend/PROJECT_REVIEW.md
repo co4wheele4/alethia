@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The Aletheia Frontend is a Next.js 16 application with React 19 that provides a solid foundation for building a GraphQL-powered user interface. The project demonstrates good architectural decisions with Apollo Client integration, authentication infrastructure, and TypeScript configuration. However, it's in an early stage with minimal feature implementation, primarily serving as a proof-of-concept.
+The Aletheia Frontend is a Next.js 16 application with React 19 that provides a GraphQL-powered user interface for evidence-first truth discovery. It includes authentication, document ingestion + inspection (provenance, chunks, entity mentions, relationship evidence), and dedicated Evidence/Provenance routes. The project emphasizes determinism and traceability (“Truth Surface”) over probabilistic confidence.
 
 ---
 
@@ -19,7 +19,7 @@ The Aletheia Frontend is a Next.js 16 application with React 19 that provides a 
 - **Build Status**: ✅ Compiles successfully
 - **npm Warnings**: ✅ 0 deprecation warnings
 - **Hydration**: ✅ SSR-safe authentication patterns implemented
-- **Test Coverage**: ✅ 100% coverage (836 unit tests, 25 E2E tests)
+- **Test Coverage (latest run)**: ✅ Coverage enabled in Vitest (All files: **96.52% statements**, **91.46% branches**, **95.9% functions**, **97.42% lines**)
 
 ### Project Structure
 - **Framework**: Next.js 16.1.1 (App Router)
@@ -36,7 +36,7 @@ The Aletheia Frontend is a Next.js 16 application with React 19 that provides a 
 - **GraphQL Queries**: 5 operations (Hello query, Login, Register, ChangePassword, ForgotPassword mutations)
 - **Pages**: 2 pages (Home page with Login/Register, Dashboard page)
 - **Feature Coverage**: Authentication fully implemented ✅
-- **Testing**: 836 unit tests, 25 E2E tests, 100% coverage ✅
+- **Testing (latest run)**: **1195 unit tests** across **190** test files (Vitest) + **65 E2E tests** (Playwright, all browser+mobile projects)
 - **TypeScript Files**: 200+ source files
 - **Total Files**: 300+ TypeScript/React files
 
@@ -112,7 +112,7 @@ The Aletheia Frontend is a Next.js 16 application with React 19 that provides a 
 5. **Testing**
    - ✅ Unit tests (Vitest + React Testing Library)
    - ✅ E2E tests (Playwright)
-   - ✅ 100% coverage enforced
+   - ✅ Coverage enabled (see “Metrics Overview” for latest summary)
 
 ---
 
@@ -464,9 +464,9 @@ The project demonstrates strong engineering practices with comprehensive testing
 
 ### January 12, 2026
 - ✅ **Comprehensive Testing Infrastructure**
-  - Added 836 unit tests across 127 test suites (Vitest + React Testing Library)
-  - Added 25 E2E tests using Playwright
-  - Achieved 100% test coverage (statements, branches, functions, lines)
+  - Vitest: 1195 unit tests across 190 test files (React Testing Library)
+  - Playwright: 65 E2E tests across cross-browser + mobile projects
+  - Coverage enabled (latest run: 96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines)
   - Configured MSW (Mock Service Worker) for GraphQL API mocking
   - Comprehensive component, hook, and integration test coverage
 - ✅ **Component Library Expansion**

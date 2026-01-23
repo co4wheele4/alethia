@@ -40,4 +40,12 @@ describe('resolvers/index', () => {
   it('should export AiQueryResultResolver', () => {
     expect(resolvers.AiQueryResultResolver).toBeDefined();
   });
+
+  it('should export ClaimResolver', () => {
+    expect(resolvers.ClaimResolver).toBeDefined();
+  });
+
+  it('should export ClaimEvidenceResolver', () => {
+    expect(resolvers.ClaimEvidenceResolver).toBeDefined();
+  });
 });

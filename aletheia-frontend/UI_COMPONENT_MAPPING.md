@@ -37,7 +37,7 @@ This document maps features to their corresponding UI components, providing a co
 **Components:**
 - `SourceBadge` - Small badges next to fields
 - `SourcePopover` - Hover/click to reveal source metadata
-- `AttributionFooter` - Includes timestamp, origin, and confidence
+- `AttributionFooter` - Includes timestamp, origin, and immutable provenance metadata (no confidence)
 
 **Location:** `app/components/truth-discovery/`
 
@@ -60,7 +60,6 @@ This document maps features to their corresponding UI components, providing a co
 
 **Components:**
 - `TruthStateIndicator` - Visual indicator for truth states
-- `ConfidenceMeter` - Confidence visualization
 - `StatusPill` - Status display component
 
 **States:**
@@ -87,14 +86,14 @@ This document maps features to their corresponding UI components, providing a co
 
 ## 3. Integrity & Trust
 
-### 3.1 Confidence Signals
+### 3.1 Traceability Signals (No confidence)
 
 **Components:**
-- `ConfidenceBar` - Visualized confidence on AI or derived values
-- `ConfidenceTooltip` - Tooltip with confidence details
+- `AuditView` - Audit trail visualization
+- `ProvenanceInspector` - Immutable ingestion metadata + parsing surface
 
 **Requirements:**
-- Never hidden or auto-collapsed
+- Explainability comes from explicit linkage: Document → Chunk → Mention → Entity (not probability)
 
 **Location:** `app/components/integrity/`
 

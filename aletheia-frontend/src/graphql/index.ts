@@ -21,6 +21,7 @@ export { DOCUMENT_EVIDENCE_VIEW } from './fragments/documentEvidenceView.fragmen
 export { DOCUMENT_EVIDENCE_FRAGMENT } from './fragments/documentEvidence.fragment';
 export { ENTITY_MENTION_FRAGMENT } from './fragments/entityMention.fragment';
 export { RELATIONSHIP_EVIDENCE_FRAGMENT } from './fragments/relationshipEvidence.fragment';
+export { CLAIM_FIELDS, CLAIM_EVIDENCE_FIELDS } from './fragments/claim.fragment';
 
 export { LIST_DOCUMENTS_QUERY } from './queries/listDocuments.query';
 export { GET_DOCUMENT_BY_ID_QUERY } from './queries/getDocumentById.query';
@@ -29,4 +30,6 @@ export { GET_DOCUMENT_EVIDENCE_VIEW_QUERY } from './queries/getDocumentEvidenceV
 export { DOCUMENTS_INDEX_QUERY } from './queries/documentsIndex.query';
 export { LIST_ENTITIES_QUERY } from './queries/listEntities.query';
 export { LIST_RELATIONSHIPS_QUERY } from './queries/listRelationships.query';
+export { LIST_CLAIMS_QUERY } from './queries/listClaims.query';
+export { CLAIMS_BY_DOCUMENT_QUERY } from './queries/claimsByDocument.query';
 

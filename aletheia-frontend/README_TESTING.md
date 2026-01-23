@@ -56,7 +56,7 @@ screen.getByLabelText('Email')
 
 ✅ **Test user interactions**
 ```tsx
-fireEvent.click(loginButton)
+await userEvent.click(loginButton)
 await waitFor(() => {
   expect(screen.getByText('Welcome')).toBeInTheDocument()
 })
@@ -87,7 +87,7 @@ server.use(
 
 ## Notes
 
-- **Playwright webServer stability**: `playwright.config.ts` runs `next dev` with `--webpack` and uses `http://127.0.0.1:3030` to avoid Windows `localhost`/IPv6 flakiness.
+- **Playwright webServer stability**: `playwright.config.ts` runs `npm run build && npm run start` (production server) and uses `http://127.0.0.1:3030` to avoid Windows `localhost`/IPv6 flakiness. Playwright E2E uses `page.route` interception for `/graphql`, so the browser MSW worker is disabled for E2E runs.
 
 ## Next Steps
 

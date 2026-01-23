@@ -28,6 +28,8 @@ import {
   EntityRelationshipResolver,
   EntityRelationshipEvidenceResolver,
   EntityRelationshipEvidenceMentionResolver,
+  ClaimResolver,
+  ClaimEvidenceResolver,
 } from '@resolvers';
 import { AuthModule } from '../auth/auth.module';
 import { OpenAIModule } from '../openai/openai.module';
@@ -88,6 +90,8 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     EntityRelationshipResolver,
     EntityRelationshipEvidenceResolver,
     EntityRelationshipEvidenceMentionResolver,
+    ClaimResolver,
+    ClaimEvidenceResolver,
     // Apply rate limiting globally (GraphQL-compatible)
     {
       provide: APP_GUARD,
