@@ -20,11 +20,13 @@ export function DocumentsDashboard({
   userId,
   initialIngestOpen,
   initialSelectedId,
+  initialMentionId,
   initialChunkIndex,
 }: {
   userId: string | null;
   initialIngestOpen?: boolean;
   initialSelectedId?: string | null;
+  initialMentionId?: string | null;
   initialChunkIndex?: number | null;
 }) {
   const [requestedSelectedId, setRequestedSelectedId] = useState<string | null>(initialSelectedId ?? null);
@@ -82,7 +84,13 @@ export function DocumentsDashboard({
                     </Alert>
                   ) : null}
 
-                  <DocumentDetailsPane selectedId={selectedId} initialChunkIndex={initialChunkIndex ?? null} />
+                  <DocumentDetailsPane
+                    key={selectedId ?? 'none'}
+                    selectedId={selectedId}
+                    initialChunkIndex={initialChunkIndex ?? null}
+                    deepLinkDocumentId={initialSelectedId ?? null}
+                    deepLinkMentionId={initialMentionId ?? null}
+                  />
                 </Box>
 
                 <IngestDocumentsDialog

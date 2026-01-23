@@ -27,6 +27,7 @@ function DocumentsPageInner() {
 
   const initialIngestOpen = params.get('ingest') === '1';
   const initialSelectedId = params.get('documentId');
+  const initialMentionId = params.get('mentionId');
   const initialChunkIndex = (() => {
     const raw = params.get('chunk');
     if (!raw) return null;
@@ -39,6 +40,7 @@ function DocumentsPageInner() {
       userId={userId}
       initialIngestOpen={initialIngestOpen}
       initialSelectedId={initialSelectedId}
+      initialMentionId={initialMentionId}
       initialChunkIndex={initialChunkIndex}
     />
   );

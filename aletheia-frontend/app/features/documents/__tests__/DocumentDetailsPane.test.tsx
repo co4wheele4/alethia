@@ -11,6 +11,10 @@ vi.mock('../components/DocumentDetailPanel', () => ({
   ),
 }));
 
+vi.mock('../../evidence/components/EvidenceDrawer', () => ({
+  EvidenceDrawer: () => null,
+}));
+
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <ThemeProvider>
     {children}

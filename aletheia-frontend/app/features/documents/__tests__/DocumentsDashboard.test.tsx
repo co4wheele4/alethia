@@ -43,6 +43,7 @@ vi.mock('../components/DocumentDetailsPane', () => ({
     <div data-testid="details-pane">
       Details Pane: {String(props.selectedId ?? 'None')}
       {typeof props.initialChunkIndex === 'number' ? ` • chunk=${props.initialChunkIndex}` : ''}
+      {props.deepLinkMentionId ? ` • mention=${props.deepLinkMentionId}` : ''}
     </div>
   ),
 }));

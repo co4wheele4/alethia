@@ -90,12 +90,13 @@ export function EvidenceSnippet(props: { evidence: Evidence }) {
           <Chip size="small" label="No mention links" variant="outlined" />
         ) : (
           evidence.mentionLinks.map((ml) => (
-            <Chip
+            <Link
               key={ml.mentionId}
-              size="small"
-              variant="outlined"
-              label={`mention:${ml.mentionId} (${ml.mention.entity.name})`}
-            />
+              href={`/documents?documentId=${encodeURIComponent(evidence.chunk.documentId)}&mentionId=${encodeURIComponent(ml.mentionId)}`}
+              style={{ textDecoration: 'none' }}
+            >
+              <Chip size="small" variant="outlined" label={`mention:${ml.mentionId} (${ml.mention.entity.name})`} />
+            </Link>
           ))
         )}
       </Stack>

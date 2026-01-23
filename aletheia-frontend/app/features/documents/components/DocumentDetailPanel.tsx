@@ -199,6 +199,7 @@ export function DocumentDetailPanel(props: {
           <Divider />
 
           <EntityMentionsList
+            documentId={doc.id}
             entities={entities}
             selectedEntityId={selectedEntityId}
             onSelectEntityId={(id) => setSelectedEntityId(id)}

@@ -21,11 +21,12 @@ export type DocumentEntityRow = {
 };
 
 export function EntityMentionsList(props: {
+  documentId: string;
   entities: DocumentEntityRow[];
   selectedEntityId: string | null;
   onSelectEntityId: (entityId: string) => void;
 }) {
-  const { entities, selectedEntityId, onSelectEntityId } = props;
+  const { documentId, entities, selectedEntityId, onSelectEntityId } = props;
 
   if (entities.length === 0) {
     return <Alert severity="info">No entity mentions were returned for this document.</Alert>;
@@ -84,6 +85,11 @@ export function EntityMentionsList(props: {
                 <Box key={m.mentionId} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                     Mention ID: {m.mentionId}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    <Link href={`/documents?documentId=${encodeURIComponent(documentId)}&mentionId=${encodeURIComponent(m.mentionId)}`}>
+                      Inspect in evidence drawer
+                    </Link>
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                     Chunk: {m.chunkIndex} (chunkId={m.chunkId})
