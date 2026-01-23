@@ -89,6 +89,39 @@ function assertDocumentHasEvidence(doc: NonNullable<ReturnType<typeof asDocument
   if (mentionCount === 0) fail('Document has no mentions (Truth Surface requires explicit mention evidence)');
 }
 
+function toDocumentEvidenceView(doc: NonNullable<ReturnType<typeof asDocumentById>>) {
+  assertPresent(doc.sourceType, 'Document.sourceType');
+  assertPresent(doc.sourceLabel, 'Document.sourceLabel');
+  assertPresent(doc.source, 'Document.source');
+
+  return {
+    __typename: doc.__typename,
+    id: doc.id,
+    title: doc.title,
+    createdAt: doc.createdAt,
+    sourceType: doc.sourceType,
+    sourceLabel: doc.sourceLabel,
+    source: doc.source,
+    chunks: doc.chunks.map((c) => ({
+      __typename: c.__typename,
+      id: c.id,
+      chunkIndex: c.chunkIndex,
+      content: c.content,
+      documentId: c.documentId,
+      mentions: c.mentions.map((m) => ({
+        __typename: m.__typename,
+        id: m.id,
+        entityId: m.entityId,
+        chunkId: m.chunkId,
+        startOffset: m.startOffset,
+        endOffset: m.endOffset,
+        excerpt: m.excerpt,
+        entity: m.entity,
+      })),
+    })),
+  };
+}
+
 function listDocuments() {
   // Return exactly the fields selected by `ListDocuments` (DocumentFragment + chunk id stubs).
   return fixture.documents.map((d) => ({
@@ -169,7 +202,7 @@ export const documentHandlers = [
     );
     const doc = asDocumentById(id);
     if (doc) assertDocumentHasEvidence(doc);
-    const data = { document: doc };
+    const data = { document: doc ? toDocumentEvidenceView(doc) : null };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });
   }),
