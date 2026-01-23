@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Production smoke validation (no mocks):
  * - Register (or upgrade legacy account) to obtain JWT with sub
@@ -81,7 +80,6 @@ async function ingestFileAndDelete(page, documentsList, now) {
 
 async function waitForHttpOk(url, timeoutMs) {
   const start = Date.now();
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
       const res = await fetch(url, { method: 'GET' });
@@ -106,7 +104,6 @@ async function maybeClick(page, locator) {
 
 async function waitForUrlOrError(page, urlRegex, timeoutMs) {
   const start = Date.now();
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const current = page.url();
     if (urlRegex.test(current)) return;
