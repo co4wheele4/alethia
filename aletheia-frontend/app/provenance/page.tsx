@@ -1,9 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, List, ListItemButton, ListItemText, Typography } from '@mui/material';
+import { Alert, Box, Button, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
 import { AppShell, ContentSurface } from '../components/layout';
+import { LadyJusticeProgressIndicator } from '../components/primitives/LadyJusticeProgressIndicator';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { getUserIdFromToken } from '../features/auth/utils/jwt';
 import { useDocuments } from '../features/documents/hooks/useDocuments';
@@ -46,7 +47,7 @@ export default function ProvenancePage() {
 
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-                <CircularProgress size={18} />
+                <LadyJusticeProgressIndicator size={18} />
                 <Typography variant="body2">Loading documents…</Typography>
               </Box>
             ) : null}
@@ -92,7 +93,7 @@ export default function ProvenancePage() {
 
                         {loading ? (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-                            <CircularProgress size={18} />
+                            <LadyJusticeProgressIndicator size={18} />
                             <Typography variant="body2">Loading provenance…</Typography>
                           </Box>
                         ) : null}

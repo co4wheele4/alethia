@@ -1,9 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Alert, Box, CircularProgress, Divider, List, ListItemButton, ListItemText, Typography } from '@mui/material';
+import { Alert, Box, Divider, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
 import { ContentSurface } from '../../../components/layout';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { useDocuments } from '../../documents/hooks/useDocuments';
 import { useDocumentEvidence } from '../hooks/useDocumentEvidence';
 import { useEntityMentions } from '../hooks/useEntityMentions';
@@ -55,7 +56,7 @@ export function DocumentsEvidenceLayout(props: { userId: string | null }) {
 
         {docsLoading ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-            <CircularProgress size={18} />
+            <LadyJusticeProgressIndicator size={18} />
             <Typography variant="body2">Loading documents…</Typography>
           </Box>
         ) : null}
@@ -92,7 +93,7 @@ export function DocumentsEvidenceLayout(props: { userId: string | null }) {
         ) : null}
         {docLoading ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-            <CircularProgress size={18} />
+            <LadyJusticeProgressIndicator size={18} />
             <Typography variant="body2">Loading document evidence…</Typography>
           </Box>
         ) : null}

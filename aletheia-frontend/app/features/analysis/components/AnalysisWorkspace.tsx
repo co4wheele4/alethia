@@ -5,13 +5,13 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Divider,
   TextField,
   Typography,
 } from '@mui/material';
 
 import { ContentSurface } from '../../../components/layout';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { useDocuments } from '../../documents/hooks/useDocuments';
 import { useAskAi, type AiQueryResult } from '../hooks/useAskAi';
 import { useAiQueriesByUser } from '../hooks/useAiQueriesByUser';
@@ -76,7 +76,7 @@ export function AnalysisWorkspace(props: { userId: string | null }) {
 
         {docs.loading ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-            <CircularProgress size={18} />
+            <LadyJusticeProgressIndicator size={18} />
             <Typography variant="body2">Loading documents…</Typography>
           </Box>
         ) : null}

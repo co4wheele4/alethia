@@ -11,6 +11,7 @@ export * from './layout';
 
 // Primitive UI components
 export * from './primitives/OptimisticButton';
+export * from './primitives/LadyJusticeProgressIndicator';
 export * from './primitives/SkeletonLoader';
 export * from './primitives/ThemeToggle';
 

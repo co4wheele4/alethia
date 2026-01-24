@@ -32,3 +32,86 @@ html {
   position: relative;
   min-height: 100vh;
 }
+
+/*
+  Lady Justice progress indicator (seamless infinite loop)
+
+  Contract:
+  - 0% and 100% are identical (same rotation + same direction at the loop edge)
+  - animation timing is linear; easing comes only from keyframe spacing
+  - direction reversals occur only at internal keyframes (the extremes)
+*/
+@keyframes aletheia-lady-justice-scales-oscillation {
+  /* Loop boundary: slightly right-of-center, moving further right */
+  0% {
+    transform: rotate(2deg);
+  }
+
+  /* Right swing + brief dwell (slow-in) */
+  4% {
+    transform: rotate(6deg);
+  }
+  10% {
+    transform: rotate(14deg);
+  }
+  14% {
+    transform: rotate(16deg);
+  }
+  20% {
+    transform: rotate(16deg);
+  }
+
+  /* Accelerate through center (bigger angular change per % around 0deg) */
+  30% {
+    transform: rotate(10deg);
+  }
+  36% {
+    transform: rotate(0deg);
+  }
+  42% {
+    transform: rotate(-12deg);
+  }
+  46% {
+    transform: rotate(-17deg);
+  }
+
+  /* Left swing + longer dwell (asymmetry) */
+  50% {
+    transform: rotate(-18deg);
+  }
+  62% {
+    transform: rotate(-18deg);
+  }
+
+  /* Return toward center (slow-out) */
+  72% {
+    transform: rotate(-12deg);
+  }
+  80% {
+    transform: rotate(-6deg);
+  }
+  88% {
+    transform: rotate(-4deg);
+  }
+  96% {
+    transform: rotate(-2deg);
+  }
+
+  /* Loop boundary: identical to 0% (same pose). Direction and local velocity match because 96%→100% and 0%→4% both increase rotation by 4deg over 4%. */
+  100% {
+    transform: rotate(2deg);
+  }
+}
+
+.aletheia-lady-justice-scales-rotate {
+  transform-origin: 32px 10px;
+  transform-box: fill-box;
+  animation: aletheia-lady-justice-scales-oscillation 2600ms linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aletheia-lady-justice-scales-rotate {
+    animation: none !important;
+  }
+}

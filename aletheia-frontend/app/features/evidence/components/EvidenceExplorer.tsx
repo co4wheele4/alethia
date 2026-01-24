@@ -7,7 +7,6 @@ import {
   Alert,
   Box,
   Chip,
-  CircularProgress,
   Divider,
   List,
   ListItemButton,
@@ -17,6 +16,7 @@ import {
 } from '@mui/material';
 
 import { ContentSurface } from '../../../components/layout';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { useDocuments, type DocumentListItem } from '../../documents/hooks/useDocuments';
 import { CHUNK0_BY_DOCUMENT_QUERY } from '../../documents/graphql';
 import { parseProvenanceFromChunk0 } from '../../documents/provenance';
@@ -195,7 +195,7 @@ export function EvidenceExplorer(props: { userId: string | null }) {
 
         {docsLoading || entitiesLoading ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-            <CircularProgress size={18} />
+            <LadyJusticeProgressIndicator size={18} />
             <Typography variant="body2">Loading…</Typography>
           </Box>
         ) : null}
@@ -307,7 +307,7 @@ export function EvidenceExplorer(props: { userId: string | null }) {
           {docDetail.error ? <Alert severity="error">{docDetail.error.message}</Alert> : null}
           {docDetail.loading ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 1 }}>
-              <CircularProgress size={18} />
+              <LadyJusticeProgressIndicator size={18} />
               <Typography variant="body2">Loading chunks…</Typography>
             </Box>
           ) : null}
@@ -360,7 +360,7 @@ export function EvidenceExplorer(props: { userId: string | null }) {
           {entityDetail.error ? <Alert severity="error">{entityDetail.error.message}</Alert> : null}
           {entityDetail.loading ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 1 }}>
-              <CircularProgress size={18} />
+              <LadyJusticeProgressIndicator size={18} />
               <Typography variant="body2">Loading entity…</Typography>
             </Box>
           ) : null}

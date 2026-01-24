@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from '@mui/material';
 
 import { useDocuments } from '../../documents/hooks/useDocuments';
 import { useClaims } from '../hooks/useClaims';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { ClaimDetailDrawer } from './ClaimDetailDrawer';
 import { ClaimsList } from './ClaimsList';
 
@@ -69,7 +70,7 @@ export function ClaimsView(props: { userId: string | null }) {
 
         {docsLoading || claimsLoading ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-            <CircularProgress size={18} />
+            <LadyJusticeProgressIndicator size={18} />
             <Typography variant="body2">Loading…</Typography>
           </Box>
         ) : null}

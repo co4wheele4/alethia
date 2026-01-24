@@ -16,7 +16,6 @@ import {
   Box,
   Button,
   Checkbox,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -30,6 +29,7 @@ import {
 import { parseFileToText } from '../ingestion/fileParsers';
 import { importUrlToText } from '../ingestion/urlImport';
 import { useIngestDocuments } from '../hooks/useIngestDocuments';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { FileDropZone } from './FileDropZone';
 import { IngestionStatusStepper } from './IngestionStatusStepper';
 import { ManualTextEditor } from './ManualTextEditor';
@@ -158,7 +158,7 @@ export function IngestDocumentsDialog(props: {
         <Box sx={{ mb: 2 }}>
           {progress.state === 'running' ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <CircularProgress size={18} />
+              <LadyJusticeProgressIndicator size={18} />
               <Typography variant="body2" color="text.secondary">
                 Processing…
               </Typography>

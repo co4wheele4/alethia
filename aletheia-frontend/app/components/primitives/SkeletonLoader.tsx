@@ -11,6 +11,7 @@
 'use client';
 
 import { Box, Skeleton, Typography } from '@mui/material';
+import { LadyJusticeProgressIndicator } from './LadyJusticeProgressIndicator';
 
 export function SkeletonLoader() {
   // This component renders the EXACT same structure on server and client
@@ -29,7 +30,7 @@ export function SkeletonLoader() {
       }}
       suppressHydrationWarning
     >
-      <Skeleton variant="circular" width={60} height={60} suppressHydrationWarning />
+      <LadyJusticeProgressIndicator size={56} suppressHydrationWarning />
       <Skeleton variant="text" width={200} height={32} suppressHydrationWarning />
       <Skeleton variant="text" width={150} height={24} suppressHydrationWarning />
       <Typography 

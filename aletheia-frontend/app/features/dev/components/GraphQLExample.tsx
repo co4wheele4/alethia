@@ -5,7 +5,8 @@
 'use client';
 
 import { useHello } from '../hooks/useHello';
-import { Box, Paper, Typography, Button, CircularProgress, Alert } from '@mui/material';
+import { Box, Paper, Typography, Button, Alert } from '@mui/material';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 
 export function GraphQLExample() {
   const { hello, loading, error, refetch } = useHello();
@@ -13,7 +14,7 @@ export function GraphQLExample() {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <CircularProgress size={20} />
+        <LadyJusticeProgressIndicator size={20} />
         <Typography color="text.secondary">Loading...</Typography>
       </Box>
     );

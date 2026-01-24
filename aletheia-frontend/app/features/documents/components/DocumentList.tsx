@@ -1,8 +1,9 @@
 'use client';
 
-import { Alert, Box, CircularProgress, List, ListItemButton, ListItemText, Typography } from '@mui/material';
+import { Alert, Box, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
 import type { DocumentListItem } from '../hooks/useDocuments';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 
 export interface DocumentListProps {
   documents: DocumentListItem[];
@@ -25,7 +26,7 @@ export function DocumentList(props: DocumentListProps) {
 
       {loading ? (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 1 }}>
-          <CircularProgress size={18} />
+          <LadyJusticeProgressIndicator size={18} />
           <Typography variant="body2">Loading documents…</Typography>
         </Box>
       ) : null}

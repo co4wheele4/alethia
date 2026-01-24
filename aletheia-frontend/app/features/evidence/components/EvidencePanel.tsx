@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   Checkbox,
-  CircularProgress,
   Divider,
   List,
   ListItemButton,
@@ -17,6 +16,7 @@ import {
 } from '@mui/material';
 
 import { ContentSurface } from '../../../components/layout';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { useDocuments } from '../../documents/hooks/useDocuments';
 import { type DocumentChunkItem } from '../../documents/hooks/useDocumentChunks';
 import { EvidenceComparisonView } from './EvidenceComparisonView';
@@ -67,7 +67,7 @@ export function EvidencePanel(props: { userId: string | null }) {
 
         {docsLoading ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-            <CircularProgress size={18} />
+            <LadyJusticeProgressIndicator size={18} />
             <Typography variant="body2">Loading documents…</Typography>
           </Box>
         ) : null}
@@ -155,7 +155,7 @@ export function EvidencePanel(props: { userId: string | null }) {
 
                     {loading ? (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 2 }}>
-                        <CircularProgress size={18} />
+                        <LadyJusticeProgressIndicator size={18} />
                         <Typography variant="body2">Loading chunks…</Typography>
                       </Box>
                     ) : null}

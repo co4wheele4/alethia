@@ -13,7 +13,6 @@ import Link from 'next/link';
 import {
   Box,
   Button,
-  CircularProgress,
   List,
   ListItemButton,
   ListItemText,
@@ -22,6 +21,7 @@ import {
 } from '@mui/material';
 
 import { useDocuments } from '../../documents/hooks/useDocuments';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 
 export function DocumentsPanel({ userId }: { userId: string | null }) {
   const { documents, loading, error } = useDocuments(userId);
@@ -64,7 +64,7 @@ export function DocumentsPanel({ userId }: { userId: string | null }) {
 
       {loading && userId ? (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
-          <CircularProgress size={18} />
+          <LadyJusticeProgressIndicator size={18} />
           <Typography variant="body2">Loading documents…</Typography>
         </Box>
       ) : null}

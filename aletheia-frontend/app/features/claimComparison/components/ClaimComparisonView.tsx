@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 
 import { useClaimsForComparison } from '../hooks/useClaimsForComparison';
+import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { ClaimComparisonPanel } from './ClaimComparisonPanel';
 
 function pickTwoById<T extends { id: string }>(items: T[], leftId: string, rightId: string) {
@@ -33,7 +34,7 @@ export function ClaimComparisonView(props: { leftClaimId: string; rightClaimId: 
   if (loading && claims.length === 0) {
     return (
       <Stack direction="row" spacing={1} alignItems="center" sx={{ color: 'text.secondary' }}>
-        <CircularProgress size={18} />
+        <LadyJusticeProgressIndicator size={18} />
         <Typography variant="body2">Loading comparison data…</Typography>
       </Stack>
     );
