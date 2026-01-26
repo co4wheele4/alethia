@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Box, Drawer, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -40,6 +40,43 @@ export function EvidenceDrawer(props: {
   const { document, entities, loading, error } = useDocumentEvidence(documentId);
 
   const [activeMentionId, setActiveMentionId] = useState<string | null>(() => mentionId ?? null);
+  const didAutoSelectRef = useRef(false);
+
+  const firstMentionId = useMemo(() => {
+    const out: Array<{ mentionId: string; chunkIndex: number; startOffset: number }> = [];
+    for (const e of entities) {
+      for (const m of e.mentions) {
+        out.push({ mentionId: m.mentionId, chunkIndex: m.chunkIndex, startOffset: m.startOffset });
+      }
+    }
+    out.sort((a, b) => a.chunkIndex - b.chunkIndex || a.startOffset - b.startOffset);
+    return out[0]?.mentionId ?? null;
+  }, [entities]);
+
+  useEffect(() => {
+    // When the route/state provides an explicit mentionId, treat it as authoritative.
+    if (!open) return;
+    if (!mentionId) return;
+    setActiveMentionId(mentionId);
+  }, [mentionId, open]);
+
+  useEffect(() => {
+    // New document → allow a new deterministic auto-selection.
+    didAutoSelectRef.current = false;
+    setActiveMentionId(mentionId ?? null);
+  }, [document?.id, mentionId]);
+
+  useEffect(() => {
+    // If nothing is explicitly selected, select the first evidence row deterministically.
+    // This keeps the list selection in sync with the auto-scrolled "first evidence" view.
+    if (!open) return;
+    if (!document) return;
+    if (activeMentionId) return;
+    if (didAutoSelectRef.current) return;
+    if (!firstMentionId) return;
+    didAutoSelectRef.current = true;
+    setActiveMentionId(firstMentionId);
+  }, [activeMentionId, document, firstMentionId, open]);
 
   const selectedEntityId = useMemo(() => {
     if (!document) return null;

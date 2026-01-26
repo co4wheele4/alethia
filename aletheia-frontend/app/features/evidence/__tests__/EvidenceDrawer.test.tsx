@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '../../../hooks/useTheme';
@@ -89,6 +89,25 @@ describe('EvidenceDrawer', () => {
     expect(screen.getByRole('list', { name: 'evidence-list' })).toBeInTheDocument();
 
     await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+
+    const list = screen.getByRole('list', { name: 'evidence-list' });
+    const selectedRow = within(list).getByRole('button', { name: /World\s*\(Thing\)/i });
+    expect(selectedRow).toHaveClass('Mui-selected');
+  });
+
+  it('auto-selects the evidence row that is being displayed when mentionId is not provided', async () => {
+    render(
+      <ThemeProvider>
+        <EvidenceDrawer open onClose={() => {}} documentId="d1" mentionId={null} />
+      </ThemeProvider>
+    );
+
+    const list = screen.getByRole('list', { name: 'evidence-list' });
+    const firstRow = within(list).getByRole('button', { name: /World\s*\(Thing\)/i });
+
+    await waitFor(() => {
+      expect(firstRow).toHaveClass('Mui-selected');
+    });
   });
 });
 

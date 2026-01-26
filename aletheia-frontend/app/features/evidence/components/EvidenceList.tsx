@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Box, List, ListItemButton, ListItemText, TextField, Typography } from '@mui/material';
 
 import type { DocumentEntityRow, EvidenceDocument } from '../hooks/useDocumentEvidence';
@@ -30,6 +30,7 @@ export function EvidenceList(props: {
 }) {
   const { document, entities, activeMentionId, onSelectMention } = props;
   const [q, setQ] = useState('');
+  const listRef = useRef<HTMLUListElement | null>(null);
 
   const rows = useMemo(() => {
     const out: MentionRow[] = [];
@@ -60,6 +61,20 @@ export function EvidenceList(props: {
     });
   }, [q, rows]);
 
+  useEffect(() => {
+    if (!activeMentionId) return;
+    const root = listRef.current;
+    if (!root) return;
+    const safeId = activeMentionId.replace(/"/g, '\\"');
+    const el = root.querySelector(`[data-mention-id="${safeId}"]`) as HTMLElement | null;
+    if (!el) return;
+    try {
+      el.scrollIntoView({ block: 'nearest' });
+    } catch {
+      el.scrollIntoView();
+    }
+  }, [activeMentionId, filtered.length]);
+
   if (!document) return <Alert severity="info">Select a document to inspect evidence.</Alert>;
 
   return (
@@ -84,10 +99,11 @@ export function EvidenceList(props: {
       {filtered.length === 0 ? (
         <Alert severity="info">No evidence rows match this filter.</Alert>
       ) : (
-        <List dense aria-label="evidence-list">
+        <List ref={listRef} dense aria-label="evidence-list">
           {filtered.map((r) => (
             <ListItemButton
               key={r.mentionId}
+              data-mention-id={r.mentionId}
               selected={r.mentionId === activeMentionId}
               onClick={() => onSelectMention(r.mentionId)}
               sx={{ borderRadius: 1 }}
