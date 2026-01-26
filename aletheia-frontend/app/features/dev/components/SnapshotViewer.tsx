@@ -6,6 +6,7 @@
 'use client';
 
 import { Box, Typography, Button } from '@mui/material';
+import { alpha, lighten } from '@mui/material/styles';
 
 export interface SnapshotViewerProps {
   // TODO: Define props
@@ -30,7 +31,7 @@ export function SnapshotViewer(props: SnapshotViewerProps) {
         <Box
           sx={{
             p: 2,
-            bgcolor: 'background.paper',
+            bgcolor: (theme) => alpha(lighten(theme.palette.background.default, 0.2), 0.72),
             border: 1,
             borderColor: 'divider',
             borderRadius: 1,

@@ -2,6 +2,23 @@ import { graphql, HttpResponse } from 'msw';
 
 import { assertNoConfidence } from '@/src/test/msw/assertNoConfidence';
 
+function base64UrlEncode(input: string): string {
+  // Works in both Node (vitest) and the browser (MSW service worker runtime).
+  const base64 =
+    typeof Buffer !== 'undefined'
+      ? Buffer.from(input, 'utf8').toString('base64')
+      : btoa(unescape(encodeURIComponent(input)));
+  return base64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function createMockJwt(payload: Record<string, unknown>): string {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+  // Signature is irrelevant for client-side decoding in tests/dev MSW.
+  return `${encodedHeader}.${encodedPayload}.signature`;
+}
+
 /**
  * App-level auth handlers used by tests/components.
  *
@@ -39,7 +56,14 @@ export const authHandlers = [
 
     const { email, password } = body.variables;
     if (email === 'test@example.com' && password === 'password123') {
-      const data = { login: 'mock-jwt-token-12345' };
+      const data = {
+        login: createMockJwt({
+          sub: 'user-1',
+          email: 'test@example.com',
+          role: 'USER',
+          iat: Math.floor(Date.now() / 1000),
+        }),
+      };
       assertNoConfidence(data, 'data');
       return HttpResponse.json({ data });
     }

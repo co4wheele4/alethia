@@ -18,6 +18,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { alpha, lighten } from '@mui/material/styles';
 
 import type { OnboardingState, ProvenanceType, ReviewPreview, StagedItem } from '../types';
 
@@ -228,7 +229,7 @@ export function ReviewStep(props: {
                           border: '1px solid',
                           borderColor: 'divider',
                           borderRadius: 1,
-                          bgcolor: 'background.default',
+                          bgcolor: (theme) => alpha(lighten(theme.palette.background.default, 0.2), 0.72),
                         }}
                       >
                         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>

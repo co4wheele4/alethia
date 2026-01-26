@@ -1,6 +1,7 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
+import { alpha, lighten } from '@mui/material/styles';
 
 export interface FileDropZoneProps {
   disabled?: boolean;
@@ -41,7 +42,7 @@ export function FileDropZone(props: FileDropZoneProps) {
         borderColor: 'divider',
         borderRadius: 1,
         p: 3,
-        bgcolor: 'background.default',
+        bgcolor: (theme) => alpha(lighten(theme.palette.background.default, 0.2), 0.72),
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.6 : 1,
       }}

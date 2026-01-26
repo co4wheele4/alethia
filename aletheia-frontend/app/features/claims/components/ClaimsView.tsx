@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from '@mui/material';
 
+import { ContentSurface } from '../../../components/layout';
 import { useDocuments } from '../../documents/hooks/useDocuments';
 import { useClaims } from '../hooks/useClaims';
 import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
@@ -33,7 +34,7 @@ export function ClaimsView(props: { userId: string | null }) {
 
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '420px 1fr' }, gap: 2, alignItems: 'start' }}>
-      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2, bgcolor: 'background.paper' }}>
+      <ContentSurface>
         <Typography variant="h6" gutterBottom>
           Claims
         </Typography>
@@ -130,16 +131,16 @@ export function ClaimsView(props: { userId: string | null }) {
             });
           }}
         />
-      </Box>
+      </ContentSurface>
 
-      <Box sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 2, p: 2, bgcolor: 'background.paper' }}>
+      <ContentSurface>
         <Typography variant="h6" gutterBottom>
           Claim inspection
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Select a claim to open the inspection drawer. Evidence is reachable via the existing Evidence Viewer.
         </Typography>
-      </Box>
+      </ContentSurface>
 
       <ClaimDetailDrawer open={Boolean(selectedClaimId)} claim={selectedClaim} onClose={() => setSelectedClaimId(null)} />
     </Box>

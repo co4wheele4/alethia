@@ -1,6 +1,7 @@
 'use client';
 
 import { Box, Divider, Typography } from '@mui/material';
+import { alpha, lighten } from '@mui/material/styles';
 
 import type { AiQueryResult } from '../hooks/useAskAi';
 import { ClaimScoreIndicator } from './ClaimScoreIndicator';
@@ -20,7 +21,7 @@ export function ClaimCard(props: ClaimCardProps) {
         borderColor: 'divider',
         borderRadius: 1,
         p: 2,
-        bgcolor: 'background.paper',
+        bgcolor: (theme) => alpha(lighten(theme.palette.background.default, 0.2), 0.72),
       }}
     >
       <Typography variant="subtitle2" color="text.secondary">

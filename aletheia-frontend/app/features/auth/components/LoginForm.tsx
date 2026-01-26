@@ -26,6 +26,7 @@ import {
   LinearProgress,
   Link,
 } from '@mui/material';
+import { alpha, lighten } from '@mui/material/styles';
 import {
   CheckCircle,
   Cancel,
@@ -284,7 +285,16 @@ export function LoginForm() {
           
           {/* Password Requirements List (shown in register mode) */}
           {isRegisterMode && showPasswordRequirements && password.length > 0 && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: 1, borderColor: 'divider' }}>
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                bgcolor: (theme) => alpha(lighten(theme.palette.background.default, 0.2), 0.72),
+                borderRadius: 1,
+                border: 1,
+                borderColor: 'divider',
+              }}
+            >
               <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
                 Password Requirements:
               </Typography>

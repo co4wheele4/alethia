@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Alert, Box, Button, Divider, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
+import { alpha, lighten } from '@mui/material/styles';
 
 import type { ClaimComparisonClaim, ClaimComparisonDocument, ClaimComparisonMention } from '../hooks/useClaimsForComparison';
 import { MentionHighlight } from './MentionHighlight';
@@ -54,7 +55,15 @@ export function ClaimEvidenceList(props: { claim: ClaimComparisonClaim }) {
   }
 
   return (
-    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2, bgcolor: 'background.paper' }}>
+    <Box
+      sx={{
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 2,
+        p: 2,
+        bgcolor: (theme) => alpha(lighten(theme.palette.background.default, 0.2), 0.72),
+      }}
+    >
       <Stack direction="row" alignItems="baseline" justifyContent="space-between" spacing={2}>
         <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
           Evidence (grouped by document)

@@ -26,6 +26,9 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
           // Next.js (Turbopack) may fetch internal assets (chunks, manifests, source maps) via `fetch`.
           // These are not API calls and should never be handled by MSW.
           if (pathname.startsWith('/_next/')) return;
+          // Next.js App Router fetches RSC payloads from same-origin routes using `?_rsc=...`.
+          // These are internal navigation requests and must not be treated as missing API mocks.
+          if (url.searchParams.has('_rsc')) return;
 
           // Allow common static assets to pass through without failing dev.
           const destination = (req as Request).destination;

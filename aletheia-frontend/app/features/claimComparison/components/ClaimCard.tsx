@@ -1,7 +1,8 @@
 'use client';
 
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 
+import { ContentSurface } from '../../../components/layout';
 import { ImmutableRecordBadge } from '../../integrity/components/ImmutableRecordBadge';
 import { ClaimStatusBadge } from '../../claims/components/ClaimStatusBadge';
 import type { ClaimComparisonClaim } from '../hooks/useClaimsForComparison';
@@ -10,7 +11,7 @@ export function ClaimCard(props: { label: 'A' | 'B'; claim: ClaimComparisonClaim
   const { label, claim } = props;
 
   return (
-    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2, bgcolor: 'background.paper' }}>
+    <ContentSurface>
       <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap', mb: 0.5 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
           Claim {label}
@@ -24,7 +25,7 @@ export function ClaimCard(props: { label: 'A' | 'B'; claim: ClaimComparisonClaim
       <Typography variant="body2" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
         {claim.text}
       </Typography>
-    </Box>
+    </ContentSurface>
   );
 }
 

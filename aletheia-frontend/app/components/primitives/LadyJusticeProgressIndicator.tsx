@@ -1,7 +1,8 @@
 /**
- * LadyJusticeProgressIndicator
+ * Aletheia progress indicator (Lady Justice line-draw)
  *
- * Seamless, infinite-loop progress indicator that animates ONLY the scales.
+ * Progress indicator that starts blank and draws in linework.
+ * Uses the provided Lady Justice line art raster as an alpha mask (no canvas/RAF).
  * Animation contract is defined in `app/globals.css`:
  * - 0% and 100% keyframes are identical
  * - linear timing; easing comes from keyframe spacing
@@ -11,6 +12,7 @@
 'use client';
 
 import { Box, type BoxProps } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 export type LadyJusticeProgressIndicatorProps = {
   /**
@@ -27,6 +29,13 @@ export type LadyJusticeProgressIndicatorProps = {
 
 export function LadyJusticeProgressIndicator(props: LadyJusticeProgressIndicatorProps) {
   const { size = 18, sx, 'aria-label': ariaLabel = 'Loading', ...rest } = props;
+  const scaledSize = size * 1.5;
+  const theme = useTheme();
+  const inkColor = theme.palette.text.primary;
+  const shadow =
+    theme.palette.mode === 'dark'
+      ? 'drop-shadow(0 0 1px rgba(0,0,0,0.75))'
+      : 'drop-shadow(0 0 1px rgba(255,255,255,0.55))';
 
   return (
     <Box
@@ -34,62 +43,74 @@ export function LadyJusticeProgressIndicator(props: LadyJusticeProgressIndicator
       role="progressbar"
       aria-label={ariaLabel}
       sx={{
-        width: size,
-        height: size,
+        width: scaledSize,
+        height: scaledSize,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: 'text.secondary',
+        // Theme-aware "ink": light mode -> dark, dark mode -> light.
+        // Callers can still override via `sx`.
+        color: inkColor,
         flex: '0 0 auto',
         ...sx,
       }}
       {...rest}
     >
-      <svg viewBox="0 0 64 64" width="100%" height="100%" fill="none" aria-hidden="true" focusable="false">
-        {/* Static: hook + post */}
-        <path
-          d="M32 8c0-2.2 1.8-4 4-4 1.1 0 2 .9 2 2s-.9 2-2 2c-1.1 0-2 .9-2 2v2h-2V8z"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        <path
-          d="M32 12v38"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        <path
-          d="M22 52h20"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
+      <Box
+        aria-hidden="true"
+        className="aletheia-lady-justice-line-draw"
+        sx={{
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          userSelect: 'none',
+          pointerEvents: 'none',
+        }}
+      >
+        <svg
+          viewBox="0 0 600 900"
+          width="100%"
+          height="100%"
+          aria-hidden="true"
+          focusable="false"
+          style={{ filter: shadow }}
+        >
+          <defs>
+            {/* Invert RGB so black lines become white (mask-visible) and white background becomes black (mask-hidden). */}
+            <filter id="aletheiaInvertRgb" colorInterpolationFilters="sRGB">
+              <feColorMatrix
+                type="matrix"
+                values="-1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0"
+              />
+            </filter>
 
-        {/* Rotating: beam + chains + pans (pivot near the hook) */}
-        <g className="aletheia-lady-justice-scales-rotate">
-          {/* Pivot anchor (keeps transform-origin stable across renderers) */}
-          <circle cx="32" cy="10" r="0.01" fill="transparent" />
+            <mask id="aletheiaLadyJusticeMask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+              {/* Black background (transparent mask) */}
+              <rect x="0" y="0" width="600" height="900" fill="black" />
+              {/* White where lines exist (after invert). */}
+              <image
+                href="/images/lady-justice-lineart.png"
+                x="0"
+                y="0"
+                width="600"
+                height="900"
+                preserveAspectRatio="xMidYMid meet"
+                filter="url(#aletheiaInvertRgb)"
+              />
+            </mask>
+          </defs>
 
-          {/* Beam */}
-          <path d="M14 18h36" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-          <path d="M32 12v8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-
-          {/* Left chain */}
-          <path d="M18 18l-6 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M18 18l6 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          {/* Left pan */}
-          <path d="M8 34h20" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M10 34c1.6 7.5 6.4 11 12 11s10.4-3.5 12-11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-
-          {/* Right chain */}
-          <path d="M46 18l-6 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M46 18l6 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          {/* Right pan */}
-          <path d="M36 34h20" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M38 34c1.6 7.5 6.4 11 12 11s10.4-3.5 12-11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-        </g>
-      </svg>
+          {/* Draw the masked linework in currentColor */}
+          <rect
+            x="0"
+            y="0"
+            width="600"
+            height="900"
+            fill="currentColor"
+            mask="url(#aletheiaLadyJusticeMask)"
+          />
+        </svg>
+      </Box>
     </Box>
   );
 }

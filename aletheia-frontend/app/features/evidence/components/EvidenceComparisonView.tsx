@@ -1,6 +1,7 @@
 'use client';
 
 import { Box, Button, Divider, Typography } from '@mui/material';
+import { alpha, lighten } from '@mui/material/styles';
 
 import type { DocumentChunkItem, DocumentHeader } from '../../documents/hooks/useDocumentChunks';
 import { EvidenceHighlightLayer } from './EvidenceHighlightLayer';
@@ -52,7 +53,7 @@ export function EvidenceComparisonView(props: EvidenceComparisonViewProps) {
               borderColor: 'divider',
               borderRadius: 1,
               p: 1.5,
-              bgcolor: 'background.default',
+              bgcolor: (theme) => alpha(lighten(theme.palette.background.default, 0.2), 0.72),
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1, mb: 1 }}>

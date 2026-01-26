@@ -34,84 +34,53 @@ html {
 }
 
 /*
-  Lady Justice progress indicator (seamless infinite loop)
+  Aletheia progress indicator (Lady Justice line-draw)
 
-  Contract:
-  - 0% and 100% are identical (same rotation + same direction at the loop edge)
+  Behavior:
+  - Starts blank, draws linework in, then resets invisibly (loop point has no flash)
   - animation timing is linear; easing comes only from keyframe spacing
-  - direction reversals occur only at internal keyframes (the extremes)
+  - prefers-reduced-motion disables animation
 */
-@keyframes aletheia-lady-justice-scales-oscillation {
-  /* Loop boundary: slightly right-of-center, moving further right */
+@keyframes aletheia-lady-justice-line-draw {
+  /* Loop boundary: identical (blank) */
   0% {
-    transform: rotate(2deg);
+    opacity: 0;
+    clip-path: inset(100% 0% 0% 0%);
+  }
+  /* Fade in while still blank */
+  6% {
+    opacity: 1;
+    clip-path: inset(100% 0% 0% 0%);
   }
 
-  /* Right swing + brief dwell (slow-in) */
-  4% {
-    transform: rotate(6deg);
-  }
-  10% {
-    transform: rotate(14deg);
-  }
-  14% {
-    transform: rotate(16deg);
-  }
-  20% {
-    transform: rotate(16deg);
+  /* Draw top-to-bottom */
+  70% {
+    opacity: 1;
+    clip-path: inset(0% 0% 0% 0%);
   }
 
-  /* Accelerate through center (bigger angular change per % around 0deg) */
-  30% {
-    transform: rotate(10deg);
+  /* Hold briefly, then fade out before resetting */
+  86% {
+    opacity: 1;
+    clip-path: inset(0% 0% 0% 0%);
   }
-  36% {
-    transform: rotate(0deg);
+  94% {
+    opacity: 0;
+    clip-path: inset(0% 0% 0% 0%);
   }
-  42% {
-    transform: rotate(-12deg);
-  }
-  46% {
-    transform: rotate(-17deg);
-  }
-
-  /* Left swing + longer dwell (asymmetry) */
-  50% {
-    transform: rotate(-18deg);
-  }
-  62% {
-    transform: rotate(-18deg);
-  }
-
-  /* Return toward center (slow-out) */
-  72% {
-    transform: rotate(-12deg);
-  }
-  80% {
-    transform: rotate(-6deg);
-  }
-  88% {
-    transform: rotate(-4deg);
-  }
-  96% {
-    transform: rotate(-2deg);
-  }
-
-  /* Loop boundary: identical to 0% (same pose). Direction and local velocity match because 96%→100% and 0%→4% both increase rotation by 4deg over 4%. */
   100% {
-    transform: rotate(2deg);
+    opacity: 0;
+    clip-path: inset(100% 0% 0% 0%);
   }
 }
 
-.aletheia-lady-justice-scales-rotate {
-  transform-origin: 32px 10px;
-  transform-box: fill-box;
-  animation: aletheia-lady-justice-scales-oscillation 2600ms linear infinite;
-  will-change: transform;
+.aletheia-lady-justice-line-draw {
+  animation: aletheia-lady-justice-line-draw 2400ms linear infinite;
+  will-change: clip-path, opacity;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .aletheia-lady-justice-scales-rotate {
+  .aletheia-lady-justice-line-draw {
     animation: none !important;
   }
 }

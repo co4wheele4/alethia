@@ -149,6 +149,40 @@ function documentsIndex() {
   return docs;
 }
 
+function documentIndexByUser() {
+  // Return exactly the fields selected by `DocumentIndexByUser` (DocumentFields + chunk ids/indexes + mention ids + EntityBasicFields).
+  return fixture.documents.map((d) => {
+    const full = asDocumentById(d.id);
+    if (!full) return null;
+    assertDocumentHasEvidence(full);
+
+    return {
+      __typename: full.__typename,
+      id: full.id,
+      title: full.title,
+      createdAt: full.createdAt,
+      sourceType: full.sourceType,
+      sourceLabel: full.sourceLabel,
+      chunks: full.chunks.map((c) => ({
+        __typename: c.__typename,
+        id: c.id,
+        chunkIndex: c.chunkIndex,
+        mentions: c.mentions.map((m) => ({
+          __typename: m.__typename,
+          id: m.id,
+          entity: {
+            __typename: m.entity.__typename,
+            id: m.entity.id,
+            name: m.entity.name,
+            type: m.entity.type,
+            mentionCount: m.entity.mentionCount,
+          },
+        })),
+      })),
+    };
+  }).filter(Boolean);
+}
+
 export const documentHandlers = [
   graphql.query('DocumentsByUser', ({ variables }) => {
     const userId = assertPresent((variables as { userId?: string } | undefined)?.userId, 'DocumentsByUser.variables.userId');
@@ -170,6 +204,84 @@ export const documentHandlers = [
           sourceLabel: full.sourceLabel,
         };
       }).filter(Boolean),
+    };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
+  graphql.query('DocumentIndexByUser', ({ variables }) => {
+    const userId = assertPresent(
+      (variables as { userId?: string } | undefined)?.userId,
+      'DocumentIndexByUser.variables.userId'
+    );
+    // This mock does not currently partition by user; it returns the deterministic fixture set.
+    void userId;
+
+    const data = { documentsByUser: documentIndexByUser() };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
+  graphql.query('ChunksByDocument', ({ variables }) => {
+    const documentId = assertPresent(
+      (variables as { documentId?: string } | undefined)?.documentId,
+      'ChunksByDocument.variables.documentId'
+    );
+    const doc = asDocumentById(documentId);
+    const chunks = doc?.chunks ?? [];
+
+    // Enforce mention offsets (audit-grade anchoring into chunk content).
+    for (const c of chunks) {
+      for (const m of c.mentions) {
+        assertOffsets(m.startOffset, m.endOffset, `EntityMention(${m.id})`);
+        assertPresent(m.entity, `EntityMention(${m.id}).entity`);
+      }
+    }
+
+    const data = {
+      chunksByDocument: chunks.map((c) => ({
+        __typename: c.__typename,
+        id: c.id,
+        chunkIndex: c.chunkIndex,
+        content: c.content,
+        documentId: c.documentId,
+        mentions: c.mentions.map((m) => ({
+          __typename: m.__typename,
+          id: m.id,
+          entityId: m.entityId,
+          chunkId: m.chunkId,
+          startOffset: m.startOffset,
+          endOffset: m.endOffset,
+          excerpt: m.excerpt,
+          entity: {
+            __typename: m.entity.__typename,
+            id: m.entity.id,
+            name: m.entity.name,
+            type: m.entity.type,
+            mentionCount: m.entity.mentionCount,
+          },
+        })),
+      })),
+    };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
+  // App uses `query Document($id: String!) { document(id: $id) { ...DocumentFields } }`
+  graphql.query('Document', ({ variables }) => {
+    const id = assertPresent((variables as { id?: string } | undefined)?.id, 'Document.variables.id');
+    const doc = asDocumentById(id);
+    const data = {
+      document: doc
+        ? {
+            __typename: doc.__typename,
+            id: doc.id,
+            title: doc.title,
+            createdAt: doc.createdAt,
+            sourceType: doc.sourceType,
+            sourceLabel: doc.sourceLabel,
+          }
+        : null,
     };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });
