@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
