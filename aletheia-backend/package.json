@@ -24,7 +24,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "npm run lint && npm run type-check && jest --config ./test/jest-e2e.json --coverage",
     "test:e2e:cov": "npm run lint && npm run type-check && jest --config ./test/jest-e2e.json --coverage",
-    "test:e2e:setup": "npx dotenv-cli -e .env.test -- npx prisma generate && npx dotenv-cli -e .env.test -- npx prisma migrate deploy",
+    "test:e2e:setup": "node scripts/test-e2e-setup.js",
     "test:e2e:reset": "npx dotenv-cli -e .env.test -- npx prisma migrate reset --force --skip-seed",
     "test:e2e:seed": "node scripts/seed-test.js",
     "test:e2e:full": "npm run test:e2e:setup && npm run test:e2e",

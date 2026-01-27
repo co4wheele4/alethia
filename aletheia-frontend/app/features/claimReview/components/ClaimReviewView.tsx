@@ -18,6 +18,23 @@ import { LadyJusticeProgressIndicator } from '../../../components/primitives/Lad
 import { ClaimStatusBadge } from '../../claims/components/ClaimStatusBadge';
 import { useClaimReview } from '../hooks/useClaimReview';
 
+function adjudicationErrorMessage(code: string) {
+  switch (code) {
+    case 'UNAUTHORIZED_REVIEWER':
+      return 'You must be signed in to review claims.';
+    case 'CLAIM_NOT_FOUND':
+      return 'This claim no longer exists or is unavailable.';
+    case 'INVALID_LIFECYCLE_TRANSITION':
+      return 'This claim can no longer be modified.';
+    case 'UNEXPECTED_ERROR_CODE':
+      return 'Unexpected adjudication error code (contract mismatch).';
+    case 'NETWORK_OR_UNKNOWN':
+      return 'Unexpected adjudication error (network/unknown).';
+    default:
+      return 'Unexpected adjudication error (unknown).';
+  }
+}
+
 export function ClaimReviewView(props: { claimId: string }) {
   const { claimId } = props;
   const [note, setNote] = useState('');
@@ -43,10 +60,8 @@ export function ClaimReviewView(props: { claimId: string }) {
     if (!claim) return 'Missing claim.';
     if (contractError) return contractError.message;
     if (evidenceCount === 0) return 'No evidence resolved; adjudication is blocked.';
-    if (!adjudication.available) return adjudication.reason;
-    if (isTerminal) return 'Claim is in a terminal state.';
     return null;
-  }, [adjudication, claim, contractError, evidenceCount, isTerminal]);
+  }, [claim, contractError, evidenceCount]);
 
   const noteValue = note.trim() ? note.trim() : null;
 
@@ -103,14 +118,6 @@ export function ClaimReviewView(props: { claimId: string }) {
 
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-              Claim type
-            </Typography>
-            <Alert severity="info" sx={{ mt: 1 }}>
-              Blocked: claim type is not exposed by the current GraphQL schema, so the UI cannot render it.
-            </Alert>
-
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
               Review actions (human judgment)
             </Typography>
 
@@ -120,28 +127,63 @@ export function ClaimReviewView(props: { claimId: string }) {
               </Alert>
             ) : null}
 
+            {isTerminal ? (
+              <Alert severity="info" sx={{ mt: 1 }}>
+                This claim can no longer be modified.
+              </Alert>
+            ) : null}
+
+            {adjudication.error ? (
+              <Alert severity="error" sx={{ mt: 1 }}>
+                {adjudicationErrorMessage(adjudication.error.code)}
+                {'received' in adjudication.error && adjudication.error.code === 'UNEXPECTED_ERROR_CODE'
+                  ? ` Received: ${adjudication.error.received}`
+                  : null}
+                {'message' in adjudication.error && adjudication.error.code === 'NETWORK_OR_UNKNOWN'
+                  ? ` Details: ${adjudication.error.message}`
+                  : null}
+              </Alert>
+            ) : null}
+
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
               <Button
                 variant="contained"
-                disabled={Boolean(actionsBlockedReason) || !canTransition('ACCEPTED')}
+                disabled={
+                  Boolean(actionsBlockedReason) ||
+                  adjudication.loading ||
+                  isTerminal ||
+                  !canTransition('ACCEPTED')
+                }
                 onClick={() => requestTransition('ACCEPTED', noteValue)}
+                startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
               >
                 Accept claim
               </Button>
               <Button
                 variant="contained"
                 color="error"
-                disabled={Boolean(actionsBlockedReason) || !canTransition('REJECTED')}
+                disabled={
+                  Boolean(actionsBlockedReason) ||
+                  adjudication.loading ||
+                  isTerminal ||
+                  !canTransition('REJECTED')
+                }
                 onClick={() => requestTransition('REJECTED', noteValue)}
+                startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
               >
                 Reject claim
               </Button>
               <Button
                 variant="outlined"
-                disabled
+                disabled={
+                  Boolean(actionsBlockedReason) ||
+                  adjudication.loading ||
+                  isTerminal ||
+                  !canTransition('REVIEWED')
+                }
                 onClick={() => requestTransition('REVIEWED', noteValue)}
               >
-                Flag for further review (not supported)
+                Mark reviewed
               </Button>
             </Stack>
 
@@ -150,8 +192,7 @@ export function ClaimReviewView(props: { claimId: string }) {
               {allowedNext.length ? allowedNext.join(', ') : '(none)'}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-              Note: the schema uses <code>REVIEWED</code> (not <code>REVIEW</code>) and does not expose a
-              conflicted/flagged state.
+              Note: mutation input uses <code>REVIEW</code> to transition to persisted <code>REVIEWED</code>.
             </Typography>
 
             <TextField
@@ -163,7 +204,7 @@ export function ClaimReviewView(props: { claimId: string }) {
               multiline
               minRows={3}
               sx={{ mt: 2 }}
-              helperText="Plain text only. Notes cannot be persisted until the backend exposes reviewer-note fields."
+              helperText="Plain text only. Notes are persisted with the adjudication action."
             />
           </>
         ) : null}

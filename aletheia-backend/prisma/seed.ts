@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import * as bcrypt from 'bcrypt';
 
 // Load .env.test if NODE_ENV is test or if explicitly requested, otherwise load .env
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.SEED_TEST_DB === 'true';
@@ -96,10 +97,11 @@ async function main() {
   };
 
   // Insert users
+  const passwordHash = await bcrypt.hash('password123', 10);
   const alice = await prisma.user.upsert({
     where: { email: 'alice@example.com' },
     update: {},
-    create: { email: 'alice@example.com', name: 'Alice' },
+    create: { email: 'alice@example.com', name: 'Alice', passwordHash },
   });
   counts.users++;
   console.log(`✓ Inserted ${counts.users} user(s)`);
@@ -120,7 +122,11 @@ async function main() {
 
   // Insert document chunks
   const chunk = await prisma.documentChunk.create({
-    data: { documentId: document.id, chunkIndex: 0, content: 'Aletheia is a system for truth discovery using AI.' },
+    data: {
+      documentId: document.id,
+      chunkIndex: 0,
+      content: 'This chunk mentions Test Entity.',
+    },
   });
   counts.documentChunks++;
   console.log(`✓ Inserted ${counts.documentChunks} document chunk(s)`);
@@ -131,14 +137,72 @@ async function main() {
   console.log(`✓ Inserted ${counts.embeddings} embedding(s)`);
 
   // Insert entities
-  const entity = await prisma.entity.create({ data: { name: 'Aletheia', type: 'Project' } });
+  const entity = await prisma.entity.create({ data: { name: 'Test Entity', type: 'TestType' } });
   counts.entities++;
   console.log(`✓ Inserted ${counts.entities} entity/entities`);
 
   // Insert entity mentions
-  await prisma.entityMention.create({ data: { entityId: entity.id, chunkId: chunk.id } });
+  const mention = await prisma.entityMention.create({
+    data: {
+      entityId: entity.id,
+      chunkId: chunk.id,
+      startOffset: 20,
+      endOffset: 31,
+      excerpt: 'Test Entity',
+    },
+  });
   counts.entityMentions++;
   console.log(`✓ Inserted ${counts.entityMentions} entity mention(s)`);
+
+  // Insert claims (REVIEWED) with explicit evidence links (ADR-005/008/011).
+  await prisma.claim.create({
+    data: {
+      id: 'claim-review-accept',
+      text: 'Test Entity is mentioned in the intro document.',
+      status: 'REVIEWED',
+      evidence: {
+        create: [
+          {
+            id: 'cev-accept-1',
+            documentId: document.id,
+            mentionLinks: { create: [{ mentionId: mention.id }] },
+          },
+        ],
+      },
+    },
+  });
+  await prisma.claim.create({
+    data: {
+      id: 'claim-review-reject',
+      text: 'The intro document contains sufficient evidence to review this claim.',
+      status: 'REVIEWED',
+      evidence: {
+        create: [
+          {
+            id: 'cev-reject-1',
+            documentId: document.id,
+            mentionLinks: { create: [{ mentionId: mention.id }] },
+          },
+        ],
+      },
+    },
+  });
+  await prisma.claim.create({
+    data: {
+      id: 'claim-review-draft',
+      text: 'Draft claim used to assert invalid transition errors.',
+      status: 'DRAFT',
+      evidence: {
+        create: [
+          {
+            id: 'cev-draft-1',
+            documentId: document.id,
+            mentionLinks: { create: [{ mentionId: mention.id }] },
+          },
+        ],
+      },
+    },
+  });
 
   // Insert AI queries
   const query = await prisma.aiQuery.create({ data: { userId: alice.id, query: 'Explain chunk 0 in simple terms' } });

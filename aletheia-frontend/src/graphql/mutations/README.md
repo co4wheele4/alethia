@@ -1,5 +1,5 @@
-This directory is intentionally empty for the current phase.
+This directory contains schema-faithful GraphQL mutations.
 
-- **Constraint**: read-only trust UI (no creation/editing/upload/AI)
-- **Rule**: contracts before features — add mutations only after the contract surface is stable
+- **Rule**: mutations must match the backend schema snapshot (`/src/schema.gql`) exactly.
+- **Guardrail**: never add confidence/probability fields.
 

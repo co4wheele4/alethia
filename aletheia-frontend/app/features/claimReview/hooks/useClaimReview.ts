@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { GET_DOCUMENT_EVIDENCE_VIEW_QUERY, LIST_RELATIONSHIPS_QUERY } from '@/src/graphql';
 import { useClaims, type Claim, type ClaimEvidence, type ClaimStatus } from '../../claims/hooks/useClaims';
+import { useAdjudicateClaim, type ClaimLifecycleState } from './useAdjudicateClaim';
 
 export type ClaimReviewEvidenceItem =
   | {
@@ -211,7 +212,7 @@ function relationshipEvidenceItems(args: {
 export function useClaimReview(claimId: string) {
   const client = useApolloClient();
 
-  const { claims, loading: claimsLoading, error: claimsError } = useClaims(null);
+  const { claims, loading: claimsLoading, error: claimsError, refetch: refetchClaims } = useClaims(null);
 
   const claim: Claim | null = useMemo(
     () => claims.find((c) => c.id === claimId) ?? null,
@@ -313,27 +314,35 @@ export function useClaimReview(claimId: string) {
     return [...(CLAIM_LIFECYCLE_TRANSITIONS[claim.status] ?? [])];
   }, [claim]);
 
-  /**
-   * Adjudication contract note:
-   * The current backend schema does NOT expose any claim lifecycle mutation.
-   * Therefore the UI must block review actions instead of simulating state changes.
-   */
+  const { adjudicate, loading: adjudicationLoading, error: adjudicationError } = useAdjudicateClaim(claimId);
+
   const adjudication = useMemo(() => {
     return {
-      available: false as const,
-      reason:
-        'Backend GraphQL schema does not expose claim review/adjudication mutations (no way to persist lifecycle transitions).',
+      available: true as const,
+      loading: adjudicationLoading,
+      error: adjudicationError,
     };
-  }, []);
+  }, [adjudicationError, adjudicationLoading]);
+
+  function mapStatusToDecision(next: ClaimStatus): ClaimLifecycleState {
+    // ADR-011: mutation input uses REVIEW (not REVIEWED) to transition DRAFT -> REVIEWED.
+    if (next === 'REVIEWED') return 'REVIEW';
+    return next;
+  }
 
   const requestTransition = useCallback(
-    async (_to: ClaimStatus, _note?: string | null) => {
-      void _note;
-      fail(
-        `Cannot transition Claim(${claimId}) because adjudication mutations are not exposed by the schema.`
-      );
+    async (to: ClaimStatus, note?: string | null) => {
+      if (!claim) fail(`Cannot transition Claim(${claimId}) because claim is not loaded.`);
+      if (!canTransitionClaim(claim.status, to)) return;
+
+      const decision = mapStatusToDecision(to);
+      const updated = await adjudicate(decision, note ?? null);
+      if (updated) {
+        // Ensure the UI reflects backend truth, including across reloads.
+        await refetchClaims();
+      }
     },
-    [claimId]
+    [adjudicate, claim, claimId, refetchClaims]
   );
 
   return {

@@ -35,3 +35,5 @@ export { LIST_CLAIMS_QUERY } from './queries/listClaims.query';
 export { CLAIMS_BY_DOCUMENT_QUERY } from './queries/claimsByDocument.query';
 export { GET_CLAIMS_FOR_COMPARISON_QUERY } from './queries/getClaimsForComparison.query';
 
+export { ADJUDICATE_CLAIM_MUTATION } from './mutations/adjudicateClaim.mutation';
+

@@ -89,11 +89,20 @@ const docEvidenceView = {
 };
 
 describe('ClaimReviewView', () => {
-  it('renders claim + evidence and blocks adjudication when schema lacks mutations', async () => {
+  it('renders claim + evidence and enables adjudication when reviewable', async () => {
     const mocks = [
       {
         request: { query: LIST_CLAIMS_QUERY },
-        result: { data: { claims: [claim1] } },
+        result: {
+          data: {
+            claims: [
+              {
+                ...claim1,
+                status: 'REVIEWED' as const,
+              },
+            ],
+          },
+        },
       },
       {
         request: { query: GET_DOCUMENT_EVIDENCE_VIEW_QUERY, variables: { id: 'doc_1' } },
@@ -116,10 +125,7 @@ describe('ClaimReviewView', () => {
     expect(screen.getByRole('heading', { name: 'Claim text' })).toBeInTheDocument();
 
     const accept = screen.getByRole('button', { name: 'Accept claim' });
-    expect(accept).toBeDisabled();
-
-    // Explicit contract message (no silent fallback)
-    expect(screen.getByText(/does not expose claim review\/adjudication mutations/i)).toBeInTheDocument();
+    expect(accept).toBeEnabled();
   });
 });
 

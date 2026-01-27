@@ -46,6 +46,9 @@ type Claim {
   """
   evidence: [ClaimEvidence!]!
   id: ID!
+  reviewedAt: DateTime
+  reviewedBy: ID
+  reviewerNote: String
   status: ClaimStatus!
   text: String!
 }

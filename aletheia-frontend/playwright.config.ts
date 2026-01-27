@@ -92,25 +92,38 @@ export default defineConfig({
     },
   ],
 
-  // Run your local dev server before starting the tests
-  webServer: {
-    // Use production server for Playwright stability on Windows.
-    // (Dev server can occasionally crash/hang under Playwright load.)
-    command: 'npm run build && npm run start',
-    // IMPORTANT:
-    // Playwright E2E tests in this repo use `page.route` GraphQL interception (see `e2e/helpers/msw-handlers.ts`).
-    // Therefore we must NOT enable the browser MSW service worker here, otherwise it will intercept `/graphql`
-    // before Playwright can, leading to unhandled-operation 500s and non-deterministic behavior.
-    env: {
-      ...process.env,
-      NEXT_PUBLIC_MSW: 'disabled',
-      // Deterministic UI fixtures for acceptance tests (no MSW required).
-      NEXT_PUBLIC_E2E_FIXTURES: 'enabled',
+  // Run backend + frontend before starting the tests
+  webServer: [
+    {
+      // Backend (real GraphQL)
+      // - Uses `.env.test` (via dotenv-cli) to ensure Playwright hits a real DB.
+      // - Seeds deterministic claims for adjudication tests.
+      command:
+        'cd .. && ' +
+        'npm run --workspace=aletheia-backend test:e2e:setup && ' +
+        'npm run --workspace=aletheia-backend test:e2e:seed && ' +
+        'npm run --workspace=aletheia-backend build && ' +
+        'npm run --workspace=aletheia-backend start:prod',
+      env: {
+        ...process.env,
+        PORT: '3050',
+      },
+      url: 'http://127.0.0.1:3050/graphql',
+      reuseExistingServer: false,
+      timeout: 180 * 1000,
     },
-    url: 'http://127.0.0.1:3030',
-    // Do not reuse an existing dev server: it may have MSW enabled, which would intercept `/graphql`
-    // before Playwright route interception and cause unhandled-operation failures.
-    reuseExistingServer: false,
-    timeout: 120 * 1000,
-  },
+    {
+      // Frontend (production server for stability)
+      command: 'npm run build && npm run start',
+      env: {
+        ...process.env,
+        NEXT_PUBLIC_MSW: 'disabled',
+        NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
+        NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3050/graphql',
+      },
+      url: 'http://127.0.0.1:3030',
+      reuseExistingServer: false,
+      timeout: 180 * 1000,
+    },
+  ],
 });

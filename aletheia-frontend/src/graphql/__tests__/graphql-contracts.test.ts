@@ -6,6 +6,7 @@ import { buildSchema, validate } from 'graphql';
 
 import {
   GET_DOCUMENT_BY_ID_QUERY,
+  ADJUDICATE_CLAIM_MUTATION,
   DOCUMENTS_INDEX_QUERY,
   LIST_DOCUMENTS_QUERY,
   LIST_ENTITIES_QUERY,
@@ -30,6 +31,7 @@ describe('GraphQL contract layer', () => {
     ['GetDocumentById', GET_DOCUMENT_BY_ID_QUERY],
     ['ListEntities', LIST_ENTITIES_QUERY],
     ['ListRelationships', LIST_RELATIONSHIPS_QUERY],
+    ['AdjudicateClaim', ADJUDICATE_CLAIM_MUTATION],
   ])('%s validates against schema snapshot', (_, doc) => {
     const errors = validate(schema, doc);
     expect(errors).toEqual([]);

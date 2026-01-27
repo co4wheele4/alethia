@@ -49,6 +49,21 @@ export class Claim {
   @Field(() => Date)
   createdAt!: Date;
 
+  /**
+   * Adjudication metadata (ADR-011).
+   *
+   * Nullable for backward safety:
+   * - existing claims may predate explicit review.
+   */
+  @Field(() => Date, { nullable: true })
+  reviewedAt?: Date | null;
+
+  @Field(() => ID, { nullable: true })
+  reviewedBy?: string | null;
+
+  @Field(() => String, { nullable: true })
+  reviewerNote?: string | null;
+
   @Field(() => [ClaimEvidence], {
     description:
       'Grounding anchors for this claim. Claims must never be returned without evidence.',
