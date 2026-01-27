@@ -1,6 +1,7 @@
 'use client';
 
 import { Box } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
 export type MentionRange = {
   mentionId: string;
@@ -79,11 +80,23 @@ export function MentionHighlightOverlay(props: {
         data-end={String(end)}
         data-mentions={covering.join(',')}
         data-testid={single ? `mention-highlight-${single}` : undefined}
+        // `mark` has strong user-agent defaults (yellow bg, black text).
+        // Force inherited text color so highlights never reduce contrast.
+        style={{ color: 'inherit' }}
         sx={{
           px: 0.25,
           borderRadius: 0.5,
-          bgcolor: covering.length > 1 ? 'rgba(156, 39, 176, 0.14)' : 'rgba(25, 118, 210, 0.14)',
-          borderBottom: covering.length > 1 ? '1px solid rgba(156, 39, 176, 0.55)' : '1px solid rgba(25, 118, 210, 0.55)',
+          bgcolor: (theme) => {
+            const base = covering.length > 1 ? theme.palette.secondary.main : theme.palette.info.main;
+            const a = theme.palette.mode === 'dark' ? 0.32 : 0.14;
+            return alpha(base, a);
+          },
+          borderBottom: (theme) => {
+            const base = covering.length > 1 ? theme.palette.secondary.main : theme.palette.info.main;
+            const a = theme.palette.mode === 'dark' ? 0.85 : 0.55;
+            return `1px solid ${alpha(base, a)}`;
+          },
+          color: 'inherit',
           ...highlightSx,
         }}
       >

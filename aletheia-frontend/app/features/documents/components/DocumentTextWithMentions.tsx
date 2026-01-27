@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { Alert, Box, Divider, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
 type Mention = {
   __typename?: 'EntityMention';
@@ -44,12 +45,33 @@ function computeRenderableSpans(content: string, mentions: Mention[]) {
       issues.push(`Mention ${m.id} has invalid offsets [${start}, ${end})`);
       continue;
     }
+
+    // If excerpt is present and disagrees with the offset slice, prefer excerpt-length
+    // when it matches the content at the same start offset. This prevents common
+    // off-by-one endOffset issues from rendering misleading highlights.
+    let fixedEnd = end;
+    const excerpt = m.excerpt ?? null;
+    const entityName = (m.entity?.name ?? '').trim() || null;
+    const expected = excerpt ?? entityName;
+
+    // Only attempt to shorten spans; never expand beyond the backend-provided endOffset.
+    if (expected && expected !== content.slice(start, end)) {
+      const candidateEnd = start + expected.length;
+      if (candidateEnd > start && candidateEnd <= end && content.slice(start, candidateEnd) === expected) {
+        issues.push(`Mention ${m.id} text mismatch; rendering highlight using expected text length`);
+        fixedEnd = candidateEnd;
+      } else if (excerpt) {
+        // Excerpt exists but isn't alignable at start; keep offsets and warn.
+        issues.push(`Mention ${m.id} excerpt mismatch; rendering highlight using offsets`);
+      }
+    }
+
     spans.push({
       mentionId: m.id,
       entityId: m.entityId,
       label: m.entity?.name ?? m.entityId,
       start,
-      end,
+      end: fixedEnd,
     });
   }
 
@@ -85,12 +107,25 @@ function renderHighlightedText(content: string, spans: Span[], activeEntityId?: 
         component="mark"
         onClick={() => onEntityClick?.(s.entityId)}
         title={`${s.label} [${s.start}, ${s.end})`}
+        // `mark` has strong user-agent defaults (yellow bg, black text).
+        // Force inherited text color so highlights never reduce contrast.
+        style={{ color: 'inherit' }}
         sx={{
           px: 0.25,
           borderRadius: 0.5,
           cursor: onEntityClick ? 'pointer' : 'default',
-          bgcolor: isActive ? 'rgba(156, 39, 176, 0.18)' : 'rgba(25, 118, 210, 0.14)',
-          borderBottom: isActive ? '2px solid rgba(156, 39, 176, 0.55)' : '1px solid rgba(25, 118, 210, 0.45)',
+          bgcolor: (theme) => {
+            const base = isActive ? theme.palette.secondary.main : theme.palette.info.main;
+            const a = theme.palette.mode === 'dark' ? (isActive ? 0.38 : 0.32) : (isActive ? 0.18 : 0.14);
+            return alpha(base, a);
+          },
+          borderBottom: (theme) => {
+            const base = isActive ? theme.palette.secondary.main : theme.palette.info.main;
+            const a = theme.palette.mode === 'dark' ? 0.9 : 0.55;
+            const w = isActive ? 2 : 1;
+            return `${w}px solid ${alpha(base, a)}`;
+          },
+          color: 'inherit',
         }}
       >
         {content.slice(s.start, s.end)}

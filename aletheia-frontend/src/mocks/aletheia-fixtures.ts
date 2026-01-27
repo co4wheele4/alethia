@@ -70,8 +70,10 @@ export const fixture = {
               id: 'm_2',
               entityId: 'e_2',
               chunkId: 'chunk_1_0',
-              startOffset: 40,
-              endOffset: 57,
+              // NOTE: offsets are 0-based and end is exclusive.
+              // "Example Publisher" begins at index 38 in the fixture content string.
+              startOffset: 38,
+              endOffset: 55,
               excerpt: 'Example Publisher',
               entity: {
                 __typename: 'Entity',
@@ -184,8 +186,9 @@ export const fixture = {
           createdAt: FIXTURE_NOW,
           relationshipId: 'r_1',
           chunkId: 'chunk_1_0',
-          startOffset: 70,
-          endOffset: 100,
+          // "Aletheia prioritizes provenance" begins at index 68 in the fixture content string.
+          startOffset: 68,
+          endOffset: 99,
           quotedText: 'Aletheia prioritizes provenance',
           chunk: {
             __typename: 'DocumentChunk',
