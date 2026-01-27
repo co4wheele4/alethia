@@ -24,6 +24,13 @@ enum ClaimStatus {
   REJECTED
 }
 
+enum ClaimLifecycleState {
+  DRAFT
+  REVIEW
+  ACCEPTED
+  REJECTED
+}
+
 type ClaimEvidence {
   claimId: ID!
   createdAt: DateTime!
@@ -239,6 +246,11 @@ type Lesson {
 }
 
 type Mutation {
+  adjudicateClaim(
+    claimId: ID!
+    decision: ClaimLifecycleState!
+    reviewerNote: String
+  ): Claim!
   askAI(query: String!, userId: String!): String!
   askAi(query: String!, userId: String!): AiQueryResult!
   createChunk(chunkIndex: Int!, content: String!, documentId: String!): DocumentChunk!

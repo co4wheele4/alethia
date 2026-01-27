@@ -18,7 +18,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 
 export default defineConfig({
-  testDir: './e2e',
+  // Support both legacy `e2e/` and newer `tests/e2e/` specs.
+  testDir: '.',
+  testMatch: ['e2e/**/*.spec.ts', 'tests/e2e/**/*.spec.ts'],
 
   // WebKit (and mobile WebKit) can be slow to start on Windows under load.
   // Increase the per-test timeout to reduce flaky "browserContext.newPage" failures.
@@ -102,6 +104,8 @@ export default defineConfig({
     env: {
       ...process.env,
       NEXT_PUBLIC_MSW: 'disabled',
+      // Deterministic UI fixtures for acceptance tests (no MSW required).
+      NEXT_PUBLIC_E2E_FIXTURES: 'enabled',
     },
     url: 'http://127.0.0.1:3030',
     // Do not reuse an existing dev server: it may have MSW enabled, which would intercept `/graphql`

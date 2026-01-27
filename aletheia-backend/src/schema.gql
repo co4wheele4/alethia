@@ -67,6 +67,14 @@ type ClaimEvidence {
   relationshipIds: [ID!]!
 }
 
+"""Contract-only lifecycle input for claim adjudication (ADR-011)."""
+enum ClaimLifecycleState {
+  ACCEPTED
+  DRAFT
+  REJECTED
+  REVIEW
+}
+
 """
 Lifecycle state for a claim (presentation-only; does not imply truth or confidence).
 """
@@ -309,6 +317,9 @@ type Lesson {
 
 type Mutation {
   acceptSuggestion(id: ID!): AiExtractionSuggestion!
+
+  """Adjudicate a claim by transitioning lifecycle state (ADR-011)."""
+  adjudicateClaim(claimId: ID!, decision: ClaimLifecycleState!, reviewerNote: String): Claim!
   askAI(query: String!, userId: String!): String!
   askAi(query: String!, userId: String!): AiQueryResult!
   createChunk(chunkIndex: Int!, content: String!, documentId: String!): DocumentChunk!

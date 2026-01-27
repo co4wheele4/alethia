@@ -351,6 +351,20 @@ model Claim {
   createdAt DateTime    @default(now()) @map("created_at")
 
   /**
+   * Adjudication metadata (ADR-011).
+   *
+   * Nullable for backward safety:
+   * - existing claims may predate explicit review.
+   *
+   * Epistemic contract:
+   * - No confidence semantics are stored here.
+   * - This metadata is purely about human review actions.
+   */
+  reviewedAt   DateTime? @map("reviewed_at")
+  reviewedBy   String?   @map("reviewed_by")
+  reviewerNote String?   @map("reviewer_note")
+
+  /**
    * Grounding requirement:
    * - Claims are higher-order assertions and MUST be inspectable via evidence anchors.
    * - This relationship is required at the semantic level; API layers must fail loudly if empty.

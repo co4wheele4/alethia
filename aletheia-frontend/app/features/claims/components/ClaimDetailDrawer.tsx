@@ -72,6 +72,17 @@ export function ClaimDetailDrawer(props: { open: boolean; claim: Claim | null; o
           <>
             <Divider sx={{ my: 2 }} />
 
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 1 }}>
+              <Button
+                component={Link}
+                href={`/claims/${encodeURIComponent(claim.id)}`}
+                variant="contained"
+                size="small"
+              >
+                Open claim review
+              </Button>
+            </Stack>
+
             <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
               Claim text
             </Typography>

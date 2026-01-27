@@ -30,8 +30,16 @@ function colorFor(status: ClaimStatus): 'default' | 'success' | 'warning' | 'err
   }
 }
 
-export function ClaimStatusBadge(props: { status: ClaimStatus }) {
-  const { status } = props;
-  return <Chip size="small" label={labelFor(status)} color={colorFor(status)} variant="outlined" />;
+export function ClaimStatusBadge(props: { status: ClaimStatus; testId?: string }) {
+  const { status, testId } = props;
+  return (
+    <Chip
+      size="small"
+      label={labelFor(status)}
+      color={colorFor(status)}
+      variant="outlined"
+      data-testid={testId}
+    />
+  );
 }
 

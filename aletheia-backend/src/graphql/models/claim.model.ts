@@ -15,6 +15,26 @@ registerEnumType(ClaimStatus, {
     'Lifecycle state for a claim (presentation-only; does not imply truth or confidence).',
 });
 
+/**
+ * CONTRACT (ADR-011): This enum exists solely to support the adjudication mutation input.
+ *
+ * NOTE:
+ * - The persisted/returned claim state remains `ClaimStatus` (which includes `REVIEWED`).
+ * - The mutation input uses `REVIEW` (not `REVIEWED`) and is mapped server-side.
+ */
+export enum ClaimLifecycleState {
+  DRAFT = 'DRAFT',
+  REVIEW = 'REVIEW',
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED',
+}
+
+registerEnumType(ClaimLifecycleState, {
+  name: 'ClaimLifecycleState',
+  description:
+    'Contract-only lifecycle input for claim adjudication (ADR-011).',
+});
+
 @ObjectType()
 export class Claim {
   @Field(() => ID)
