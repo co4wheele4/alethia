@@ -1,8 +1,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useParams } from 'next/navigation';
-import { Alert } from '@mui/material';
+import { useParams, useSearchParams } from 'next/navigation';
+import { Alert, Box } from '@mui/material';
 
 import { AppShell } from '../../components/layout';
 import { useAuth } from '../../features/auth/hooks/useAuth';
@@ -12,6 +12,7 @@ import { ClaimReviewView } from '../../features/claimReview/components/ClaimRevi
 
 function ClaimReviewPageInner() {
   const params = useParams<{ claimId?: string }>();
+  const searchParams = useSearchParams();
   const claimId = String(params?.claimId ?? '');
 
   const { token, isInitialized } = useAuth();
@@ -29,7 +30,21 @@ function ClaimReviewPageInner() {
     return <Alert severity="error">Missing claim id.</Alert>;
   }
 
-  return <ClaimReviewView claimId={claimId} />;
+  const isReviewRequestFromComparison =
+    searchParams.get('reviewRequest') === '1' && searchParams.get('from') === 'compare';
+
+  return (
+    <Box>
+      {isReviewRequestFromComparison ? (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Requesting review does not resolve or modify claims. It signals that a human reviewer should inspect this claim in context.
+          <br />
+          No data is persisted by requesting review; any adjudication must be an explicit, schema-allowed action.
+        </Alert>
+      ) : null}
+      <ClaimReviewView claimId={claimId} />
+    </Box>
+  );
 }
 
 export default function ClaimReviewPage() {

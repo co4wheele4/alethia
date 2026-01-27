@@ -1,14 +1,16 @@
 'use client';
 
-import Link from 'next/link';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
-import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { Alert, Box, Stack, Typography } from '@mui/material';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 
 import { useClaimsForComparison } from '../hooks/useClaimsForComparison';
 import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { LIST_RELATIONSHIPS_QUERY } from '@/src/graphql';
 import { ClaimComparisonColumn } from './ClaimComparisonColumn';
+import { ClaimComparisonPanel } from './ClaimComparisonPanel';
+import { RequestReviewDialog } from './RequestReviewDialog';
 import type { ClaimEvidenceListModel } from './ClaimEvidenceList';
 import type { ClaimComparisonClaim, ClaimComparisonDocument, ClaimComparisonMention } from '../hooks/useClaimsForComparison';
 import type { ClaimEvidenceSnippetModel } from './ClaimEvidenceSnippet';
@@ -216,18 +218,44 @@ function buildEvidenceModel(args: {
   };
 }
 
-export function ClaimComparisonView(props: { baseClaimId: string }) {
-  const { baseClaimId } = props;
+export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?: string[] }) {
+  const { baseClaimId, withClaimIds = [] } = props;
   const { claims, loading, error } = useClaimsForComparison();
+  const router = useRouter();
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+
   const base = useMemo(() => claims.find((c) => c.id === baseClaimId) ?? null, [claims, baseClaimId]);
 
-  const related = useMemo(() => {
+  const explicitRelated = useMemo(() => {
+    if (!withClaimIds.length) return [];
+    const byId = new Map(claims.map((c) => [c.id, c] as const));
+    const out: ClaimComparisonClaim[] = [];
+    for (const id of withClaimIds) {
+      const c = byId.get(id);
+      if (c) out.push(c);
+    }
+    return out;
+  }, [claims, withClaimIds]);
+
+  const missingWithClaimIds = useMemo(() => {
+    if (!withClaimIds.length) return [];
+    const known = new Set(claims.map((c) => c.id));
+    return withClaimIds.filter((id) => !known.has(id));
+  }, [claims, withClaimIds]);
+
+  const derivedRelated = useMemo(() => {
     if (!base) return [];
     return relatedClaimsFromSchema({
       base,
       all: claims,
     }).sort((a, b) => a.id.localeCompare(b.id));
   }, [base, claims]);
+
+  const related = useMemo(() => {
+    // ADR-010: comparison is user-initiated. If explicit `with=` is provided, prefer it (no implicit additions).
+    if (withClaimIds.length) return explicitRelated;
+    return derivedRelated;
+  }, [derivedRelated, explicitRelated, withClaimIds.length]);
 
   const comparedClaims = useMemo(() => (base ? [base, ...related] : []), [base, related]);
 
@@ -312,25 +340,51 @@ export function ClaimComparisonView(props: { baseClaimId: string }) {
     );
   }
 
+  const requestReviewHref = (() => {
+    // ADR-011: request review is navigational only; context is passed via URL (no persistence).
+    const qs = new URLSearchParams();
+    qs.set('reviewRequest', '1');
+    qs.set('from', 'compare');
+    qs.set('base', base.id);
+    const withIds = comparedClaims
+      .slice(1)
+      .map((c) => c.id)
+      .filter(Boolean);
+    if (withIds.length) qs.set('with', withIds.join(','));
+    return `/claims/${encodeURIComponent(base.id)}?${qs.toString()}`;
+  })();
+
   return (
     <Box>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'baseline' }} sx={{ mb: 2 }}>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6">Claim comparison</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Neutral, read-only side-by-side inspection. No conflict, agreement, ranking, or confidence is inferred.
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-            Related claims are derived client-side from schema fields only (shared document IDs and evidence-linked entity IDs).
-          </Typography>
-        </Box>
-        <Box sx={{ flex: 1 }} />
-        <Button component={Link} href="/claims" size="small" sx={{ textTransform: 'none' }}>
-          Back to Claims
-        </Button>
-      </Stack>
+      <ClaimComparisonPanel
+        onRequestReview={() => setReviewDialogOpen(true)}
+        requestReviewDisabled={!base}
+        modeCaption={
+          withClaimIds.length
+            ? 'Compared claims were explicitly selected via URL query params (with=...). No additional claims are inferred or added.'
+            : 'Related claims are derived client-side from schema fields only (shared document IDs and evidence-linked entity IDs).'
+        }
+      />
 
-      {related.length === 0 ? (
+      <RequestReviewDialog
+        open={reviewDialogOpen}
+        claimId={base.id}
+        onClose={() => setReviewDialogOpen(false)}
+        onConfirm={() => {
+          // ADR-009/010: no adjudication or state changes from comparison.
+          // ADR-011: no mutation is triggered; we only navigate to the review surface.
+          setReviewDialogOpen(false);
+          router.push(requestReviewHref);
+        }}
+      />
+
+      {!loading && withClaimIds.length && missingWithClaimIds.length ? (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Some requested claims were not available in the current schema-backed dataset: {missingWithClaimIds.join(', ')}.
+        </Alert>
+      ) : null}
+
+      {!withClaimIds.length && related.length === 0 ? (
         <Alert severity="info" sx={{ mb: 2 }}>
           No related claims were found based on shared documents/entities exposed by the current GraphQL schema.
         </Alert>

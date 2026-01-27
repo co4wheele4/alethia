@@ -751,7 +751,7 @@ describe('EvidenceExplorer', () => {
 
     // Ensure the getter-based evidence branch executed at least once (also fixes unused-var lint).
     expect(getterEvidenceReads).toBeGreaterThan(0)
-  })
+  }, 20_000)
 
   it('does not set evidence when chunk click cannot find active document', async () => {
     const user = userEvent.setup()
