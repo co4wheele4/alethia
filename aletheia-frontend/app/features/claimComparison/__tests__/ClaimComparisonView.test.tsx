@@ -1,13 +1,16 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import { ClaimComparisonView } from '../components/ClaimComparisonView';
 
 import * as comparisonHook from '../hooks/useClaimsForComparison';
 
 vi.mock('../hooks/useClaimsForComparison');
+vi.mock('@apollo/client/react', () => ({
+  useQuery: vi.fn(() => ({ data: { entityRelationships: [] }, loading: false, error: undefined })),
+}));
 
 describe('ClaimComparisonView', () => {
-  it('renders two claims side-by-side with document-grouped evidence and offset highlights', () => {
+  it('renders base + related claims as independent columns with offset-grounded evidence and lifecycle badges', () => {
     vi.mocked(comparisonHook.useClaimsForComparison).mockReturnValue({
       claims: [
         {
@@ -33,6 +36,8 @@ describe('ClaimComparisonView', () => {
               id: 'doc_1',
               title: 'Doc 1',
               createdAt: '2026-01-20T10:15:00.000Z',
+              sourceType: 'URL',
+              sourceLabel: 'example.com',
               chunks: [
                 {
                   __typename: 'DocumentChunk',
@@ -80,6 +85,8 @@ describe('ClaimComparisonView', () => {
               id: 'doc_1',
               title: 'Doc 1',
               createdAt: '2026-01-20T10:15:00.000Z',
+              sourceType: 'URL',
+              sourceLabel: 'example.com',
               chunks: [
                 {
                   __typename: 'DocumentChunk',
@@ -110,21 +117,22 @@ describe('ClaimComparisonView', () => {
       refetch: vi.fn(),
     });
 
-    render(<ClaimComparisonView leftClaimId="c1" rightClaimId="c2" />);
+    render(<ClaimComparisonView baseClaimId="c1" />);
 
     expect(screen.getByText(/Claim comparison/i)).toBeInTheDocument();
-    expect(screen.getByText('Claim A')).toBeInTheDocument();
-    expect(screen.getByText('Claim B')).toBeInTheDocument();
-    expect(screen.getByText('Claim one text')).toBeInTheDocument();
-    expect(screen.getByText('Claim two text')).toBeInTheDocument();
+    expect(screen.getByText('Base')).toBeInTheDocument();
+    expect(screen.getByText('Claim 2')).toBeInTheDocument();
+    // Claim text is diff-rendered (split across spans); assert via textContent includes.
+    expect(document.body.textContent ?? '').toContain('Claim one text');
+    expect(document.body.textContent ?? '').toContain('two text');
 
-    // Evidence is grouped by document and includes a source label + highlight span.
+    // Lifecycle badges render.
+    expect(screen.getAllByText(/draft/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/reviewed/i)[0]).toBeInTheDocument();
+
+    // Evidence snippet renders with offsets and highlight mark.
     expect(screen.getAllByText(/Source document:/i)[0]).toHaveTextContent('Doc 1');
-    const docGroup = screen.getByRole('list', { name: 'claim-evidence-document-c1-doc_1' });
-    const mentionRow = within(docGroup).getByText(/Mention • chunk 0/i);
-    expect(mentionRow).toBeInTheDocument();
-
-    // Highlight must be offset-driven (mark rendered by MentionHighlightOverlay).
+    expect(screen.getAllByText(/offsets 0–8/i)[0]).toBeInTheDocument();
     expect(screen.getAllByTestId('mention-highlight-m_1')[0]).toHaveTextContent('Aletheia');
   });
 });

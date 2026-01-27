@@ -6,22 +6,34 @@ import { Alert } from '@mui/material';
 
 import { AppShell } from '../../components/layout';
 import { ClaimComparisonView } from '../../features/claimComparison';
+import { useAuth } from '../../features/auth/hooks/useAuth';
+import { getAuthToken } from '../../features/auth/utils/auth';
+import { getUserIdFromToken } from '../../features/auth/utils/jwt';
 
 function ClaimComparisonPageInner() {
+  const { token, isInitialized } = useAuth();
   const params = useSearchParams();
-  const left = params.get('left') ?? '';
-  const right = params.get('right') ?? '';
+  if (!isInitialized) return null;
 
-  if (!left || !right) {
-    return <Alert severity="info">Select two claims on the Claims page, then open comparison.</Alert>;
+  const stableToken = token ?? getAuthToken();
+  const userId = getUserIdFromToken(stableToken);
+
+  if (!userId) {
+    return <Alert severity="info">Claim comparison is available after login.</Alert>;
   }
 
-  return <ClaimComparisonView leftClaimId={left} rightClaimId={right} />;
+  const base = params.get('base') ?? '';
+
+  if (!base) {
+    return <Alert severity="info">Open claim comparison with /claims/compare?base=&lt;claimId&gt;.</Alert>;
+  }
+
+  return <ClaimComparisonView baseClaimId={base} />;
 }
 
 export default function ClaimComparisonPage() {
   return (
-    <AppShell title="Claim comparison">
+    <AppShell title="Claim comparison" requireAuth={false}>
       <Suspense fallback={null}>
         <ClaimComparisonPageInner />
       </Suspense>

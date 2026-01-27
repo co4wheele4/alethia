@@ -1,58 +1,53 @@
 'use client';
 
-import Link from 'next/link';
-import { Alert, Box, Button, Divider, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
+import { Alert, Box, Divider, List, ListItem, Stack, Typography } from '@mui/material';
 import { alpha, lighten } from '@mui/material/styles';
 
-import type { ClaimComparisonClaim, ClaimComparisonDocument, ClaimComparisonMention } from '../hooks/useClaimsForComparison';
-import { MentionHighlight } from './MentionHighlight';
+import { ClaimEvidenceSnippet, type ClaimEvidenceSnippetModel } from './ClaimEvidenceSnippet';
 
-type MentionRef = {
-  mention: ClaimComparisonMention;
-  document: ClaimComparisonDocument;
-  chunkIndex: number;
-  chunkText: string;
+export type ClaimEvidenceListModel = {
+  /**
+   * Renderable, offset-grounded snippets. These are derived strictly from schema fields
+   * and MUST be shown exactly as returned (no confidence, no conflict inference).
+   */
+  snippets: ClaimEvidenceSnippetModel[];
+
+  /**
+   * Relationship IDs referenced by ClaimEvidence.relationshipIds that have zero evidence anchors.
+   * This is not a schema violation (legacy relationships can exist without anchors) but must be explicit.
+   */
+  relationshipsWithNoEvidence: string[];
+
+  /**
+   * While relationship data is loading, we keep the UI evidence-first by explicitly showing
+   * that relationship evidence is pending.
+   */
+  relationshipsPending: string[];
 };
 
-function indexMentionsById(documents: ClaimComparisonDocument[]) {
-  const byId = new Map<string, MentionRef>();
-  for (const doc of documents ?? []) {
-    for (const chunk of doc.chunks ?? []) {
-      for (const mention of chunk.mentions ?? []) {
-        byId.set(mention.id, {
-          mention,
-          document: doc,
-          chunkIndex: chunk.chunkIndex,
-          chunkText: chunk.content ?? '',
-        });
-      }
-    }
+function groupSnippetsByDocument(snippets: ClaimEvidenceSnippetModel[]) {
+  const groups = new Map<string, ClaimEvidenceSnippetModel[]>();
+  for (const s of snippets ?? []) {
+    const arr = groups.get(s.documentId) ?? [];
+    arr.push(s);
+    groups.set(s.documentId, arr);
   }
-  return byId;
-}
-
-function groupMentionIdsByDocument(claim: ClaimComparisonClaim) {
-  const groups = new Map<string, Set<string>>();
-  for (const ev of claim.evidence ?? []) {
-    const set = groups.get(ev.documentId) ?? new Set<string>();
-    for (const mentionId of ev.mentionIds ?? []) set.add(mentionId);
-    groups.set(ev.documentId, set);
+  for (const [k, v] of groups) {
+    groups.set(
+      k,
+      v.slice().sort((a, b) => {
+        if (a.chunkIndex !== b.chunkIndex) return a.chunkIndex - b.chunkIndex;
+        return a.startOffset - b.startOffset;
+      })
+    );
   }
   return groups;
 }
 
-export function ClaimEvidenceList(props: { claim: ClaimComparisonClaim }) {
-  const { claim } = props;
-
-  const docById = new Map<string, ClaimComparisonDocument>((claim.documents ?? []).map((d) => [d.id, d]));
-  const mentionIndex = indexMentionsById(claim.documents ?? []);
-  const grouped = groupMentionIdsByDocument(claim);
-
+export function ClaimEvidenceList(props: { model: ClaimEvidenceListModel }) {
+  const { model } = props;
+  const grouped = groupSnippetsByDocument(model.snippets);
   const docIds = [...grouped.keys()].sort();
-
-  if (docIds.length === 0) {
-    return <Alert severity="error">Contract violation: claim has no evidence document references.</Alert>;
-  }
 
   return (
     <Box
@@ -66,10 +61,10 @@ export function ClaimEvidenceList(props: { claim: ClaimComparisonClaim }) {
     >
       <Stack direction="row" alignItems="baseline" justifyContent="space-between" spacing={2}>
         <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
-          Evidence (grouped by document)
+          Evidence
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {claim.evidence.length} anchor{claim.evidence.length === 1 ? '' : 's'}
+          {model.snippets.length} snippet{model.snippets.length === 1 ? '' : 's'}
         </Typography>
       </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -78,87 +73,46 @@ export function ClaimEvidenceList(props: { claim: ClaimComparisonClaim }) {
 
       <Divider sx={{ my: 2 }} />
 
-      <Stack spacing={2}>
-        {docIds.map((docId) => {
-          const doc = docById.get(docId) ?? null;
-          const mentionIds = [...(grouped.get(docId) ?? new Set())].sort();
+      {model.snippets.length === 0 && model.relationshipsWithNoEvidence.length === 0 && model.relationshipsPending.length === 0 ? (
+        <Alert severity="info">No evidence provided.</Alert>
+      ) : (
+        <Stack spacing={2}>
+          {model.relationshipsPending.length > 0 ? (
+            <Alert severity="info">Loading relationship evidence…</Alert>
+          ) : null}
 
-          if (!doc) {
+          {model.relationshipsWithNoEvidence.length > 0 ? (
+            <Alert severity="info">
+              No evidence provided for relationship{model.relationshipsWithNoEvidence.length === 1 ? '' : 's'}:{' '}
+              {model.relationshipsWithNoEvidence.join(', ')}
+            </Alert>
+          ) : null}
+
+          {docIds.map((docId) => {
+            const snippets = grouped.get(docId) ?? [];
+            const title = snippets[0]?.documentTitle ?? docId;
             return (
-              <Alert key={docId} severity="error">
-                Contract violation: evidence references documentId={docId}, but it is missing from Claim.documents.
-              </Alert>
-            );
-          }
-
-          return (
-            <Box key={docId} sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 2, p: 1.5 }}>
-              <Stack direction="row" alignItems="baseline" justifyContent="space-between" spacing={2} sx={{ minWidth: 0 }}>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>
-                    Source document: <Link href={`/documents/${doc.id}`}>{doc.title}</Link>
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    documentId={doc.id}
-                  </Typography>
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                  {mentionIds.length} mention{mentionIds.length === 1 ? '' : 's'}
+              <Box key={docId} sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 2, p: 1.5, minWidth: 0 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>
+                  Source document: {title}
                 </Typography>
-              </Stack>
 
-              <List dense aria-label={`claim-evidence-document-${claim.id}-${doc.id}`} sx={{ mt: 1 }}>
-                {mentionIds.map((mentionId) => {
-                  const ref = mentionIndex.get(mentionId) ?? null;
-                  if (!ref) {
-                    return (
-                      <ListItem key={mentionId} disableGutters>
-                        <ListItemText
-                          primary={<Typography variant="body2">mentionId={mentionId}</Typography>}
-                          secondary="Missing mention record in Document.chunks[].mentions (cannot render offsets)."
-                          secondaryTypographyProps={{ variant: 'caption' }}
-                        />
-                      </ListItem>
-                    );
-                  }
-
-                  const href = `/documents?documentId=${encodeURIComponent(ref.document.id)}&chunk=${encodeURIComponent(
-                    String(ref.chunkIndex)
-                  )}&mentionId=${encodeURIComponent(ref.mention.id)}`;
-
-                  return (
-                    <ListItem key={mentionId} disableGutters alignItems="flex-start" sx={{ flexDirection: 'column', gap: 1 }}>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ width: '100%' }}>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                              Mention • chunk {ref.chunkIndex}
-                            </Typography>
-                          }
-                          secondary={`entity=${ref.mention.entity?.name ?? ref.mention.entityId}`}
-                          secondaryTypographyProps={{ variant: 'caption' }}
-                          sx={{ m: 0 }}
-                        />
-                        <Button component={Link} href={href} size="small" sx={{ textTransform: 'none' }}>
-                          Open source
-                        </Button>
-                      </Stack>
-
-                      <MentionHighlight
-                        mentionId={ref.mention.id}
-                        chunkText={ref.chunkText}
-                        startOffset={ref.mention.startOffset}
-                        endOffset={ref.mention.endOffset}
-                        excerpt={ref.mention.excerpt}
-                      />
+                <List dense aria-label={`claim-evidence-document-${docId}`} sx={{ mt: 1 }}>
+                  {snippets.map((s) => (
+                    <ListItem
+                      key={`${s.kind}:${s.documentId}:${s.chunkIndex}:${s.startOffset}:${s.endOffset}:${'mentionId' in s ? s.mentionId : s.anchorId}`}
+                      disableGutters
+                      sx={{ display: 'block', py: 1 }}
+                    >
+                      <ClaimEvidenceSnippet item={s} />
                     </ListItem>
-                  );
-                })}
-              </List>
-            </Box>
-          );
-        })}
-      </Stack>
+                  ))}
+                </List>
+              </Box>
+            );
+          })}
+        </Stack>
+      )}
     </Box>
   );
 }
