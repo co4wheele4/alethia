@@ -2,11 +2,19 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import path from 'path'
+import fs from 'node:fs'
 import { fileURLToPath } from 'url'
 import { createRequire } from 'module'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
+
+// Coverage reliability (Windows): ensure the target directory exists before the v8 provider writes shards.
+try {
+  fs.mkdirSync(path.join(__dirname, 'coverage', '.tmp'), { recursive: true })
+} catch {
+  // Best-effort: if this fails, the test run will surface it explicitly.
+}
 
 // Resolve React from root node_modules or local node_modules
 let reactPath, reactDomPath

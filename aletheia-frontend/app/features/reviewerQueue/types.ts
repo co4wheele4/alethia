@@ -1,25 +1,27 @@
-export type ReviewRequestSource = 'comparison' | 'manual';
+export type ReviewRequestSource = 'CLAIM_VIEW' | 'COMPARISON';
 
-export type ReviewerQueueItem = {
-  /**
-   * Local-only identifier (in-memory). Not persisted anywhere.
-   */
+export type ReviewRequestUser = {
+  __typename?: 'User';
   id: string;
-  claimId: string;
-  claimText: string;
-  source: ReviewRequestSource;
-  /**
-   * Optional hint about the originating surface (e.g. "compare" or "claim").
-   * This is UI-only coordination context and must not be treated as domain state.
-   */
-  requestedFrom?: string;
-  createdAtMs: number;
+  email: string;
+  name?: string | null;
 };
 
-export type ReviewerQueueSeedItem = {
+/**
+ * Persisted, coordination-only review request (read-only in the queue UI).
+ *
+ * Contract constraints:
+ * - Must be schema-backed (`/src/schema.gql`)
+ * - Must not imply claim truth/status changes (ADR-005/008/012)
+ * - Must not infer reviewer authority (ADR-014)
+ */
+export type ReviewRequest = {
+  __typename?: 'ReviewRequest';
+  id: string;
   claimId: string;
-  claimText: string;
+  requestedAt: string;
   source: ReviewRequestSource;
-  requestedFrom?: string;
+  note?: string | null;
+  requestedBy: ReviewRequestUser;
 };
 

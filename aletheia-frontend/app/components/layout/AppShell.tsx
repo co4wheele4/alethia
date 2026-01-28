@@ -92,7 +92,7 @@ export function AppShell(props: AppShellProps) {
         { href: '/documents', label: 'Documents', description: 'Immutable sources and chunks' },
         { href: '/evidence', label: 'Evidence', description: 'Chunk-level inspection & comparison' },
         { href: '/claims', label: 'Claims', description: 'Read-only assertions (always grounded)' },
-        { href: '/review-queue', label: 'Review queue', description: 'Coordination aid (non-mutating stub)' },
+        { href: '/review-queue', label: 'Review queue', description: 'Persisted review requests (coordination only)' },
         { href: '/entities', label: 'Entities', description: 'Extracted mentions and relationships' },
         { href: '/questions', label: 'Questions', description: 'Gated workspace (claims must link to evidence)' },
         { href: '/provenance', label: 'Provenance', description: 'Auditability & transformation steps' },

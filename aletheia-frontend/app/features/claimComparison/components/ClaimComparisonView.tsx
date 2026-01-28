@@ -12,7 +12,7 @@ import { LIST_RELATIONSHIPS_QUERY } from '@/src/graphql';
 import { ClaimComparisonColumn } from './ClaimComparisonColumn';
 import { ClaimComparisonPanel } from './ClaimComparisonPanel';
 import { RequestReviewDialog } from './RequestReviewDialog';
-import { useReviewerQueue } from '../../reviewerQueue';
+import { useRequestReview } from '../../reviewerQueue';
 import type { ClaimEvidenceListModel } from './ClaimEvidenceList';
 import type { ClaimComparisonClaim, ClaimComparisonDocument, ClaimComparisonMention } from '../hooks/useClaimsForComparison';
 import type { ClaimEvidenceSnippetModel } from './ClaimEvidenceSnippet';
@@ -224,8 +224,8 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
   const { baseClaimId, withClaimIds = [] } = props;
   const { claims, loading, error } = useClaimsForComparison();
   const router = useRouter();
-  const reviewerQueue = useReviewerQueue();
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const requestReview = useRequestReview();
 
   const base = useMemo(() => claims.find((c) => c.id === baseClaimId) ?? null, [claims, baseClaimId]);
 
@@ -343,24 +343,6 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
     );
   }
 
-  const requestReviewHref = (() => {
-    // ADR-012/013: request review is navigational only; context is passed via URL (no persistence).
-    const qs = new URLSearchParams();
-    qs.set('requestedFrom', 'compare');
-    for (const c of comparedClaims) {
-      qs.append(
-        'item',
-        JSON.stringify({
-          claimId: c.id,
-          claimText: c.text,
-          source: 'comparison',
-          requestedFrom: 'compare',
-        })
-      );
-    }
-    return `/review-queue?${qs.toString()}`;
-  })();
-
   return (
     <Box>
       <ClaimComparisonPanel
@@ -377,19 +359,22 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
         open={reviewDialogOpen}
         claimId={base.id}
         onClose={() => setReviewDialogOpen(false)}
-        onConfirm={() => {
-          // ADR-009/010: no adjudication or state changes from comparison.
-          // ADR-012/013: no mutation is triggered; we only enqueue UI-only coordination context and navigate.
-          setReviewDialogOpen(false);
-          reviewerQueue.enqueue(
-            comparedClaims.map((c) => ({
-              claimId: c.id,
-              claimText: c.text,
-              source: 'comparison' as const,
-              requestedFrom: 'compare',
-            }))
-          );
-          router.push(requestReviewHref);
+        submitting={requestReview.loading}
+        error={requestReview.error}
+        onConfirm={async (args) => {
+          // ADR-009/010: comparison remains read-only.
+          // Review request is coordination-only and must not change claim status/truth (ADR-005/008/012).
+          try {
+            await requestReview.requestReview({
+              claimId: base.id,
+              source: 'COMPARISON',
+              note: args.note ?? null,
+            });
+            setReviewDialogOpen(false);
+            router.push('/review-queue');
+          } catch {
+            // Error is rendered inside the dialog.
+          }
         }}
       />
 

@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "binary"
 }
 
@@ -11,20 +11,21 @@ datasource db {
 // USERS
 ////////////////////
 model User {
-  id        String   @id @default(uuid()) @map("id")
-  email     String   @unique @map("email")
-  name      String?  @map("name")
+  id           String   @id @default(uuid()) @map("id")
+  email        String   @unique @map("email")
+  name         String?  @map("name")
   /**
    * Password hash (bcrypt). Nullable for backward safety for legacy rows.
    * New registrations must set this field; login requires it to be present.
    */
-  passwordHash String? @map("password_hash")
-  role      String   @default("USER") @map("role")
-  createdAt DateTime @default(now()) @map("created_at")
+  passwordHash String?  @map("password_hash")
+  role         String   @default("USER") @map("role")
+  createdAt    DateTime @default(now()) @map("created_at")
 
-  lessons   Lesson[]
-  documents Document[]
-  aiQueries AiQuery[]
+  lessons        Lesson[]
+  documents      Document[]
+  aiQueries      AiQuery[]
+  reviewRequests ReviewRequest[]
 
   @@map("users")
 }
@@ -58,7 +59,6 @@ model Document {
 
   /**
    * Declared, human-legible provenance summary for this document.
-   *
    * Epistemic contract:
    * - These fields are *not inferred* from content.
    * - They are nullable for backward safety (legacy documents).
@@ -67,14 +67,14 @@ model Document {
   sourceType  DocumentSourceKind? @map("source_type")
   sourceLabel String?             @map("source_label")
 
-  user   User            @relation(fields: [userId], references: [id])
-  chunks DocumentChunk[]
+  user          User            @relation(fields: [userId], references: [id])
+  chunks        DocumentChunk[]
   claimEvidence ClaimEvidence[]
   /**
    * Source metadata is required for epistemic completeness, but is nullable for backward safety:
    * existing documents may predate structured source capture.
    */
-  source DocumentSource?
+  source        DocumentSource?
 
   @@index([userId])
   @@index([createdAt])
@@ -140,11 +140,11 @@ model DocumentChunk {
   chunkIndex Int    @map("chunk_index")
   content    String @map("content")
 
-  document   Document        @relation(fields: [documentId], references: [id])
-  embeddings Embedding[]
-  mentions   EntityMention[]
+  document             Document                     @relation(fields: [documentId], references: [id])
+  embeddings           Embedding[]
+  mentions             EntityMention[]
   relationshipEvidence EntityRelationshipEvidence[]
-  aiSuggestions AiExtractionSuggestion[]
+  aiSuggestions        AiExtractionSuggestion[]
 
   @@unique([documentId, chunkIndex])
   @@index([documentId])
@@ -205,7 +205,6 @@ model EntityMention {
 
   /**
    * Legacy column: present in some DBs due to earlier experimentation.
-   *
    * Epistemic contract:
    * - This is NOT part of the truth contract and MUST NOT be used to infer correctness.
    * - Prisma Client ignores this field.
@@ -214,13 +213,12 @@ model EntityMention {
 
   /**
    * Evidence links (join table) that explicitly connect relationship evidence -> mentions.
-   *
    * Epistemic contract:
    * - This is not inference; it is a persisted linkage created at write time.
    * - It enables navigability from a relationship's evidence anchor to concrete mention IDs.
    */
   relationshipEvidenceLinks EntityRelationshipEvidenceMention[]
-  claimEvidenceLinks ClaimEvidenceMention[]
+  claimEvidenceLinks        ClaimEvidenceMention[]
 
   entity Entity        @relation(fields: [entityId], references: [id])
   chunk  DocumentChunk @relation(fields: [chunkId], references: [id])
@@ -239,9 +237,9 @@ model EntityRelationship {
   toEntity   String @map("to_entity")
   relation   String @map("relation")
 
-  from Entity @relation("FromEntity", fields: [fromEntity], references: [id])
-  to   Entity @relation("ToEntity", fields: [toEntity], references: [id])
-  evidence EntityRelationshipEvidence[]
+  from               Entity                       @relation("FromEntity", fields: [fromEntity], references: [id])
+  to                 Entity                       @relation("ToEntity", fields: [toEntity], references: [id])
+  evidence           EntityRelationshipEvidence[]
   claimEvidenceLinks ClaimEvidenceRelationship[]
 
   @@index([fromEntity])
@@ -259,23 +257,23 @@ enum RelationshipEvidenceKind {
 }
 
 model EntityRelationshipEvidence {
-  id             String                 @id @default(uuid()) @map("id")
-  relationshipId String                 @map("relationship_id")
-  chunkId        String                 @map("chunk_id")
+  id             String                   @id @default(uuid()) @map("id")
+  relationshipId String                   @map("relationship_id")
+  chunkId        String                   @map("chunk_id")
   kind           RelationshipEvidenceKind @default(TEXT_SPAN) @map("kind")
 
   /**
    * Evidence anchor into `DocumentChunk.content`.
    * Nullable only for backward safety; new evidence should always include a span.
    */
-  startOffset Int? @map("start_offset")
-  endOffset   Int? @map("end_offset")
+  startOffset Int?    @map("start_offset")
+  endOffset   Int?    @map("end_offset")
   quotedText  String? @map("quoted_text")
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  relationship EntityRelationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
-  chunk        DocumentChunk      @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  relationship EntityRelationship                  @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
+  chunk        DocumentChunk                       @relation(fields: [chunkId], references: [id], onDelete: Cascade)
   mentionLinks EntityRelationshipEvidenceMention[]
 
   @@index([relationshipId])
@@ -291,7 +289,7 @@ model EntityRelationshipEvidenceMention {
   mentionId  String @map("mention_id")
 
   evidence EntityRelationshipEvidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
-  mention  EntityMention             @relation(fields: [mentionId], references: [id], onDelete: Cascade)
+  mention  EntityMention              @relation(fields: [mentionId], references: [id], onDelete: Cascade)
 
   @@id([evidenceId, mentionId])
   @@index([mentionId])
@@ -319,10 +317,10 @@ model AiQuery {
 // AI QUERY RESULTS
 ////////////////////
 model AiQueryResult {
-  id      String @id @default(uuid()) @map("id")
-  queryId String @map("query_id")
-  answer  String @map("answer")
-  score   Float  @map("score")
+  id        String   @id @default(uuid()) @map("id")
+  queryId   String   @map("query_id")
+  answer    String   @map("answer")
+  score     Float    @map("score")
   createdAt DateTime @default(now()) @map("created_at")
 
   query AiQuery @relation(fields: [queryId], references: [id])
@@ -344,6 +342,15 @@ enum ClaimStatus {
   REJECTED
 }
 
+////////////////////
+// REVIEW REQUESTS (COORDINATION ONLY; DOES NOT CHANGE CLAIM LIFECYCLE)
+////////////////////
+
+enum ReviewRequestSource {
+  CLAIM_VIEW
+  COMPARISON
+}
+
 model Claim {
   id        String      @id @default(uuid()) @map("id")
   text      String      @map("text")
@@ -352,10 +359,8 @@ model Claim {
 
   /**
    * Adjudication metadata (ADR-011).
-   *
    * Nullable for backward safety:
    * - existing claims may predate explicit review.
-   *
    * Epistemic contract:
    * - No confidence semantics are stored here.
    * - This metadata is purely about human review actions.
@@ -371,9 +376,41 @@ model Claim {
    */
   evidence ClaimEvidence[]
 
+  /**
+   * Review requests are coordination-only artifacts (ADR-012/013).
+   * Epistemic contract:
+   * - Review requests MUST NOT mutate claim lifecycle or truth semantics.
+   * - They exist only to coordinate attention.
+   */
+  reviewRequests ReviewRequest[]
+
   @@index([status])
   @@index([createdAt])
   @@map("claims")
+}
+
+model ReviewRequest {
+  id String @id @default(uuid()) @map("id")
+
+  claimId           String              @map("claim_id")
+  requestedByUserId String              @map("requested_by_user_id")
+  requestedAt       DateTime            @default(now()) @map("requested_at")
+  source            ReviewRequestSource @map("source")
+  note              String?             @map("note")
+
+  // Safety: delete review requests when the claim is deleted.
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  // A request is always attributable to a concrete user.
+  requestedBy User @relation(fields: [requestedByUserId], references: [id], onDelete: Cascade)
+
+  // Idempotent per (claimId, requestedByUserId): prevent duplicate rows.
+  @@unique([claimId, requestedByUserId])
+  @@index([claimId])
+  @@index([requestedByUserId])
+  @@index([requestedAt])
+  @@index([source])
+  @@map("review_requests")
 }
 
 model ClaimEvidence {
@@ -418,7 +455,7 @@ model ClaimEvidenceRelationship {
   evidenceId     String @map("evidence_id")
   relationshipId String @map("relationship_id")
 
-  evidence     ClaimEvidence     @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  evidence     ClaimEvidence      @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
   relationship EntityRelationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
 
   @@id([evidenceId, relationshipId])
@@ -442,15 +479,15 @@ enum SuggestionKind {
 }
 
 model AiExtractionSuggestion {
-  id         String   @id @default(uuid()) @map("id")
-  chunkId    String   @map("chunk_id")
-  kind       SuggestionKind @map("kind")
-  status     SuggestionStatus @default(PENDING) @map("status")
-  
+  id      String           @id @default(uuid()) @map("id")
+  chunkId String           @map("chunk_id")
+  kind    SuggestionKind   @map("kind")
+  status  SuggestionStatus @default(PENDING) @map("status")
+
   // Suggested data (Entity Mention)
-  entityName  String? @map("entity_name")
-  entityType  String? @map("entity_type")
-  
+  entityName String? @map("entity_name")
+  entityType String? @map("entity_type")
+
   // Suggested data (Relationship)
   subjectName String? @map("subject_name")
   subjectType String? @map("subject_type")
@@ -459,11 +496,11 @@ model AiExtractionSuggestion {
   relation    String? @map("relation")
 
   // Provenance (offsets into DocumentChunk.content)
-  startOffset Int? @map("start_offset")
-  endOffset   Int? @map("end_offset")
+  startOffset Int?    @map("start_offset")
+  endOffset   Int?    @map("end_offset")
   excerpt     String? @map("excerpt")
-  
-  createdAt  DateTime @default(now()) @map("created_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
 
   chunk DocumentChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
 

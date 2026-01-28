@@ -346,6 +346,11 @@ type Mutation {
   proposeExtraction(chunkId: ID!): [AiExtractionSuggestion!]!
   register(email: String!, name: String, password: String!): String!
   rejectSuggestion(id: ID!): AiExtractionSuggestion!
+
+  """
+  Request review of a claim (coordination-only; does not change claim lifecycle).
+  """
+  requestReview(claimId: ID!, note: String, source: ReviewRequestSource!): ReviewRequest!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
   updateEmbedding(id: String!, values: [Float!]): Embedding!
@@ -394,6 +399,16 @@ type Query {
   lesson(id: String!): Lesson
   lessons: [Lesson!]!
   lessonsByUser(userId: String!): [Lesson!]!
+
+  """
+  Review requests created by the current user (coordination-only; does not change claim status).
+  """
+  myReviewRequests: [ReviewRequest!]!
+
+  """
+  Reviewer queue (unassigned): review requests visible in the current workspace (coordination-only).
+  """
+  reviewQueue: [ReviewRequest!]!
   user(id: String!): User
   users: [User!]!
 }
@@ -401,6 +416,23 @@ type Query {
 """Evidence kind for an entity relationship (currently only TEXT_SPAN)."""
 enum RelationshipEvidenceKind {
   TEXT_SPAN
+}
+
+type ReviewRequest {
+  claimId: ID!
+  id: ID!
+  note: String
+  requestedAt: DateTime!
+  requestedBy: User!
+  source: ReviewRequestSource!
+}
+
+"""
+Origin surface for a review request (coordination-only; does not change truth or claim lifecycle).
+"""
+enum ReviewRequestSource {
+  CLAIM_VIEW
+  COMPARISON
 }
 
 enum SuggestionKind {

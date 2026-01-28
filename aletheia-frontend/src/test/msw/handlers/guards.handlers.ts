@@ -33,12 +33,11 @@ function assertNoForbiddenMutations(query: string, operationName?: string | null
   const op = String(operationName ?? '');
   const q = query;
 
-  // ADR-005/012/013: reviewer queues are coordination-only; no mutations are allowed for them.
+  // ADR-005/012/013: reviewer queues are coordination-only; they must not mutate claim lifecycle or imply adjudication.
   const reviewerQueueSignals = [
     'reviewQueue',
     'reviewerQueue',
     'queueReview',
-    'requestReview', // if someone tries to back it with a mutation, we must fail
   ];
   if (
     reviewerQueueSignals.some((s) => new RegExp(`\\b${s}\\b`, 'i').test(q)) ||

@@ -7,6 +7,7 @@ import { claimComparisonHandlers } from './claimComparison.handlers';
 import { documentHandlers } from './documents.handlers';
 import { entityHandlers } from './entities.handlers';
 import { relationshipHandlers } from './relationships.handlers';
+import { reviewRequestHandlers } from './reviewRequests.handlers';
 import { fixture } from '@/src/mocks/aletheia-fixtures';
 import { assertNoConfidence } from '@/src/test/msw/assertNoConfidence';
 
@@ -26,6 +27,7 @@ export const handlers: RequestHandler[] = [
   ...relationshipHandlers,
   ...claimHandlers,
   ...claimComparisonHandlers,
+  ...reviewRequestHandlers,
   ...authHandlers,
 ];
 

@@ -2,6 +2,24 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AiExtractionSuggestion {
+  chunkId: String!
+  createdAt: DateTime!
+  endOffset: Int
+  entityName: String
+  entityType: String
+  excerpt: String
+  id: ID!
+  kind: SuggestionKind!
+  objectName: String
+  objectType: String
+  relation: String
+  startOffset: Int
+  status: SuggestionStatus!
+  subjectName: String
+  subjectType: String
+}
+
 type AiQuery {
   createdAt: DateTime!
   id: ID!
@@ -17,32 +35,15 @@ type AiQueryResult {
   score: Float!
 }
 
-enum ClaimStatus {
-  DRAFT
-  REVIEWED
-  ACCEPTED
-  REJECTED
-}
-
-enum ClaimLifecycleState {
-  DRAFT
-  REVIEW
-  ACCEPTED
-  REJECTED
-}
-
-type ClaimEvidence {
-  claimId: ID!
-  createdAt: DateTime!
-  documentId: ID!
-  id: ID!
-  mentionIds: [ID!]!
-  relationshipIds: [ID!]!
-}
-
 type Claim {
   createdAt: DateTime!
+
+  """Documents referenced by this claim, derived from evidence.documentId."""
   documents: [Document!]!
+
+  """
+  Grounding anchors for this claim. Claims must never be returned without evidence.
+  """
   evidence: [ClaimEvidence!]!
   id: ID!
   reviewedAt: DateTime
@@ -50,6 +51,60 @@ type Claim {
   reviewerNote: String
   status: ClaimStatus!
   text: String!
+}
+
+type ClaimEvidence {
+  claimId: ID!
+  createdAt: DateTime!
+  documentId: ID!
+  id: ID!
+
+  """
+  Explicit persisted mention IDs grounding this claim evidence (may be empty if relationshipIds are present).
+  """
+  mentionIds: [ID!]!
+
+  """
+  Explicit persisted relationship IDs grounding this claim evidence (may be empty if mentionIds are present).
+  """
+  relationshipIds: [ID!]!
+}
+
+"""Contract-only lifecycle input for claim adjudication (ADR-011)."""
+enum ClaimLifecycleState {
+  ACCEPTED
+  DRAFT
+  REJECTED
+  REVIEW
+}
+
+"""
+Lifecycle state for a claim (presentation-only; does not imply truth or confidence).
+"""
+enum ClaimStatus {
+  ACCEPTED
+  DRAFT
+  REJECTED
+  REVIEWED
+}
+
+input CreateDocumentSourceInput {
+  accessedAt: DateTime
+  author: String
+  contentSha256: String
+  contentType: String
+  fetchedUrl: String
+  fileSha256: String
+  filename: String
+  kind: DocumentSourceKindInput!
+
+  """Milliseconds since epoch, as string."""
+  lastModifiedMs: String
+  mimeType: String
+  publishedAt: DateTime
+  publisher: String
+  requestedUrl: String
+  sizeBytes: Float
 }
 
 input CreateEntityInput {
@@ -105,6 +160,7 @@ type Document {
 }
 
 type DocumentChunk {
+  aiSuggestions: [AiExtractionSuggestion!]
   chunkIndex: Int!
   content: String!
   document: Document!
@@ -144,6 +200,13 @@ type DocumentSource {
 
 """Declared source kind for an ingested document snapshot."""
 enum DocumentSourceKind {
+  FILE
+  MANUAL
+  URL
+}
+
+"""Declared source kind for document ingestion."""
+enum DocumentSourceKindInput {
   FILE
   MANUAL
   URL
@@ -240,6 +303,13 @@ type EntityRelationshipEvidenceMention {
   mentionId: ID!
 }
 
+input IngestDocumentInput {
+  content: String!
+  source: CreateDocumentSourceInput!
+  title: String!
+  userId: String!
+}
+
 type Lesson {
   content: String
   createdAt: DateTime!
@@ -249,11 +319,10 @@ type Lesson {
 }
 
 type Mutation {
-  adjudicateClaim(
-    claimId: ID!
-    decision: ClaimLifecycleState!
-    reviewerNote: String
-  ): Claim!
+  acceptSuggestion(id: ID!): AiExtractionSuggestion!
+
+  """Adjudicate a claim by transitioning lifecycle state (ADR-011)."""
+  adjudicateClaim(claimId: ID!, decision: ClaimLifecycleState!, reviewerNote: String): Claim!
   askAI(query: String!, userId: String!): String!
   askAi(query: String!, userId: String!): AiQueryResult!
   createChunk(chunkIndex: Int!, content: String!, documentId: String!): DocumentChunk!
@@ -272,8 +341,16 @@ type Mutation {
   deleteEntityRelationship(id: String!): EntityRelationship!
   deleteLesson(id: String!): Lesson!
   deleteUser(id: String!): User!
+  ingestDocument(input: IngestDocumentInput!): Document!
   login(email: String!, password: String!): String!
+  proposeExtraction(chunkId: ID!): [AiExtractionSuggestion!]!
   register(email: String!, name: String, password: String!): String!
+  rejectSuggestion(id: ID!): AiExtractionSuggestion!
+
+  """
+  Request review of a claim (coordination-only; does not change claim lifecycle).
+  """
+  requestReview(claimId: ID!, note: String, source: ReviewRequestSource!): ReviewRequest!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
   updateEmbedding(id: String!, values: [Float!]): Embedding!
@@ -291,10 +368,18 @@ type Query {
   aiQuery(id: String!): AiQuery
   aiQueryResult(id: String!): AiQueryResult
   aiQueryResults: [AiQueryResult!]!
-  claims: [Claim!]!
-  claimsByDocument(documentId: String!): [Claim!]!
   chunk0ByDocument(documentId: String!): DocumentChunk
   chunksByDocument(documentId: String!): [DocumentChunk!]!
+
+  """
+  List claims visible in the current workspace (scoped via evidence -> documents).
+  """
+  claims: [Claim!]!
+
+  """
+  List claims grounded in a specific document (derived via claim evidence anchors).
+  """
+  claimsByDocument(documentId: String!): [Claim!]!
   document(id: String!): Document
   documentChunk(id: String!): DocumentChunk
   documentChunks: [DocumentChunk!]!
@@ -310,9 +395,20 @@ type Query {
   entityRelationship(id: String!): EntityRelationship
   entityRelationships: [EntityRelationship!]!
   hello: String!
+  ingestionHealthCheck: String!
   lesson(id: String!): Lesson
   lessons: [Lesson!]!
   lessonsByUser(userId: String!): [Lesson!]!
+
+  """
+  Review requests created by the current user (coordination-only; does not change claim status).
+  """
+  myReviewRequests: [ReviewRequest!]!
+
+  """
+  Reviewer queue (unassigned): review requests visible in the current workspace (coordination-only).
+  """
+  reviewQueue: [ReviewRequest!]!
   user(id: String!): User
   users: [User!]!
 }
@@ -320,6 +416,34 @@ type Query {
 """Evidence kind for an entity relationship (currently only TEXT_SPAN)."""
 enum RelationshipEvidenceKind {
   TEXT_SPAN
+}
+
+type ReviewRequest {
+  claimId: ID!
+  id: ID!
+  note: String
+  requestedAt: DateTime!
+  requestedBy: User!
+  source: ReviewRequestSource!
+}
+
+"""
+Origin surface for a review request (coordination-only; does not change truth or claim lifecycle).
+"""
+enum ReviewRequestSource {
+  CLAIM_VIEW
+  COMPARISON
+}
+
+enum SuggestionKind {
+  ENTITY_MENTION
+  RELATIONSHIP
+}
+
+enum SuggestionStatus {
+  ACCEPTED
+  PENDING
+  REJECTED
 }
 
 input UpdateEntityInput {
@@ -356,3 +480,4 @@ type User {
   lessons: [Lesson!]!
   name: String
 }
+

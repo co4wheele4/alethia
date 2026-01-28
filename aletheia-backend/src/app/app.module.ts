@@ -31,6 +31,7 @@ import {
   ClaimResolver,
   ClaimEvidenceResolver,
   ClaimAdjudicationResolver,
+  ReviewRequestResolver,
 } from '@resolvers';
 import { AuthModule } from '../auth/auth.module';
 import { OpenAIModule } from '../openai/openai.module';
@@ -94,6 +95,7 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     ClaimResolver,
     ClaimEvidenceResolver,
     ClaimAdjudicationResolver,
+    ReviewRequestResolver,
     // Apply rate limiting globally (GraphQL-compatible)
     {
       provide: APP_GUARD,

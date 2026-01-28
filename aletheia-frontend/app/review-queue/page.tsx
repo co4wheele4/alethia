@@ -1,28 +1,17 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Stack, Button } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 
 import { AppShell } from '../components/layout';
-import { parseReviewerQueueSeedFromSearchParams, ReviewerQueueView, useReviewerQueue } from '../features/reviewerQueue';
+import { ReviewerQueueView, useReviewQueue } from '../features/reviewerQueue';
 
 function ReviewQueuePageInner() {
-  const params = useSearchParams();
-  const { items, enqueue, clear } = useReviewerQueue();
-
-  useEffect(() => {
-    const seed = parseReviewerQueueSeedFromSearchParams(new URLSearchParams(params?.toString() ?? ''));
-    if (seed.length) enqueue(seed);
-  }, [enqueue, params]);
+  const { items, loading, error } = useReviewQueue();
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
-        <Button onClick={clear} size="small" variant="outlined" sx={{ textTransform: 'none' }}>
-          Clear queue (session only)
-        </Button>
-      </Stack>
+      {error ? <Alert severity="error">{error.message}</Alert> : null}
+      {loading && items.length === 0 ? <Alert severity="info">Loading review queue…</Alert> : null}
       <ReviewerQueueView items={items} />
     </Stack>
   );
@@ -30,10 +19,8 @@ function ReviewQueuePageInner() {
 
 export default function ReviewQueuePage() {
   return (
-    <AppShell title="Review queue" requireAuth={false}>
-      <Suspense fallback={null}>
-        <ReviewQueuePageInner />
-      </Suspense>
+    <AppShell title="Review queue" requireAuth>
+      <ReviewQueuePageInner />
     </AppShell>
   );
 }

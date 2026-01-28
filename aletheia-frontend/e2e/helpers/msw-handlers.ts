@@ -48,6 +48,7 @@ let entityDetailStore: Record<string, Record<string, unknown> | null> = {};
 let mentionsStore: Array<Record<string, unknown>> = [];
 let relationshipsStore: Array<Record<string, unknown>> = [];
 let claimsStore: Array<Record<string, unknown>> = [];
+let reviewRequestsStore: Array<Record<string, unknown>> = [];
 
 function ensureSeeded() {
   if (documentsStore.length > 0) return;
@@ -225,6 +226,16 @@ function ensureSeeded() {
       ],
     },
   ];
+}
+
+function failContract(message: string): never {
+  throw new Error(`[E2E contract] ${message}`);
+}
+
+function assertNoForbiddenRequestedFields(query: string, operationName?: string) {
+  // Confidence is forbidden by the authoritative schema snapshot.
+  if (/\bconfidence\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: confidence`);
+  if (/\bprobability\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: probability`);
 }
 
 function buildDocumentSource(documentId: string, createdAt: string) {
@@ -419,6 +430,10 @@ export async function setupGraphQLMocks(route: Route) {
       operationName = match?.[1];
     }
 
+    if (typeof parsedBody.query === 'string' && parsedBody.query) {
+      assertNoForbiddenRequestedFields(parsedBody.query, operationName);
+    }
+
     // Handle different GraphQL operations
     let response: { status: number; body: unknown };
 
@@ -446,6 +461,7 @@ export async function setupGraphQLMocks(route: Route) {
           relationshipsStore = [];
           entityDetailStore = {};
           claimsStore = [];
+          reviewRequestsStore = [];
           ensureSeeded();
 
           response = {
@@ -832,6 +848,74 @@ export async function setupGraphQLMocks(route: Route) {
             },
           },
         };
+        break;
+      }
+
+      case 'RequestReview': {
+        ensureSeeded();
+        const authHeader = route.request().headers()['authorization'] ?? '';
+        if (!authHeader) {
+          response = {
+            status: 200,
+            body: { errors: [{ message: 'UNAUTHORIZED', extensions: { code: 'UNAUTHORIZED' } }] },
+          };
+          break;
+        }
+
+        const claimId = varString(parsedBody.variables, 'claimId') ?? '';
+        const source = varString(parsedBody.variables, 'source') ?? '';
+        const note = varString(parsedBody.variables, 'note');
+        const claimExists = claimsStore.some((c) => (c as { id?: string }).id === claimId);
+        if (!claimExists) {
+          response = {
+            status: 200,
+            body: { errors: [{ message: 'CLAIM_NOT_FOUND', extensions: { code: 'CLAIM_NOT_FOUND' } }] },
+          };
+          break;
+        }
+
+        const requestedBy = { __typename: 'User', id: 'user-1', email: 'test@example.com', name: 'Test User' };
+        const dup = reviewRequestsStore.some(
+          (rr) =>
+            (rr as { claimId?: string; requestedBy?: { id?: string } }).claimId === claimId &&
+            (rr as { requestedBy?: { id?: string } }).requestedBy?.id === requestedBy.id
+        );
+        if (dup) {
+          response = {
+            status: 200,
+            body: { errors: [{ message: 'DUPLICATE_REVIEW_REQUEST', extensions: { code: 'DUPLICATE_REVIEW_REQUEST' } }] },
+          };
+          break;
+        }
+
+        const createdAt = new Date().toISOString();
+        const created = {
+          __typename: 'ReviewRequest',
+          id: `rr-${reviewRequestsStore.length + 1}`,
+          claimId,
+          requestedAt: createdAt,
+          source,
+          note: note ?? null,
+          requestedBy,
+        };
+        reviewRequestsStore = [created, ...reviewRequestsStore];
+        response = { status: 200, body: { data: { requestReview: created } } };
+        break;
+      }
+
+      case 'ReviewQueue': {
+        ensureSeeded();
+        response = { status: 200, body: { data: { reviewQueue: reviewRequestsStore } } };
+        break;
+      }
+
+      case 'MyReviewRequests': {
+        ensureSeeded();
+        const requestedById = 'user-1';
+        const mine = reviewRequestsStore.filter(
+          (rr) => (rr as { requestedBy?: { id?: string } }).requestedBy?.id === requestedById
+        );
+        response = { status: 200, body: { data: { myReviewRequests: mine } } };
         break;
       }
 

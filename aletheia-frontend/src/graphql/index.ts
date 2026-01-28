@@ -34,6 +34,11 @@ export { LIST_RELATIONSHIPS_QUERY } from './queries/listRelationships.query';
 export { LIST_CLAIMS_QUERY } from './queries/listClaims.query';
 export { CLAIMS_BY_DOCUMENT_QUERY } from './queries/claimsByDocument.query';
 export { GET_CLAIMS_FOR_COMPARISON_QUERY } from './queries/getClaimsForComparison.query';
+export { REVIEW_QUEUE_QUERY } from './queries/reviewQueue.query';
+export { MY_REVIEW_REQUESTS_QUERY } from './queries/myReviewRequests.query';
 
 export { ADJUDICATE_CLAIM_MUTATION } from './mutations/adjudicateClaim.mutation';
+export { REQUEST_REVIEW_MUTATION } from './mutations/requestReview.mutation';
+
+export { REVIEW_REQUEST_FIELDS } from './fragments/reviewRequest.fragment';
 

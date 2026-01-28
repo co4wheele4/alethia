@@ -4,7 +4,6 @@ import "./globals.css";
 import { ApolloClientProvider } from "./providers/apollo-provider";
 import { MuiThemeProvider } from "./providers/mui-theme-provider";
 import { MSWProvider } from "./providers/msw-provider";
-import { ReviewerQueueProvider } from "./features/reviewerQueue";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +42,7 @@ export default function RootLayout({
         <MuiThemeProvider>
           <MSWProvider>
             <ApolloClientProvider>
-              <ReviewerQueueProvider>{children}</ReviewerQueueProvider>
+              {children}
             </ApolloClientProvider>
           </MSWProvider>
         </MuiThemeProvider>

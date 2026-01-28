@@ -17,7 +17,7 @@ import {
 import { ContentSurface } from '../../../components/layout';
 import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { ClaimStatusBadge } from '../../claims/components/ClaimStatusBadge';
-import { useReviewerQueue } from '../../reviewerQueue';
+import { useRequestReview } from '../../reviewerQueue';
 import { useClaimReview } from '../hooks/useClaimReview';
 
 function adjudicationErrorMessage(code: string) {
@@ -37,11 +37,28 @@ function adjudicationErrorMessage(code: string) {
   }
 }
 
+function requestReviewErrorMessage(code: string) {
+  switch (code) {
+    case 'UNAUTHORIZED':
+      return 'You must be signed in to request review.';
+    case 'CLAIM_NOT_FOUND':
+      return 'This claim no longer exists or is unavailable.';
+    case 'DUPLICATE_REVIEW_REQUEST':
+      return 'You already requested review for this claim.';
+    case 'UNEXPECTED_ERROR_CODE':
+      return 'Unexpected review-request error code (contract mismatch).';
+    case 'NETWORK_OR_UNKNOWN':
+      return 'Unexpected review-request error (network/unknown).';
+    default:
+      return 'Unexpected review-request error (unknown).';
+  }
+}
+
 export function ClaimReviewView(props: { claimId: string }) {
   const { claimId } = props;
   const [note, setNote] = useState('');
   const router = useRouter();
-  const reviewerQueue = useReviewerQueue();
+  const requestReview = useRequestReview();
 
   const {
     claim,
@@ -125,24 +142,36 @@ export function ClaimReviewView(props: { claimId: string }) {
                 size="small"
                 variant="outlined"
                 sx={{ textTransform: 'none' }}
-                onClick={() => {
-                  // ADR-012/013: navigation-only; no persistence, no claim lifecycle changes.
-                  const seed = {
-                    claimId,
-                    claimText: claim.text,
-                    source: 'manual' as const,
-                    requestedFrom: 'claim',
-                  };
-                  reviewerQueue.enqueue([seed]);
-                  const qs = new URLSearchParams();
-                  qs.set('requestedFrom', 'claim');
-                  qs.append('item', JSON.stringify(seed));
-                  router.push(`/review-queue?${qs.toString()}`);
+                disabled={requestReview.loading}
+                onClick={async () => {
+                  try {
+                    await requestReview.requestReview({
+                      claimId,
+                      source: 'CLAIM_VIEW',
+                      note: null,
+                    });
+                    router.push('/review-queue');
+                  } catch {
+                    // error is rendered below via requestReview.error
+                  }
                 }}
+                startIcon={requestReview.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
               >
                 Request review
               </Button>
             </Stack>
+
+            {requestReview.error ? (
+              <Alert severity="error" sx={{ mt: 1 }}>
+                {requestReviewErrorMessage(requestReview.error.code)}
+                {'received' in requestReview.error && requestReview.error.code === 'UNEXPECTED_ERROR_CODE'
+                  ? ` Received: ${requestReview.error.received}`
+                  : null}
+                {'message' in requestReview.error && requestReview.error.code === 'NETWORK_OR_UNKNOWN'
+                  ? ` Details: ${requestReview.error.message}`
+                  : null}
+              </Alert>
+            ) : null}
 
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>

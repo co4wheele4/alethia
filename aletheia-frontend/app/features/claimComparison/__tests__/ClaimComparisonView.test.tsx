@@ -1,15 +1,20 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MockedProvider } from '@apollo/client/testing/react';
 
 import { ClaimComparisonView } from '../components/ClaimComparisonView';
-import { ReviewerQueueProvider } from '../../reviewerQueue';
+import { REQUEST_REVIEW_MUTATION } from '@/src/graphql';
 
 import * as comparisonHook from '../hooks/useClaimsForComparison';
 
 vi.mock('../hooks/useClaimsForComparison');
-vi.mock('@apollo/client/react', () => ({
-  useQuery: vi.fn(() => ({ data: { entityRelationships: [] }, loading: false, error: undefined })),
-}));
+vi.mock('@apollo/client/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@apollo/client/react')>();
+  return {
+    ...actual,
+    useQuery: vi.fn(() => ({ data: { entityRelationships: [] }, loading: false, error: undefined })),
+  };
+});
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 
@@ -126,9 +131,9 @@ describe('ClaimComparisonView', () => {
     });
 
     render(
-      <ReviewerQueueProvider>
+      <MockedProvider mocks={[]}>
         <ClaimComparisonView baseClaimId="c1" />
-      </ReviewerQueueProvider>
+      </MockedProvider>,
     );
 
     expect(screen.getByText(/Claim comparison/i)).toBeInTheDocument();
@@ -148,7 +153,7 @@ describe('ClaimComparisonView', () => {
     expect(screen.getAllByTestId('mention-highlight-m_1')[0]).toHaveTextContent('Aletheia');
   });
 
-  it('exposes Request Review as a non-mutating navigation flow', async () => {
+  it('requests review via mutation and navigates to the persisted review queue', async () => {
     vi.mocked(comparisonHook.useClaimsForComparison).mockReturnValue({
       claims: [
         {
@@ -207,10 +212,31 @@ describe('ClaimComparisonView', () => {
     });
 
     const user = userEvent.setup();
+    const mocks = [
+      {
+        request: {
+          query: REQUEST_REVIEW_MUTATION,
+          variables: { claimId: 'c1', source: 'COMPARISON', note: null },
+        },
+        result: {
+          data: {
+            requestReview: {
+              __typename: 'ReviewRequest',
+              id: 'rr1',
+              claimId: 'c1',
+              requestedAt: '2026-01-21T12:00:00.000Z',
+              source: 'COMPARISON',
+              note: null,
+              requestedBy: { __typename: 'User', id: 'u1', email: 'u1@example.com', name: null },
+            },
+          },
+        },
+      },
+    ];
     render(
-      <ReviewerQueueProvider>
+      <MockedProvider mocks={mocks}>
         <ClaimComparisonView baseClaimId="c1" />
-      </ReviewerQueueProvider>
+      </MockedProvider>
     );
 
     const open = screen.getByRole('button', { name: /request review/i });
@@ -219,13 +245,11 @@ describe('ClaimComparisonView', () => {
     // Modal explains non-mutating intent (ADR-009/010/011).
     expect(screen.getByLabelText('Request review dialog')).toBeInTheDocument();
     expect(screen.getByText(/Requesting review does not resolve or modify claims/i)).toBeInTheDocument();
-    expect(screen.getByText(/no data is persisted/i)).toBeInTheDocument();
+    expect(screen.getByText(/do not change truth or claim status/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /go to review queue/i }));
+    await user.click(screen.getByRole('button', { name: /^request review$/i }));
     expect(push).toHaveBeenCalledTimes(1);
-    expect(push.mock.calls[0]?.[0]).toContain('/review-queue?');
-    expect(push.mock.calls[0]?.[0]).toContain('requestedFrom=compare');
-    expect(push.mock.calls[0]?.[0]).toContain('item=');
+    expect(push).toHaveBeenCalledWith('/review-queue');
   });
 });
 

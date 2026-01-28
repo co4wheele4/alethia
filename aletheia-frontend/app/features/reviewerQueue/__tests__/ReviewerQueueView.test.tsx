@@ -1,40 +1,43 @@
 import { render, screen } from '@testing-library/react';
-import { useEffect } from 'react';
 
-import { ReviewerQueueProvider, ReviewerQueueView, parseReviewerQueueSeedFromSearchParams, useReviewerQueue } from '../index';
+import { ReviewerQueueView } from '../index';
 
-function SeededQueue(props: { seed: { claimId: string; claimText: string; requestedFrom?: string } }) {
-  const { enqueue, items } = useReviewerQueue();
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    params.set('requestedFrom', props.seed.requestedFrom ?? 'compare');
-    params.set('claimId', props.seed.claimId);
-    params.set('claimText', props.seed.claimText);
-    enqueue(parseReviewerQueueSeedFromSearchParams(params));
-  }, [enqueue, props.seed.claimId, props.seed.claimText, props.seed.requestedFrom]);
-
-  return <ReviewerQueueView items={items} />;
-}
-
-describe('Reviewer queue (stub)', () => {
+describe('Review queue (persisted review requests)', () => {
   it('renders the required non-truth messaging', () => {
     render(<ReviewerQueueView items={[]} />);
-    expect(
-      screen.getByText('Reviewer queues are a coordination aid. They do not change claim status or truth.')
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Review requests coordinate attention/i)).toBeInTheDocument();
   });
 
-  it('renders entries from navigation context (URL-seeded, in-memory queue)', async () => {
+  it('groups items by source and renders claim links', async () => {
     render(
-      <ReviewerQueueProvider>
-        <SeededQueue seed={{ claimId: 'c1', claimText: 'Example claim text', requestedFrom: 'compare' }} />
-      </ReviewerQueueProvider>
+      <ReviewerQueueView
+        items={[
+          {
+            __typename: 'ReviewRequest',
+            id: 'rr1',
+            claimId: 'c1',
+            requestedAt: '2026-01-01T00:00:00.000Z',
+            source: 'COMPARISON',
+            note: null,
+            requestedBy: { __typename: 'User', id: 'u1', email: 'u1@example.com', name: 'User One' },
+          },
+          {
+            __typename: 'ReviewRequest',
+            id: 'rr2',
+            claimId: 'c2',
+            requestedAt: '2026-01-01T00:00:00.000Z',
+            source: 'CLAIM_VIEW',
+            note: 'please check offsets',
+            requestedBy: { __typename: 'User', id: 'u1', email: 'u1@example.com', name: null },
+          },
+        ]}
+      />
     );
 
-    expect(await screen.findByText('Example claim text')).toBeInTheDocument();
-    expect(screen.getByText(/Source:\s*Comparison/i)).toBeInTheDocument();
-    expect(screen.getByText('Review Requested (Not Yet Assigned)')).toBeInTheDocument();
+    expect(await screen.findByText('Comparison')).toBeInTheDocument();
+    expect(screen.getByText('Claim view')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /view claim/i }).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Note:\s*please check offsets/i)).toBeInTheDocument();
   });
 });
 
