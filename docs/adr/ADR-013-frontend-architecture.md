@@ -1,110 +1,175 @@
-# ADR-012: Review Request Semantics
+# ADR-013: Reviewer Queues
 
 ## Status
-Accepted
+Proposed
 
 ## Date
 2026-01-27
 
 ## Context
 
-Aletheia enables users to inspect, compare, and adjudicate claims based on explicit evidence.
-After introducing claim comparison (ADR-009, ADR-010), a new user need emerges:
+As Aletheia evolves from individual claim inspection toward structured adjudication (ADR-011) and explicit review intent (ADR-012), a coordination problem emerges:
 
-> “I see claims that appear to disagree — how do I ask for human review without resolving them?”
+> How do claims move from “someone noticed this” to “a qualified human reviews it”?
 
-Premature automation (conflict detection, lifecycle mutation) would violate Aletheia’s core principle:
-**truth disclosure without inference**.
+Currently:
+- Claims can be adjudicated directly if accessed
+- Review intent is non-persistent and navigational only
+- There is no concept of *review workload*, *ownership*, or *triage*
+
+Without a formal reviewer queue:
+- Review becomes opportunistic and opaque
+- Claims may be over-reviewed or never reviewed
+- Governance and auditability are weakened
 
 ---
 
 ## Decision
 
-Introduce a **Review Request** interaction that:
+Introduce **Reviewer Queues** as a **first-class governance concept** that coordinates human review **without altering claim truth semantics**.
 
-- Is **explicit**
-- Is **non-mutating**
-- Is **non-persistent**
-- Signals **human governance**, not resolution
+Reviewer queues:
+- Organize *who should review what*
+- Do **not** determine claim correctness
+- Do **not** infer confidence or conflict
+- Do **not** replace adjudication decisions
 
----
-
-## Definition: Review Request
-
-A *Review Request* is a **user action**, not a domain state.
-
-It:
-- Does NOT modify claim lifecycle
-- Does NOT persist to the backend
-- Does NOT infer conflict or correctness
-- DOES provide navigational context for human adjudication
+They exist to manage **human process**, not epistemic state.
 
 ---
 
-## Semantics
+## Definitions
 
-### What Review Request Means
-- “This claim warrants human inspection”
-- “This comparison reveals potential disagreement”
-- “Further adjudication may be required”
+### Reviewer Queue
 
-### What Review Request Does NOT Mean
-- The claim is wrong
-- The claim is conflicted
-- The claim is under review in the system
-- The system has detected an error
+A *Reviewer Queue* is a collection of claims awaiting human review, scoped by:
+- Workspace / organization
+- Reviewer role or qualification
+- Review intent source
+
+Queues are **orthogonal** to claim lifecycle state.
 
 ---
 
-## UI Requirements
+## Core Principles
 
-- Review Request MUST:
-  - Be explicitly labeled
-  - Explain that no state change occurs
-  - Avoid adjudication language
+1. **Separation of Concerns**
+   - Claim truth ≠ review logistics
+   - Adjudication remains explicit and manual (ADR-011)
 
-- The UI MUST NOT:
-  - Show lifecycle changes
-  - Show confidence deltas
-  - Simulate persistence
+2. **Explicitness Over Inference**
+   - Claims enter queues only through explicit actions
+   - No automatic conflict detection places claims in queues
+
+3. **Auditability**
+   - Queue membership and review actions must be traceable
+
+4. **Non-Blocking**
+   - Claims may be adjudicated without ever entering a queue
+   - Queues assist governance; they do not gate it
 
 ---
 
-## Technical Constraints
+## Queue Entry Semantics
 
-- No new backend API
-- No GraphQL mutation
-- No database persistence
-- Navigation-only behavior is allowed
+A claim MAY enter a reviewer queue via:
+- Explicit “Request Review” action (ADR-012)
+- Manual triage by an administrator
+- Import from an external governance system
+
+A claim MUST NOT enter a queue due to:
+- Automated confidence thresholds
+- Implicit conflict detection
+- Heuristic disagreement
+
+---
+
+## Queue States (Queue-Level Only)
+
+Queues MAY track:
+- `PENDING`
+- `ASSIGNED`
+- `IN_PROGRESS`
+- `COMPLETED`
+
+These states:
+- Apply to **queue membership**
+- Do NOT modify claim lifecycle
+- Do NOT imply claim correctness
+
+---
+
+## Reviewer Assignment
+
+Reviewer assignment:
+- Is explicit
+- Is reversible
+- Does not lock claims
+
+Multiple reviewers MAY:
+- Independently review the same claim
+- Produce independent adjudications (future ADR)
+
+---
+
+## UI Implications (Non-Binding)
+
+Future UI MAY include:
+- “My Review Queue”
+- “Unassigned Reviews”
+- Claim review counts
+- Review activity timelines
+
+UI MUST NOT:
+- Auto-accept/reject claims
+- Collapse review state into claim state
+- Hide evidence during review
+
+---
+
+## Backend Implications (Deferred)
+
+This ADR does **not** require immediate backend changes.
+
+If implemented later, reviewer queues likely require:
+- A queue membership model
+- Assignment metadata
+- Event logging
+
+These are explicitly deferred.
 
 ---
 
 ## Relationship to Other ADRs
 
-- **ADR-005**: Review Request must not assume unavailable schema fields
-- **ADR-009**: Triggered from claim comparison
-- **ADR-010**: UI must remain evidence-first and neutral
-- **ADR-011**: Review Request precedes (but does not perform) adjudication
+- **ADR-005**: No frontend assumptions beyond schema
+- **ADR-009**: Queues may be populated from comparison views
+- **ADR-010**: UI remains evidence-first
+- **ADR-011**: Adjudication remains explicit and terminal
+- **ADR-012**: Review Request is a primary queue entry mechanism
 
 ---
 
 ## Consequences
 
 ### Positive
-- Preserves epistemic humility
+- Scales human review
 - Enables governance workflows
-- Keeps frontend schema-faithful
-- Avoids premature automation
+- Preserves epistemic discipline
+- Improves auditability
 
 ### Negative
-- Review intent is not persisted
-- Requires human follow-through
+- Adds conceptual overhead
+- Requires future backend coordination
+- Does not automate resolution
 
-This tradeoff is intentional.
+These tradeoffs are intentional.
 
 ---
 
 ## Outcome
 
-Review Request is adopted as a **non-mutating, navigational affordance** that bridges
-claim comparison and adjudication without violating Aletheia’s truth-first design principles.
+Reviewer Queues are adopted as a **future-facing governance abstraction** that enables
+structured human review **without compromising Aletheia’s truth-first design**.
+
+Implementation is deferred until explicitly authorized by schema and product needs.

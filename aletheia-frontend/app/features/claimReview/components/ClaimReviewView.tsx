@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -16,6 +17,7 @@ import {
 import { ContentSurface } from '../../../components/layout';
 import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { ClaimStatusBadge } from '../../claims/components/ClaimStatusBadge';
+import { useReviewerQueue } from '../../reviewerQueue';
 import { useClaimReview } from '../hooks/useClaimReview';
 
 function adjudicationErrorMessage(code: string) {
@@ -38,6 +40,8 @@ function adjudicationErrorMessage(code: string) {
 export function ClaimReviewView(props: { claimId: string }) {
   const { claimId } = props;
   const [note, setNote] = useState('');
+  const router = useRouter();
+  const reviewerQueue = useReviewerQueue();
 
   const {
     claim,
@@ -115,6 +119,30 @@ export function ClaimReviewView(props: { claimId: string }) {
             >
               {claim.text}
             </Typography>
+
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
+              <Button
+                size="small"
+                variant="outlined"
+                sx={{ textTransform: 'none' }}
+                onClick={() => {
+                  // ADR-012/013: navigation-only; no persistence, no claim lifecycle changes.
+                  const seed = {
+                    claimId,
+                    claimText: claim.text,
+                    source: 'manual' as const,
+                    requestedFrom: 'claim',
+                  };
+                  reviewerQueue.enqueue([seed]);
+                  const qs = new URLSearchParams();
+                  qs.set('requestedFrom', 'claim');
+                  qs.append('item', JSON.stringify(seed));
+                  router.push(`/review-queue?${qs.toString()}`);
+                }}
+              >
+                Request review
+              </Button>
+            </Stack>
 
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>

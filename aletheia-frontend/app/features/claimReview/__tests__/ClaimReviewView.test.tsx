@@ -7,6 +7,7 @@ import {
   LIST_RELATIONSHIPS_QUERY,
 } from '@/src/graphql';
 import { ClaimReviewView } from '../components/ClaimReviewView';
+import { ReviewerQueueProvider } from '../../reviewerQueue';
 
 const docCore = {
   __typename: 'Document' as const,
@@ -116,7 +117,9 @@ describe('ClaimReviewView', () => {
 
     render(
       <MockedProvider mocks={mocks}>
-        <ClaimReviewView claimId="c1" />
+        <ReviewerQueueProvider>
+          <ClaimReviewView claimId="c1" />
+        </ReviewerQueueProvider>
       </MockedProvider>
     );
 

@@ -31,7 +31,7 @@ function withNoMutations(routeHandler: (route: Route) => Promise<void>, onMutati
 }
 
 test.describe('Claims: comparison → request review (non-mutating)', () => {
-  test('Request Review navigates to claim review and sends no GraphQL mutations', async ({ page }) => {
+  test('Request Review navigates to review queue and sends no GraphQL mutations', async ({ page }) => {
     test.setTimeout(60_000);
 
     const mutations: string[] = [];
@@ -50,22 +50,23 @@ test.describe('Claims: comparison → request review (non-mutating)', () => {
     await expect(page.getByText('Claim 2')).toBeVisible();
 
     await page.getByRole('button', { name: /request review/i }).click();
-    await expect(page.getByRole('dialog', { name: /request review dialog/i })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('dialog', { name: /request human review/i })).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(/Requesting review does not resolve or modify claims/i)).toBeVisible();
     await expect(page.getByText(/no data is persisted/i)).toBeVisible();
 
-    await page.getByRole('button', { name: /go to claim review/i }).click();
-    await page.waitForURL(/\/claims\/claim-1\?/, { timeout: 20_000 });
+    await page.getByRole('button', { name: /go to review queue/i }).click();
+    await page.waitForURL(/\/review-queue\?/, { timeout: 20_000 });
 
-    // Banner is explicit about non-mutating intent.
-    await expect(page.getByText(/Requesting review does not resolve or modify claims/i)).toBeVisible({ timeout: 20_000 });
+    // Queue view is explicit about non-truth semantics.
+    await expect(
+      page.getByText('Reviewer queues are a coordination aid. They do not change claim status or truth.')
+    ).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText('Review Requested (Not Yet Assigned)').first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/Source:\s*Comparison/i).first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/Test Entity is mentioned in Getting Started\./i)).toBeVisible({ timeout: 20_000 });
 
-    // Lifecycle is unchanged (no mutation); reload preserves state.
-    await expect(page.getByTestId('claim-state')).toHaveText(/draft/i, { timeout: 20_000 });
-    await page.reload();
-    await expect(page.getByTestId('claim-state')).toHaveText(/draft/i, { timeout: 20_000 });
-
-    expect(mutations).toHaveLength(0);
+    const nonAuthMutations = mutations.filter((op) => !['Login', 'Register', 'ChangePassword', 'ForgotPassword'].includes(op));
+    expect(nonAuthMutations).toHaveLength(0);
   });
 });
 

@@ -22,7 +22,7 @@
     "start:dev": "npm run start:dev --workspaces --if-present",
     "start:backend": "npm run start:dev --workspace=aletheia-backend",
     "start:frontend": "npm run start:dev --workspace=aletheia-frontend",
-    "start:all": "concurrently \"npm run start:backend\" \"npm run start:frontend\" --names \"backend,frontend\" --prefix-colors \"blue,green\"",
+    "start:all": "node scripts/start-dev-auto.cjs",
     "start:prod:backend": "npm run start:prod --workspace=aletheia-backend",
     "start:prod:frontend": "npm run start --workspace=aletheia-frontend",
     "dev": "npm run start:all",

@@ -7,7 +7,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typog
  *
  * ADR constraints:
  * - Comparison is read-only (ADR-009/010) — this action is *navigational + explanatory* only.
- * - No claim lifecycle transitions are triggered here (ADR-011); users must explicitly adjudicate on the claim review page if schema permits.
+ * - No claim lifecycle transitions are triggered here (ADR-011/012/013); this is coordination-only.
  */
 export function RequestReviewDialog(props: {
   open: boolean;
@@ -26,8 +26,7 @@ export function RequestReviewDialog(props: {
             Requesting review does not resolve or modify claims. It signals that a human reviewer should inspect this claim in context.
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            This does not adjudicate claims, and no data is persisted. You will be taken to the claim review page where evidence is visible and adjudication is
-            only possible if the current GraphQL schema explicitly allows it.
+            This does not adjudicate claims, and no data is persisted. You will be taken to the reviewer queue stub (coordination only).
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Target claimId={claimId}
@@ -39,7 +38,7 @@ export function RequestReviewDialog(props: {
           Cancel
         </Button>
         <Button onClick={onConfirm} variant="contained" sx={{ textTransform: 'none' }}>
-          Go to claim review
+          Go to review queue
         </Button>
       </DialogActions>
     </Dialog>

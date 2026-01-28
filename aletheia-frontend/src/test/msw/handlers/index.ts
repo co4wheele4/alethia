@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'msw';
 
 import { authHandlers } from './auth.handlers';
+import { guardHandlers } from './guards.handlers';
 import { claimHandlers } from './claims.handlers';
 import { claimComparisonHandlers } from './claimComparison.handlers';
 import { documentHandlers } from './documents.handlers';
@@ -19,6 +20,7 @@ import { assertNoConfidence } from '@/src/test/msw/assertNoConfidence';
 assertNoConfidence(fixture, 'fixture');
 
 export const handlers: RequestHandler[] = [
+  ...guardHandlers,
   ...documentHandlers,
   ...entityHandlers,
   ...relationshipHandlers,

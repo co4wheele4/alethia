@@ -1,43 +1,43 @@
 # ADR-005: GraphQL Contract & Data Guarantees
 
 ## Status
-Implemented
+Implemented (Living ADR)
 
 ## Date
-2026-01-12
-
-## Related ADRs
-- **ADR-004**: Frontend Architecture Overview
-- **ADR-006**: Confidence Semantics
-- **ADR-007**: Claim Semantics vs Evidence Semantics
-
----
+2026-01-12  
+Updated: 2026-01-27
 
 ## Context
 
-Aletheia’s core value is *truth disclosure* (aletheia): surfacing **claims, entities, relationships, and evidence** with explicit provenance and inspectability.
+Aletheia’s core value is *truth disclosure* (aletheia): surfacing **claims, evidence, entities, and relationships** with explicit provenance and traceability.
 
-Early frontend assumptions created risk:
-- Claims treated as facts
-- Evidence conflated with assertions
-- Confidence inferred or fabricated in UI
-- GraphQL fragments drifting from backend reality
+To preserve epistemic integrity, the frontend must **only rely on what the GraphQL schema explicitly guarantees**. Any inferred semantics—especially around confidence, conflict, or review state—introduce unacceptable risk.
 
-This ADR formalizes **what the frontend is allowed to assume** about GraphQL responses and how those assumptions differ for **claims vs evidence**.
+This ADR defines **hard frontend guarantees** and explicitly documents **what is *not* guaranteed**.
 
 ---
 
-## Decision
+## Governing ADRs
 
-The GraphQL API is the **single source of truth**.
+ADR-005 is the **contract anchor** and is governed by:
 
-The frontend MUST:
-- Distinguish **claims** from **evidence**
-- Use **schema-faithful GraphQL fragments**
-- Respect **confidence semantics as defined in ADR-006**
-- Enforce **claim vs evidence boundaries as defined in ADR-007**
+- **ADR-006** — Confidence Semantics
+- **ADR-007** — Claim Semantics vs Evidence Semantics
+- **ADR-008** — Claim Lifecycle & Review States
+- **ADR-009** — Claim Comparison & Conflict Detection
+- **ADR-010** — Claim Comparison UI Semantics
+- **ADR-011** — Claim Adjudication API Contract
+- **ADR-012** — Review Request Semantics
+- **ADR-013** — Reviewer Queues
 
-If the schema does not expose a field, the frontend MUST behave as if it does not exist.
+Any frontend behavior violating these ADRs is a defect.
+
+---
+
+## Core Principle
+
+> **The GraphQL schema is the only source of truth.**  
+> If a field, enum, or relationship is not present in the schema, the frontend must assume it does **not** exist.
 
 ---
 
@@ -49,56 +49,51 @@ Every `Document` MUST expose:
 
 - `id`
 - `title`
-- `sourceType` (UPLOAD, URL, API, MANUAL, etc.)
+- `sourceType`
 - `createdAt`
-- `status` (INGESTED, PROCESSING, INDEXED, FAILED)
-- `provenanceSummary` (human-readable origin)
+- `status`
+- `provenanceSummary`
 
-The frontend MUST NOT infer source type or provenance from UI flow.
+The frontend MUST NOT infer source type, provenance, or ingestion method.
 
 ---
 
-## Claims (Assertion Layer)
+### Claims
 
-> Claims represent extracted or user-authored assertions.  
-> Claims are **not facts**. They are disputable statements.
-
-### Claim Guarantees
-
-Every `Claim` MUST expose:
+Every `Claim` MUST expose (if present in schema):
 
 - `id`
 - `text`
-- `sourceDocumentId`
-- `createdAt`
-- `status` (DRAFT, EXTRACTED, CONFIRMED, DISPUTED)
-
-### Explicit Non-Guarantees (ADR-006)
-
-Claims MUST NOT expose:
-- `confidence`
-- probabilistic weighting
-- inferred truthfulness
+- `status` (existing persisted enum)
+- `reviewedAt?`
+- `reviewedBy?`
+- `reviewerNote?`
 
 The frontend MUST:
-- Render claims as assertions
-- Clearly label them as “Claim”
-- Avoid visual affordances implying factual certainty
-
-### Claim GraphQL Fragments
-
-Claim fragments MUST:
-- Contain **only assertion-level fields**
-- Never include evidence-level confidence or offsets
-- Be reusable without leaking evidence semantics
+- Treat lifecycle transitions as **explicit mutations only** (ADR-011)
+- Respect terminal states (`ACCEPTED`, `REJECTED`)
+- Never simulate adjudication
 
 ---
 
-## Evidence (Grounding Layer)
+### Evidence
 
-> Evidence grounds claims in observable source material.
+Evidence MUST be:
 
-### Entity Mentions (Evidence Units)
+- Explicit
+- Traceable
+- Renderable
+
+Every evidence reference MUST resolve to:
+- A `Document`
+- One or more offset-based mentions
+
+Evidence MAY exist without claims.  
+Claims MUST NOT exist without evidence.
+
+---
+
+### Entity Mentions
 
 Every `EntityMention` MUST expose:
 
@@ -108,93 +103,102 @@ Every `EntityMention` MUST expose:
 - `endOffset`
 - `textSnippet`
 
-Offsets MUST refer to the original document text.
-
-⚠️ **Confidence is NOT guaranteed** on mentions in the current schema  
-(see ADR-006). The frontend MUST NOT assume it exists.
+Offsets MUST reference original document text.
 
 ---
 
-### Entities
+### Confidence (Critical Clarification)
 
-Every `Entity` MUST expose:
+Per **ADR-006**:
 
-- `id`
-- `label`
-- `type`
-- `mentionCount`
+- Confidence is **not guaranteed** unless explicitly exposed
+- The current schema does **not** expose mention-level or evidence-level confidence
+- Prisma “legacy/ignored” confidence fields are **non-contractual**
 
-`confidenceAggregate` MUST NOT be assumed unless explicitly added to the schema.
+Therefore:
 
----
+🚫 The frontend MUST NOT:
+- Render confidence bars
+- Calculate confidence
+- Mock confidence in MSW
+- Assume confidence semantics
 
-### Relationships
-
-Every `EntityRelationship` MUST expose:
-
-- `sourceEntityId`
-- `targetEntityId`
-- `relationshipType`
-- `evidence[]`
-
-Each `evidence` entry MUST reference:
-- A document
-- One or more mention IDs
-
-⚠️ Relationship confidence MUST NOT be assumed unless explicitly present in schema.
+✅ Confidence may only appear when the schema explicitly adds it.
 
 ---
 
-## Evidence Guarantees
+## Claims vs Evidence (ADR-007)
 
-- No relationship exists without evidence
-- Evidence MUST be renderable in the UI
-- Evidence MUST be traceable back to source text
-- Evidence MUST be navigable (offset-based highlighting)
+- Claims express *assertions*
+- Evidence expresses *support*
+
+The frontend MUST:
+- Never conflate evidence strength with claim truth
+- Never infer conflict from disagreement alone
+- Keep evidence rendering independent of claim lifecycle
 
 ---
 
-## Frontend Rules
+## Review & Governance Semantics
 
-### Fragment Discipline
+### Review Requests (ADR-012)
 
-- **Claim fragments** and **Evidence fragments** MUST be separate
-- No fragment may mix assertion semantics with grounding semantics
-- Shared fragments are allowed **only** for structural identifiers (`id`, `createdAt`)
+- Review intent is **non-mutating**
+- It does not alter claim lifecycle
+- It is navigational or contextual only
 
-### UI Rules
+### Reviewer Queues (ADR-013)
 
-- UI MUST NOT guess confidence, provenance, or strength
-- UI MUST block features that require missing guarantees
-- Evidence inspection MUST be possible wherever claims are shown
+- Reviewer queues are **logistical constructs**
+- They do not affect truth, confidence, or lifecycle
+- They MAY be stubbed in UI
+- They MUST NOT imply adjudication
 
-### Testing Rules
+---
 
-- GraphQL contract tests validate required fields
-- MSW mocks MUST fail if:
+## Frontend Rules (Hard)
+
+- UI MUST NOT guess missing fields
+- Missing schema guarantees MUST block feature completion
+- GraphQL fragments MUST be reused consistently
+- MSW MUST FAIL if:
   - Confidence appears prematurely
-  - Evidence is missing where required
-  - Claims expose forbidden fields
-- UI tests MUST assert evidence inspectability
+  - Lifecycle mutations are simulated
+  - Reviewer queues mutate claims
+
+---
+
+## Testing Implications
+
+- Contract tests validate schema parity
+- UI tests fail on missing guarantees
+- Playwright tests assert:
+  - Persistence only via real mutations
+  - Explicit blocking when schema is insufficient
 
 ---
 
 ## Consequences
 
 ### Positive
-- Clear semantic boundaries
-- Reduced hallucinated certainty
+- Epistemic integrity
+- Predictable UI behavior
 - Strong auditability
-- ADR-aligned UI behavior
+- Safe schema evolution
 
 ### Negative
-- Slower feature rollout without schema changes
-- Higher upfront discipline required
+- Slower feature velocity
+- Requires backend/frontend coordination
+
+These tradeoffs are intentional.
 
 ---
 
-## Decision Outcome
+## Outcome
 
-Adopted as a **hard contract** between frontend and backend.
+ADR-005 is the **binding contract** between frontend and backend.
 
-Any violation MUST be treated as a defect, not a workaround.
+Any deviation requires:
+1. A schema change
+2. A new ADR
+3. Explicit review

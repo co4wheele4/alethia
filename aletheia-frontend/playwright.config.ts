@@ -92,38 +92,60 @@ export default defineConfig({
     },
   ],
 
-  // Run backend + frontend before starting the tests
-  webServer: [
-    {
-      // Backend (real GraphQL)
-      // - Uses `.env.test` (via dotenv-cli) to ensure Playwright hits a real DB.
-      // - Seeds deterministic claims for adjudication tests.
-      command:
-        'cd .. && ' +
-        'npm run --workspace=aletheia-backend test:e2e:setup && ' +
-        'npm run --workspace=aletheia-backend test:e2e:seed && ' +
-        'npm run --workspace=aletheia-backend build && ' +
-        'npm run --workspace=aletheia-backend start:prod',
-      env: {
-        ...process.env,
-        PORT: '3050',
-      },
-      url: 'http://127.0.0.1:3050/graphql',
-      reuseExistingServer: false,
-      timeout: 180 * 1000,
-    },
-    {
-      // Frontend (production server for stability)
-      command: 'npm run build && npm run start',
-      env: {
-        ...process.env,
-        NEXT_PUBLIC_MSW: 'disabled',
-        NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
-        NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3050/graphql',
-      },
-      url: 'http://127.0.0.1:3030',
-      reuseExistingServer: false,
-      timeout: 180 * 1000,
-    },
-  ],
+  /**
+   * Web servers for E2E.
+   *
+   * Default: frontend only. Our E2E suite routes GraphQL requests in the browser and provides deterministic fixtures,
+   * so a real backend is not required for most tests.
+   *
+   * Set `PLAYWRIGHT_REAL_BACKEND=1` to run against a real backend + seeded DB.
+   */
+  webServer:
+    process.env.PLAYWRIGHT_REAL_BACKEND === '1'
+      ? [
+          {
+            // Backend (real GraphQL)
+            // - Uses `.env.test` (via dotenv-cli) to ensure Playwright hits a real DB.
+            // - Seeds deterministic claims for adjudication tests.
+            command:
+              'cd .. && ' +
+              'npm run --workspace=aletheia-backend test:e2e:setup && ' +
+              'npm run --workspace=aletheia-backend test:e2e:seed && ' +
+              'npm run --workspace=aletheia-backend build && ' +
+              'npm run --workspace=aletheia-backend start:prod',
+            env: {
+              ...process.env,
+              PORT: '3050',
+            },
+            url: 'http://127.0.0.1:3050/graphql',
+            reuseExistingServer: false,
+            timeout: 180 * 1000,
+          },
+          {
+            // Frontend (production server for stability)
+            command: 'npm run build && npm run start',
+            env: {
+              ...process.env,
+              NEXT_PUBLIC_MSW: 'disabled',
+              NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
+              NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3050/graphql',
+            },
+            url: 'http://127.0.0.1:3030',
+            reuseExistingServer: false,
+            timeout: 180 * 1000,
+          },
+        ]
+      : {
+          // Frontend only (GraphQL requests are intercepted per-test via Playwright routing).
+          command: 'npm run build && npm run start',
+          env: {
+            ...process.env,
+            NEXT_PUBLIC_MSW: 'disabled',
+            NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
+            NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3030/graphql',
+          },
+          url: 'http://127.0.0.1:3030',
+          reuseExistingServer: false,
+          timeout: 180 * 1000,
+        },
 });

@@ -12,6 +12,7 @@ import { LIST_RELATIONSHIPS_QUERY } from '@/src/graphql';
 import { ClaimComparisonColumn } from './ClaimComparisonColumn';
 import { ClaimComparisonPanel } from './ClaimComparisonPanel';
 import { RequestReviewDialog } from './RequestReviewDialog';
+import { useReviewerQueue } from '../../reviewerQueue';
 import type { ClaimEvidenceListModel } from './ClaimEvidenceList';
 import type { ClaimComparisonClaim, ClaimComparisonDocument, ClaimComparisonMention } from '../hooks/useClaimsForComparison';
 import type { ClaimEvidenceSnippetModel } from './ClaimEvidenceSnippet';
@@ -223,6 +224,7 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
   const { baseClaimId, withClaimIds = [] } = props;
   const { claims, loading, error } = useClaimsForComparison();
   const router = useRouter();
+  const reviewerQueue = useReviewerQueue();
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   const base = useMemo(() => claims.find((c) => c.id === baseClaimId) ?? null, [claims, baseClaimId]);
@@ -342,17 +344,21 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
   }
 
   const requestReviewHref = (() => {
-    // ADR-011: request review is navigational only; context is passed via URL (no persistence).
+    // ADR-012/013: request review is navigational only; context is passed via URL (no persistence).
     const qs = new URLSearchParams();
-    qs.set('reviewRequest', '1');
-    qs.set('from', 'compare');
-    qs.set('base', base.id);
-    const withIds = comparedClaims
-      .slice(1)
-      .map((c) => c.id)
-      .filter(Boolean);
-    if (withIds.length) qs.set('with', withIds.join(','));
-    return `/claims/${encodeURIComponent(base.id)}?${qs.toString()}`;
+    qs.set('requestedFrom', 'compare');
+    for (const c of comparedClaims) {
+      qs.append(
+        'item',
+        JSON.stringify({
+          claimId: c.id,
+          claimText: c.text,
+          source: 'comparison',
+          requestedFrom: 'compare',
+        })
+      );
+    }
+    return `/review-queue?${qs.toString()}`;
   })();
 
   return (
@@ -373,8 +379,16 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
         onClose={() => setReviewDialogOpen(false)}
         onConfirm={() => {
           // ADR-009/010: no adjudication or state changes from comparison.
-          // ADR-011: no mutation is triggered; we only navigate to the review surface.
+          // ADR-012/013: no mutation is triggered; we only enqueue UI-only coordination context and navigate.
           setReviewDialogOpen(false);
+          reviewerQueue.enqueue(
+            comparedClaims.map((c) => ({
+              claimId: c.id,
+              claimText: c.text,
+              source: 'comparison' as const,
+              requestedFrom: 'compare',
+            }))
+          );
           router.push(requestReviewHref);
         }}
       />

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { ClaimComparisonView } from '../components/ClaimComparisonView';
+import { ReviewerQueueProvider } from '../../reviewerQueue';
 
 import * as comparisonHook from '../hooks/useClaimsForComparison';
 
@@ -124,7 +125,11 @@ describe('ClaimComparisonView', () => {
       refetch: vi.fn(),
     });
 
-    render(<ClaimComparisonView baseClaimId="c1" />);
+    render(
+      <ReviewerQueueProvider>
+        <ClaimComparisonView baseClaimId="c1" />
+      </ReviewerQueueProvider>
+    );
 
     expect(screen.getByText(/Claim comparison/i)).toBeInTheDocument();
     expect(screen.getByText('Base')).toBeInTheDocument();
@@ -202,7 +207,11 @@ describe('ClaimComparisonView', () => {
     });
 
     const user = userEvent.setup();
-    render(<ClaimComparisonView baseClaimId="c1" />);
+    render(
+      <ReviewerQueueProvider>
+        <ClaimComparisonView baseClaimId="c1" />
+      </ReviewerQueueProvider>
+    );
 
     const open = screen.getByRole('button', { name: /request review/i });
     await user.click(open);
@@ -212,11 +221,11 @@ describe('ClaimComparisonView', () => {
     expect(screen.getByText(/Requesting review does not resolve or modify claims/i)).toBeInTheDocument();
     expect(screen.getByText(/no data is persisted/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /go to claim review/i }));
+    await user.click(screen.getByRole('button', { name: /go to review queue/i }));
     expect(push).toHaveBeenCalledTimes(1);
-    expect(push.mock.calls[0]?.[0]).toContain('/claims/c1?');
-    expect(push.mock.calls[0]?.[0]).toContain('reviewRequest=1');
-    expect(push.mock.calls[0]?.[0]).toContain('from=compare');
+    expect(push.mock.calls[0]?.[0]).toContain('/review-queue?');
+    expect(push.mock.calls[0]?.[0]).toContain('requestedFrom=compare');
+    expect(push.mock.calls[0]?.[0]).toContain('item=');
   });
 });
 
