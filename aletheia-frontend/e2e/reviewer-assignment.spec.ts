@@ -137,6 +137,68 @@ test.describe('Reviewer assignment (coordination only)', () => {
       'ForgotPassword',
       'RequestReview',
       'AssignReviewer',
+      'RespondToReviewAssignment',
+    ]);
+    const forbidden = mutations.filter((op) => !allowed.has(op));
+    expect(forbidden).toHaveLength(0);
+  });
+
+  test('reviewer acknowledges assignment; response persists; claim.status unchanged; adjudicateClaim never called', async ({ page }) => {
+    test.setTimeout(60_000);
+
+    const mutations: string[] = [];
+    await page.route(
+      '**/graphql',
+      withMutationAudit(setupGraphQLMocks, ({ operationName }) => {
+        mutations.push(String(operationName ?? '(missing operationName)'));
+      }),
+    );
+
+    await loginAsAdmin(page);
+
+    // Baseline status before coordination actions.
+    await page.goto('/claims/claim-1');
+    await expect(page.getByTestId('claim-state')).toContainText(/draft/i, { timeout: 20_000 });
+
+    await createCoordinationOnlyReviewRequestViaComparison(page);
+
+    // Mandatory ADR-016 disclaimer must be visible.
+    await expect(
+      page.getByText('Reviewer responses coordinate attention. They do not determine truth or claim status.'),
+    ).toBeVisible({ timeout: 20_000 });
+
+    // Assign to self so the current user is the assigned reviewer (coordination only).
+    await page.getByRole('button', { name: 'Assign to me (coordination only)' }).first().click();
+    await expect(page.locator('[aria-label="Assigned to you"]')).toBeVisible({ timeout: 20_000 });
+
+    // Acknowledge and ensure UI disables further responses.
+    const assigned = page.locator('[aria-label="Assigned to you"]').first();
+    const acknowledge = assigned.getByRole('button', { name: 'Acknowledge' }).first();
+    const decline = assigned.getByRole('button', { name: 'Decline' }).first();
+
+    await acknowledge.click();
+    await expect(assigned.getByText('Acknowledged (coordination only)')).toBeVisible({ timeout: 20_000 });
+    await expect(acknowledge).toBeDisabled();
+    await expect(decline).toBeDisabled();
+
+    // Persistence across reload: response remains visible.
+    await page.reload();
+    await expect(page.locator('[aria-label="Assigned to you"]')).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText('Acknowledged (coordination only)').first()).toBeVisible({ timeout: 20_000 });
+
+    // Claim status unchanged after response.
+    await page.goto('/claims/claim-1');
+    await expect(page.getByTestId('claim-state')).toContainText(/draft/i, { timeout: 20_000 });
+
+    // Assert that no truth-adjacent mutation (e.g. adjudication) was invoked.
+    const allowed = new Set([
+      'Login',
+      'Register',
+      'ChangePassword',
+      'ForgotPassword',
+      'RequestReview',
+      'AssignReviewer',
+      'RespondToReviewAssignment',
     ]);
     const forbidden = mutations.filter((op) => !allowed.has(op));
     expect(forbidden).toHaveLength(0);

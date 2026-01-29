@@ -19,3 +19,7 @@ export { Claim, ClaimStatus } from './claim.model';
 export { ClaimEvidence } from './claim-evidence.model';
 export { ReviewRequest, ReviewRequestSource } from './review-request.model';
 export { ReviewAssignment } from './review-assignment.model';
+export {
+  ReviewerResponse,
+  ReviewerResponseType,
+} from './reviewer-response.model';

@@ -12,4 +12,9 @@ export {
   type AssignReviewerError,
   type AssignReviewerErrorCode,
 } from './hooks/useAssignReviewer';
+export {
+  useReviewerResponse,
+  type ReviewerResponseError,
+  type ReviewerResponseErrorCode,
+} from './hooks/useReviewerResponse';
 

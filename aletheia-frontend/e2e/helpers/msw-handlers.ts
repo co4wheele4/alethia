@@ -67,6 +67,7 @@ let relationshipsStore: Array<Record<string, unknown>> = [];
 let claimsStore: Array<Record<string, unknown>> = [];
 let reviewRequestsStore: Array<Record<string, unknown>> = [];
 let reviewAssignmentsStore: Array<Record<string, unknown>> = [];
+let reviewerResponsesSeq = 0;
 
 function ensureSeeded() {
   if (documentsStore.length > 0) return;
@@ -303,6 +304,21 @@ function assertNoForbiddenRequestedFields(query: string, operationName?: string)
   if (/\bconfidence\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: confidence`);
   if (/\bprobability\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: probability`);
   if (/\btruthScore\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: truthScore`);
+
+  // Reviewer coordination UI must not request claim lifecycle fields.
+  // (Claim detail surfaces legitimately do; we scope this guard by operationName.)
+  const op = String(operationName ?? '');
+  const isReviewerCoordinationOp =
+    /^(ReviewQueue|MyReviewRequests|AssignReviewer|RespondToReviewAssignment)$/i.test(op) ||
+    /review-?queue/i.test(op);
+  if (isReviewerCoordinationOp) {
+    const forbidden = ['reviewedAt', 'reviewedBy', 'reviewerNote', 'ClaimLifecycleState'];
+    for (const f of forbidden) {
+      if (new RegExp(`\\b${f}\\b`).test(query)) {
+        failContract(`Forbidden claim lifecycle field requested in ${operationName ?? '(missing operationName)'}: ${f}`);
+      }
+    }
+  }
 
   // Claim lifecycle mutations (truth-adjacent) must never be invoked from the mocked E2E surface.
   const isMutation = /\bmutation\b/i.test(query);
@@ -570,6 +586,7 @@ export async function setupGraphQLMocks(route: Route) {
           claimsStore = [];
           reviewRequestsStore = [];
           reviewAssignmentsStore = [];
+          reviewerResponsesSeq = 0;
           ensureSeeded();
 
           const isAdmin = email === 'admin@example.com';
@@ -1079,11 +1096,72 @@ export async function setupGraphQLMocks(route: Route) {
           reviewerUserId,
           assignedByUserId,
           assignedAt: createdAt,
+          reviewerResponse: null,
         };
         reviewAssignmentsStore = [created, ...reviewAssignmentsStore];
         rr.reviewAssignments = [created, ...existingAssignments];
 
         response = { status: 200, body: { data: { assignReviewer: created } } };
+        break;
+      }
+
+      case 'RespondToReviewAssignment': {
+        ensureSeeded();
+        const authHeader = route.request().headers()['authorization'] ?? '';
+        if (!authHeader) {
+          response = { status: 200, body: { errors: [{ message: 'UNAUTHORIZED', extensions: { code: 'UNAUTHORIZED' } }] } };
+          break;
+        }
+
+        const token = authHeader.replace(/^Bearer\s+/i, '');
+        const payload = parseJwt(token);
+        const userId = typeof payload?.sub === 'string' ? payload.sub : null;
+        if (!userId) {
+          response = { status: 200, body: { errors: [{ message: 'UNAUTHORIZED', extensions: { code: 'UNAUTHORIZED' } }] } };
+          break;
+        }
+
+        const reviewAssignmentId = varString(parsedBody.variables, 'reviewAssignmentId') ?? '';
+        const resp = varString(parsedBody.variables, 'response') ?? '';
+        const note = varString(parsedBody.variables, 'note');
+
+        if (!reviewAssignmentId || (resp !== 'ACKNOWLEDGED' && resp !== 'DECLINED')) {
+          response = { status: 200, body: { errors: [{ message: 'BAD_USER_INPUT', extensions: { code: 'BAD_USER_INPUT' } }] } };
+          break;
+        }
+
+        const assignment = reviewAssignmentsStore.find((a) => (a as { id?: string }).id === reviewAssignmentId) as
+          | (Record<string, unknown> & { id: string; reviewerUserId?: string; reviewerResponse?: unknown })
+          | undefined;
+        if (!assignment) {
+          response = { status: 200, body: { errors: [{ message: 'ASSIGNMENT_NOT_FOUND', extensions: { code: 'ASSIGNMENT_NOT_FOUND' } }] } };
+          break;
+        }
+
+        if (assignment.reviewerUserId !== userId) {
+          response = { status: 200, body: { errors: [{ message: 'NOT_ASSIGNED_REVIEWER', extensions: { code: 'NOT_ASSIGNED_REVIEWER' } }] } };
+          break;
+        }
+
+        if (assignment.reviewerResponse) {
+          response = { status: 200, body: { errors: [{ message: 'DUPLICATE_RESPONSE', extensions: { code: 'DUPLICATE_RESPONSE' } }] } };
+          break;
+        }
+
+        const createdAt = new Date().toISOString();
+        const created = {
+          __typename: 'ReviewerResponse',
+          id: `resp-${(reviewerResponsesSeq += 1)}`,
+          reviewAssignmentId,
+          reviewerUserId: userId,
+          response: resp,
+          respondedAt: createdAt,
+          note: note ?? null,
+        };
+
+        assignment.reviewerResponse = created;
+
+        response = { status: 200, body: { data: { respondToReviewAssignment: created } } };
         break;
       }
 

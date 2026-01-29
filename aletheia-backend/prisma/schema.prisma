@@ -32,6 +32,11 @@ model User {
    */
   reviewAssignmentsReceived ReviewAssignment[] @relation("ReviewAssignmentReviewer")
   reviewAssignmentsCreated  ReviewAssignment[] @relation("ReviewAssignmentAssignedBy")
+  /**
+   * Reviewer responses (ADR-016).
+   * Coordination-only: does not determine truth or claim status.
+   */
+  reviewerResponses ReviewerResponse[] @relation("ReviewerResponseReviewer")
 
   @@map("users")
 }
@@ -446,6 +451,14 @@ model ReviewAssignment {
   reviewer   User @relation("ReviewAssignmentReviewer", fields: [reviewerUserId], references: [id], onDelete: Cascade)
   assignedBy User @relation("ReviewAssignmentAssignedBy", fields: [assignedByUserId], references: [id], onDelete: Cascade)
 
+  /**
+   * Reviewer responses are coordination-only (ADR-016).
+   * Epistemic contract:
+   * - A response acknowledges/declines attention; it does NOT determine truth or claim status.
+   * - Resolver must enforce that only the assigned reviewer may create a response.
+   */
+  reviewerResponses ReviewerResponse[]
+
   // Idempotent per (reviewRequestId, reviewerUserId): prevent duplicate rows.
   @@unique([reviewRequestId, reviewerUserId])
   @@index([reviewRequestId])
@@ -453,6 +466,38 @@ model ReviewAssignment {
   @@index([assignedByUserId])
   @@index([assignedAt])
   @@map("review_assignments")
+}
+
+////////////////////
+// REVIEWER RESPONSES (COORDINATION ONLY; DOES NOT CHANGE CLAIM LIFECYCLE)
+////////////////////
+
+enum ReviewerResponseType {
+  ACKNOWLEDGED
+  DECLINED
+}
+
+model ReviewerResponse {
+  id String @id @default(uuid()) @map("id")
+
+  reviewAssignmentId String               @map("review_assignment_id")
+  reviewerUserId     String               @map("reviewer_user_id")
+  response           ReviewerResponseType @map("response")
+  respondedAt        DateTime             @default(now()) @map("responded_at")
+  note               String?              @map("note")
+
+  // Safety: delete responses when the assignment is deleted.
+  reviewAssignment ReviewAssignment @relation(fields: [reviewAssignmentId], references: [id], onDelete: Cascade)
+
+  // Attribution only; delete responses if the referenced user is deleted.
+  reviewer User @relation("ReviewerResponseReviewer", fields: [reviewerUserId], references: [id], onDelete: Cascade)
+
+  // One response per (assignment, reviewer).
+  @@unique([reviewAssignmentId, reviewerUserId])
+  @@index([reviewAssignmentId])
+  @@index([reviewerUserId])
+  @@index([respondedAt])
+  @@map("reviewer_responses")
 }
 
 model ClaimEvidence {

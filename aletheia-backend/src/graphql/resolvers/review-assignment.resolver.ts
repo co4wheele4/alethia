@@ -1,9 +1,21 @@
-import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Context,
+  ID,
+  Mutation,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
 import { GraphQLError } from 'graphql';
 import { PrismaService } from '@prisma/prisma.service';
 import { OptionalJwtAuthGuard } from '@auth/guards/optional-jwt-auth.guard';
 import { ReviewAssignment } from '@models/review-assignment.model';
+import {
+  ReviewerResponse,
+  ReviewerResponseType,
+} from '@models/reviewer-response.model';
 
 type GqlRequestContext = {
   req?: {
@@ -25,6 +37,18 @@ function contractError(code: ReviewAssignmentErrorCode): GraphQLError {
   return new GraphQLError(code, { extensions: { code } });
 }
 
+type ReviewerResponseErrorCode =
+  | 'UNAUTHORIZED'
+  | 'ASSIGNMENT_NOT_FOUND'
+  | 'NOT_ASSIGNED_REVIEWER'
+  | 'DUPLICATE_RESPONSE';
+
+function reviewerResponseContractError(
+  code: ReviewerResponseErrorCode,
+): GraphQLError {
+  return new GraphQLError(code, { extensions: { code } });
+}
+
 function getAuthUserId(ctx?: GqlRequestContext): string | undefined {
   return ctx?.req?.user?.sub ?? ctx?.req?.user?.id;
 }
@@ -39,13 +63,33 @@ function getAuthUserRole(ctx?: GqlRequestContext): string | undefined {
 // Calling them once here is side-effect free and keeps global coverage guarantees intact.
 const reviewAssignmentType = () => ReviewAssignment;
 const idType = () => ID;
+const reviewerResponseType = () => ReviewerResponse;
+const reviewerResponseEnumType = () => ReviewerResponseType;
 void reviewAssignmentType();
 void idType();
+void reviewerResponseType();
+void reviewerResponseEnumType();
 
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(reviewAssignmentType)
 export class ReviewAssignmentResolver {
   constructor(private readonly prisma: PrismaService) {}
+
+  @ResolveField(reviewerResponseType, {
+    nullable: true,
+    description:
+      'Optional reviewer response (coordination-only; does not determine truth or claim status).',
+  })
+  async reviewerResponse(@Parent() ra: ReviewAssignment) {
+    return await this.prisma.reviewerResponse.findUnique({
+      where: {
+        reviewAssignmentId_reviewerUserId: {
+          reviewAssignmentId: ra.id,
+          reviewerUserId: ra.reviewerUserId,
+        },
+      },
+    });
+  }
 
   @Mutation(reviewAssignmentType, {
     description:
@@ -106,6 +150,61 @@ export class ReviewAssignmentResolver {
         });
         if (!rrExists) throw contractError('REVIEW_REQUEST_NOT_FOUND');
         throw contractError('REVIEWER_NOT_ELIGIBLE');
+      }
+
+      throw err;
+    }
+  }
+
+  @Mutation(reviewerResponseType, {
+    description:
+      'Respond to a review assignment (coordination-only; does not determine truth or claim status).',
+  })
+  @UseGuards(OptionalJwtAuthGuard)
+  async respondToReviewAssignment(
+    @Args('reviewAssignmentId', { type: idType }) reviewAssignmentId: string,
+    @Args('response', { type: reviewerResponseEnumType })
+    response: ReviewerResponseType,
+    @Args('note', { nullable: true }) note?: string,
+    @Context() ctx?: GqlRequestContext,
+  ) {
+    const userId = getAuthUserId(ctx);
+    if (!userId) throw reviewerResponseContractError('UNAUTHORIZED');
+
+    const assignment = await this.prisma.reviewAssignment.findUnique({
+      where: { id: reviewAssignmentId },
+      select: { id: true, reviewerUserId: true },
+    });
+    if (!assignment)
+      throw reviewerResponseContractError('ASSIGNMENT_NOT_FOUND');
+    if (assignment.reviewerUserId !== userId) {
+      throw reviewerResponseContractError('NOT_ASSIGNED_REVIEWER');
+    }
+
+    try {
+      return await this.prisma.reviewerResponse.create({
+        data: {
+          reviewAssignmentId: assignment.id,
+          reviewerUserId: userId,
+          response,
+          note: note ?? null,
+        },
+      });
+    } catch (err: unknown) {
+      const code = (err as { code?: unknown })?.code;
+      if (code === 'P2002')
+        throw reviewerResponseContractError('DUPLICATE_RESPONSE');
+
+      // FK race: re-check the assignment. If it still exists, map to UNAUTHORIZED (user FK) to
+      // avoid leaking internal details beyond the explicit contract codes.
+      if (code === 'P2003') {
+        const stillExists = await this.prisma.reviewAssignment.findUnique({
+          where: { id: reviewAssignmentId },
+          select: { id: true, reviewerUserId: true },
+        });
+        if (!stillExists)
+          throw reviewerResponseContractError('ASSIGNMENT_NOT_FOUND');
+        throw reviewerResponseContractError('UNAUTHORIZED');
       }
 
       throw err;

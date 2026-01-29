@@ -38,6 +38,7 @@ const SCHEMA_MUTATION_FIELDS = new Set<string>([
   'register',
   'rejectSuggestion',
   'requestReview',
+  'respondToReviewAssignment',
   'updateChunk',
   'updateDocument',
   'updateEmbedding',
@@ -78,6 +79,30 @@ function assertNoProbabilityRequested(query: string, operationName?: string | nu
 function assertNoTruthScoreRequested(query: string, operationName?: string | null) {
   if (!/\btruthScore\b/i.test(query)) return;
   fail(`Forbidden field requested in GraphQL operation ${operationName ?? '(missing operationName)'}: truthScore`);
+}
+
+function assertNoClaimLifecycleFieldsRequestedInReviewerCoordinationUI(
+  query: string,
+  operationName?: string | null,
+) {
+  const op = String(operationName ?? '');
+
+  // Scope this guard to reviewer coordination surfaces only.
+  // Claim detail pages legitimately query lifecycle fields; the review-queue UI must not.
+  const isReviewerCoordinationOp =
+    /^(ReviewQueue|MyReviewRequests|AssignReviewer|RespondToReviewAssignment)$/i.test(op) ||
+    /review-?queue/i.test(op);
+
+  if (!isReviewerCoordinationOp) return;
+
+  const forbidden = ['reviewedAt', 'reviewedBy', 'reviewerNote', 'ClaimLifecycleState'];
+  for (const f of forbidden) {
+    if (new RegExp(`\\b${f}\\b`).test(query)) {
+      fail(
+        `Forbidden claim lifecycle field requested in reviewer coordination operation ${operationName ?? '(missing operationName)'}: ${f}`,
+      );
+    }
+  }
 }
 
 function extractMutationFieldName(query: string): string | null {
@@ -152,6 +177,7 @@ export const guardHandlers = [
       assertNoConfidenceRequested(query, operationName);
       assertNoProbabilityRequested(query, operationName);
       assertNoTruthScoreRequested(query, operationName);
+      assertNoClaimLifecycleFieldsRequestedInReviewerCoordinationUI(query, operationName);
       assertMutationDeclaredInSchema(query, operationName);
       assertNoForbiddenMutations(query, operationName);
     }

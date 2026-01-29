@@ -356,6 +356,15 @@ type Mutation {
   Request review of a claim (coordination-only; does not change claim lifecycle).
   """
   requestReview(claimId: ID!, note: String, source: ReviewRequestSource!): ReviewRequest!
+
+  """
+  Respond to a review assignment (coordination-only; does not determine truth or claim status).
+  """
+  respondToReviewAssignment(
+    note: String
+    response: ReviewerResponseType!
+    reviewAssignmentId: ID!
+  ): ReviewerResponse!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
   updateEmbedding(id: String!, values: [Float!]): Embedding!
@@ -427,6 +436,7 @@ type ReviewAssignment {
   assignedAt: DateTime!
   assignedByUserId: ID!
   id: ID!
+  reviewerResponse: ReviewerResponse
   reviewRequestId: ID!
   reviewerUserId: ID!
 }
@@ -441,12 +451,30 @@ type ReviewRequest {
   source: ReviewRequestSource!
 }
 
+type ReviewerResponse {
+  id: ID!
+  note: String
+  response: ReviewerResponseType!
+  respondedAt: DateTime!
+  reviewAssignmentId: ID!
+  reviewerUserId: ID!
+}
+
 """
 Origin surface for a review request (coordination-only; does not change truth or claim lifecycle).
 """
 enum ReviewRequestSource {
   CLAIM_VIEW
   COMPARISON
+}
+
+"""
+Coordination-only reviewer response (ACKNOWLEDGED = seen; DECLINED = cannot take).
+Does not determine truth or claim status.
+"""
+enum ReviewerResponseType {
+  ACKNOWLEDGED
+  DECLINED
 }
 
 enum SuggestionKind {

@@ -5,7 +5,13 @@ import { Alert, Box, Button, Chip, Divider, Stack, Typography } from '@mui/mater
 import { useCallback, useMemo, useState } from 'react';
 
 import { useAssignReviewer } from '../hooks/useAssignReviewer';
-import type { ReviewAssignment, ReviewRequest, ReviewRequestSource } from '../types';
+import { useReviewerResponse } from '../hooks/useReviewerResponse';
+import type {
+  ReviewAssignment,
+  ReviewRequest,
+  ReviewRequestSource,
+  ReviewerResponseType,
+} from '../types';
 
 function sourceLabel(source: ReviewRequestSource) {
   switch (source) {
@@ -52,6 +58,36 @@ function assignReviewerErrorMessage(code: string) {
   }
 }
 
+function reviewerResponseErrorMessage(code: string) {
+  switch (code) {
+    case 'UNAUTHORIZED':
+      return 'You must be signed in to respond to an assignment.';
+    case 'ASSIGNMENT_NOT_FOUND':
+      return 'This assignment no longer exists or is unavailable.';
+    case 'NOT_ASSIGNED_REVIEWER':
+      return 'Only the assigned reviewer may respond (coordination only).';
+    case 'DUPLICATE_RESPONSE':
+      return 'This assignment already has your response. Responses are immutable (coordination only).';
+    case 'UNEXPECTED_ERROR_CODE':
+      return 'Unexpected response error code (contract mismatch).';
+    case 'NETWORK_OR_UNKNOWN':
+      return 'Unexpected response error (network/unknown).';
+    default:
+      return 'Unexpected response error (unknown).';
+  }
+}
+
+function reviewerResponseLabel(response: ReviewerResponseType) {
+  switch (response) {
+    case 'ACKNOWLEDGED':
+      return 'Acknowledged (coordination only)';
+    case 'DECLINED':
+      return 'Declined (coordination only)';
+    default:
+      return 'Responded (coordination only)';
+  }
+}
+
 function groupBySource(items: ReviewRequest[]) {
   const by: Record<ReviewRequestSource, ReviewRequest[]> = {
     CLAIM_VIEW: [],
@@ -73,8 +109,10 @@ export function ReviewerQueueView(props: {
   const grouped = groupBySource(items);
   const isAdmin = currentUserRole === 'ADMIN';
   const [pendingAssignFor, setPendingAssignFor] = useState<string | null>(null);
+  const [pendingResponseFor, setPendingResponseFor] = useState<string | null>(null);
 
   const { assignReviewer, loading: assigning, error: assignError } = useAssignReviewer();
+  const { respond, loading: responding, error: responseError } = useReviewerResponse();
 
   const assignedToYou = useMemo(() => {
     if (!currentUserId) return [];
@@ -97,6 +135,19 @@ export function ReviewerQueueView(props: {
     [assignReviewer, currentUserId, onRefetch],
   );
 
+  const submitReviewerResponse = useCallback(
+    async (args: { reviewAssignmentId: string; response: ReviewerResponseType }) => {
+      setPendingResponseFor(args.reviewAssignmentId);
+      try {
+        await respond({ reviewAssignmentId: args.reviewAssignmentId, response: args.response });
+        await onRefetch();
+      } finally {
+        setPendingResponseFor(null);
+      }
+    },
+    [onRefetch, respond],
+  );
+
   return (
     <Stack spacing={2}>
       <Alert severity="info">
@@ -104,6 +155,9 @@ export function ReviewerQueueView(props: {
       </Alert>
       <Alert severity="info">
         Assignment coordinates attention. It does not change truth or claim status.
+      </Alert>
+      <Alert severity="info">
+        Reviewer responses coordinate attention. They do not determine truth or claim status.
       </Alert>
 
       <Box>
@@ -134,6 +188,53 @@ export function ReviewerQueueView(props: {
                 bgcolor: 'background.paper',
               }}
             >
+              {(() => {
+                const myAssignment =
+                  currentUserId
+                    ? (rr.reviewAssignments ?? []).find((a) => a.reviewerUserId === currentUserId) ?? null
+                    : null;
+                const resp = myAssignment?.reviewerResponse ?? null;
+                return myAssignment ? (
+                  <Box sx={{ mb: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                      {resp ? (
+                        <Chip
+                          size="small"
+                          color={resp.response === 'DECLINED' ? 'warning' : 'success'}
+                          variant="outlined"
+                          label={reviewerResponseLabel(resp.response)}
+                        />
+                      ) : (
+                        <Chip size="small" color="default" variant="outlined" label="No response yet (coordination only)" />
+                      )}
+                      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                        <Button
+                          size="small"
+                          sx={{ textTransform: 'none' }}
+                          disabled={responding || pendingResponseFor === myAssignment.id || Boolean(resp)}
+                          onClick={() => submitReviewerResponse({ reviewAssignmentId: myAssignment.id, response: 'ACKNOWLEDGED' })}
+                        >
+                          {pendingResponseFor === myAssignment.id ? 'Saving…' : 'Acknowledge'}
+                        </Button>
+                        <Button
+                          size="small"
+                          color="warning"
+                          sx={{ textTransform: 'none' }}
+                          disabled={responding || pendingResponseFor === myAssignment.id || Boolean(resp)}
+                          onClick={() => submitReviewerResponse({ reviewAssignmentId: myAssignment.id, response: 'DECLINED' })}
+                        >
+                          {pendingResponseFor === myAssignment.id ? 'Saving…' : 'Decline'}
+                        </Button>
+                      </Stack>
+                    </Stack>
+                    {resp?.respondedAt ? (
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+                        Responded at: {new Date(resp.respondedAt).toISOString()}
+                      </Typography>
+                    ) : null}
+                  </Box>
+                ) : null;
+              })()}
               <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 800, minWidth: 0 }}>
                   Assigned (coordination only)
@@ -173,6 +274,19 @@ export function ReviewerQueueView(props: {
                 ? String((assignError as { code?: unknown }).code)
                 : '';
             const msg = assignReviewerErrorMessage(code);
+            return code ? `${msg} [${code}]` : msg;
+          })()}
+        </Alert>
+      ) : null}
+
+      {responseError ? (
+        <Alert severity="error">
+          {(() => {
+            const code =
+              typeof (responseError as { code?: unknown })?.code === 'string'
+                ? String((responseError as { code?: unknown }).code)
+                : '';
+            const msg = reviewerResponseErrorMessage(code);
             return code ? `${msg} [${code}]` : msg;
           })()}
         </Alert>
@@ -251,6 +365,53 @@ export function ReviewerQueueView(props: {
                       >
                         View claim
                       </Button>
+                      {(() => {
+                        const myAssignment =
+                          currentUserId
+                            ? (rr.reviewAssignments ?? []).find((a) => a.reviewerUserId === currentUserId) ?? null
+                            : null;
+                        if (!myAssignment) return null;
+                        const resp = myAssignment.reviewerResponse ?? null;
+                        return (
+                          <>
+                            {resp ? (
+                              <Chip
+                                size="small"
+                                color={resp.response === 'DECLINED' ? 'warning' : 'success'}
+                                variant="outlined"
+                                label={reviewerResponseLabel(resp.response)}
+                              />
+                            ) : null}
+                            <Button
+                              size="small"
+                              sx={{ textTransform: 'none' }}
+                              disabled={responding || pendingResponseFor === myAssignment.id || Boolean(resp)}
+                              onClick={() =>
+                                submitReviewerResponse({
+                                  reviewAssignmentId: myAssignment.id,
+                                  response: 'ACKNOWLEDGED',
+                                })
+                              }
+                            >
+                              {pendingResponseFor === myAssignment.id ? 'Saving…' : 'Acknowledge'}
+                            </Button>
+                            <Button
+                              size="small"
+                              color="warning"
+                              sx={{ textTransform: 'none' }}
+                              disabled={responding || pendingResponseFor === myAssignment.id || Boolean(resp)}
+                              onClick={() =>
+                                submitReviewerResponse({
+                                  reviewAssignmentId: myAssignment.id,
+                                  response: 'DECLINED',
+                                })
+                              }
+                            >
+                              {pendingResponseFor === myAssignment.id ? 'Saving…' : 'Decline'}
+                            </Button>
+                          </>
+                        );
+                      })()}
                       {isAdmin && currentUserId ? (
                         <Button
                           size="small"

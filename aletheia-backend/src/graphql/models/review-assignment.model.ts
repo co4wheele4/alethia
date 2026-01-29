@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { ReviewerResponse } from './reviewer-response.model';
 
 /**
  * Reviewer assignment (ADR-015).
@@ -24,4 +25,14 @@ export class ReviewAssignment {
 
   @Field(() => Date)
   assignedAt!: Date;
+
+  /**
+   * Optional response from the assigned reviewer (ADR-016).
+   *
+   * Epistemic contract:
+   * - Coordination-only: does not determine truth or claim status.
+   * - MUST NOT be treated as authority/endorsement.
+   */
+  @Field(() => ReviewerResponse, { nullable: true })
+  reviewerResponse?: ReviewerResponse | null;
 }

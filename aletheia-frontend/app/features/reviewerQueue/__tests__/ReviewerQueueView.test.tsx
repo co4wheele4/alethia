@@ -12,6 +12,15 @@ vi.mock('../hooks/useAssignReviewer', () => ({
   }),
 }));
 
+vi.mock('../hooks/useReviewerResponse', () => ({
+  useReviewerResponse: () => ({
+    respond: vi.fn(async () => null),
+    loading: false,
+    error: null,
+    result: null,
+  }),
+}));
+
 describe('Review queue (persisted review requests)', () => {
   it('renders the required non-truth messaging', () => {
     render(

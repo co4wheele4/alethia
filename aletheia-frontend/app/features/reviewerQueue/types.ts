@@ -14,6 +14,19 @@ export type ReviewAssignment = {
   reviewerUserId: string;
   assignedByUserId: string;
   assignedAt: string;
+  reviewerResponse?: ReviewerResponse | null;
+};
+
+export type ReviewerResponseType = 'ACKNOWLEDGED' | 'DECLINED';
+
+export type ReviewerResponse = {
+  __typename?: 'ReviewerResponse';
+  id: string;
+  reviewAssignmentId: string;
+  reviewerUserId: string;
+  response: ReviewerResponseType;
+  respondedAt: string;
+  note?: string | null;
 };
 
 /**

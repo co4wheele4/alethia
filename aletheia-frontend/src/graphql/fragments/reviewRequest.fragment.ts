@@ -28,6 +28,15 @@ export const REVIEW_REQUEST_FIELDS = gql`
       reviewerUserId
       assignedByUserId
       assignedAt
+      reviewerResponse {
+        __typename
+        id
+        reviewAssignmentId
+        reviewerUserId
+        response
+        respondedAt
+        note
+      }
     }
   }
 `;
