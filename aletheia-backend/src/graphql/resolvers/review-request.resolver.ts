@@ -105,6 +105,34 @@ export class ReviewRequestResolver {
     });
   }
 
+  @Query(reviewRequestListType, {
+    description:
+      'Review requests for a claim visible in the current workspace (coordination-only; does not change claim status).',
+  })
+  @UseGuards(OptionalJwtAuthGuard)
+  async reviewRequestsByClaim(
+    @Args('claimId', { type: idType }) claimId: string,
+    @Context() ctx?: GqlRequestContext,
+  ) {
+    const userId = getAuthUserId(ctx);
+    if (!userId) throw contractError('UNAUTHORIZED');
+
+    // Claim must exist and be visible in the current workspace.
+    const existingClaim = await this.prisma.claim.findFirst({
+      where: {
+        id: claimId,
+        evidence: { some: { document: { userId } } },
+      },
+      select: { id: true },
+    });
+    if (!existingClaim) throw contractError('CLAIM_NOT_FOUND');
+
+    return await this.prisma.reviewRequest.findMany({
+      where: { claimId: existingClaim.id },
+      orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
+    });
+  }
+
   @Mutation(reviewRequestType, {
     description:
       'Request review of a claim (coordination-only; does not change claim lifecycle).',

@@ -81,6 +81,13 @@ function assertNoTruthScoreRequested(query: string, operationName?: string | nul
   fail(`Forbidden field requested in GraphQL operation ${operationName ?? '(missing operationName)'}: truthScore`);
 }
 
+function assertReviewActivityIsQueryOnly(query: string, operationName?: string | null) {
+  const op = String(operationName ?? '');
+  if (!/^ReviewRequestsByClaim$/i.test(op)) return;
+  if (!/\bmutation\b/.test(query)) return;
+  fail(`Review activity must be read-only (query-only): ${operationName ?? '(missing operationName)'}`);
+}
+
 function assertNoClaimLifecycleFieldsRequestedInReviewerCoordinationUI(
   query: string,
   operationName?: string | null,
@@ -90,7 +97,7 @@ function assertNoClaimLifecycleFieldsRequestedInReviewerCoordinationUI(
   // Scope this guard to reviewer coordination surfaces only.
   // Claim detail pages legitimately query lifecycle fields; the review-queue UI must not.
   const isReviewerCoordinationOp =
-    /^(ReviewQueue|MyReviewRequests|AssignReviewer|RespondToReviewAssignment)$/i.test(op) ||
+    /^(ReviewQueue|MyReviewRequests|ReviewRequestsByClaim|AssignReviewer|RespondToReviewAssignment)$/i.test(op) ||
     /review-?queue/i.test(op);
 
   if (!isReviewerCoordinationOp) return;
@@ -174,6 +181,7 @@ export const guardHandlers = [
       const query = typeof body?.query === 'string' ? body.query : '';
       const operationName = typeof body?.operationName === 'string' ? body.operationName : null;
       if (!query) continue;
+      assertReviewActivityIsQueryOnly(query, operationName);
       assertNoConfidenceRequested(query, operationName);
       assertNoProbabilityRequested(query, operationName);
       assertNoTruthScoreRequested(query, operationName);

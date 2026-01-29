@@ -81,6 +81,14 @@ export const reviewRequestHandlers = [
     return HttpResponse.json({ data });
   }),
 
+  graphql.query('ReviewRequestsByClaim', ({ variables }) => {
+    const v = (variables ?? {}) as { claimId?: string };
+    const claimId = v.claimId ?? '';
+    const data = { reviewRequestsByClaim: store.filter((rr) => rr.claimId === claimId) };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
   graphql.mutation('AssignReviewer', ({ variables, request }) => {
     // MSW contract enforcement (not a security boundary).
     const auth = request.headers.get('authorization');

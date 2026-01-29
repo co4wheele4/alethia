@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Alert, Box, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 
@@ -13,6 +13,8 @@ import { ClaimComparisonColumn } from './ClaimComparisonColumn';
 import { ClaimComparisonPanel } from './ClaimComparisonPanel';
 import { RequestReviewDialog } from './RequestReviewDialog';
 import { useRequestReview } from '../../reviewerQueue';
+import { ReviewActivityPanel } from '../../reviewActivity/components/ReviewActivityPanel';
+import { useReviewActivityForClaim } from '../../reviewActivity/hooks/useReviewActivityForClaim';
 import type { ClaimEvidenceListModel } from './ClaimEvidenceList';
 import type { ClaimComparisonClaim, ClaimComparisonDocument, ClaimComparisonMention } from '../hooks/useClaimsForComparison';
 import type { ClaimEvidenceSnippetModel } from './ClaimEvidenceSnippet';
@@ -225,9 +227,11 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
   const { claims, loading, error } = useClaimsForComparison();
   const router = useRouter();
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewActivityOpen, setReviewActivityOpen] = useState(false);
   const requestReview = useRequestReview();
 
   const base = useMemo(() => claims.find((c) => c.id === baseClaimId) ?? null, [claims, baseClaimId]);
+  const reviewActivity = useReviewActivityForClaim(base?.id ?? null);
 
   const explicitRelated = useMemo(() => {
     if (!withClaimIds.length) return [];
@@ -348,6 +352,8 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
       <ClaimComparisonPanel
         onRequestReview={() => setReviewDialogOpen(true)}
         requestReviewDisabled={!base}
+        reviewActivityCount={reviewActivity.items.length}
+        onOpenReviewActivity={() => setReviewActivityOpen(true)}
         modeCaption={
           withClaimIds.length
             ? 'Compared claims were explicitly selected via URL query params (with=...). No additional claims are inferred or added.'
@@ -377,6 +383,24 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
           }
         }}
       />
+
+      <Dialog
+        open={reviewActivityOpen}
+        onClose={() => setReviewActivityOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        aria-label="Review activity details"
+      >
+        <DialogTitle>Review activity (coordination only)</DialogTitle>
+        <DialogContent dividers>
+          {base ? <ReviewActivityPanel claimId={base.id} defaultExpanded /> : <Alert severity="warning">Missing base claim.</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReviewActivityOpen(false)} sx={{ textTransform: 'none' }}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {!loading && withClaimIds.length && missingWithClaimIds.length ? (
         <Alert severity="warning" sx={{ mb: 2 }}>

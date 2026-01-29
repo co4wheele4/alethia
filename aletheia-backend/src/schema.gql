@@ -423,6 +423,10 @@ type Query {
   Reviewer queue (unassigned): review requests visible in the current workspace (coordination-only).
   """
   reviewQueue: [ReviewRequest!]!
+  """
+  Review requests for a claim visible in the current workspace (coordination-only; does not change claim status).
+  """
+  reviewRequestsByClaim(claimId: ID!): [ReviewRequest!]!
   user(id: String!): User
   users: [User!]!
 }

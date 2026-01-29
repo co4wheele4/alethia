@@ -17,6 +17,7 @@ import {
 import { ContentSurface } from '../../../components/layout';
 import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { ClaimStatusBadge } from '../../claims/components/ClaimStatusBadge';
+import { ReviewActivityPanel } from '../../reviewActivity/components/ReviewActivityPanel';
 import { useRequestReview } from '../../reviewerQueue';
 import { useClaimReview } from '../hooks/useClaimReview';
 
@@ -95,177 +96,161 @@ export function ClaimReviewView(props: { claimId: string }) {
         alignItems: 'start',
       }}
     >
-      <ContentSurface>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
-          <Typography variant="h6">Claim</Typography>
-          {claim ? <ClaimStatusBadge status={claim.status} testId="claim-state" /> : null}
-        </Stack>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-          Claims are assertions grounded in explicit evidence. No confidence is shown.
-        </Typography>
+      <Stack spacing={2} sx={{ minWidth: 0 }}>
+        <ContentSurface>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
+            <Typography variant="h6">Claim</Typography>
+            {claim ? <ClaimStatusBadge status={claim.status} testId="claim-state" /> : null}
+          </Stack>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+            Claims are assertions grounded in explicit evidence. No confidence is shown.
+          </Typography>
 
-        {claimsLoading ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mt: 2 }}>
-            <LadyJusticeProgressIndicator size={18} />
-            <Typography variant="body2">Loading claim…</Typography>
-          </Box>
-        ) : null}
+          {claimsLoading ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mt: 2 }}>
+              <LadyJusticeProgressIndicator size={18} />
+              <Typography variant="body2">Loading claim…</Typography>
+            </Box>
+          ) : null}
 
-        {claimsError ? (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {claimsError.message}
-          </Alert>
-        ) : null}
+          {claimsError ? (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {claimsError.message}
+            </Alert>
+          ) : null}
 
-        {!claimsLoading && !claimsError && !claim ? (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            Claim not found: {claimId}
-          </Alert>
-        ) : null}
+          {!claimsLoading && !claimsError && !claim ? (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Claim not found: {claimId}
+            </Alert>
+          ) : null}
 
-        {claim ? (
-          <>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-              Claim text
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}
-              data-testid="claim-text"
-            >
-              {claim.text}
-            </Typography>
+          {claim ? (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                Claim text
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }} data-testid="claim-text">
+                {claim.text}
+              </Typography>
 
-            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
-              <Button
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  sx={{ textTransform: 'none' }}
+                  disabled={requestReview.loading}
+                  onClick={async () => {
+                    try {
+                      await requestReview.requestReview({
+                        claimId,
+                        source: 'CLAIM_VIEW',
+                        note: null,
+                      });
+                      router.push('/review-queue');
+                    } catch {
+                      // error is rendered below via requestReview.error
+                    }
+                  }}
+                  startIcon={requestReview.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
+                >
+                  Request review
+                </Button>
+              </Stack>
+
+              {requestReview.error ? (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  {requestReviewErrorMessage(requestReview.error.code)}
+                  {'received' in requestReview.error && requestReview.error.code === 'UNEXPECTED_ERROR_CODE'
+                    ? ` Received: ${requestReview.error.received}`
+                    : null}
+                  {'message' in requestReview.error && requestReview.error.code === 'NETWORK_OR_UNKNOWN'
+                    ? ` Details: ${requestReview.error.message}`
+                    : null}
+                </Alert>
+              ) : null}
+
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                Review actions (human judgment)
+              </Typography>
+
+              {actionsBlockedReason ? (
+                <Alert severity="warning" sx={{ mt: 1 }}>
+                  {actionsBlockedReason}
+                </Alert>
+              ) : null}
+
+              {isTerminal ? (
+                <Alert severity="info" sx={{ mt: 1 }}>
+                  This claim can no longer be modified.
+                </Alert>
+              ) : null}
+
+              {adjudication.error ? (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  {adjudicationErrorMessage(adjudication.error.code)}
+                  {'received' in adjudication.error && adjudication.error.code === 'UNEXPECTED_ERROR_CODE'
+                    ? ` Received: ${adjudication.error.received}`
+                    : null}
+                  {'message' in adjudication.error && adjudication.error.code === 'NETWORK_OR_UNKNOWN'
+                    ? ` Details: ${adjudication.error.message}`
+                    : null}
+                </Alert>
+              ) : null}
+
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
+                <Button
+                  variant="contained"
+                  disabled={Boolean(actionsBlockedReason) || adjudication.loading || isTerminal || !canTransition('ACCEPTED')}
+                  onClick={() => requestTransition('ACCEPTED', noteValue)}
+                  startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
+                >
+                  Accept claim
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  disabled={Boolean(actionsBlockedReason) || adjudication.loading || isTerminal || !canTransition('REJECTED')}
+                  onClick={() => requestTransition('REJECTED', noteValue)}
+                  startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
+                >
+                  Reject claim
+                </Button>
+                <Button
+                  variant="outlined"
+                  disabled={Boolean(actionsBlockedReason) || adjudication.loading || isTerminal || !canTransition('REVIEWED')}
+                  onClick={() => requestTransition('REVIEWED', noteValue)}
+                >
+                  Mark reviewed
+                </Button>
+              </Stack>
+
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                Lifecycle transitions are schema-enforced. Allowed next: {allowedNext.length ? allowedNext.join(', ') : '(none)'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                Note: mutation input uses <code>REVIEW</code> to transition to persisted <code>REVIEWED</code>.
+              </Typography>
+
+              <TextField
+                label="Reviewer note (optional)"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
                 size="small"
-                variant="outlined"
-                sx={{ textTransform: 'none' }}
-                disabled={requestReview.loading}
-                onClick={async () => {
-                  try {
-                    await requestReview.requestReview({
-                      claimId,
-                      source: 'CLAIM_VIEW',
-                      note: null,
-                    });
-                    router.push('/review-queue');
-                  } catch {
-                    // error is rendered below via requestReview.error
-                  }
-                }}
-                startIcon={requestReview.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
-              >
-                Request review
-              </Button>
-            </Stack>
+                fullWidth
+                multiline
+                minRows={3}
+                sx={{ mt: 2 }}
+                helperText="Plain text only. Notes are persisted with the adjudication action."
+              />
+            </>
+          ) : null}
+        </ContentSurface>
 
-            {requestReview.error ? (
-              <Alert severity="error" sx={{ mt: 1 }}>
-                {requestReviewErrorMessage(requestReview.error.code)}
-                {'received' in requestReview.error && requestReview.error.code === 'UNEXPECTED_ERROR_CODE'
-                  ? ` Received: ${requestReview.error.received}`
-                  : null}
-                {'message' in requestReview.error && requestReview.error.code === 'NETWORK_OR_UNKNOWN'
-                  ? ` Details: ${requestReview.error.message}`
-                  : null}
-              </Alert>
-            ) : null}
-
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-              Review actions (human judgment)
-            </Typography>
-
-            {actionsBlockedReason ? (
-              <Alert severity="warning" sx={{ mt: 1 }}>
-                {actionsBlockedReason}
-              </Alert>
-            ) : null}
-
-            {isTerminal ? (
-              <Alert severity="info" sx={{ mt: 1 }}>
-                This claim can no longer be modified.
-              </Alert>
-            ) : null}
-
-            {adjudication.error ? (
-              <Alert severity="error" sx={{ mt: 1 }}>
-                {adjudicationErrorMessage(adjudication.error.code)}
-                {'received' in adjudication.error && adjudication.error.code === 'UNEXPECTED_ERROR_CODE'
-                  ? ` Received: ${adjudication.error.received}`
-                  : null}
-                {'message' in adjudication.error && adjudication.error.code === 'NETWORK_OR_UNKNOWN'
-                  ? ` Details: ${adjudication.error.message}`
-                  : null}
-              </Alert>
-            ) : null}
-
-            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
-              <Button
-                variant="contained"
-                disabled={
-                  Boolean(actionsBlockedReason) ||
-                  adjudication.loading ||
-                  isTerminal ||
-                  !canTransition('ACCEPTED')
-                }
-                onClick={() => requestTransition('ACCEPTED', noteValue)}
-                startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
-              >
-                Accept claim
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                disabled={
-                  Boolean(actionsBlockedReason) ||
-                  adjudication.loading ||
-                  isTerminal ||
-                  !canTransition('REJECTED')
-                }
-                onClick={() => requestTransition('REJECTED', noteValue)}
-                startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
-              >
-                Reject claim
-              </Button>
-              <Button
-                variant="outlined"
-                disabled={
-                  Boolean(actionsBlockedReason) ||
-                  adjudication.loading ||
-                  isTerminal ||
-                  !canTransition('REVIEWED')
-                }
-                onClick={() => requestTransition('REVIEWED', noteValue)}
-              >
-                Mark reviewed
-              </Button>
-            </Stack>
-
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-              Lifecycle transitions are schema-enforced. Allowed next:{' '}
-              {allowedNext.length ? allowedNext.join(', ') : '(none)'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-              Note: mutation input uses <code>REVIEW</code> to transition to persisted <code>REVIEWED</code>.
-            </Typography>
-
-            <TextField
-              label="Reviewer note (optional)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              size="small"
-              fullWidth
-              multiline
-              minRows={3}
-              sx={{ mt: 2 }}
-              helperText="Plain text only. Notes are persisted with the adjudication action."
-            />
-          </>
-        ) : null}
-      </ContentSurface>
+        {claimId ? <ReviewActivityPanel claimId={claimId} /> : null}
+      </Stack>
 
       <ContentSurface>
         <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">

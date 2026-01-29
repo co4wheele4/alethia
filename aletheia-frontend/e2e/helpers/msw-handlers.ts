@@ -245,6 +245,49 @@ function ensureSeeded() {
       ],
     },
   ];
+
+  // Seed one read-only review activity record for claim-1 so visibility surfaces can render
+  // coordination metadata without invoking any mutations.
+  const seededRequestedBy = {
+    __typename: 'User',
+    id: 'user-2',
+    email: 'reviewer@example.com',
+    name: 'Reviewer User',
+  };
+  const seededRequestedAt = new Date('2026-01-02T00:00:00.000Z').toISOString();
+  const seededAssignedAt = new Date('2026-01-02T01:00:00.000Z').toISOString();
+  const seededRespondedAt = new Date('2026-01-02T02:00:00.000Z').toISOString();
+  const seededResponse = {
+    __typename: 'ReviewerResponse',
+    id: 'resp-seed-1',
+    reviewAssignmentId: 'ra-seed-1',
+    reviewerUserId: 'user-3',
+    response: 'ACKNOWLEDGED',
+    respondedAt: seededRespondedAt,
+    note: null,
+  };
+  reviewerResponsesSeq = Math.max(reviewerResponsesSeq, 1);
+  const seededAssignment = {
+    __typename: 'ReviewAssignment',
+    id: 'ra-seed-1',
+    reviewRequestId: 'rr-seed-1',
+    reviewerUserId: 'user-3',
+    assignedByUserId: 'admin-1',
+    assignedAt: seededAssignedAt,
+    reviewerResponse: seededResponse,
+  };
+  reviewAssignmentsStore = [seededAssignment, ...reviewAssignmentsStore];
+  const seededReviewRequest = {
+    __typename: 'ReviewRequest',
+    id: 'rr-seed-1',
+    claimId: 'claim-1',
+    requestedAt: seededRequestedAt,
+    source: 'COMPARISON',
+    note: 'Seeded coordination-only review activity record.',
+    requestedBy: seededRequestedBy,
+    reviewAssignments: [seededAssignment],
+  };
+  reviewRequestsStore = [seededReviewRequest, ...reviewRequestsStore];
 }
 
 function failContract(message: string): never {
@@ -305,11 +348,16 @@ function assertNoForbiddenRequestedFields(query: string, operationName?: string)
   if (/\bprobability\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: probability`);
   if (/\btruthScore\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: truthScore`);
 
+  // Review activity is a read-only surface. It must never be implemented as a mutation.
+  if (/^ReviewRequestsByClaim$/i.test(String(operationName ?? '')) && /\bmutation\b/i.test(query)) {
+    failContract(`Review activity must be query-only: ${operationName ?? '(missing operationName)'}`);
+  }
+
   // Reviewer coordination UI must not request claim lifecycle fields.
   // (Claim detail surfaces legitimately do; we scope this guard by operationName.)
   const op = String(operationName ?? '');
   const isReviewerCoordinationOp =
-    /^(ReviewQueue|MyReviewRequests|AssignReviewer|RespondToReviewAssignment)$/i.test(op) ||
+    /^(ReviewQueue|MyReviewRequests|ReviewRequestsByClaim|AssignReviewer|RespondToReviewAssignment)$/i.test(op) ||
     /review-?queue/i.test(op);
   if (isReviewerCoordinationOp) {
     const forbidden = ['reviewedAt', 'reviewedBy', 'reviewerNote', 'ClaimLifecycleState'];
@@ -1191,6 +1239,20 @@ export async function setupGraphQLMocks(route: Route) {
             : [],
         }));
         response = { status: 200, body: { data: { myReviewRequests: hydrated } } };
+        break;
+      }
+
+      case 'ReviewRequestsByClaim': {
+        ensureSeeded();
+        const claimId = varString(parsedBody.variables, 'claimId') ?? '';
+        const filtered = reviewRequestsStore.filter((rr) => (rr as { claimId?: string }).claimId === claimId);
+        const hydrated = filtered.map((rr) => ({
+          ...rr,
+          reviewAssignments: Array.isArray((rr as { reviewAssignments?: unknown }).reviewAssignments)
+            ? (rr as { reviewAssignments: unknown[] }).reviewAssignments
+            : [],
+        }));
+        response = { status: 200, body: { data: { reviewRequestsByClaim: hydrated } } };
         break;
       }
 

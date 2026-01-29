@@ -36,6 +36,7 @@ export { CLAIMS_BY_DOCUMENT_QUERY } from './queries/claimsByDocument.query';
 export { GET_CLAIMS_FOR_COMPARISON_QUERY } from './queries/getClaimsForComparison.query';
 export { REVIEW_QUEUE_QUERY } from './queries/reviewQueue.query';
 export { MY_REVIEW_REQUESTS_QUERY } from './queries/myReviewRequests.query';
+export { REVIEW_REQUESTS_BY_CLAIM_QUERY } from './queries/reviewRequestsByClaim.query';
 
 export { ADJUDICATE_CLAIM_MUTATION } from './mutations/adjudicateClaim.mutation';
 export { REQUEST_REVIEW_MUTATION } from './mutations/requestReview.mutation';

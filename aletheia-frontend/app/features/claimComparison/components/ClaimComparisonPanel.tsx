@@ -13,8 +13,10 @@ export function ClaimComparisonPanel(props: {
   onRequestReview: () => void;
   requestReviewDisabled?: boolean;
   modeCaption?: string;
+  reviewActivityCount?: number;
+  onOpenReviewActivity?: () => void;
 }) {
-  const { onRequestReview, requestReviewDisabled, modeCaption } = props;
+  const { onRequestReview, requestReviewDisabled, modeCaption, reviewActivityCount, onOpenReviewActivity } = props;
 
   return (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'baseline' }} sx={{ mb: 2 }}>
@@ -29,6 +31,18 @@ export function ClaimComparisonPanel(props: {
       </Box>
       <Box sx={{ flex: 1 }} />
       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+        <Button
+          onClick={onOpenReviewActivity}
+          disabled={!onOpenReviewActivity}
+          variant="outlined"
+          size="small"
+          aria-label={
+            typeof reviewActivityCount === 'number' ? `Review activity (${reviewActivityCount})` : 'Review activity'
+          }
+          sx={{ textTransform: 'none' }}
+        >
+          Review activity{typeof reviewActivityCount === 'number' ? ` (${reviewActivityCount})` : ''}
+        </Button>
         <Button
           onClick={onRequestReview}
           disabled={Boolean(requestReviewDisabled)}
