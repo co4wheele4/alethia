@@ -6,6 +6,15 @@ Accepted
 ## Date
 2026-01-27
 
+> ⚠️ **Superseded**
+>
+> This ADR is superseded by **ADR-014 — Supersession of ADR-012 and ADR-013 (Review Coordination Persistence)**.
+>
+> Status: **Superseded**
+>
+> This document is retained for historical context only and is no longer authoritative.
+> Its constraints MUST NOT be enforced against the current system.
+
 ## Context
 
 Aletheia enables users to inspect, compare, and adjudicate claims based on explicit evidence.
