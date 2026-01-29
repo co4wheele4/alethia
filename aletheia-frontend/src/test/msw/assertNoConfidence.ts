@@ -39,6 +39,13 @@ export function assertNoConfidence(value: unknown, path = 'root', seen = new Set
       );
     }
 
+    // Also forbid truthScore-like fields (same category of prohibited scoring signals).
+    if (key.includes('truthscore')) {
+      throw new Error(
+        `GraphQL contract violation: truthScore field is not allowed (found "${k}" at ${path}.${k})`
+      );
+    }
+
     assertNoConfidence(v, `${path}.${k}`, seen);
   }
 }

@@ -26,6 +26,12 @@ model User {
   documents      Document[]
   aiQueries      AiQuery[]
   reviewRequests ReviewRequest[]
+  /**
+   * Review assignment coordination artifacts (ADR-015).
+   * These links are coordination-only and do not imply authority or adjudication.
+   */
+  reviewAssignmentsReceived ReviewAssignment[] @relation("ReviewAssignmentReviewer")
+  reviewAssignmentsCreated  ReviewAssignment[] @relation("ReviewAssignmentAssignedBy")
 
   @@map("users")
 }
@@ -404,6 +410,14 @@ model ReviewRequest {
   // A request is always attributable to a concrete user.
   requestedBy User @relation(fields: [requestedByUserId], references: [id], onDelete: Cascade)
 
+  /**
+   * Reviewer assignments are coordination-only artifacts (ADR-015).
+   * Epistemic contract:
+   * - Assignments MUST NOT mutate claim lifecycle or truth semantics.
+   * - They exist only to coordinate attention.
+   */
+  reviewAssignments ReviewAssignment[]
+
   // Idempotent per (claimId, requestedByUserId): prevent duplicate rows.
   @@unique([claimId, requestedByUserId])
   @@index([claimId])
@@ -411,6 +425,34 @@ model ReviewRequest {
   @@index([requestedAt])
   @@index([source])
   @@map("review_requests")
+}
+
+////////////////////
+// REVIEW ASSIGNMENTS (COORDINATION ONLY; DOES NOT CHANGE CLAIM LIFECYCLE)
+////////////////////
+
+model ReviewAssignment {
+  id String @id @default(uuid()) @map("id")
+
+  reviewRequestId   String   @map("review_request_id")
+  reviewerUserId    String   @map("reviewer_user_id")
+  assignedByUserId  String   @map("assigned_by_user_id")
+  assignedAt        DateTime @default(now()) @map("assigned_at")
+
+  // Safety: delete assignments when the review request is deleted.
+  reviewRequest ReviewRequest @relation(fields: [reviewRequestId], references: [id], onDelete: Cascade)
+
+  // Attribution only; delete assignments if the referenced users are deleted.
+  reviewer   User @relation("ReviewAssignmentReviewer", fields: [reviewerUserId], references: [id], onDelete: Cascade)
+  assignedBy User @relation("ReviewAssignmentAssignedBy", fields: [assignedByUserId], references: [id], onDelete: Cascade)
+
+  // Idempotent per (reviewRequestId, reviewerUserId): prevent duplicate rows.
+  @@unique([reviewRequestId, reviewerUserId])
+  @@index([reviewRequestId])
+  @@index([reviewerUserId])
+  @@index([assignedByUserId])
+  @@index([assignedAt])
+  @@map("review_assignments")
 }
 
 model ClaimEvidence {

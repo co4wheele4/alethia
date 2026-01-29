@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { User } from './user.model';
+import { ReviewAssignment } from './review-assignment.model';
 
 export enum ReviewRequestSource {
   CLAIM_VIEW = 'CLAIM_VIEW',
@@ -36,4 +37,11 @@ export class ReviewRequest {
 
   @Field(() => String, { nullable: true })
   note?: string | null;
+
+  /**
+   * Reviewer assignments are coordination-only metadata (ADR-015).
+   * They do not change claim status, adjudication, or truth semantics.
+   */
+  @Field(() => [ReviewAssignment])
+  reviewAssignments!: ReviewAssignment[];
 }

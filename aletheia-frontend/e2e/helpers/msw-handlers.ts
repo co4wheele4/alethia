@@ -9,10 +9,27 @@
  */
 
 import { Route } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
 
 function base64UrlEncode(input: string): string {
   // Node supports base64url in recent versions, but keep it explicit for portability
   return Buffer.from(input).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function base64UrlDecode(input: string): string {
+  const padded = input.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(input.length / 4) * 4, '=');
+  return Buffer.from(padded, 'base64').toString('utf8');
+}
+
+function parseJwt(token: string): Record<string, unknown> | null {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    return JSON.parse(base64UrlDecode(parts[1])) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
 }
 
 function varString(vars: Record<string, unknown> | undefined, key: string): string | undefined {
@@ -49,6 +66,7 @@ let mentionsStore: Array<Record<string, unknown>> = [];
 let relationshipsStore: Array<Record<string, unknown>> = [];
 let claimsStore: Array<Record<string, unknown>> = [];
 let reviewRequestsStore: Array<Record<string, unknown>> = [];
+let reviewAssignmentsStore: Array<Record<string, unknown>> = [];
 
 function ensureSeeded() {
   if (documentsStore.length > 0) return;
@@ -232,10 +250,93 @@ function failContract(message: string): never {
   throw new Error(`[E2E contract] ${message}`);
 }
 
+let cachedSchemaMutationFields: Set<string> | null = null;
+
+function schemaGqlPathFromHere(): string {
+  // This file lives at: aletheia-frontend/e2e/helpers/msw-handlers.ts
+  // Authoritative schema is at repo root: src/schema.gql
+  const candidates = [
+    // helpers -> e2e -> aletheia-frontend -> aletheia
+    path.resolve(__dirname, '../../../src/schema.gql'),
+    // Historical / alternate execution roots (defensive)
+    path.resolve(__dirname, '../../../../src/schema.gql'),
+    path.resolve(process.cwd(), '../src/schema.gql'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return candidates[0]!;
+}
+
+function readSchemaMutationFields(): Set<string> {
+  if (cachedSchemaMutationFields) return cachedSchemaMutationFields;
+
+  const schemaPath = schemaGqlPathFromHere();
+  const text = fs.readFileSync(schemaPath, 'utf8');
+
+  const match = text.match(/type\s+Mutation\s*\{([\s\S]*?)\}\s*/m);
+  if (!match) failContract(`Unable to locate "type Mutation" in schema at ${schemaPath}`);
+
+  const block = match[1] ?? '';
+  const names = new Set<string>();
+  const re = /^\s*([_A-Za-z][_0-9A-Za-z]*)\s*\(/gm;
+  let m: RegExpExecArray | null = re.exec(block);
+  while (m) {
+    if (m[1]) names.add(m[1]);
+    m = re.exec(block);
+  }
+
+  cachedSchemaMutationFields = names;
+  return names;
+}
+
+function extractMutationFieldName(query: string): string | null {
+  // Minimal extraction: first selected field in the mutation selection set.
+  // Example:
+  //   mutation AssignReviewer(...) { assignReviewer(...) { ... } }
+  const m = query.match(/\bmutation\b[\s\S]*?\{\s*([_A-Za-z][_0-9A-Za-z]*)\b/);
+  return m?.[1] ?? null;
+}
+
 function assertNoForbiddenRequestedFields(query: string, operationName?: string) {
   // Confidence is forbidden by the authoritative schema snapshot.
   if (/\bconfidence\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: confidence`);
   if (/\bprobability\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: probability`);
+  if (/\btruthScore\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: truthScore`);
+
+  // Claim lifecycle mutations (truth-adjacent) must never be invoked from the mocked E2E surface.
+  const isMutation = /\bmutation\b/i.test(query);
+  if (isMutation) {
+    const mutationFieldName = extractMutationFieldName(query);
+    const schemaMutations = readSchemaMutationFields();
+    if (!mutationFieldName) {
+      failContract(`Mutation attempted without parseable field name in ${operationName ?? '(missing operationName)'}`);
+    }
+    if (mutationFieldName && !schemaMutations.has(mutationFieldName)) {
+      failContract(
+        `Mutation not declared in schema.gql attempted in ${operationName ?? '(missing operationName)'}: ${mutationFieldName}`,
+      );
+    }
+
+    if (
+      mutationFieldName === 'adjudicateClaim' ||
+      /\badjudicateClaim\b/i.test(query) ||
+      /adjudicate/i.test(String(operationName ?? '')) ||
+      /lifecycle/i.test(String(operationName ?? ''))
+    ) {
+      failContract(`Forbidden claim lifecycle mutation attempted in ${operationName ?? '(missing operationName)'}`);
+    }
+
+    // Extra belt-and-suspenders: any "claim*-mutation" surface is treated as lifecycle-adjacent,
+    // except explicit coordination-only surfaces.
+    if (
+      mutationFieldName &&
+      /\bclaim\b/i.test(mutationFieldName) &&
+      mutationFieldName !== 'requestReview'
+    ) {
+      failContract(`Forbidden claim lifecycle mutation attempted in ${operationName ?? '(missing operationName)'}`);
+    }
+  }
 }
 
 function buildDocumentSource(documentId: string, createdAt: string) {
@@ -372,6 +473,9 @@ function assertNoConfidence(value: unknown, path = 'root', seen = new Set<object
     if (key.includes('probability')) {
       throw new Error(`[E2E contract] Unexpected probability field "${k}" at ${path}.${k}`);
     }
+    if (key.includes('truthscore')) {
+      throw new Error(`[E2E contract] Unexpected truthScore field "${k}" at ${path}.${k}`);
+    }
     assertNoConfidence(v, `${path}.${k}`, seen);
   }
 }
@@ -452,7 +556,10 @@ export async function setupGraphQLMocks(route: Route) {
       case 'Login': {
         const email = varString(parsedBody.variables, 'email');
         const password = varString(parsedBody.variables, 'password');
-        if (email === 'test@example.com' && password === 'password123') {
+        if (
+          (email === 'test@example.com' && password === 'password123') ||
+          (email === 'admin@example.com' && password === 'password123')
+        ) {
           // Reset per-login to keep tests isolated/deterministic
           documentsStore = [];
           chunksStore = {};
@@ -462,13 +569,19 @@ export async function setupGraphQLMocks(route: Route) {
           entityDetailStore = {};
           claimsStore = [];
           reviewRequestsStore = [];
+          reviewAssignmentsStore = [];
           ensureSeeded();
 
+          const isAdmin = email === 'admin@example.com';
           response = {
             status: 200,
             body: {
               data: {
-                login: createMockJwt({ sub: 'user-1', email: 'test@example.com', role: 'USER' }),
+                login: createMockJwt({
+                  sub: isAdmin ? 'admin-1' : 'user-1',
+                  email,
+                  role: isAdmin ? 'ADMIN' : 'USER',
+                }),
               },
             },
           };
@@ -862,6 +975,12 @@ export async function setupGraphQLMocks(route: Route) {
           break;
         }
 
+        const token = authHeader.replace(/^Bearer\s+/i, '');
+        const payload = parseJwt(token);
+        const requestedById = typeof payload?.sub === 'string' ? payload.sub : 'user-1';
+        const requestedByEmail = typeof payload?.email === 'string' ? payload.email : 'test@example.com';
+        const requestedByName = requestedById === 'admin-1' ? 'Admin User' : 'Test User';
+
         const claimId = varString(parsedBody.variables, 'claimId') ?? '';
         const source = varString(parsedBody.variables, 'source') ?? '';
         const note = varString(parsedBody.variables, 'note');
@@ -874,7 +993,7 @@ export async function setupGraphQLMocks(route: Route) {
           break;
         }
 
-        const requestedBy = { __typename: 'User', id: 'user-1', email: 'test@example.com', name: 'Test User' };
+        const requestedBy = { __typename: 'User', id: requestedById, email: requestedByEmail, name: requestedByName };
         const dup = reviewRequestsStore.some(
           (rr) =>
             (rr as { claimId?: string; requestedBy?: { id?: string } }).claimId === claimId &&
@@ -897,15 +1016,87 @@ export async function setupGraphQLMocks(route: Route) {
           source,
           note: note ?? null,
           requestedBy,
+          reviewAssignments: [],
         };
         reviewRequestsStore = [created, ...reviewRequestsStore];
         response = { status: 200, body: { data: { requestReview: created } } };
         break;
       }
 
+      case 'AssignReviewer': {
+        ensureSeeded();
+        const authHeader = route.request().headers()['authorization'] ?? '';
+        if (!authHeader) {
+          response = { status: 200, body: { errors: [{ message: 'UNAUTHORIZED', extensions: { code: 'UNAUTHORIZED' } }] } };
+          break;
+        }
+
+        const token = authHeader.replace(/^Bearer\s+/i, '');
+        const payload = parseJwt(token);
+        const assignedByUserId = typeof payload?.sub === 'string' ? payload.sub : null;
+        const role = typeof payload?.role === 'string' ? payload.role : null;
+        if (!assignedByUserId || role !== 'ADMIN') {
+          response = { status: 200, body: { errors: [{ message: 'UNAUTHORIZED', extensions: { code: 'UNAUTHORIZED' } }] } };
+          break;
+        }
+
+        const reviewRequestId = varString(parsedBody.variables, 'reviewRequestId') ?? '';
+        const reviewerUserId = varString(parsedBody.variables, 'reviewerUserId') ?? '';
+
+        const rr = reviewRequestsStore.find((x) => (x as { id?: string }).id === reviewRequestId) as
+          | (Record<string, unknown> & { id: string; reviewAssignments?: unknown })
+          | undefined;
+        if (!rr) {
+          response = {
+            status: 200,
+            body: { errors: [{ message: 'REVIEW_REQUEST_NOT_FOUND', extensions: { code: 'REVIEW_REQUEST_NOT_FOUND' } }] },
+          };
+          break;
+        }
+
+        if (!reviewerUserId) {
+          response = {
+            status: 200,
+            body: { errors: [{ message: 'REVIEWER_NOT_ELIGIBLE', extensions: { code: 'REVIEWER_NOT_ELIGIBLE' } }] },
+          };
+          break;
+        }
+
+        const existingAssignments = Array.isArray(rr.reviewAssignments) ? rr.reviewAssignments : [];
+        if (existingAssignments.some((a) => (a as { reviewerUserId?: string }).reviewerUserId === reviewerUserId)) {
+          response = {
+            status: 200,
+            body: { errors: [{ message: 'DUPLICATE_ASSIGNMENT', extensions: { code: 'DUPLICATE_ASSIGNMENT' } }] },
+          };
+          break;
+        }
+
+        const createdAt = new Date().toISOString();
+        const created = {
+          __typename: 'ReviewAssignment',
+          id: `ra-${reviewAssignmentsStore.length + 1}`,
+          reviewRequestId,
+          reviewerUserId,
+          assignedByUserId,
+          assignedAt: createdAt,
+        };
+        reviewAssignmentsStore = [created, ...reviewAssignmentsStore];
+        rr.reviewAssignments = [created, ...existingAssignments];
+
+        response = { status: 200, body: { data: { assignReviewer: created } } };
+        break;
+      }
+
       case 'ReviewQueue': {
         ensureSeeded();
-        response = { status: 200, body: { data: { reviewQueue: reviewRequestsStore } } };
+        // Ensure schema-faithful shape: every ReviewRequest includes reviewAssignments.
+        const hydrated = reviewRequestsStore.map((rr) => ({
+          ...rr,
+          reviewAssignments: Array.isArray((rr as { reviewAssignments?: unknown }).reviewAssignments)
+            ? (rr as { reviewAssignments: unknown[] }).reviewAssignments
+            : [],
+        }));
+        response = { status: 200, body: { data: { reviewQueue: hydrated } } };
         break;
       }
 
@@ -915,7 +1106,13 @@ export async function setupGraphQLMocks(route: Route) {
         const mine = reviewRequestsStore.filter(
           (rr) => (rr as { requestedBy?: { id?: string } }).requestedBy?.id === requestedById
         );
-        response = { status: 200, body: { data: { myReviewRequests: mine } } };
+        const hydrated = mine.map((rr) => ({
+          ...rr,
+          reviewAssignments: Array.isArray((rr as { reviewAssignments?: unknown }).reviewAssignments)
+            ? (rr as { reviewAssignments: unknown[] }).reviewAssignments
+            : [],
+        }));
+        response = { status: 200, body: { data: { myReviewRequests: hydrated } } };
         break;
       }
 

@@ -21,6 +21,14 @@ export const REVIEW_REQUEST_FIELDS = gql`
       email
       name
     }
+    reviewAssignments {
+      __typename
+      id
+      reviewRequestId
+      reviewerUserId
+      assignedByUserId
+      assignedAt
+    }
   }
 `;
 

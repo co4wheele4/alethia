@@ -4,73 +4,108 @@
 Proposed
 
 ## Date
-2026-01-27
+2026-01-28
 
 ## Context
 
-Aletheia distinguishes **review coordination** from **truth adjudication**.
+Aletheia supports persisted **Review Requests** (ADR-012) as a coordination mechanism to surface claims that require human attention. Review requests are intentionally non-authoritative and do not change claim truth, lifecycle, or adjudication state.
 
-Review requests exist to surface claims requiring attention.
-Assignment of reviewers introduces authority, responsibility, and trust implications.
+As review volume grows, the system must support **assignment for coordination purposes** only:
+- To indicate who is *looking at* a request
+- To avoid duplicated effort
+- To provide auditability of attention
 
-Premature assignment risks:
-- Implicit endorsement
-- Authority leakage
-- Undocumented reviewer qualifications
+However, assignment must not be conflated with:
+- Authority
+- Responsibility
+- Adjudication
+- Truth validation
 
----
+This ADR formalizes **reviewer assignment as non-binding coordination metadata**.
 
 ## Decision
 
-Reviewer assignment MUST be an explicit, auditable action.
+The system SHALL support reviewer assignment as a **non-authoritative, non-truth-affecting construct**.
 
-It MUST NOT be inferred from:
-- Queue presence
-- Review request creation
-- Reviewer viewing a claim
+Reviewer assignment:
+- Links a `ReviewRequest` to a `User`
+- Does not imply acceptance, responsibility, or correctness
+- Does not mutate claim lifecycle, status, or confidence
+- Exists solely to coordinate attention
 
----
+## Semantics
 
-## Rules
+### What Assignment Means
 
-1. A ReviewRequest does NOT imply assignment.
-2. A reviewer is unassigned until explicitly assigned by:
-   - System policy
-   - Authorized coordinator
-3. Assignment MUST be persisted and reversible.
-4. Assignment MUST NOT change claim lifecycle.
+- “This reviewer has been assigned to look at this request.”
+- “Attention has been directed.”
 
----
+### What Assignment Does NOT Mean
+
+Assignment MUST NOT imply:
+- Claim acceptance or rejection
+- Reviewer endorsement
+- Reviewer obligation
+- Reviewer expertise
+- Claim correctness
+- Claim priority
+
+## Data Model (Conceptual)
+
+A `ReviewAssignment` references:
+- `reviewRequestId`
+- `reviewerUserId`
+- `assignedByUserId`
+- `assignedAt`
+
+Assignments are:
+- Explicit
+- Auditable
+- Reversible (future ADR)
+- Non-exclusive (future ADR may allow multiple)
+
+## Permissions
+
+- Assignment MAY be restricted by role (e.g., admin, coordinator)
+- Reviewers MAY see assignments without accepting them
+- Reviewers MAY ignore assignments without penalty
+
+## UI Requirements
+
+- Assignment UI MUST include explicit non-authority language:
+  “Assignment coordinates attention only. It does not change truth or claim status.”
+- Assigned reviewers MUST be visibly labeled as “Assigned (coordination only)”
+- No UI affordance may imply responsibility or obligation
 
 ## Non-Goals
 
-- Auto-assignment
+This ADR explicitly excludes:
+- Automatic assignment
+- Reviewer scoring or ranking
 - Expertise inference
-- Consensus modeling
+- SLA or deadlines
+- Escalation logic
+- Truth signaling
 
----
+## Testing Implications
 
-## UI Implications
-
-- Queues show “Unassigned”
-- Claim review page must state reviewer role explicitly
-- No adjudication buttons unless reviewer is assigned
-
----
+- Tests MUST assert that:
+  - Claim lifecycle does not change on assignment
+  - Adjudication mutations are not triggered
+  - Confidence fields are not queried
+- MSW guards MUST fail fast on violations
 
 ## Consequences
 
 ### Positive
-- Clear authority boundaries
-- Auditable review responsibility
-- Prevents silent trust elevation
+- Clear separation of coordination vs authority
+- Scalable review workflows
+- Strong epistemic safety guarantees
 
 ### Negative
-- Additional coordination steps
-- Slightly slower review throughput
+- Additional complexity without immediate adjudication benefit
+- Requires careful UI language discipline
 
----
+## Decision Outcome
 
-## Outcome
-
-Deferred until after ReviewRequest persistence is complete.
+Reviewer assignment is adopted as **coordination metadata only**, with explicit non-authority guarantees.

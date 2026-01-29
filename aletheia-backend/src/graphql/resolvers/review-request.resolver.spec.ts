@@ -11,12 +11,14 @@ describe('ReviewRequestResolver', () => {
   let claimFindFirst: jest.Mock;
   let reviewRequestFindMany: jest.Mock;
   let reviewRequestCreate: jest.Mock;
+  let reviewAssignmentFindMany: jest.Mock;
   let userLoad: jest.Mock;
 
   beforeEach(() => {
     claimFindFirst = jest.fn();
     reviewRequestFindMany = jest.fn();
     reviewRequestCreate = jest.fn();
+    reviewAssignmentFindMany = jest.fn();
     userLoad = jest.fn();
 
     prisma = {
@@ -24,6 +26,9 @@ describe('ReviewRequestResolver', () => {
       reviewRequest: {
         findMany: reviewRequestFindMany,
         create: reviewRequestCreate,
+      },
+      reviewAssignment: {
+        findMany: reviewAssignmentFindMany,
       },
     } as unknown as PrismaService;
 
@@ -180,5 +185,17 @@ describe('ReviewRequestResolver', () => {
     await expect(
       resolver.requestedBy({ id: 'rr1', requestedByUserId: 'missing' } as any),
     ).rejects.toThrow(/ReviewRequest\(rr1\).*missing User\(missing\)/i);
+  });
+
+  it('reviewAssignments returns assignments ordered by assignedAt desc then id desc', async () => {
+    reviewAssignmentFindMany.mockResolvedValue([{ id: 'ra1' }] as any);
+    const result = await resolver.reviewAssignments({ id: 'rr1' } as any);
+    expect(result).toEqual([{ id: 'ra1' }]);
+    expect(reviewAssignmentFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { reviewRequestId: 'rr1' },
+        orderBy: [{ assignedAt: 'desc' }, { id: 'desc' }],
+      }),
+    );
   });
 });

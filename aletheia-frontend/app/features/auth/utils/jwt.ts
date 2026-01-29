@@ -33,3 +33,18 @@ export function getUserIdFromToken(token: string | null): string | null {
   }
 }
 
+/**
+ * Extract the user role from a JWT token (payload `role`).
+ * Returns null if token is missing/invalid/not a JWT.
+ */
+export function getUserRoleFromToken(token: string | null): string | null {
+  if (!token) return null;
+  if (!isProbablyJwt(token)) return null;
+
+  try {
+    const payload = jwtDecode<JwtPayload>(token);
+    return payload.role ?? null;
+  } catch {
+    return null;
+  }
+}

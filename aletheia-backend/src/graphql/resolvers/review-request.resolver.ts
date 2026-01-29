@@ -17,6 +17,7 @@ import {
   ReviewRequest,
   ReviewRequestSource,
 } from '@models/review-request.model';
+import { ReviewAssignment } from '@models/review-assignment.model';
 import { User } from '@models/user.model';
 
 type GqlRequestContext = {
@@ -53,11 +54,13 @@ function failInvariant(message: string): never {
 const reviewRequestType = () => ReviewRequest;
 const reviewRequestListType = () => [ReviewRequest];
 const reviewRequestSourceType = () => ReviewRequestSource;
+const reviewAssignmentListType = () => [ReviewAssignment];
 const userType = () => User;
 const idType = () => ID;
 void reviewRequestType();
 void reviewRequestListType();
 void reviewRequestSourceType();
+void reviewAssignmentListType();
 void userType();
 void idType();
 
@@ -155,5 +158,16 @@ export class ReviewRequestResolver {
       );
     }
     return user;
+  }
+
+  @ResolveField(reviewAssignmentListType, {
+    description:
+      'Assigned reviewers (coordination-only; does not change truth or claim status).',
+  })
+  async reviewAssignments(@Parent() rr: ReviewRequest) {
+    return await this.prisma.reviewAssignment.findMany({
+      where: { reviewRequestId: rr.id },
+      orderBy: [{ assignedAt: 'desc' }, { id: 'desc' }],
+    });
   }
 }

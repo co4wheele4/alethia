@@ -7,6 +7,15 @@ export type ReviewRequestUser = {
   name?: string | null;
 };
 
+export type ReviewAssignment = {
+  __typename?: 'ReviewAssignment';
+  id: string;
+  reviewRequestId: string;
+  reviewerUserId: string;
+  assignedByUserId: string;
+  assignedAt: string;
+};
+
 /**
  * Persisted, coordination-only review request (read-only in the queue UI).
  *
@@ -23,5 +32,6 @@ export type ReviewRequest = {
   source: ReviewRequestSource;
   note?: string | null;
   requestedBy: ReviewRequestUser;
+  reviewAssignments: ReviewAssignment[];
 };
 

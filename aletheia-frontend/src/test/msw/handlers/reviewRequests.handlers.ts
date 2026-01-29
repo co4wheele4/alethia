@@ -4,6 +4,15 @@ import { assertNoConfidence } from '@/src/test/msw/assertNoConfidence';
 
 type ReviewRequestSource = 'CLAIM_VIEW' | 'COMPARISON';
 
+type ReviewAssignment = {
+  __typename: 'ReviewAssignment';
+  id: string;
+  reviewRequestId: string;
+  reviewerUserId: string;
+  assignedByUserId: string;
+  assignedAt: string;
+};
+
 type ReviewRequest = {
   __typename: 'ReviewRequest';
   id: string;
@@ -12,6 +21,7 @@ type ReviewRequest = {
   source: ReviewRequestSource;
   note: string | null;
   requestedBy: { __typename: 'User'; id: string; email: string; name: string | null };
+  reviewAssignments: ReviewAssignment[];
 };
 
 const requestedBy = {
@@ -32,6 +42,54 @@ export const reviewRequestHandlers = [
 
   graphql.query('MyReviewRequests', () => {
     const data = { myReviewRequests: store.filter((rr) => rr.requestedBy.id === requestedBy.id) };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
+  graphql.mutation('AssignReviewer', ({ variables, request }) => {
+    // MSW contract enforcement (not a security boundary).
+    const auth = request.headers.get('authorization');
+    if (!auth) {
+      return HttpResponse.json({ errors: [{ message: 'UNAUTHORIZED', extensions: { code: 'UNAUTHORIZED' } }] });
+    }
+
+    const v = (variables ?? {}) as { reviewRequestId?: string; reviewerUserId?: string };
+    const reviewRequestId = v.reviewRequestId ?? '';
+    const reviewerUserId = v.reviewerUserId ?? '';
+
+    const rr = store.find((x) => x.id === reviewRequestId) ?? null;
+    if (!rr) {
+      return HttpResponse.json({
+        errors: [{ message: 'REVIEW_REQUEST_NOT_FOUND', extensions: { code: 'REVIEW_REQUEST_NOT_FOUND' } }],
+      });
+    }
+
+    // Reviewer eligibility (minimal for MSW): ensure a non-empty reviewerUserId.
+    if (!reviewerUserId) {
+      return HttpResponse.json({
+        errors: [{ message: 'REVIEWER_NOT_ELIGIBLE', extensions: { code: 'REVIEWER_NOT_ELIGIBLE' } }],
+      });
+    }
+
+    if (rr.reviewAssignments.some((a) => a.reviewerUserId === reviewerUserId)) {
+      return HttpResponse.json({
+        errors: [{ message: 'DUPLICATE_ASSIGNMENT', extensions: { code: 'DUPLICATE_ASSIGNMENT' } }],
+      });
+    }
+
+    const created: ReviewAssignment = {
+      __typename: 'ReviewAssignment',
+      id: `ra_${rr.reviewAssignments.length + 1}`,
+      reviewRequestId: rr.id,
+      reviewerUserId,
+      // In MSW tests this is coordination metadata only; use the known fixture user id.
+      assignedByUserId: requestedBy.id,
+      assignedAt: new Date('2026-01-21T12:00:00.000Z').toISOString(),
+    };
+
+    rr.reviewAssignments = [created, ...rr.reviewAssignments];
+
+    const data = { assignReviewer: created };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });
   }),
@@ -61,6 +119,7 @@ export const reviewRequestHandlers = [
       source,
       note,
       requestedBy,
+      reviewAssignments: [],
     };
     store = [created, ...store];
 

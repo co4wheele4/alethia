@@ -14,3 +14,4 @@ export { ClaimResolver } from './claim.resolver';
 export { ClaimEvidenceResolver } from './claim-evidence.resolver';
 export { ClaimAdjudicationResolver } from './claim-adjudication.resolver';
 export { ReviewRequestResolver } from './review-request.resolver';
+export { ReviewAssignmentResolver } from './review-assignment.resolver';

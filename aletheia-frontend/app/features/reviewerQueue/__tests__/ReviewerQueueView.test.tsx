@@ -1,10 +1,27 @@
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 
 import { ReviewerQueueView } from '../index';
 
+vi.mock('../hooks/useAssignReviewer', () => ({
+  useAssignReviewer: () => ({
+    assignReviewer: vi.fn(async () => null),
+    loading: false,
+    error: null,
+    result: null,
+  }),
+}));
+
 describe('Review queue (persisted review requests)', () => {
   it('renders the required non-truth messaging', () => {
-    render(<ReviewerQueueView items={[]} />);
+    render(
+      <ReviewerQueueView
+        items={[]}
+        currentUserId={null}
+        currentUserRole={null}
+        onRefetch={async () => undefined}
+      />,
+    );
     expect(screen.getByText(/Review requests coordinate attention/i)).toBeInTheDocument();
   });
 
@@ -20,6 +37,7 @@ describe('Review queue (persisted review requests)', () => {
             source: 'COMPARISON',
             note: null,
             requestedBy: { __typename: 'User', id: 'u1', email: 'u1@example.com', name: 'User One' },
+            reviewAssignments: [],
           },
           {
             __typename: 'ReviewRequest',
@@ -29,8 +47,12 @@ describe('Review queue (persisted review requests)', () => {
             source: 'CLAIM_VIEW',
             note: 'please check offsets',
             requestedBy: { __typename: 'User', id: 'u1', email: 'u1@example.com', name: null },
+            reviewAssignments: [],
           },
         ]}
+        currentUserId={null}
+        currentUserRole={null}
+        onRefetch={async () => undefined}
       />
     );
 

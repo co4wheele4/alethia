@@ -14,6 +14,7 @@ import {
   REVIEW_QUEUE_QUERY,
   MY_REVIEW_REQUESTS_QUERY,
   REQUEST_REVIEW_MUTATION,
+  ASSIGN_REVIEWER_MUTATION,
 } from '@/src/graphql';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,7 @@ describe('GraphQL contract layer', () => {
     ['ReviewQueue', REVIEW_QUEUE_QUERY],
     ['MyReviewRequests', MY_REVIEW_REQUESTS_QUERY],
     ['RequestReview', REQUEST_REVIEW_MUTATION],
+    ['AssignReviewer', ASSIGN_REVIEWER_MUTATION],
   ])('%s validates against schema snapshot', (_, doc) => {
     const errors = validate(schema, doc);
     expect(errors).toEqual([]);

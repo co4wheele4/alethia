@@ -39,6 +39,7 @@ export { MY_REVIEW_REQUESTS_QUERY } from './queries/myReviewRequests.query';
 
 export { ADJUDICATE_CLAIM_MUTATION } from './mutations/adjudicateClaim.mutation';
 export { REQUEST_REVIEW_MUTATION } from './mutations/requestReview.mutation';
+export { ASSIGN_REVIEWER_MUTATION } from './mutations/assignReviewer.mutation';
 
 export { REVIEW_REQUEST_FIELDS } from './fragments/reviewRequest.fragment';
 

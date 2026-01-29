@@ -325,6 +325,11 @@ type Mutation {
   adjudicateClaim(claimId: ID!, decision: ClaimLifecycleState!, reviewerNote: String): Claim!
   askAI(query: String!, userId: String!): String!
   askAi(query: String!, userId: String!): AiQueryResult!
+
+  """
+  Assign a reviewer (coordination-only; does not change truth, claim status, or adjudication).
+  """
+  assignReviewer(reviewRequestId: ID!, reviewerUserId: ID!): ReviewAssignment!
   createChunk(chunkIndex: Int!, content: String!, documentId: String!): DocumentChunk!
   createDocument(title: String!, userId: String!): Document!
   createEmbedding(chunkId: String!, values: [Float!]!): Embedding!
@@ -418,12 +423,21 @@ enum RelationshipEvidenceKind {
   TEXT_SPAN
 }
 
+type ReviewAssignment {
+  assignedAt: DateTime!
+  assignedByUserId: ID!
+  id: ID!
+  reviewRequestId: ID!
+  reviewerUserId: ID!
+}
+
 type ReviewRequest {
   claimId: ID!
   id: ID!
   note: String
   requestedAt: DateTime!
   requestedBy: User!
+  reviewAssignments: [ReviewAssignment!]!
   source: ReviewRequestSource!
 }
 
