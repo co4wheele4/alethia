@@ -1,6 +1,7 @@
 import { PrismaService } from '@prisma/prisma.service';
 import { ClaimAdjudicationResolver } from './claim-adjudication.resolver';
 import { ClaimLifecycleState, ClaimStatus } from '@models/claim.model';
+import { GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 
 describe('ClaimAdjudicationResolver', () => {
   let resolver: ClaimAdjudicationResolver;
@@ -28,7 +29,7 @@ describe('ClaimAdjudicationResolver', () => {
         req: { user: {} },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'UNAUTHORIZED_REVIEWER' },
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED_REVIEWER },
     });
   });
 
@@ -45,7 +46,7 @@ describe('ClaimAdjudicationResolver', () => {
         } as any,
       ),
     ).rejects.toMatchObject({
-      extensions: { code: 'CLAIM_NOT_FOUND' },
+      extensions: { code: GQL_ERROR_CODES.CLAIM_NOT_FOUND },
     });
   });
 
@@ -133,7 +134,7 @@ describe('ClaimAdjudicationResolver', () => {
         req: { user: { sub: 'u1' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'INVALID_LIFECYCLE_TRANSITION' },
+      extensions: { code: GQL_ERROR_CODES.INVALID_LIFECYCLE_TRANSITION },
     });
   });
 
@@ -148,7 +149,7 @@ describe('ClaimAdjudicationResolver', () => {
         req: { user: { sub: 'u1' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'INVALID_LIFECYCLE_TRANSITION' },
+      extensions: { code: GQL_ERROR_CODES.INVALID_LIFECYCLE_TRANSITION },
     });
   });
 });

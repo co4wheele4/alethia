@@ -2,9 +2,9 @@ name: Tests
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, master, develop]
   push:
-    branches: [main, develop]
+    branches: [main, master, develop]
 
 jobs:
   unit-tests:
@@ -22,6 +22,9 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
+
+      - name: Check schema snapshot consistency
+        run: npm run schema:snapshots:check
       
       - name: Run unit tests with coverage
         run: npm run test:cov
@@ -66,6 +69,12 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
+
+      - name: Regenerate backend schema snapshot (must be clean)
+        run: |
+          npm run schema:generate --workspace=aletheia-backend
+          git diff --ignore-cr-at-eol --exit-code aletheia-backend/src/schema.gql
+          npm run schema:snapshots:check
       
       - name: Setup test database
         run: npm run test:e2e:setup

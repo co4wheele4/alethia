@@ -1,5 +1,7 @@
 import { PrismaService } from '@prisma/prisma.service';
 import { ReviewAssignmentResolver } from './review-assignment.resolver';
+import { GQL_ERROR_CODES } from '../errors/graphql-error-codes';
+import { ReviewerResponseType } from '@models/reviewer-response.model';
 
 describe('ReviewAssignmentResolver', () => {
   let resolver: ReviewAssignmentResolver;
@@ -9,12 +11,18 @@ describe('ReviewAssignmentResolver', () => {
   let reviewRequestFindUnique: jest.Mock;
   let claimFindFirst: jest.Mock;
   let reviewAssignmentCreate: jest.Mock;
+  let reviewAssignmentFindUnique: jest.Mock;
+  let reviewerResponseFindUnique: jest.Mock;
+  let reviewerResponseCreate: jest.Mock;
 
   beforeEach(() => {
     reviewRequestFindFirst = jest.fn();
     reviewRequestFindUnique = jest.fn();
     claimFindFirst = jest.fn();
     reviewAssignmentCreate = jest.fn();
+    reviewAssignmentFindUnique = jest.fn();
+    reviewerResponseFindUnique = jest.fn();
+    reviewerResponseCreate = jest.fn();
 
     prisma = {
       reviewRequest: {
@@ -26,6 +34,11 @@ describe('ReviewAssignmentResolver', () => {
       },
       reviewAssignment: {
         create: reviewAssignmentCreate,
+        findUnique: reviewAssignmentFindUnique,
+      },
+      reviewerResponse: {
+        findUnique: reviewerResponseFindUnique,
+        create: reviewerResponseCreate,
       },
     } as unknown as PrismaService;
 
@@ -36,7 +49,7 @@ describe('ReviewAssignmentResolver', () => {
     await expect(
       resolver.assignReviewer('rr1', 'u2', { req: { user: {} } } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'UNAUTHORIZED' },
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
     });
   });
 
@@ -46,7 +59,7 @@ describe('ReviewAssignmentResolver', () => {
         req: { user: { sub: 'u1', role: 'USER' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'UNAUTHORIZED' },
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
     });
   });
 
@@ -57,7 +70,7 @@ describe('ReviewAssignmentResolver', () => {
         req: { user: { sub: 'admin1', role: 'ADMIN' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'REVIEW_REQUEST_NOT_FOUND' },
+      extensions: { code: GQL_ERROR_CODES.REVIEW_REQUEST_NOT_FOUND },
     });
   });
 
@@ -70,7 +83,7 @@ describe('ReviewAssignmentResolver', () => {
         req: { user: { sub: 'admin1', role: 'ADMIN' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'REVIEWER_NOT_ELIGIBLE' },
+      extensions: { code: GQL_ERROR_CODES.REVIEWER_NOT_ELIGIBLE },
     });
   });
 
@@ -110,7 +123,7 @@ describe('ReviewAssignmentResolver', () => {
         req: { user: { sub: 'admin1', role: 'ADMIN' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'DUPLICATE_ASSIGNMENT' },
+      extensions: { code: GQL_ERROR_CODES.DUPLICATE_ASSIGNMENT },
     });
   });
 
@@ -125,7 +138,7 @@ describe('ReviewAssignmentResolver', () => {
         req: { user: { sub: 'admin1', role: 'ADMIN' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'REVIEW_REQUEST_NOT_FOUND' },
+      extensions: { code: GQL_ERROR_CODES.REVIEW_REQUEST_NOT_FOUND },
     });
   });
 
@@ -140,7 +153,7 @@ describe('ReviewAssignmentResolver', () => {
         req: { user: { sub: 'admin1', role: 'ADMIN' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'REVIEWER_NOT_ELIGIBLE' },
+      extensions: { code: GQL_ERROR_CODES.REVIEWER_NOT_ELIGIBLE },
     });
   });
 
@@ -155,5 +168,185 @@ describe('ReviewAssignmentResolver', () => {
         req: { user: { sub: 'admin1', role: 'ADMIN' } },
       } as any),
     ).rejects.toBe(err);
+  });
+
+  it('reviewerResponse resolves via compound key (reviewAssignmentId, reviewerUserId)', async () => {
+    reviewerResponseFindUnique.mockResolvedValue({ id: 'resp1' } as any);
+    const result = await resolver.reviewerResponse({
+      id: 'ra1',
+      reviewerUserId: 'u1',
+    } as any);
+    expect(result).toEqual({ id: 'resp1' });
+    expect(reviewerResponseFindUnique).toHaveBeenCalledWith({
+      where: {
+        reviewAssignmentId_reviewerUserId: {
+          reviewAssignmentId: 'ra1',
+          reviewerUserId: 'u1',
+        },
+      },
+    });
+  });
+
+  it('respondToReviewAssignment rejects unauthenticated access with UNAUTHORIZED', async () => {
+    await expect(
+      resolver.respondToReviewAssignment(
+        'ra1',
+        ReviewerResponseType.ACKNOWLEDGED,
+        undefined,
+        { req: { user: {} } } as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+  });
+
+  it('respondToReviewAssignment returns ASSIGNMENT_NOT_FOUND when assignment is missing', async () => {
+    reviewAssignmentFindUnique.mockResolvedValue(null);
+    await expect(
+      resolver.respondToReviewAssignment(
+        'missing',
+        ReviewerResponseType.ACKNOWLEDGED,
+        undefined,
+        { req: { user: { sub: 'u1' } } } as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.ASSIGNMENT_NOT_FOUND },
+    });
+  });
+
+  it('respondToReviewAssignment rejects NOT_ASSIGNED_REVIEWER when user is not the assignee', async () => {
+    reviewAssignmentFindUnique.mockResolvedValue({
+      id: 'ra1',
+      reviewerUserId: 'other',
+    });
+    await expect(
+      resolver.respondToReviewAssignment(
+        'ra1',
+        ReviewerResponseType.ACKNOWLEDGED,
+        undefined,
+        { req: { user: { id: 'u1' } } } as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.NOT_ASSIGNED_REVIEWER },
+    });
+  });
+
+  it('respondToReviewAssignment creates a response and preserves note nullability', async () => {
+    reviewAssignmentFindUnique.mockResolvedValue({
+      id: 'ra1',
+      reviewerUserId: 'u1',
+    });
+    reviewerResponseCreate.mockResolvedValue({ id: 'resp1' } as any);
+
+    const result = await resolver.respondToReviewAssignment(
+      'ra1',
+      ReviewerResponseType.DECLINED,
+      undefined,
+      { req: { user: { sub: 'u1' } } } as any,
+    );
+
+    expect(result).toEqual({ id: 'resp1' });
+    expect(reviewerResponseCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          reviewAssignmentId: 'ra1',
+          reviewerUserId: 'u1',
+          response: ReviewerResponseType.DECLINED,
+          note: null,
+        },
+      }),
+    );
+  });
+
+  it('respondToReviewAssignment rejects duplicates with DUPLICATE_RESPONSE', async () => {
+    reviewAssignmentFindUnique.mockResolvedValue({
+      id: 'ra1',
+      reviewerUserId: 'u1',
+    });
+    reviewerResponseCreate.mockRejectedValue({ code: 'P2002' });
+
+    await expect(
+      resolver.respondToReviewAssignment(
+        'ra1',
+        ReviewerResponseType.ACKNOWLEDGED,
+        undefined,
+        { req: { user: { sub: 'u1' } } } as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.DUPLICATE_RESPONSE },
+    });
+  });
+
+  it('respondToReviewAssignment rethrows unknown errors', async () => {
+    reviewAssignmentFindUnique.mockResolvedValue({
+      id: 'ra1',
+      reviewerUserId: 'u1',
+    });
+    const err = new Error('boom');
+    reviewerResponseCreate.mockRejectedValue(err);
+
+    await expect(
+      resolver.respondToReviewAssignment(
+        'ra1',
+        ReviewerResponseType.ACKNOWLEDGED,
+        undefined,
+        { req: { user: { sub: 'u1' } } } as any,
+      ),
+    ).rejects.toBe(err);
+  });
+
+  it('respondToReviewAssignment maps FK race (P2003) to ASSIGNMENT_NOT_FOUND when assignment is deleted', async () => {
+    reviewAssignmentFindUnique.mockResolvedValue({
+      id: 'ra1',
+      reviewerUserId: 'u1',
+    });
+    reviewerResponseCreate.mockRejectedValue({ code: 'P2003' });
+    // Re-check shows assignment no longer exists.
+    reviewAssignmentFindUnique
+      .mockResolvedValueOnce({
+        id: 'ra1',
+        reviewerUserId: 'u1',
+      })
+      .mockResolvedValueOnce(null);
+
+    await expect(
+      resolver.respondToReviewAssignment(
+        'ra1',
+        ReviewerResponseType.ACKNOWLEDGED,
+        undefined,
+        { req: { user: { sub: 'u1' } } } as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.ASSIGNMENT_NOT_FOUND },
+    });
+  });
+
+  it('respondToReviewAssignment maps FK race (P2003) to UNAUTHORIZED when assignment still exists', async () => {
+    reviewAssignmentFindUnique.mockResolvedValue({
+      id: 'ra1',
+      reviewerUserId: 'u1',
+    });
+    reviewerResponseCreate.mockRejectedValue({ code: 'P2003' });
+    // Re-check shows assignment still exists; contract maps to UNAUTHORIZED.
+    reviewAssignmentFindUnique
+      .mockResolvedValueOnce({
+        id: 'ra1',
+        reviewerUserId: 'u1',
+      })
+      .mockResolvedValueOnce({
+        id: 'ra1',
+        reviewerUserId: 'u1',
+      });
+
+    await expect(
+      resolver.respondToReviewAssignment(
+        'ra1',
+        ReviewerResponseType.ACKNOWLEDGED,
+        undefined,
+        { req: { user: { sub: 'u1' } } } as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
   });
 });

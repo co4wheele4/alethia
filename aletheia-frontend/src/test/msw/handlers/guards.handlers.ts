@@ -81,6 +81,12 @@ function assertNoTruthScoreRequested(query: string, operationName?: string | nul
   fail(`Forbidden field requested in GraphQL operation ${operationName ?? '(missing operationName)'}: truthScore`);
 }
 
+function deriveOperationName(query: string, operationName?: string | null): string | null {
+  if (typeof operationName === 'string' && operationName.trim() !== '') return operationName;
+  const m = query.match(/\b(?:query|mutation)\s+([_A-Za-z][_0-9A-Za-z]*)\b/);
+  return m?.[1] ?? null;
+}
+
 function assertReviewActivityIsQueryOnly(query: string, operationName?: string | null) {
   const op = String(operationName ?? '');
   if (!/^ReviewRequestsByClaim$/i.test(op)) return;
@@ -179,7 +185,9 @@ export const guardHandlers = [
 
     for (const body of bodies) {
       const query = typeof body?.query === 'string' ? body.query : '';
-      const operationName = typeof body?.operationName === 'string' ? body.operationName : null;
+      const explicitOperationName =
+        typeof body?.operationName === 'string' ? body.operationName : null;
+      const operationName = deriveOperationName(query, explicitOperationName);
       if (!query) continue;
       assertReviewActivityIsQueryOnly(query, operationName);
       assertNoConfidenceRequested(query, operationName);

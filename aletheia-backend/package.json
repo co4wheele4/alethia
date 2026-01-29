@@ -9,6 +9,7 @@
   "scripts": {
     "build": "nest build",
     "ci": "npm run lint && npx prisma validate && npm run test && npm run test:e2e",
+    "schema:generate": "node -r ts-node/register -r tsconfig-paths/register scripts/generate-schema.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "postinstall": "prisma generate",
     "seed": "ts-node prisma/seed.ts",

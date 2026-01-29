@@ -9,7 +9,6 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
-import { GraphQLError } from 'graphql';
 import { PrismaService } from '@prisma/prisma.service';
 import { OptionalJwtAuthGuard } from '@auth/guards/optional-jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
@@ -19,6 +18,7 @@ import {
 } from '@models/review-request.model';
 import { ReviewAssignment } from '@models/review-assignment.model';
 import { User } from '@models/user.model';
+import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 
 type GqlRequestContext = {
   req?: {
@@ -28,15 +28,6 @@ type GqlRequestContext = {
     };
   };
 };
-
-type ReviewRequestErrorCode =
-  | 'UNAUTHORIZED'
-  | 'CLAIM_NOT_FOUND'
-  | 'DUPLICATE_REVIEW_REQUEST';
-
-function contractError(code: ReviewRequestErrorCode): GraphQLError {
-  return new GraphQLError(code, { extensions: { code } });
-}
 
 function getAuthUserId(ctx?: GqlRequestContext): string | undefined {
   return ctx?.req?.user?.sub ?? ctx?.req?.user?.id;
@@ -79,7 +70,7 @@ export class ReviewRequestResolver {
   @UseGuards(OptionalJwtAuthGuard)
   async myReviewRequests(@Context() ctx?: GqlRequestContext) {
     const userId = getAuthUserId(ctx);
-    if (!userId) throw contractError('UNAUTHORIZED');
+    if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
 
     return await this.prisma.reviewRequest.findMany({
       where: { requestedByUserId: userId },
@@ -94,7 +85,7 @@ export class ReviewRequestResolver {
   @UseGuards(OptionalJwtAuthGuard)
   async reviewQueue(@Context() ctx?: GqlRequestContext) {
     const userId = getAuthUserId(ctx);
-    if (!userId) throw contractError('UNAUTHORIZED');
+    if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
 
     // Workspace scoping: only requests for claims visible via evidence -> document.userId.
     return await this.prisma.reviewRequest.findMany({
@@ -115,7 +106,7 @@ export class ReviewRequestResolver {
     @Context() ctx?: GqlRequestContext,
   ) {
     const userId = getAuthUserId(ctx);
-    if (!userId) throw contractError('UNAUTHORIZED');
+    if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
 
     // Claim must exist and be visible in the current workspace.
     const existingClaim = await this.prisma.claim.findFirst({
@@ -125,7 +116,7 @@ export class ReviewRequestResolver {
       },
       select: { id: true },
     });
-    if (!existingClaim) throw contractError('CLAIM_NOT_FOUND');
+    if (!existingClaim) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
 
     return await this.prisma.reviewRequest.findMany({
       where: { claimId: existingClaim.id },
@@ -146,7 +137,7 @@ export class ReviewRequestResolver {
     @Context() ctx?: GqlRequestContext,
   ) {
     const userId = getAuthUserId(ctx);
-    if (!userId) throw contractError('UNAUTHORIZED');
+    if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
 
     // Claim must exist and be visible in the current workspace.
     const existingClaim = await this.prisma.claim.findFirst({
@@ -156,7 +147,7 @@ export class ReviewRequestResolver {
       },
       select: { id: true },
     });
-    if (!existingClaim) throw contractError('CLAIM_NOT_FOUND');
+    if (!existingClaim) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
 
     try {
       return await this.prisma.reviewRequest.create({
@@ -169,8 +160,10 @@ export class ReviewRequestResolver {
       });
     } catch (err: unknown) {
       const code = (err as { code?: unknown })?.code;
-      if (code === 'P2002') throw contractError('DUPLICATE_REVIEW_REQUEST');
-      if (code === 'P2003') throw contractError('CLAIM_NOT_FOUND');
+      if (code === 'P2002')
+        throw contractError(GQL_ERROR_CODES.DUPLICATE_REVIEW_REQUEST);
+      if (code === 'P2003')
+        throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
       throw err;
     }
   }

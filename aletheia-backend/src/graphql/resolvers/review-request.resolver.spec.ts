@@ -2,6 +2,7 @@ import { PrismaService } from '@prisma/prisma.service';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 import { ReviewRequestResolver } from './review-request.resolver';
 import { ReviewRequestSource } from '@models/review-request.model';
+import { GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 
 describe('ReviewRequestResolver', () => {
   let resolver: ReviewRequestResolver;
@@ -43,7 +44,7 @@ describe('ReviewRequestResolver', () => {
     await expect(
       resolver.myReviewRequests({ req: { user: {} } } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'UNAUTHORIZED' },
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
     });
   });
 
@@ -64,7 +65,7 @@ describe('ReviewRequestResolver', () => {
     await expect(
       resolver.reviewQueue({ req: { user: {} } } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'UNAUTHORIZED' },
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
     });
   });
 
@@ -83,13 +84,58 @@ describe('ReviewRequestResolver', () => {
     );
   });
 
+  it('reviewRequestsByClaim rejects unauthenticated access with UNAUTHORIZED', async () => {
+    await expect(
+      resolver.reviewRequestsByClaim('c1', { req: { user: {} } } as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+  });
+
+  it('reviewRequestsByClaim returns CLAIM_NOT_FOUND when claim is missing (or not visible)', async () => {
+    claimFindFirst.mockResolvedValue(null);
+    await expect(
+      resolver.reviewRequestsByClaim('missing', {
+        req: { user: { sub: 'u1' } },
+      } as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.CLAIM_NOT_FOUND },
+    });
+  });
+
+  it('reviewRequestsByClaim queries by claimId after workspace-scoped existence check', async () => {
+    claimFindFirst.mockResolvedValue({ id: 'c1' });
+    reviewRequestFindMany.mockResolvedValue([{ id: 'rr1' }] as any);
+
+    const result = await resolver.reviewRequestsByClaim('c1', {
+      req: { user: { sub: 'u1' } },
+    } as any);
+
+    expect(result).toEqual([{ id: 'rr1' }]);
+    expect(claimFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: 'c1',
+          evidence: { some: { document: { userId: 'u1' } } },
+        },
+        select: { id: true },
+      }),
+    );
+    expect(reviewRequestFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { claimId: 'c1' },
+        orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
+      }),
+    );
+  });
+
   it('requestReview rejects unauthenticated access with UNAUTHORIZED', async () => {
     await expect(
       resolver.requestReview('c1', ReviewRequestSource.CLAIM_VIEW, undefined, {
         req: { user: {} },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'UNAUTHORIZED' },
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
     });
   });
 
@@ -103,7 +149,7 @@ describe('ReviewRequestResolver', () => {
         { req: { user: { sub: 'u1' } } } as any,
       ),
     ).rejects.toMatchObject({
-      extensions: { code: 'CLAIM_NOT_FOUND' },
+      extensions: { code: GQL_ERROR_CODES.CLAIM_NOT_FOUND },
     });
   });
 
@@ -140,7 +186,7 @@ describe('ReviewRequestResolver', () => {
         req: { user: { id: 'u1' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'DUPLICATE_REVIEW_REQUEST' },
+      extensions: { code: GQL_ERROR_CODES.DUPLICATE_REVIEW_REQUEST },
     });
   });
 
@@ -153,7 +199,7 @@ describe('ReviewRequestResolver', () => {
         req: { user: { sub: 'u1' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: 'CLAIM_NOT_FOUND' },
+      extensions: { code: GQL_ERROR_CODES.CLAIM_NOT_FOUND },
     });
   });
 

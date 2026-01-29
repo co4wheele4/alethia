@@ -1,9 +1,9 @@
 import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
-import { GraphQLError } from 'graphql';
 import { PrismaService } from '@prisma/prisma.service';
 import { Claim, ClaimLifecycleState, ClaimStatus } from '@models/claim.model';
 import { OptionalJwtAuthGuard } from '@auth/guards/optional-jwt-auth.guard';
+import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 
 type GqlRequestContext = {
   req?: {
@@ -13,15 +13,6 @@ type GqlRequestContext = {
     };
   };
 };
-
-type AdjudicationErrorCode =
-  | 'CLAIM_NOT_FOUND'
-  | 'INVALID_LIFECYCLE_TRANSITION'
-  | 'UNAUTHORIZED_REVIEWER';
-
-function contractError(code: AdjudicationErrorCode): GraphQLError {
-  return new GraphQLError(code, { extensions: { code } });
-}
 
 function getAuthUserId(ctx?: GqlRequestContext): string | undefined {
   return ctx?.req?.user?.sub ?? ctx?.req?.user?.id;
@@ -76,7 +67,7 @@ export class ClaimAdjudicationResolver {
     @Context() ctx?: GqlRequestContext,
   ) {
     const reviewerId = getAuthUserId(ctx);
-    if (!reviewerId) throw contractError('UNAUTHORIZED_REVIEWER');
+    if (!reviewerId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED_REVIEWER);
 
     // Fetch claim scoped to reviewer workspace (evidence -> document.userId).
     const existing = await this.prisma.claim.findFirst({
@@ -87,11 +78,11 @@ export class ClaimAdjudicationResolver {
       select: { id: true, status: true },
     });
 
-    if (!existing) throw contractError('CLAIM_NOT_FOUND');
+    if (!existing) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
 
     const currentStatus = existing.status as ClaimStatus;
     if (!isAllowedTransition(currentStatus, decision)) {
-      throw contractError('INVALID_LIFECYCLE_TRANSITION');
+      throw contractError(GQL_ERROR_CODES.INVALID_LIFECYCLE_TRANSITION);
     }
 
     const now = new Date();

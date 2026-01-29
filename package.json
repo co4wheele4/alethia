@@ -49,7 +49,9 @@
     "clean": "npm run clean --workspaces --if-present && rimraf node_modules",
     "clean:all": "rimraf node_modules && rimraf aletheia-backend/node_modules && rimraf aletheia-frontend/node_modules && rimraf aletheia-backend/dist && rimraf aletheia-frontend/.next",
     "seed": "npm run seed --workspace=aletheia-backend",
-    "kill": "node scripts/kill.js"
+    "kill": "node scripts/kill.js",
+    "schema:snapshots:check": "node scripts/check-schema-snapshots.cjs",
+    "schema:check": "npm run schema:snapshots:check"
   },
   "devDependencies": {
     "@nestjs/common": "^11.1.11",

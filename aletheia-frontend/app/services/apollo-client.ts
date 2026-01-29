@@ -132,9 +132,13 @@ export function createApolloClient(): ApolloClient {
     defaultOptions: {
       watchQuery: {
         errorPolicy: 'all',
+        // Explicit default (Apollo default) to avoid implicit correctness assumptions.
+        fetchPolicy: 'cache-first',
       },
       query: {
         errorPolicy: 'all',
+        // Explicit default (Apollo default) to avoid implicit correctness assumptions.
+        fetchPolicy: 'cache-first',
       },
       mutate: {
         errorPolicy: 'all',

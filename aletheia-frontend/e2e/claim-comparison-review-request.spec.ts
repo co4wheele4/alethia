@@ -12,7 +12,7 @@ async function login(page: Page) {
 
 function withMutationAudit(
   routeHandler: (route: Route) => Promise<void>,
-  onMutation: (details: { operationName?: string }) => void,
+  onMutation: (details: { operationName?: string; query?: string }) => void,
 ) {
   return async (route: Route) => {
     const url = route.request().url();
@@ -27,7 +27,7 @@ function withMutationAudit(
     const parsed: { operationName?: string; query?: string } = body ? JSON.parse(body) : {};
     const query = typeof parsed.query === 'string' ? parsed.query : '';
     const isMutation = /\bmutation\b/.test(query);
-    if (isMutation) onMutation({ operationName: parsed.operationName });
+    if (isMutation) onMutation({ operationName: parsed.operationName, query });
 
     await routeHandler(route);
   };
@@ -40,8 +40,11 @@ test.describe('Claims: comparison → request review (non-mutating)', () => {
     const mutations: string[] = [];
     await page.route(
       '**/graphql',
-      withMutationAudit(setupGraphQLMocks, ({ operationName }) => {
+      withMutationAudit(setupGraphQLMocks, ({ operationName, query }) => {
         mutations.push(String(operationName ?? '(missing operationName)'));
+        if (/\badjudicateClaim\b/i.test(String(query ?? ''))) {
+          throw new Error('[E2E] adjudicateClaim must never be invoked from review request coordination surfaces');
+        }
       })
     );
 
