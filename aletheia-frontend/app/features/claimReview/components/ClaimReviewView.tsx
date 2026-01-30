@@ -27,6 +27,8 @@ function adjudicationErrorMessage(code: string) {
       return 'You must be signed in to review claims.';
     case 'CLAIM_NOT_FOUND':
       return 'This claim no longer exists or is unavailable.';
+    case 'CLAIM_NOT_EVIDENCE_CLOSED':
+      return 'This claim is not evidence-closed; adjudication is blocked.';
     case 'INVALID_LIFECYCLE_TRANSITION':
       return 'This claim can no longer be modified.';
     case 'UNEXPECTED_ERROR_CODE':
@@ -44,6 +46,8 @@ function requestReviewErrorMessage(code: string) {
       return 'You must be signed in to request review.';
     case 'CLAIM_NOT_FOUND':
       return 'This claim no longer exists or is unavailable.';
+    case 'CLAIM_NOT_EVIDENCE_CLOSED':
+      return 'This claim is not evidence-closed; review requests are blocked.';
     case 'DUPLICATE_REVIEW_REQUEST':
       return 'You already requested review for this claim.';
     case 'UNEXPECTED_ERROR_CODE':
@@ -85,6 +89,25 @@ export function ClaimReviewView(props: { claimId: string }) {
     return null;
   }, [claim, contractError, evidenceCount]);
 
+  const canEnterWorkflows = useMemo(() => {
+    // ADR-018: workflow eligibility requires explicit, resolvable evidence.
+    // Fail closed: if evidence is still loading or errored, do not surface workflow affordances.
+    if (!claim) return false;
+    if (claimsLoading || Boolean(claimsError)) return false;
+    if (evidenceLoading || Boolean(evidenceError)) return false;
+    if (contractError) return false;
+    return evidenceCount > 0;
+  }, [claim, claimsError, claimsLoading, contractError, evidenceCount, evidenceError, evidenceLoading]);
+
+  const nonAuthoritativeLabel = useMemo(() => {
+    if (!claim) return null;
+    if (claimsLoading || evidenceLoading) return null;
+    if (contractError) return 'Non-authoritative (ADR-018): no resolvable evidence; comparison/review/adjudication are ineligible.';
+    if (evidenceError) return 'Non-authoritative (ADR-018): evidence could not be loaded; workflow actions are unavailable.';
+    if (evidenceCount === 0) return 'Non-authoritative (ADR-018): no evidence resolved; comparison/review/adjudication are ineligible.';
+    return null;
+  }, [claim, claimsLoading, contractError, evidenceCount, evidenceError, evidenceLoading]);
+
   const noteValue = note.trim() ? note.trim() : null;
 
   return (
@@ -121,7 +144,7 @@ export function ClaimReviewView(props: { claimId: string }) {
 
           {!claimsLoading && !claimsError && !claim ? (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Claim not found: {claimId}
+              Claim not found in the schema-backed dataset: {claimId}. Workflow surfaces require evidence-closed claims (ADR-018).
             </Alert>
           ) : null}
 
@@ -135,29 +158,37 @@ export function ClaimReviewView(props: { claimId: string }) {
                 {claim.text}
               </Typography>
 
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  sx={{ textTransform: 'none' }}
-                  disabled={requestReview.loading}
-                  onClick={async () => {
-                    try {
-                      await requestReview.requestReview({
-                        claimId,
-                        source: 'CLAIM_VIEW',
-                        note: null,
-                      });
-                      router.push('/review-queue');
-                    } catch {
-                      // error is rendered below via requestReview.error
-                    }
-                  }}
-                  startIcon={requestReview.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
-                >
-                  Request review
-                </Button>
-              </Stack>
+              {nonAuthoritativeLabel ? (
+                <Alert severity="warning" sx={{ mt: 1 }}>
+                  {nonAuthoritativeLabel}
+                </Alert>
+              ) : null}
+
+              {canEnterWorkflows ? (
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ textTransform: 'none' }}
+                    disabled={requestReview.loading}
+                    onClick={async () => {
+                      try {
+                        await requestReview.requestReview({
+                          claimId,
+                          source: 'CLAIM_VIEW',
+                          note: null,
+                        });
+                        router.push('/review-queue');
+                      } catch {
+                        // error is rendered below via requestReview.error
+                      }
+                    }}
+                    startIcon={requestReview.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
+                  >
+                    Request review
+                  </Button>
+                </Stack>
+              ) : null}
 
               {requestReview.error ? (
                 <Alert severity="error" sx={{ mt: 1 }}>
@@ -200,32 +231,34 @@ export function ClaimReviewView(props: { claimId: string }) {
                 </Alert>
               ) : null}
 
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
-                <Button
-                  variant="contained"
-                  disabled={Boolean(actionsBlockedReason) || adjudication.loading || isTerminal || !canTransition('ACCEPTED')}
-                  onClick={() => requestTransition('ACCEPTED', noteValue)}
-                  startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
-                >
-                  Accept claim
-                </Button>
-                <Button
-                  variant="contained"
-                  color="error"
-                  disabled={Boolean(actionsBlockedReason) || adjudication.loading || isTerminal || !canTransition('REJECTED')}
-                  onClick={() => requestTransition('REJECTED', noteValue)}
-                  startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
-                >
-                  Reject claim
-                </Button>
-                <Button
-                  variant="outlined"
-                  disabled={Boolean(actionsBlockedReason) || adjudication.loading || isTerminal || !canTransition('REVIEWED')}
-                  onClick={() => requestTransition('REVIEWED', noteValue)}
-                >
-                  Mark reviewed
-                </Button>
-              </Stack>
+              {canEnterWorkflows ? (
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
+                  <Button
+                    variant="contained"
+                    disabled={adjudication.loading || isTerminal || !canTransition('ACCEPTED')}
+                    onClick={() => requestTransition('ACCEPTED', noteValue)}
+                    startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
+                  >
+                    Accept claim
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    disabled={adjudication.loading || isTerminal || !canTransition('REJECTED')}
+                    onClick={() => requestTransition('REJECTED', noteValue)}
+                    startIcon={adjudication.loading ? <LadyJusticeProgressIndicator size={18} /> : undefined}
+                  >
+                    Reject claim
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    disabled={adjudication.loading || isTerminal || !canTransition('REVIEWED')}
+                    onClick={() => requestTransition('REVIEWED', noteValue)}
+                  >
+                    Mark reviewed
+                  </Button>
+                </Stack>
+              ) : null}
 
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
                 Lifecycle transitions are schema-enforced. Allowed next: {allowedNext.length ? allowedNext.join(', ') : '(none)'}
@@ -234,17 +267,19 @@ export function ClaimReviewView(props: { claimId: string }) {
                 Note: mutation input uses <code>REVIEW</code> to transition to persisted <code>REVIEWED</code>.
               </Typography>
 
-              <TextField
-                label="Reviewer note (optional)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                size="small"
-                fullWidth
-                multiline
-                minRows={3}
-                sx={{ mt: 2 }}
-                helperText="Plain text only. Notes are persisted with the adjudication action."
-              />
+              {canEnterWorkflows ? (
+                <TextField
+                  label="Reviewer note (optional)"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  size="small"
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  sx={{ mt: 2 }}
+                  helperText="Plain text only. Notes are persisted with the adjudication action."
+                />
+              ) : null}
             </>
           ) : null}
         </ContentSurface>

@@ -334,7 +334,8 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
   if (!base) {
     return (
       <Alert severity="warning">
-        The base claim is not available. Return to <Link href="/claims">Claims</Link> and open comparison again.
+        The base claim is not available in the schema-backed dataset. Comparison requires evidence-closed claims (ADR-018). Return to{' '}
+        <Link href="/claims">Claims</Link> and open comparison again.
       </Alert>
     );
   }

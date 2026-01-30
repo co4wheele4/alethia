@@ -10,6 +10,7 @@ describe('ReviewRequestResolver', () => {
   let dataLoaders: jest.Mocked<DataLoaderService>;
 
   let claimFindFirst: jest.Mock;
+  let claimEvidenceFindFirst: jest.Mock;
   let reviewRequestFindMany: jest.Mock;
   let reviewRequestCreate: jest.Mock;
   let reviewAssignmentFindMany: jest.Mock;
@@ -17,6 +18,7 @@ describe('ReviewRequestResolver', () => {
 
   beforeEach(() => {
     claimFindFirst = jest.fn();
+    claimEvidenceFindFirst = jest.fn();
     reviewRequestFindMany = jest.fn();
     reviewRequestCreate = jest.fn();
     reviewAssignmentFindMany = jest.fn();
@@ -24,6 +26,7 @@ describe('ReviewRequestResolver', () => {
 
     prisma = {
       claim: { findFirst: claimFindFirst },
+      claimEvidence: { findFirst: claimEvidenceFindFirst },
       reviewRequest: {
         findMany: reviewRequestFindMany,
         create: reviewRequestCreate,
@@ -78,7 +81,17 @@ describe('ReviewRequestResolver', () => {
     expect(reviewRequestFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          claim: { evidence: { some: { document: { userId: 'u1' } } } },
+          claim: {
+            evidence: {
+              some: {
+                document: { userId: 'u1' },
+                OR: [
+                  { mentionLinks: { some: {} } },
+                  { relationshipLinks: { some: {} } },
+                ],
+              },
+            },
+          },
         },
       }),
     );
@@ -105,6 +118,7 @@ describe('ReviewRequestResolver', () => {
 
   it('reviewRequestsByClaim queries by claimId after workspace-scoped existence check', async () => {
     claimFindFirst.mockResolvedValue({ id: 'c1' });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
     reviewRequestFindMany.mockResolvedValue([{ id: 'rr1' }] as any);
 
     const result = await resolver.reviewRequestsByClaim('c1', {
@@ -121,12 +135,33 @@ describe('ReviewRequestResolver', () => {
         select: { id: true },
       }),
     );
+    expect(claimEvidenceFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          claimId: 'c1',
+          document: { userId: 'u1' },
+          OR: [{ mentionLinks: { some: {} } }, { relationshipLinks: { some: {} } }],
+        },
+        select: { id: true },
+      }),
+    );
     expect(reviewRequestFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { claimId: 'c1' },
         orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
       }),
     );
+  });
+
+  it('reviewRequestsByClaim rejects non-evidence-closed claims with CLAIM_NOT_EVIDENCE_CLOSED', async () => {
+    claimFindFirst.mockResolvedValue({ id: 'c1' });
+    claimEvidenceFindFirst.mockResolvedValue(null);
+
+    await expect(
+      resolver.reviewRequestsByClaim('c1', { req: { user: { sub: 'u1' } } } as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED },
+    });
   });
 
   it('requestReview rejects unauthenticated access with UNAUTHORIZED', async () => {
@@ -155,6 +190,7 @@ describe('ReviewRequestResolver', () => {
 
   it('requestReview creates a review request and preserves note nullability', async () => {
     claimFindFirst.mockResolvedValue({ id: 'c1' });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
     reviewRequestCreate.mockResolvedValue({ id: 'rr1', claimId: 'c1' } as any);
 
     const result = await resolver.requestReview(
@@ -179,6 +215,7 @@ describe('ReviewRequestResolver', () => {
 
   it('requestReview rejects duplicates with DUPLICATE_REVIEW_REQUEST', async () => {
     claimFindFirst.mockResolvedValue({ id: 'c1' });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
     reviewRequestCreate.mockRejectedValue({ code: 'P2002' });
 
     await expect(
@@ -192,6 +229,7 @@ describe('ReviewRequestResolver', () => {
 
   it('requestReview maps FK race (P2003) to CLAIM_NOT_FOUND', async () => {
     claimFindFirst.mockResolvedValue({ id: 'c1' });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
     reviewRequestCreate.mockRejectedValue({ code: 'P2003' });
 
     await expect(
@@ -205,6 +243,7 @@ describe('ReviewRequestResolver', () => {
 
   it('requestReview rethrows unknown errors', async () => {
     claimFindFirst.mockResolvedValue({ id: 'c1' });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
     const err = new Error('boom');
     reviewRequestCreate.mockRejectedValue(err);
 
@@ -213,6 +252,19 @@ describe('ReviewRequestResolver', () => {
         req: { user: { sub: 'u1' } },
       } as any),
     ).rejects.toBe(err);
+  });
+
+  it('requestReview rejects non-evidence-closed claims with CLAIM_NOT_EVIDENCE_CLOSED', async () => {
+    claimFindFirst.mockResolvedValue({ id: 'c1' });
+    claimEvidenceFindFirst.mockResolvedValue(null);
+
+    await expect(
+      resolver.requestReview('c1', ReviewRequestSource.CLAIM_VIEW, undefined, {
+        req: { user: { sub: 'u1' } },
+      } as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED },
+    });
   });
 
   it('requestedBy resolves via DataLoader', async () => {

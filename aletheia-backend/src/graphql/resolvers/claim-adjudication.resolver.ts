@@ -80,6 +80,19 @@ export class ClaimAdjudicationResolver {
 
     if (!existing) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
 
+    // ADR-018: evidence closure is binary and explicit. A claim is adjudication-ineligible unless it has
+    // at least one evidence anchor that explicitly links to a mention or a relationship.
+    const hasEvidenceAnchors = await this.prisma.claimEvidence.findFirst({
+      where: {
+        claimId: existing.id,
+        document: { userId: reviewerId },
+        OR: [{ mentionLinks: { some: {} } }, { relationshipLinks: { some: {} } }],
+      },
+      select: { id: true },
+    });
+    if (!hasEvidenceAnchors)
+      throw contractError(GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED);
+
     const currentStatus = existing.status as ClaimStatus;
     if (!isAllowedTransition(currentStatus, decision)) {
       throw contractError(GQL_ERROR_CODES.INVALID_LIFECYCLE_TRANSITION);

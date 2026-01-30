@@ -32,6 +32,8 @@ export function RequestReviewDialog(props: {
         return 'You must be signed in to request review.';
       case 'CLAIM_NOT_FOUND':
         return 'This claim no longer exists or is unavailable.';
+      case 'CLAIM_NOT_EVIDENCE_CLOSED':
+        return 'This claim is not evidence-closed; review requests are blocked.';
       case 'DUPLICATE_REVIEW_REQUEST':
         return 'You already requested review for this claim.';
       case 'UNEXPECTED_ERROR_CODE':

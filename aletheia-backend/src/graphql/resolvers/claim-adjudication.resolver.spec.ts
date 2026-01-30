@@ -7,16 +7,21 @@ describe('ClaimAdjudicationResolver', () => {
   let resolver: ClaimAdjudicationResolver;
   let prisma: PrismaService;
   let claimFindFirst: jest.Mock;
+  let claimEvidenceFindFirst: jest.Mock;
   let claimUpdate: jest.Mock;
 
   beforeEach(() => {
     claimFindFirst = jest.fn();
+    claimEvidenceFindFirst = jest.fn();
     claimUpdate = jest.fn();
 
     prisma = {
       claim: {
         findFirst: claimFindFirst,
         update: claimUpdate,
+      },
+      claimEvidence: {
+        findFirst: claimEvidenceFindFirst,
       },
     } as unknown as PrismaService;
 
@@ -52,6 +57,7 @@ describe('ClaimAdjudicationResolver', () => {
 
   it('allows DRAFT -> REVIEW and persists adjudication metadata', async () => {
     claimFindFirst.mockResolvedValue({ id: 'c1', status: ClaimStatus.DRAFT });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
     claimUpdate.mockResolvedValue({ id: 'c1', status: ClaimStatus.REVIEWED });
 
     const result = await resolver.adjudicateClaim(
@@ -80,6 +86,7 @@ describe('ClaimAdjudicationResolver', () => {
       id: 'c1',
       status: ClaimStatus.REVIEWED,
     });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
     claimUpdate.mockResolvedValue({ id: 'c1', status: ClaimStatus.ACCEPTED });
 
     const result = await resolver.adjudicateClaim(
@@ -106,6 +113,7 @@ describe('ClaimAdjudicationResolver', () => {
       id: 'c1',
       status: ClaimStatus.REVIEWED,
     });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
     claimUpdate.mockResolvedValue({ id: 'c1', status: ClaimStatus.REJECTED });
 
     const result = await resolver.adjudicateClaim(
@@ -128,6 +136,7 @@ describe('ClaimAdjudicationResolver', () => {
 
   it('rejects invalid transitions with INVALID_LIFECYCLE_TRANSITION', async () => {
     claimFindFirst.mockResolvedValue({ id: 'c1', status: ClaimStatus.DRAFT });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
 
     await expect(
       resolver.adjudicateClaim('c1', ClaimLifecycleState.ACCEPTED, undefined, {
@@ -143,6 +152,7 @@ describe('ClaimAdjudicationResolver', () => {
       id: 'c1',
       status: ClaimStatus.ACCEPTED,
     });
+    claimEvidenceFindFirst.mockResolvedValue({ id: 'ce1' });
 
     await expect(
       resolver.adjudicateClaim('c1', ClaimLifecycleState.REJECTED, undefined, {
@@ -150,6 +160,19 @@ describe('ClaimAdjudicationResolver', () => {
       } as any),
     ).rejects.toMatchObject({
       extensions: { code: GQL_ERROR_CODES.INVALID_LIFECYCLE_TRANSITION },
+    });
+  });
+
+  it('rejects non-evidence-closed claims with CLAIM_NOT_EVIDENCE_CLOSED', async () => {
+    claimFindFirst.mockResolvedValue({ id: 'c1', status: ClaimStatus.DRAFT });
+    claimEvidenceFindFirst.mockResolvedValue(null);
+
+    await expect(
+      resolver.adjudicateClaim('c1', ClaimLifecycleState.REVIEW, undefined, {
+        req: { user: { sub: 'u1' } },
+      } as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED },
     });
   });
 });

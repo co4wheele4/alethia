@@ -8,6 +8,7 @@ import { REVIEW_REQUEST_FIELDS } from '../fragments/reviewRequest.fragment';
  * Explicit backend errors:
  * - UNAUTHORIZED
  * - CLAIM_NOT_FOUND
+ * - CLAIM_NOT_EVIDENCE_CLOSED
  * - DUPLICATE_REVIEW_REQUEST
  */
 export const REQUEST_REVIEW_MUTATION = gql`

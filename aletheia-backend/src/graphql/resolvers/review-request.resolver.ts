@@ -90,7 +90,14 @@ export class ReviewRequestResolver {
     // Workspace scoping: only requests for claims visible via evidence -> document.userId.
     return await this.prisma.reviewRequest.findMany({
       where: {
-        claim: { evidence: { some: { document: { userId } } } },
+        claim: {
+          evidence: {
+            some: {
+              document: { userId },
+              OR: [{ mentionLinks: { some: {} } }, { relationshipLinks: { some: {} } }],
+            },
+          },
+        },
       },
       orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
     });
@@ -117,6 +124,18 @@ export class ReviewRequestResolver {
       select: { id: true },
     });
     if (!existingClaim) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
+
+    // ADR-018: evidence closure is binary and explicit. A claim is workflow-ineligible unless it has
+    // at least one evidence anchor that explicitly links to a mention or a relationship.
+    const hasEvidenceAnchors = await this.prisma.claimEvidence.findFirst({
+      where: {
+        claimId: existingClaim.id,
+        document: { userId },
+        OR: [{ mentionLinks: { some: {} } }, { relationshipLinks: { some: {} } }],
+      },
+      select: { id: true },
+    });
+    if (!hasEvidenceAnchors) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED);
 
     return await this.prisma.reviewRequest.findMany({
       where: { claimId: existingClaim.id },
@@ -148,6 +167,17 @@ export class ReviewRequestResolver {
       select: { id: true },
     });
     if (!existingClaim) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
+
+    // ADR-018: evidence closure is binary and explicit. Require explicit mention/relationship link anchors.
+    const hasEvidenceAnchors = await this.prisma.claimEvidence.findFirst({
+      where: {
+        claimId: existingClaim.id,
+        document: { userId },
+        OR: [{ mentionLinks: { some: {} } }, { relationshipLinks: { some: {} } }],
+      },
+      select: { id: true },
+    });
+    if (!hasEvidenceAnchors) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED);
 
     try {
       return await this.prisma.reviewRequest.create({

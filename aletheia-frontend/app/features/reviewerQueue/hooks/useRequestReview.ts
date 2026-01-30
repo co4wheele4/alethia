@@ -10,6 +10,7 @@ import type { ReviewRequest, ReviewRequestSource } from '../types';
 export type RequestReviewErrorCode =
   | 'UNAUTHORIZED'
   | 'CLAIM_NOT_FOUND'
+  | 'CLAIM_NOT_EVIDENCE_CLOSED'
   | 'DUPLICATE_REVIEW_REQUEST'
   | 'NETWORK_OR_UNKNOWN'
   | 'UNEXPECTED_ERROR_CODE';
@@ -17,6 +18,7 @@ export type RequestReviewErrorCode =
 export type RequestReviewError =
   | { code: 'UNAUTHORIZED' }
   | { code: 'CLAIM_NOT_FOUND' }
+  | { code: 'CLAIM_NOT_EVIDENCE_CLOSED' }
   | { code: 'DUPLICATE_REVIEW_REQUEST' }
   | { code: 'UNEXPECTED_ERROR_CODE'; received: string }
   | { code: 'NETWORK_OR_UNKNOWN'; message: string };
@@ -36,6 +38,7 @@ function toRequestReviewError(err: unknown): RequestReviewError {
     const gqlCode = first?.extensions?.code;
     if (gqlCode === 'UNAUTHORIZED') return { code: 'UNAUTHORIZED' };
     if (gqlCode === 'CLAIM_NOT_FOUND') return { code: 'CLAIM_NOT_FOUND' };
+    if (gqlCode === 'CLAIM_NOT_EVIDENCE_CLOSED') return { code: 'CLAIM_NOT_EVIDENCE_CLOSED' };
     if (gqlCode === 'DUPLICATE_REVIEW_REQUEST') return { code: 'DUPLICATE_REVIEW_REQUEST' };
     if (typeof gqlCode === 'string' && gqlCode) return { code: 'UNEXPECTED_ERROR_CODE', received: gqlCode };
     return { code: 'NETWORK_OR_UNKNOWN', message: err.message };
