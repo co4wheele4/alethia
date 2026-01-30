@@ -1,7 +1,7 @@
 # ADR-009: Claim Comparison & Conflict Detection
 
 ## Status
-Proposed
+Status: Proposed
 
 ## Date
 2026-01-22

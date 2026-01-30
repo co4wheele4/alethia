@@ -1,7 +1,7 @@
 # ADR-015: Reviewer Assignment Semantics
 
 ## Status
-Proposed
+Status: Proposed
 
 ## Date
 2026-01-28

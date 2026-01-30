@@ -1,7 +1,7 @@
 # ADR-001: Frontend Architecture for Aletheia
 
 ## Status
-Accepted
+Status: Accepted
 
 ## Date
 January 2026

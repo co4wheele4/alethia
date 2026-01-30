@@ -1,7 +1,7 @@
 # ADR-017: Review Visibility & Audit Semantics
 
 ## Status
-Proposed
+Status: Proposed
 
 ## Date
 2026-01-29

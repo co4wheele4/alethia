@@ -1,7 +1,7 @@
 # ADR-007: Claim Semantics vs Evidence Semantics
 
 ## Status
-Proposed
+Status: Proposed
 
 ## Date
 2026-01-22

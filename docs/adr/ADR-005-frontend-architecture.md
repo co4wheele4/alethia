@@ -1,7 +1,7 @@
 # ADR-005: GraphQL Contract & Data Guarantees
 
 ## Status
-Implemented (Living ADR)
+Status: Implemented (Living ADR)
 
 ## Date
 2026-01-12  

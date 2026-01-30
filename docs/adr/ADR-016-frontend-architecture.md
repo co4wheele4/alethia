@@ -1,7 +1,7 @@
 # ADR-016: Reviewer Response Semantics (Acknowledge / Decline)
 
 ## Status
-Proposed
+Status: Proposed
 
 ## Date
 2026-01-29

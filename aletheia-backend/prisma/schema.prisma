@@ -388,7 +388,7 @@ model Claim {
   evidence ClaimEvidence[]
 
   /**
-   * Review requests are coordination-only artifacts (ADR-012/013).
+   * Review requests are coordination-only artifacts.
    * Epistemic contract:
    * - Review requests MUST NOT mutate claim lifecycle or truth semantics.
    * - They exist only to coordinate attention.

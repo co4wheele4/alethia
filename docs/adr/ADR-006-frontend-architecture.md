@@ -1,7 +1,7 @@
 # ADR-006: Confidence Semantics & Deferred Exposure
 
 ## Status
-Accepted (Deferred Implementation)
+Status: Accepted (Deferred Implementation)
 
 ## Date
 2026-01-22

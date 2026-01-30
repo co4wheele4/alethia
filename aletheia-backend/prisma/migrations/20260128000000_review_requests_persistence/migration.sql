@@ -1,5 +1,5 @@
 -- =========================================================
--- Review Requests: persisted coordination artifacts (ADR-012/013)
+-- Review Requests: persisted coordination artifacts
 --
 -- Adds:
 -- - ReviewRequestSource enum (CLAIM_VIEW / COMPARISON)

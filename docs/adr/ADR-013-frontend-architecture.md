@@ -1,7 +1,7 @@
 # ADR-013: Reviewer Queues
 
 ## Status
-Proposed
+Status: Superseded
 
 ## Date
 2026-01-27
@@ -14,7 +14,7 @@ Proposed
 >
 > This document is retained for historical context only and is no longer authoritative.
 > Its constraints MUST NOT be enforced against the current system.
-
+> This document MUST NOT be cited for validation or correctness.
 
 ## Context
 

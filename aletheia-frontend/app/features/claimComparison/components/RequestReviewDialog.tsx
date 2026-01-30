@@ -10,7 +10,7 @@ import type { RequestReviewError } from '../../reviewerQueue';
  *
  * ADR constraints:
  * - Comparison is read-only (ADR-009/010) — this action must not adjudicate or mutate claims.
- * - Review requests coordinate attention only (ADR-012): they do not change truth or claim status.
+ * - Review requests coordinate attention only: they do not change truth or claim status.
  */
 export function RequestReviewDialog(props: {
   open: boolean;

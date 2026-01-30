@@ -1,7 +1,7 @@
 # ADR-014: Reviewer Roles & Qualifications
 
 ## Status
-Draft
+Status: Draft
 
 ## Date
 2026-01-27

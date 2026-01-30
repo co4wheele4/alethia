@@ -1,7 +1,7 @@
 # ADR-003: Frontend Testing Strategy
 
 ## Status
-Implemented
+Status: Implemented
 
 ## Date
 2026-01-12
