@@ -1,0 +1,17 @@
+{
+  "name": "eslint-plugin-aletheia",
+  "version": "1.0.0",
+  "description": "ESLint plugin enforcing Aletheia epistemic guardrails (ADR-022)",
+  "private": true,
+  "main": "dist/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "@types/eslint": "^9.0.0",
+    "eslint": "^9.18.0",
+    "typescript": "^5.9.3"
+  }
+}

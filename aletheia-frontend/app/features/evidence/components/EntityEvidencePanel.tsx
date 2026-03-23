@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * EntityEvidencePanel — offset-grounded mention display (ADR-020).
+ * Verbatim excerpt from chunk; no summaries. Boundary integrity via explicit offsets.
+ */
 import { Alert, Box, Divider, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
 import type { EvidenceDocument } from '../hooks/useDocumentEvidence';

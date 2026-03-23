@@ -3,6 +3,9 @@ import eslint from '@eslint/js';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import aletheiaPlugin from 'eslint-plugin-aletheia';
+
+const aletheia = aletheiaPlugin?.default ?? aletheiaPlugin;
 
 export default tseslint.config(
   {
@@ -11,6 +14,15 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   eslintPluginPrettierRecommended,
+  aletheia?.configs?.recommended ?? {
+    plugins: { aletheia },
+    rules: {
+      'aletheia/no-derived-semantics-identifiers': 'error',
+      'aletheia/no-inference-logic': 'error',
+      'aletheia/no-evidence-transformation': 'error',
+      'aletheia/no-claim-comparison': 'error',
+    },
+  },
   {
     languageOptions: {
       globals: {
@@ -48,6 +60,7 @@ export default tseslint.config(
       'scripts/**/*.ts',
     ],
     rules: {
+      'aletheia/no-derived-semantics-identifiers': 'off',
       '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',

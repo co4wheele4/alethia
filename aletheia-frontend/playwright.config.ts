@@ -52,9 +52,8 @@ export default defineConfig({
   
   // Shared settings for all projects
   use: {
-    // Base URL for tests
-    // Prefer IPv4 loopback to avoid occasional localhost/IPv6 (::1) resolution issues on Windows.
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3030',
+    // Base URL for tests (port 3040 to avoid conflict with dev server on 3030)
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3040',
     
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -130,7 +129,7 @@ export default defineConfig({
               NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
               NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3050/graphql',
             },
-            url: 'http://127.0.0.1:3030',
+            url: 'http://127.0.0.1:3040',
             reuseExistingServer: false,
             timeout: 180 * 1000,
           },
@@ -140,11 +139,12 @@ export default defineConfig({
           command: 'npm run build && npm run start',
           env: {
             ...process.env,
+            PORT: '3040',
             NEXT_PUBLIC_MSW: 'disabled',
             NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
-            NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3030/graphql',
+            NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3040/graphql',
           },
-          url: 'http://127.0.0.1:3030',
+          url: 'http://127.0.0.1:3040',
           reuseExistingServer: false,
           timeout: 180 * 1000,
         },

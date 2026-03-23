@@ -87,16 +87,26 @@ export class ReviewRequestResolver {
     const userId = getAuthUserId(ctx);
     if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
 
-    // Workspace scoping: only requests for claims visible via evidence -> document.userId.
+    // Workspace scoping: claims visible via evidence -> document.userId.
     return await this.prisma.reviewRequest.findMany({
       where: {
         claim: {
-          evidence: {
-            some: {
-              document: { userId },
-              OR: [{ mentionLinks: { some: {} } }, { relationshipLinks: { some: {} } }],
+          OR: [
+            {
+              evidenceLinks: {
+                some: {
+                  evidence: {
+                    sourceDocument: { userId },
+                  },
+                },
+              },
             },
-          },
+            {
+              evidence: {
+                some: { document: { userId } },
+              },
+            },
+          ],
         },
       },
       orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
@@ -115,27 +125,47 @@ export class ReviewRequestResolver {
     const userId = getAuthUserId(ctx);
     if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
 
-    // Claim must exist and be visible in the current workspace.
     const existingClaim = await this.prisma.claim.findFirst({
       where: {
         id: claimId,
-        evidence: { some: { document: { userId } } },
+        OR: [
+          {
+            evidenceLinks: {
+              some: {
+                evidence: { sourceDocument: { userId } },
+              },
+            },
+          },
+          { evidence: { some: { document: { userId } } } },
+        ],
       },
       select: { id: true },
     });
     if (!existingClaim) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
 
-    // ADR-018: evidence closure is binary and explicit. A claim is workflow-ineligible unless it has
-    // at least one evidence anchor that explicitly links to a mention or a relationship.
-    const hasEvidenceAnchors = await this.prisma.claimEvidence.findFirst({
+    const hasNewEvidence =
+      (await this.prisma.claimEvidenceLink.count({
+        where: {
+          claimId: existingClaim.id,
+          evidence: {
+            sourceDocument: { userId },
+            chunkId: { not: null },
+          },
+        },
+      })) > 0;
+    const hasLegacyEvidence = await this.prisma.claimEvidence.findFirst({
       where: {
         claimId: existingClaim.id,
         document: { userId },
-        OR: [{ mentionLinks: { some: {} } }, { relationshipLinks: { some: {} } }],
+        OR: [
+          { mentionLinks: { some: {} } },
+          { relationshipLinks: { some: {} } },
+        ],
       },
       select: { id: true },
     });
-    if (!hasEvidenceAnchors) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED);
+    if (!hasNewEvidence && !hasLegacyEvidence)
+      throw contractError(GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED);
 
     return await this.prisma.reviewRequest.findMany({
       where: { claimId: existingClaim.id },
@@ -158,26 +188,47 @@ export class ReviewRequestResolver {
     const userId = getAuthUserId(ctx);
     if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
 
-    // Claim must exist and be visible in the current workspace.
     const existingClaim = await this.prisma.claim.findFirst({
       where: {
         id: claimId,
-        evidence: { some: { document: { userId } } },
+        OR: [
+          {
+            evidenceLinks: {
+              some: {
+                evidence: { sourceDocument: { userId } },
+              },
+            },
+          },
+          { evidence: { some: { document: { userId } } } },
+        ],
       },
       select: { id: true },
     });
     if (!existingClaim) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
 
-    // ADR-018: evidence closure is binary and explicit. Require explicit mention/relationship link anchors.
-    const hasEvidenceAnchors = await this.prisma.claimEvidence.findFirst({
+    const hasNewEvidence =
+      (await this.prisma.claimEvidenceLink.count({
+        where: {
+          claimId: existingClaim.id,
+          evidence: {
+            sourceDocument: { userId },
+            chunkId: { not: null },
+          },
+        },
+      })) > 0;
+    const hasLegacyEvidence = await this.prisma.claimEvidence.findFirst({
       where: {
         claimId: existingClaim.id,
         document: { userId },
-        OR: [{ mentionLinks: { some: {} } }, { relationshipLinks: { some: {} } }],
+        OR: [
+          { mentionLinks: { some: {} } },
+          { relationshipLinks: { some: {} } },
+        ],
       },
       select: { id: true },
     });
-    if (!hasEvidenceAnchors) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED);
+    if (!hasNewEvidence && !hasLegacyEvidence)
+      throw contractError(GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED);
 
     try {
       return await this.prisma.reviewRequest.create({

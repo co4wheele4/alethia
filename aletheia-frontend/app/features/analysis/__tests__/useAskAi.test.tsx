@@ -17,7 +17,6 @@ const mocks = [
         askAi: {
           __typename: 'AiResult',
           id: 'res1',
-          score: 0.9,
           answer: 'test answer',
           query: {
             __typename: 'AiQuery',

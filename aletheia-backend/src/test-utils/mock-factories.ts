@@ -123,7 +123,6 @@ export const createMockAiQueryResult = (
 ): AiQueryResult => ({
   id: 'result-1',
   answer: 'Aletheia is a system for truth discovery.',
-  score: 0.9,
   query: createMockAiQuery(),
   ...overrides,
 });

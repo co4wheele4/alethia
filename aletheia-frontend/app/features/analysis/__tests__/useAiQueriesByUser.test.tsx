@@ -23,7 +23,6 @@ const mocks = [
               {
                 __typename: 'AiResult',
                 id: 'res1',
-                score: 0.9,
                 answer: 'Answer 1',
               },
             ],

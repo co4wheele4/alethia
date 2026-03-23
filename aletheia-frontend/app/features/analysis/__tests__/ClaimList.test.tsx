@@ -6,7 +6,6 @@ const mockClaims = [
   {
     id: '1',
     answer: 'Answer 1',
-    score: 0.85,
     query: {
       id: 'q1',
       query: 'Query 1',
@@ -16,7 +15,6 @@ const mockClaims = [
   {
     id: '2',
     answer: 'Answer 2',
-    score: 0.95,
     query: {
       id: 'q2',
       query: 'Query 2',

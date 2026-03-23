@@ -10,6 +10,7 @@
     "build": "nest build",
     "ci": "npm run lint && npx prisma validate && npm run test && npm run test:e2e",
     "schema:generate": "node -r ts-node/register -r tsconfig-paths/register scripts/generate-schema.ts",
+    "schema:lint": "node scripts/schema-lint-adr022.cjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "postinstall": "prisma generate",
     "seed": "ts-node prisma/seed.ts",
@@ -62,6 +63,7 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "eslint-plugin-aletheia": "file:../../tools/eslint-plugin-aletheia",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",

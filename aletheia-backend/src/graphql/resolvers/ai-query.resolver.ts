@@ -52,9 +52,8 @@ export class AiQueryResolver {
     @Args('skip', { type: () => Int, nullable: true }) skip = 0,
     @Args('take', { type: () => Int, nullable: true }) take = 20,
   ) {
-    // Validate skip and take values
-    const validatedSkip = Math.max(0, skip ?? 0);
-    const validatedTake = Math.max(0, take ?? 20);
+    const validatedSkip = skip != null && skip >= 0 ? skip : 0;
+    const validatedTake = take != null && take >= 0 ? take : 20;
 
     return await this.prisma.aiQuery.findMany({
       skip: validatedSkip,
@@ -73,12 +72,11 @@ export class AiQueryResolver {
       },
     });
 
-    // placeholder – OpenAI integration later
+    // placeholder – OpenAI integration later (score omitted; ADR-022)
     return await this.prisma.aiQueryResult.create({
       data: {
         queryId: aiQuery.id,
         answer: 'TODO: AI response',
-        score: 0.9,
       },
     });
   }

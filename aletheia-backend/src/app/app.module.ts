@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { GraphQLThrottlerGuard } from '../common/guards/graphql-throttler.guard';
+import { AssertNoDerivedSemanticsGuard } from '../graphql/guards/assertNoDerivedSemantics';
 import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
@@ -30,6 +31,7 @@ import {
   EntityRelationshipEvidenceMentionResolver,
   ClaimResolver,
   ClaimEvidenceResolver,
+  EvidenceResolver,
   ClaimAdjudicationResolver,
   ReviewRequestResolver,
   ReviewAssignmentResolver,
@@ -95,6 +97,7 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     EntityRelationshipEvidenceMentionResolver,
     ClaimResolver,
     ClaimEvidenceResolver,
+    EvidenceResolver,
     ClaimAdjudicationResolver,
     ReviewRequestResolver,
     ReviewAssignmentResolver,
@@ -102,6 +105,11 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     {
       provide: APP_GUARD,
       useClass: GraphQLThrottlerGuard,
+    },
+    // ADR-022: Reject derived-semantic query terms (orderBy, sort, compare, score, rank, confidence)
+    {
+      provide: APP_GUARD,
+      useClass: AssertNoDerivedSemanticsGuard,
     },
   ],
 })

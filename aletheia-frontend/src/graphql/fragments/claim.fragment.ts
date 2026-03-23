@@ -3,6 +3,25 @@ import { gql } from '@apollo/client';
 import { DOCUMENT_CORE_FIELDS } from './documentCoreFields.fragment';
 
 /**
+ * Evidence fields for claim grounding (ADR-019).
+ * Evidence is a reference to source material; no confidence or inference.
+ */
+export const EVIDENCE_FIELDS = gql`
+  fragment EvidenceFields on Evidence {
+    __typename
+    id
+    createdAt
+    createdBy
+    sourceType
+    sourceDocumentId
+    chunkId
+    startOffset
+    endOffset
+    snippet
+  }
+`;
+
+/**
  * Claim inspection fragments (read-only; evidence-grounded).
  *
  * Contract constraints:
@@ -10,18 +29,6 @@ import { DOCUMENT_CORE_FIELDS } from './documentCoreFields.fragment';
  * - No confidence/probability/scoring fields (ADR-006)
  * - Documents are derived from evidence anchors (no implicit summarization)
  */
-export const CLAIM_EVIDENCE_FIELDS = gql`
-  fragment ClaimEvidenceFields on ClaimEvidence {
-    __typename
-    id
-    claimId
-    documentId
-    createdAt
-    mentionIds
-    relationshipIds
-  }
-`;
-
 export const CLAIM_FIELDS = gql`
   fragment ClaimFields on Claim {
     __typename
@@ -30,13 +37,13 @@ export const CLAIM_FIELDS = gql`
     status
     createdAt
     evidence {
-      ...ClaimEvidenceFields
+      ...EvidenceFields
     }
     documents {
       ...DocumentCoreFields
     }
   }
-  ${CLAIM_EVIDENCE_FIELDS}
+  ${EVIDENCE_FIELDS}
   ${DOCUMENT_CORE_FIELDS}
 `;
 

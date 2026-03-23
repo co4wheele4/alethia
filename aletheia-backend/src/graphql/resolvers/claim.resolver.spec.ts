@@ -9,16 +9,19 @@ describe('ClaimResolver', () => {
   let dataLoaders: jest.Mocked<DataLoaderService>;
   let claimFindMany: jest.Mock;
   let claimEvidenceFindMany: jest.Mock;
+  let claimEvidenceLinkFindMany: jest.Mock;
   let documentFindUnique: jest.Mock;
 
   beforeEach(() => {
     claimFindMany = jest.fn();
     claimEvidenceFindMany = jest.fn();
+    claimEvidenceLinkFindMany = jest.fn();
     documentFindUnique = jest.fn();
 
     prisma = {
       claim: { findMany: claimFindMany },
       claimEvidence: { findMany: claimEvidenceFindMany },
+      claimEvidenceLink: { findMany: claimEvidenceLinkFindMany },
       document: { findUnique: documentFindUnique },
     } as unknown as PrismaService;
 
@@ -30,20 +33,39 @@ describe('ClaimResolver', () => {
   });
 
   it('claims returns empty list when unauthenticated', async () => {
-    const result = await resolver.claims({ req: { user: {} } } as any);
+    const result = await resolver.claims(undefined, {
+      req: { user: {} },
+    } as any);
     expect(result).toEqual([]);
     expect(claimFindMany).not.toHaveBeenCalled();
   });
 
   it('claims queries by evidence->document.userId when authenticated', async () => {
     claimFindMany.mockResolvedValue([{ id: 'c1' }] as any);
-    const result = await resolver.claims({
+    const result = await resolver.claims(undefined, {
       req: { user: { sub: 'u1' } },
     } as any);
     expect(result).toEqual([{ id: 'c1' }]);
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { evidence: { some: { document: { userId: 'u1' } } } },
+        where: {
+          OR: [
+            {
+              evidenceLinks: {
+                some: {
+                  evidence: {
+                    sourceDocument: { userId: 'u1' },
+                  },
+                },
+              },
+            },
+            {
+              evidence: {
+                some: { document: { userId: 'u1' } },
+              },
+            },
+          ],
+        },
       }),
     );
   });
@@ -88,25 +110,59 @@ describe('ClaimResolver', () => {
     expect(result).toEqual([{ id: 'c1' }]);
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { evidence: { some: { documentId: 'doc_1' } } },
+        where: {
+          OR: [
+            {
+              evidenceLinks: {
+                some: {
+                  evidence: { sourceDocumentId: 'doc_1' },
+                },
+              },
+            },
+            { evidence: { some: { documentId: 'doc_1' } } },
+          ],
+        },
       }),
     );
   });
 
   it('evidence resolveField fails when claim has no evidence', async () => {
+    claimEvidenceLinkFindMany.mockResolvedValue([] as any);
     claimEvidenceFindMany.mockResolvedValue([] as any);
     await expect(resolver.evidence({ id: 'c1' } as any)).rejects.toThrow(
       /Claim\(c1\).*no evidence anchors/i,
     );
   });
 
-  it('evidence resolveField returns evidence anchors when present', async () => {
-    claimEvidenceFindMany.mockResolvedValue([{ id: 'ev1' }] as any);
+  it('evidence resolveField returns evidence anchors when present (from links)', async () => {
+    claimEvidenceLinkFindMany.mockResolvedValue([
+      { evidence: { id: 'ev1' } },
+    ] as any);
     const result = await resolver.evidence({ id: 'c1' } as any);
     expect(result).toEqual([{ id: 'ev1' }]);
   });
 
+  it('evidence resolveField returns legacy evidence when no links', async () => {
+    claimEvidenceLinkFindMany.mockResolvedValue([] as any);
+    claimEvidenceFindMany.mockResolvedValue([
+      {
+        id: 'ce1',
+        documentId: 'doc_1',
+        createdAt: new Date(),
+        document: { userId: 'u1' },
+      },
+    ] as any);
+    const result = await resolver.evidence({ id: 'c1' } as any);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: 'ce1',
+      sourceDocumentId: 'doc_1',
+      sourceType: 'DOCUMENT',
+    });
+  });
+
   it('documents resolveField fails when documents cannot be derived (no evidence)', async () => {
+    claimEvidenceLinkFindMany.mockResolvedValue([] as any);
     claimEvidenceFindMany.mockResolvedValue([] as any);
     await expect(resolver.documents({ id: 'c1' } as any)).rejects.toThrow(
       /documents cannot be derived/i,
@@ -114,6 +170,7 @@ describe('ClaimResolver', () => {
   });
 
   it('documents resolveField fails when referenced document is missing', async () => {
+    claimEvidenceLinkFindMany.mockResolvedValue([] as any);
     claimEvidenceFindMany.mockResolvedValue([{ documentId: 'doc_1' }] as any);
     dataLoaders.getDocumentLoader.mockReturnValue({
       load: jest.fn().mockResolvedValue(null),
@@ -124,6 +181,7 @@ describe('ClaimResolver', () => {
   });
 
   it('documents resolveField returns deduped documents in stable order', async () => {
+    claimEvidenceLinkFindMany.mockResolvedValue([] as any);
     claimEvidenceFindMany.mockResolvedValue([
       { documentId: 'doc_1' },
       { documentId: 'doc_2' },

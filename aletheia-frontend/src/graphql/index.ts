@@ -21,7 +21,7 @@ export { DOCUMENT_EVIDENCE_VIEW } from './fragments/documentEvidenceView.fragmen
 export { DOCUMENT_EVIDENCE_FRAGMENT } from './fragments/documentEvidence.fragment';
 export { ENTITY_MENTION_FRAGMENT } from './fragments/entityMention.fragment';
 export { RELATIONSHIP_EVIDENCE_FRAGMENT } from './fragments/relationshipEvidence.fragment';
-export { CLAIM_FIELDS, CLAIM_EVIDENCE_FIELDS } from './fragments/claim.fragment';
+export { CLAIM_FIELDS, EVIDENCE_FIELDS } from './fragments/claim.fragment';
 export { CLAIM_COMPARISON_ASSERTION_FIELDS, CLAIM_COMPARISON_EVIDENCE_FIELDS } from './fragments/ClaimComparison.fragment';
 
 export { LIST_DOCUMENTS_QUERY } from './queries/listDocuments.query';

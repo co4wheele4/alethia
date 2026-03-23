@@ -32,7 +32,6 @@ type AiQueryResult {
   answer: String!
   id: ID!
   query: AiQuery!
-  score: Float!
 }
 
 type Claim {
@@ -42,9 +41,9 @@ type Claim {
   documents: [Document!]!
 
   """
-  Grounding anchors for this claim. Claims must never be returned without evidence.
+  Grounding anchors for this claim (ADR-019). Claims must never be returned without evidence.
   """
-  evidence: [ClaimEvidence!]!
+  evidence: [Evidence!]!
   id: ID!
   reviewedAt: DateTime
   reviewedBy: ID
@@ -53,21 +52,12 @@ type Claim {
   text: String!
 }
 
-type ClaimEvidence {
-  claimId: ID!
-  createdAt: DateTime!
-  documentId: ID!
-  id: ID!
+input ClaimFilterInput {
+  """Filter by evidence presence. true = has evidence; false = no evidence."""
+  hasEvidence: Boolean
 
-  """
-  Explicit persisted mention IDs grounding this claim evidence (may be empty if relationshipIds are present).
-  """
-  mentionIds: [ID!]!
-
-  """
-  Explicit persisted relationship IDs grounding this claim evidence (may be empty if mentionIds are present).
-  """
-  relationshipIds: [ID!]!
+  """Filter by lifecycle state (presentation-only)."""
+  lifecycle: ClaimStatus
 }
 
 """Contract-only lifecycle input for claim adjudication (ADR-011)."""
@@ -124,6 +114,22 @@ input CreateEntityRelationshipInput {
   fromEntity: String!
   relation: String!
   toEntity: String!
+}
+
+input CreateEvidenceInput {
+  chunkId: String
+  claimIds: [String!]
+  endOffset: Int
+  snippet: String
+  sourceDocumentId: String
+  sourceType: CreateEvidenceSourceKindInput!
+  sourceUrl: String
+  startOffset: Int
+}
+
+enum CreateEvidenceSourceKindInput {
+  DOCUMENT
+  URL
 }
 
 input CreateUserInput {
@@ -303,6 +309,30 @@ type EntityRelationshipEvidenceMention {
   mentionId: ID!
 }
 
+type Evidence {
+  chunk: DocumentChunk
+  chunkId: ID
+  createdAt: DateTime!
+  createdBy: ID!
+  createdByUser: User!
+  endOffset: Int
+  id: ID!
+  snippet: String
+  sourceDocument: Document
+  sourceDocumentId: ID
+  sourceType: EvidenceSourceKind!
+  sourceUrl: String
+  startOffset: Int
+}
+
+"""
+Source type for evidence. DOCUMENT = ingested document; URL = external (future).
+"""
+enum EvidenceSourceKind {
+  DOCUMENT
+  URL
+}
+
 input IngestDocumentInput {
   content: String!
   source: CreateDocumentSourceInput!
@@ -336,6 +366,7 @@ type Mutation {
   createEntity(data: CreateEntityInput!): Entity!
   createEntityMention(data: CreateEntityMentionInput!): EntityMention!
   createEntityRelationship(data: CreateEntityRelationshipInput!): EntityRelationship!
+  createEvidence(input: CreateEvidenceInput!): Evidence!
   createLesson(content: String, title: String!, userId: String!): Lesson!
   createUser(data: CreateUserInput!): User!
   deleteChunk(id: String!): DocumentChunk!
@@ -347,6 +378,7 @@ type Mutation {
   deleteLesson(id: String!): Lesson!
   deleteUser(id: String!): User!
   ingestDocument(input: IngestDocumentInput!): Document!
+  linkEvidenceToClaim(claimId: String!, evidenceId: String!): Evidence!
   login(email: String!, password: String!): String!
   proposeExtraction(chunkId: ID!): [AiExtractionSuggestion!]!
   register(email: String!, name: String, password: String!): String!
@@ -360,11 +392,7 @@ type Mutation {
   """
   Respond to a review assignment (coordination-only; does not determine truth or claim status).
   """
-  respondToReviewAssignment(
-    note: String
-    response: ReviewerResponseType!
-    reviewAssignmentId: ID!
-  ): ReviewerResponse!
+  respondToReviewAssignment(note: String, response: ReviewerResponseType!, reviewAssignmentId: ID!): ReviewerResponse!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
   updateEmbedding(id: String!, values: [Float!]): Embedding!
@@ -386,9 +414,9 @@ type Query {
   chunksByDocument(documentId: String!): [DocumentChunk!]!
 
   """
-  List claims visible in the current workspace (scoped via evidence -> documents).
+  List claims visible in the current workspace (scoped via evidence -> documents). ADR-022: filter supports only lifecycle and hasEvidence.
   """
-  claims: [Claim!]!
+  claims(filter: ClaimFilterInput): [Claim!]!
 
   """
   List claims grounded in a specific document (derived via claim evidence anchors).
@@ -408,6 +436,10 @@ type Query {
   entityMentions: [EntityMention!]!
   entityRelationship(id: String!): EntityRelationship
   entityRelationships: [EntityRelationship!]!
+
+  """List evidence visible to the current user (via document ownership)."""
+  evidence: [Evidence!]!
+  evidenceById(id: String!): Evidence
   hello: String!
   ingestionHealthCheck: String!
   lesson(id: String!): Lesson
@@ -423,6 +455,7 @@ type Query {
   Reviewer queue (unassigned): review requests visible in the current workspace (coordination-only).
   """
   reviewQueue: [ReviewRequest!]!
+
   """
   Review requests for a claim visible in the current workspace (coordination-only; does not change claim status).
   """
@@ -440,8 +473,8 @@ type ReviewAssignment {
   assignedAt: DateTime!
   assignedByUserId: ID!
   id: ID!
-  reviewerResponse: ReviewerResponse
   reviewRequestId: ID!
+  reviewerResponse: ReviewerResponse
   reviewerUserId: ID!
 }
 
@@ -455,15 +488,6 @@ type ReviewRequest {
   source: ReviewRequestSource!
 }
 
-type ReviewerResponse {
-  id: ID!
-  note: String
-  response: ReviewerResponseType!
-  respondedAt: DateTime!
-  reviewAssignmentId: ID!
-  reviewerUserId: ID!
-}
-
 """
 Origin surface for a review request (coordination-only; does not change truth or claim lifecycle).
 """
@@ -472,9 +496,17 @@ enum ReviewRequestSource {
   COMPARISON
 }
 
+type ReviewerResponse {
+  id: ID!
+  note: String
+  respondedAt: DateTime!
+  response: ReviewerResponseType!
+  reviewAssignmentId: ID!
+  reviewerUserId: ID!
+}
+
 """
-Coordination-only reviewer response (ACKNOWLEDGED = seen; DECLINED = cannot take).
-Does not determine truth or claim status.
+Coordination-only reviewer response (ACKNOWLEDGED = seen; DECLINED = cannot take). Does not determine truth or claim status.
 """
 enum ReviewerResponseType {
   ACKNOWLEDGED

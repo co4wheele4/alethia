@@ -30,7 +30,7 @@ const mockQueries = [
     query: 'Previous Query',
     createdAt: '2023-01-01T12:00:00Z',
     results: [
-      { id: 'r1', score: 0.9, answer: 'Historical Answer' }
+      { id: 'r1', answer: 'Historical Answer' }
     ]
   }
 ];
@@ -47,7 +47,6 @@ describe('AnalysisWorkspace', () => {
   it('renders correctly and handles questioning', async () => {
     mockAsk.mockResolvedValue({
       id: 'r2',
-      score: 0.95,
       answer: 'New Answer',
       query: { id: 'q2', query: 'New Query', createdAt: new Date().toISOString() }
     });
@@ -81,13 +80,13 @@ describe('AnalysisWorkspace', () => {
         id: 'q1',
         query: 'Old Query',
         createdAt: '2023-01-01T12:00:00Z',
-        results: [{ id: 'r1', score: 0.8, answer: 'Old Answer' }]
+        results: [{ id: 'r1', answer: 'Old Answer' }]
       },
       {
         id: 'q2',
         query: 'New Query',
         createdAt: '2023-01-02T12:00:00Z',
-        results: [{ id: 'r2', score: 0.9, answer: 'New Answer' }]
+        results: [{ id: 'r2', answer: 'New Answer' }]
       }
     ];
     mockUseAiQueriesByUser.mockReturnValue({ queries: multiQueries, loading: false, error: null });

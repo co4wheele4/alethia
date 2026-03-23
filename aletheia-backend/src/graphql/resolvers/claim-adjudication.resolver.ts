@@ -73,24 +73,47 @@ export class ClaimAdjudicationResolver {
     const existing = await this.prisma.claim.findFirst({
       where: {
         id: claimId,
-        evidence: { some: { document: { userId: reviewerId } } },
+        OR: [
+          {
+            evidenceLinks: {
+              some: {
+                evidence: {
+                  sourceDocument: { userId: reviewerId },
+                },
+              },
+            },
+          },
+          { evidence: { some: { document: { userId: reviewerId } } } },
+        ],
       },
       select: { id: true, status: true },
     });
 
     if (!existing) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
 
-    // ADR-018: evidence closure is binary and explicit. A claim is adjudication-ineligible unless it has
-    // at least one evidence anchor that explicitly links to a mention or a relationship.
-    const hasEvidenceAnchors = await this.prisma.claimEvidence.findFirst({
+    // ADR-018/019: evidence closure is binary. Claim needs valid evidence anchors.
+    const hasNewEvidence =
+      (await this.prisma.claimEvidenceLink.count({
+        where: {
+          claimId: existing.id,
+          evidence: {
+            sourceDocument: { userId: reviewerId },
+            chunkId: { not: null },
+          },
+        },
+      })) > 0;
+    const hasLegacyEvidence = await this.prisma.claimEvidence.findFirst({
       where: {
         claimId: existing.id,
         document: { userId: reviewerId },
-        OR: [{ mentionLinks: { some: {} } }, { relationshipLinks: { some: {} } }],
+        OR: [
+          { mentionLinks: { some: {} } },
+          { relationshipLinks: { some: {} } },
+        ],
       },
       select: { id: true },
     });
-    if (!hasEvidenceAnchors)
+    if (!hasNewEvidence && !hasLegacyEvidence)
       throw contractError(GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED);
 
     const currentStatus = existing.status as ClaimStatus;

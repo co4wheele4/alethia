@@ -1,20 +1,28 @@
 import { test, expect, type Page } from '@playwright/test';
+import { setupGraphQLMocks } from './helpers/msw-handlers';
 
-async function login(page: Page) {
+async function login(page: Page, email = 'test@example.com') {
   await page.goto('/');
   await page.waitForSelector('input[name="email"]', { timeout: 10_000 });
-  await page.locator('input[name="email"]').fill('alice@example.com');
+  await page.locator('input[name="email"]').fill(email);
   await page.locator('input[name="password"]').fill('password123');
   await page.getByRole('button', { name: /^login$/i }).click();
   await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 }
 
 test.describe('Claims: review (single-claim)', () => {
-  // These tests mutate seeded DB state; keep them isolated/deterministic.
   test.skip(({ browserName }) => browserName !== 'chromium', 'Adjudication E2E runs only in Chromium');
   test.describe.configure({ mode: 'serial' });
 
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/graphql', setupGraphQLMocks);
+  });
+
   test('adjudicateClaim error codes are contract-stable', async ({ page }) => {
+    test.skip(
+      process.env.PLAYWRIGHT_REAL_BACKEND !== '1',
+      'Requires real backend (PLAYWRIGHT_REAL_BACKEND=1)'
+    );
     test.setTimeout(60_000);
 
     const mutation = `
@@ -71,8 +79,12 @@ test.describe('Claims: review (single-claim)', () => {
   });
 
   test('accept persists across reload and enforces terminal state', async ({ page }) => {
+    test.skip(
+      process.env.PLAYWRIGHT_REAL_BACKEND !== '1',
+      'Requires real backend (adjudicateClaim mutation)'
+    );
     test.setTimeout(60_000);
-    await login(page);
+    await login(page, 'alice@example.com');
 
     await page.goto('/claims/claim-review-accept');
 
@@ -104,8 +116,12 @@ test.describe('Claims: review (single-claim)', () => {
   });
 
   test('reject persists across reload and enforces terminal state', async ({ page }) => {
+    test.skip(
+      process.env.PLAYWRIGHT_REAL_BACKEND !== '1',
+      'Requires real backend (adjudicateClaim mutation)'
+    );
     test.setTimeout(60_000);
-    await login(page);
+    await login(page, 'alice@example.com');
 
     await page.goto('/claims/claim-review-reject');
 

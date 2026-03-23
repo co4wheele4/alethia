@@ -1,6 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Document } from './document.model';
-import { ClaimEvidence } from './claim-evidence.model';
+import { Evidence } from './evidence.model';
 
 export enum ClaimStatus {
   DRAFT = 'DRAFT',
@@ -64,11 +64,11 @@ export class Claim {
   @Field(() => String, { nullable: true })
   reviewerNote?: string | null;
 
-  @Field(() => [ClaimEvidence], {
+  @Field(() => [Evidence], {
     description:
-      'Grounding anchors for this claim. Claims must never be returned without evidence.',
+      'Grounding anchors for this claim (ADR-019). Claims must never be returned without evidence.',
   })
-  evidence!: ClaimEvidence[];
+  evidence!: Evidence[];
 
   @Field(() => [Document], {
     description:

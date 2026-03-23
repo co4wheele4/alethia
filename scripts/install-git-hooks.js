@@ -19,21 +19,24 @@ function main() {
     return;
   }
 
-  const src = path.join(repoRoot, 'scripts', 'git-hooks', 'pre-push');
-  const dst = path.join(hooksDir, 'pre-push');
+  const hooks = ['pre-push', 'pre-commit'];
+  for (const name of hooks) {
+    const src = path.join(repoRoot, 'scripts', 'git-hooks', name);
+    const dst = path.join(hooksDir, name);
 
-  if (!fs.existsSync(src)) {
-    throw new Error(`Missing hook template at ${src}`);
-  }
+    if (!fs.existsSync(src)) {
+      if (name === 'pre-push') throw new Error(`Missing hook template at ${src}`);
+      continue;
+    }
 
-  const content = fs.readFileSync(src, 'utf8');
-  fs.writeFileSync(dst, content, { encoding: 'utf8' });
+    const content = fs.readFileSync(src, 'utf8');
+    fs.writeFileSync(dst, content, { encoding: 'utf8' });
 
-  // Best-effort chmod for non-Windows.
-  try {
-    fs.chmodSync(dst, 0o755);
-  } catch {
-    // ignore
+    try {
+      fs.chmodSync(dst, 0o755);
+    } catch {
+      // ignore
+    }
   }
 }
 

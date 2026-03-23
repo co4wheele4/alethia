@@ -110,7 +110,7 @@ export class IngestionService {
   }
 
   private validateInput(input: IngestDocumentInput) {
-    if (!input.content || input.content.trim().length === 0) {
+    if (!input.content || !/\S/.test(input.content)) {
       throw new BadRequestException('Document content cannot be empty');
     }
 

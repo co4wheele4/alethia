@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+set -e
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$ROOT"
+
+echo "pre-commit: ESLint (epistemic guardrails)..."
+npm run lint
+
+echo "pre-commit: GraphQL lint (no semantic queries)..."
+node tools/graphql-lint/noSemanticQueries.cjs
+
+echo "pre-commit: Schema validation (ADR-022)..."
+npm run schema:lint
+
+echo "pre-commit: guardrails passed."

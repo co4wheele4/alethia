@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * ClaimReviewView — claim adjudication with evidence panel (ADR-020).
+ * Evidence is rendered faithfully: verbatim snippets, source reference, locator context. No interpretation.
+ */
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
@@ -363,7 +367,7 @@ export function ClaimReviewView(props: { claimId: string }) {
                     size="small"
                     sx={{ textTransform: 'none' }}
                   >
-                    Jump to source
+                    View in source
                   </Button>
                   {item.kind === 'mention' && item.entityName ? (
                     <Chip size="small" variant="outlined" label={`entity: ${item.entityName}`} />

@@ -44,13 +44,16 @@ export type ClaimComparisonDocument = {
 };
 
 export type ClaimComparisonEvidence = {
-  __typename?: 'ClaimEvidence';
+  __typename?: 'Evidence';
   id: string;
-  claimId: string;
-  documentId: string;
   createdAt: string;
-  mentionIds: string[];
-  relationshipIds: string[];
+  createdBy: string;
+  sourceType: string;
+  sourceDocumentId?: string | null;
+  chunkId?: string | null;
+  startOffset?: number | null;
+  endOffset?: number | null;
+  snippet?: string | null;
 };
 
 export type ClaimComparisonClaim = {

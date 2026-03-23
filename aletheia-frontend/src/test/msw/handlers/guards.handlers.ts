@@ -81,6 +81,31 @@ function assertNoTruthScoreRequested(query: string, operationName?: string | nul
   fail(`Forbidden field requested in GraphQL operation ${operationName ?? '(missing operationName)'}: truthScore`);
 }
 
+/** ADR-021: No inference, semantic leakage, or graph metrics in queries */
+const ADR021_FORBIDDEN_IN_QUERY = [
+  'similarity',
+  'relatedClaims',
+  'clusters',
+  'groups',
+  'weights',
+  'scores',
+  'centrality',
+  'degree',
+  'ranking',
+  'influence',
+];
+
+function assertNoAdr021SemanticLeakageRequested(query: string, operationName?: string | null) {
+  const q = query.toLowerCase();
+  for (const term of ADR021_FORBIDDEN_IN_QUERY) {
+    if (new RegExp(`\\b${term}\\b`, 'i').test(q)) {
+      fail(
+        `ADR-021: Forbidden field requested in GraphQL operation ${operationName ?? '(missing operationName)'}: ${term}`,
+      );
+    }
+  }
+}
+
 function deriveOperationName(query: string, operationName?: string | null): string | null {
   if (typeof operationName === 'string' && operationName.trim() !== '') return operationName;
   const m = query.match(/\b(?:query|mutation)\s+([_A-Za-z][_0-9A-Za-z]*)\b/);
@@ -136,6 +161,32 @@ function assertMutationDeclaredInSchema(query: string, operationName?: string | 
   }
 }
 
+/** ADR-022: Reject ordering, comparison, and relation-inference in queries */
+function assertNoAdr022DerivedSemantics(
+  query: string,
+  variables: unknown,
+  operationName?: string | null,
+) {
+  const vars = variables && typeof variables === 'object' ? (variables as Record<string, unknown>) : {};
+
+  if (vars.orderBy !== undefined) {
+    fail(`ADR-022: ORDERING_FORBIDDEN - variables.orderBy must not be used`);
+  }
+  if (vars.sort !== undefined) {
+    fail(`ADR-022: ORDERING_FORBIDDEN - variables.sort must not be used`);
+  }
+
+  const op = String(operationName ?? '');
+  if (/^Compare/i.test(op) || op === 'Compare') {
+    fail(`ADR-022: COMPARISON_FORBIDDEN - operation "${op}" implies semantic comparison`);
+  }
+
+  const q = query.toLowerCase();
+  if (/\brelated\b/.test(q) || /\bsimilar\b/.test(q)) {
+    fail(`ADR-022: RELATION_INFERENCE_FORBIDDEN - query requests related/similar (inferred relations)`);
+  }
+}
+
 function assertNoForbiddenMutations(query: string, operationName?: string | null) {
   const isMutation = /\bmutation\b/.test(query);
   if (!isMutation) return;
@@ -188,11 +239,14 @@ export const guardHandlers = [
       const explicitOperationName =
         typeof body?.operationName === 'string' ? body.operationName : null;
       const operationName = deriveOperationName(query, explicitOperationName);
+      const variables = body?.variables;
       if (!query) continue;
+      assertNoAdr022DerivedSemantics(query, variables, operationName);
       assertReviewActivityIsQueryOnly(query, operationName);
       assertNoConfidenceRequested(query, operationName);
       assertNoProbabilityRequested(query, operationName);
       assertNoTruthScoreRequested(query, operationName);
+      assertNoAdr021SemanticLeakageRequested(query, operationName);
       assertNoClaimLifecycleFieldsRequestedInReviewerCoordinationUI(query, operationName);
       assertMutationDeclaredInSchema(query, operationName);
       assertNoForbiddenMutations(query, operationName);

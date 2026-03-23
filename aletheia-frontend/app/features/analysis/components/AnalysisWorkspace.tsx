@@ -33,7 +33,6 @@ export function AnalysisWorkspace(props: { userId: string | null }) {
         all.push({
           __typename: 'AiQueryResult',
           id: r.id,
-          score: r.score,
           answer: r.answer,
           query: {
             __typename: 'AiQuery',

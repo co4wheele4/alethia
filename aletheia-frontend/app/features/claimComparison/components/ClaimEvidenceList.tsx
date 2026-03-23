@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * ClaimEvidenceList — evidence presentation for claim comparison (ADR-020).
+ * Renders verbatim snippets with source reference and locator context. No summarization or interpretation.
+ */
 import { Alert, Box, Divider, List, ListItem, Stack, Typography } from '@mui/material';
 import { alpha, lighten } from '@mui/material/styles';
 

@@ -32,7 +32,6 @@ describe('AiQueryResolver', () => {
   const mockAiQueryResult: AiQueryResult = {
     id: 'result-1',
     answer: 'Aletheia is a system for truth discovery.',
-    score: 0.9,
     query: mockAiQuery,
   };
 
@@ -286,7 +285,6 @@ describe('AiQueryResolver', () => {
         data: {
           queryId: mockAiQuery.id,
           answer: 'TODO: AI response',
-          score: 0.9,
         },
       });
     });
@@ -376,7 +374,6 @@ describe('AiQueryResultResolver', () => {
   const mockAiQueryResult: AiQueryResult = {
     id: 'result-1',
     answer: 'Aletheia is a system for truth discovery.',
-    score: 0.9,
     query: mockAiQuery,
   };
 

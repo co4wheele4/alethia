@@ -1,0 +1,10 @@
+{
+  "DEV-GUARDRAILS": {
+    "enforcedBy": [
+      "eslint-plugin-aletheia",
+      "graphql-lint/noSemanticQueries.cjs",
+      "pr-checks/epistemicGuard.cjs",
+      "types/epistemic.ts"
+    ]
+  }
+}

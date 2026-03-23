@@ -37,6 +37,10 @@ model User {
    * Coordination-only: does not determine truth or claim status.
    */
   reviewerResponses ReviewerResponse[] @relation("ReviewerResponseReviewer")
+  /**
+   * Evidence records created by this user (ADR-019).
+   */
+  evidenceCreated Evidence[] @relation("EvidenceCreatedBy")
 
   @@map("users")
 }
@@ -80,6 +84,11 @@ model Document {
 
   user          User            @relation(fields: [userId], references: [id])
   chunks        DocumentChunk[]
+  /**
+   * Evidence anchors referencing this document (ADR-019).
+   * Replaces legacy claim_evidence for document-level grounding.
+   */
+  evidence      Evidence[]
   claimEvidence ClaimEvidence[]
   /**
    * Source metadata is required for epistemic completeness, but is nullable for backward safety:
@@ -156,6 +165,7 @@ model DocumentChunk {
   mentions             EntityMention[]
   relationshipEvidence EntityRelationshipEvidence[]
   aiSuggestions        AiExtractionSuggestion[]
+  evidence             Evidence[]
 
   @@unique([documentId, chunkIndex])
   @@index([documentId])
@@ -331,15 +341,73 @@ model AiQueryResult {
   id        String   @id @default(uuid()) @map("id")
   queryId   String   @map("query_id")
   answer    String   @map("answer")
-  score     Float    @map("score")
+  /// Internal storage only; not exposed via GraphQL (ADR-022).
+  score     Float?   @default(0) @map("score")
   createdAt DateTime @default(now()) @map("created_at")
 
   query AiQuery @relation(fields: [queryId], references: [id])
 
   @@index([queryId])
   @@index([createdAt])
-  @@index([score])
   @@map("ai_query_results")
+}
+
+////////////////////
+// EVIDENCE (ADR-019: STRICT, IMMUTABLE, REFERENTIAL CONTRACT)
+////////////////////
+
+/**
+ * Source kind for Evidence.
+ * DOCUMENT = references an ingested Document (via chunk).
+ * URL = external URL (future; not yet implemented).
+ */
+enum EvidenceSourceKind {
+  DOCUMENT
+  URL
+}
+
+/**
+ * Evidence: reference to source material enabling inspection of a claim.
+ *
+ * ADR-019 invariants:
+ * - Referentially valid (source exists, locator reproducible)
+ * - Immutable after creation (no updates)
+ * - No confidence, scoring, or inference
+ * - Reusable across claims (via ClaimEvidenceLink)
+ * - Binary validity (accept or reject)
+ */
+model Evidence {
+  id        String             @id @default(uuid()) @map("id")
+  createdAt DateTime           @default(now()) @map("created_at")
+  createdBy String             @map("created_by")
+
+  sourceType       EvidenceSourceKind @map("source_type")
+  sourceDocumentId String?            @map("source_document_id")
+  sourceUrl        String?            @map("source_url")
+
+  /**
+   * Locator: chunk + offsets for DOCUMENT source.
+   * Required for DOCUMENT; chunk must belong to sourceDocumentId.
+   */
+  chunkId     String? @map("chunk_id")
+  startOffset Int?    @map("start_offset")
+  endOffset   Int?    @map("end_offset")
+
+  /**
+   * Optional verbatim snippet (not derived or summarized).
+   */
+  snippet String? @map("snippet")
+
+  createdByUser  User             @relation("EvidenceCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  sourceDocument Document?        @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  chunk          DocumentChunk?   @relation(fields: [chunkId], references: [id], onDelete: Restrict)
+  claimLinks     ClaimEvidenceLink[]
+
+  @@index([sourceDocumentId])
+  @@index([chunkId])
+  @@index([createdBy])
+  @@index([createdAt])
+  @@map("evidence")
 }
 
 ////////////////////
@@ -384,7 +452,10 @@ model Claim {
    * Grounding requirement:
    * - Claims are higher-order assertions and MUST be inspectable via evidence anchors.
    * - This relationship is required at the semantic level; API layers must fail loudly if empty.
+   * - ADR-019: Evidence is reusable across claims via this join table.
    */
+  evidenceLinks ClaimEvidenceLink[]
+  /** @deprecated Legacy claim-document grounding; migrated to Evidence + ClaimEvidenceLink. */
   evidence ClaimEvidence[]
 
   /**
@@ -500,6 +571,29 @@ model ReviewerResponse {
   @@map("reviewer_responses")
 }
 
+/**
+ * Join table: Evidence <-> Claim (ADR-019).
+ * Evidence may be linked to multiple claims; claims may have multiple evidence.
+ */
+model ClaimEvidenceLink {
+  evidenceId String   @map("evidence_id")
+  claimId    String   @map("claim_id")
+  linkedAt   DateTime @default(now()) @map("linked_at")
+
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  claim    Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@id([evidenceId, claimId])
+  @@index([claimId])
+  @@index([evidenceId])
+  @@map("claim_evidence_links")
+}
+
+/**
+ * @deprecated Legacy claim evidence (pre-ADR-019).
+ * Migrated to Evidence + ClaimEvidenceLink.
+ * See docs/adr/ADR-019-evidence-semantics-structure.md § Migration Path.
+ */
 model ClaimEvidence {
   id         String   @id @default(uuid()) @map("id")
   claimId    String   @map("claim_id")

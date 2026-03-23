@@ -4,14 +4,17 @@ import { fixture } from '@/src/mocks/aletheia-fixtures';
 import { assertNoConfidence } from '@/src/test/msw/assertNoConfidence';
 
 type FixtureDocument = (typeof fixture.documents)[number];
-type FixtureClaimEvidence = {
-  __typename: 'ClaimEvidence';
+type FixtureEvidence = {
+  __typename: 'Evidence';
   id: string;
-  claimId: string;
-  documentId: string;
   createdAt: string;
-  mentionIds: readonly string[];
-  relationshipIds: readonly string[];
+  createdBy: string;
+  sourceType: string;
+  sourceDocumentId: string;
+  chunkId?: string | null;
+  startOffset?: number | null;
+  endOffset?: number | null;
+  snippet?: string | null;
 };
 type FixtureClaim = {
   __typename: 'Claim';
@@ -19,7 +22,7 @@ type FixtureClaim = {
   text: string;
   status: string;
   createdAt: string;
-  evidence: readonly FixtureClaimEvidence[];
+  evidence: readonly FixtureEvidence[];
 };
 
 function fail(message: string): never {
@@ -31,13 +34,10 @@ function assertPresent<T>(value: T | null | undefined, label: string): NonNullab
   return value as NonNullable<T>;
 }
 
-function assertClaimEvidence(ev: FixtureClaimEvidence, label: string) {
+function assertEvidence(ev: FixtureEvidence, label: string) {
   assertPresent(ev.id, `${label}.id`);
-  assertPresent(ev.claimId, `${label}.claimId`);
-  assertPresent(ev.documentId, `${label}.documentId`);
-  if (ev.mentionIds.length === 0 && ev.relationshipIds.length === 0) {
-    fail(`${label} must reference mentionIds and/or relationshipIds`);
-  }
+  assertPresent(ev.sourceDocumentId, `${label}.sourceDocumentId`);
+  assertPresent(ev.createdBy, `${label}.createdBy`);
 }
 
 function assertClaimGrounded(claim: FixtureClaim, label: string) {
@@ -46,7 +46,7 @@ function assertClaimGrounded(claim: FixtureClaim, label: string) {
   assertPresent(claim.status, `${label}.status`);
   if (!Array.isArray(claim.evidence)) fail(`${label}.evidence must be an array`);
   if (claim.evidence.length === 0) fail(`${label}.evidence must be non-empty`);
-  claim.evidence.forEach((ev, idx) => assertClaimEvidence(ev, `${label}.evidence[${idx}]`));
+  claim.evidence.forEach((ev, idx) => assertEvidence(ev, `${label}.evidence[${idx}]`));
 }
 
 function toDocumentCoreFields(doc: FixtureDocument) {
@@ -93,7 +93,7 @@ function isFixtureDocument(doc: FixtureDocument | undefined): doc is FixtureDocu
 function toClaim(claim: FixtureClaim) {
   assertClaimGrounded(claim, `Claim(${claim.id})`);
 
-  const docIds = Array.from(new Set(claim.evidence.map((e) => e.documentId)));
+  const docIds = Array.from(new Set(claim.evidence.map((e) => e.sourceDocumentId).filter(Boolean)));
   const documents = docIds
     .map((id) => fixture.documents.find((d) => d.id === id))
     .filter(isFixtureDocument)
@@ -112,11 +112,14 @@ function toClaim(claim: FixtureClaim) {
     evidence: claim.evidence.map((ev) => ({
       __typename: ev.__typename,
       id: ev.id,
-      claimId: ev.claimId,
-      documentId: ev.documentId,
       createdAt: ev.createdAt,
-      mentionIds: ev.mentionIds,
-      relationshipIds: ev.relationshipIds,
+      createdBy: ev.createdBy,
+      sourceType: ev.sourceType,
+      sourceDocumentId: ev.sourceDocumentId,
+      chunkId: ev.chunkId ?? null,
+      startOffset: ev.startOffset ?? null,
+      endOffset: ev.endOffset ?? null,
+      snippet: ev.snippet ?? null,
     })),
     documents,
   };
@@ -134,7 +137,9 @@ export const claimHandlers = [
       (variables as { documentId?: string } | undefined)?.documentId,
       'ClaimsByDocument.variables.documentId'
     );
-    const claims = fixture.claims.filter((c) => c.evidence.some((e) => e.documentId === documentId));
+    const claims = fixture.claims.filter((c) =>
+      c.evidence.some((e) => e.sourceDocumentId === documentId)
+    );
     const data = { claimsByDocument: claims.map(toClaim) };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });

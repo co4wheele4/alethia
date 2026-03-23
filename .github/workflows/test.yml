@@ -26,10 +26,28 @@ jobs:
       - name: Enforce ADR governance hygiene
         run: npm run adr:check
 
+  epistemic-guardrails:
+    name: Epistemic Guardrails
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: ESLint (custom epistemic rules)
+        run: npm run lint
+      - name: GraphQL lint (no semantic queries)
+        run: node tools/graphql-lint/noSemanticQueries.cjs
+      - name: PR diff epistemic scan
+        run: node tools/pr-checks/epistemicGuard.cjs
+        env:
+          GITHUB_BASE_REF: ${{ github.event.pull_request?.base?.ref || 'main' }}
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
       
@@ -42,6 +60,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: ADR-022 schema lint (no derived semantics)
+        run: npm run schema:lint
       - name: Check schema snapshot consistency
         run: npm run schema:snapshots:check
       
@@ -93,6 +113,7 @@ jobs:
         run: |
           npm run schema:generate --workspace=aletheia-backend
           git diff --ignore-cr-at-eol --exit-code aletheia-backend/src/schema.gql
+          npm run schema:lint
           npm run schema:snapshots:check
       
       - name: Setup test database

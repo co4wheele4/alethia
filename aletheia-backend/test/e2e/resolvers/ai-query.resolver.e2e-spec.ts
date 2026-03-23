@@ -98,7 +98,6 @@ describe('AiQueryResolver (e2e)', () => {
             results {
               id
               answer
-              score
               query {
                 id
                 query
@@ -116,7 +115,6 @@ describe('AiQueryResolver (e2e)', () => {
           results?: Array<{
             id?: string;
             answer?: unknown;
-            score?: unknown;
             query?: unknown;
           }>;
         };
@@ -126,7 +124,6 @@ describe('AiQueryResolver (e2e)', () => {
       expect(data?.aiQuery?.results?.length).toBeGreaterThan(0);
       expect(data?.aiQuery?.results?.[0]?.id).toBe(resultId);
       expect(data?.aiQuery?.results?.[0]?.answer).toBeDefined();
-      expect(data?.aiQuery?.results?.[0]?.score).toBeDefined();
       expect(data?.aiQuery?.results?.[0]?.query).toBeDefined();
     });
   });
@@ -160,7 +157,6 @@ describe('AiQueryResolver (e2e)', () => {
           aiQueryResult(id: $id) {
             id
             answer
-            score
             query {
               id
               query
@@ -182,7 +178,6 @@ describe('AiQueryResolver (e2e)', () => {
         aiQueryResult?: {
           id?: string;
           answer?: unknown;
-          score?: unknown;
           query?: {
             id?: string;
             user?: unknown;
@@ -193,7 +188,6 @@ describe('AiQueryResolver (e2e)', () => {
       expect(data?.aiQueryResult).toBeDefined();
       expect(data?.aiQueryResult?.id).toBe(resultId);
       expect(data?.aiQueryResult?.answer).toBeDefined();
-      expect(data?.aiQueryResult?.score).toBeDefined();
       expect(data?.aiQueryResult?.query).toBeDefined();
       expect(data?.aiQueryResult?.query?.user).toBeDefined();
       expect(data?.aiQueryResult?.query?.results).toBeInstanceOf(Array);

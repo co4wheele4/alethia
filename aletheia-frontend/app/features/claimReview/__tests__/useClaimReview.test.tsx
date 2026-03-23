@@ -1,11 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 
-import {
-  GET_DOCUMENT_EVIDENCE_VIEW_QUERY,
-  LIST_CLAIMS_QUERY,
-  LIST_RELATIONSHIPS_QUERY,
-} from '@/src/graphql';
+import { GET_DOCUMENT_EVIDENCE_VIEW_QUERY, LIST_CLAIMS_QUERY } from '@/src/graphql';
 import { useClaimReview } from '../hooks/useClaimReview';
 
 const docCore = {
@@ -45,13 +41,16 @@ const claim1 = {
   createdAt: '2026-01-02T00:00:00.000Z',
   evidence: [
     {
-      __typename: 'ClaimEvidence' as const,
+      __typename: 'Evidence' as const,
       id: 'cev1',
-      claimId: 'c1',
-      documentId: 'doc_1',
       createdAt: '2026-01-02T00:00:00.000Z',
-      mentionIds: ['m1'],
-      relationshipIds: ['r1'],
+      createdBy: 'u1',
+      sourceType: 'DOCUMENT',
+      sourceDocumentId: 'doc_1',
+      chunkId: 'chunk_1_0',
+      startOffset: 6,
+      endOffset: 10,
+      snippet: 'Test',
     },
   ],
   documents: [docCore],
@@ -88,38 +87,6 @@ const docEvidenceView = {
   ],
 };
 
-const relationships = [
-  {
-    __typename: 'EntityRelationship' as const,
-    id: 'r1',
-    relation: 'MENTIONS',
-    from: { __typename: 'Entity' as const, id: 'e1', name: 'A', type: 'Thing', mentionCount: 1 },
-    to: { __typename: 'Entity' as const, id: 'e2', name: 'B', type: 'Thing', mentionCount: 1 },
-    evidence: [
-      {
-        __typename: 'EntityRelationshipEvidence' as const,
-        id: 'ev1',
-        kind: 'TEXT_SPAN',
-        createdAt: '2026-01-02T00:00:00.000Z',
-        relationshipId: 'r1',
-        chunkId: 'chunk_1_0',
-        startOffset: 0,
-        endOffset: 5,
-        quotedText: 'Hello',
-        chunk: {
-          __typename: 'DocumentChunk' as const,
-          id: 'chunk_1_0',
-          chunkIndex: 0,
-          content: 'Hello Test Entity.',
-          documentId: 'doc_1',
-          document: docCore,
-        },
-        mentionLinks: [],
-      },
-    ],
-  },
-];
-
 describe('useClaimReview', () => {
   it('resolves offset-based evidence items for a claim', async () => {
     const mocks = [
@@ -130,10 +97,6 @@ describe('useClaimReview', () => {
       {
         request: { query: GET_DOCUMENT_EVIDENCE_VIEW_QUERY, variables: { id: 'doc_1' } },
         result: { data: { document: docEvidenceView } },
-      },
-      {
-        request: { query: LIST_RELATIONSHIPS_QUERY },
-        result: { data: { entityRelationships: relationships } },
       },
     ];
 

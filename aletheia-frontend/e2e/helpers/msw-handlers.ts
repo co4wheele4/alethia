@@ -102,6 +102,7 @@ function ensureSeeded() {
   entitiesStore = [
     { id: 'entity-1', name: 'Test Entity', type: 'TestType', mentionCount: 1 },
     { id: 'entity-2', name: 'Other Entity', type: 'TestType', mentionCount: 0 },
+    { id: 'e_1', name: 'Aletheia', type: 'TestType', mentionCount: 0 },
   ];
 
   mentionsStore = [
@@ -183,6 +184,16 @@ function ensureSeeded() {
   ];
 
   entityDetailStore = {
+    'e_1': {
+      __typename: 'Entity',
+      id: 'e_1',
+      name: 'Aletheia',
+      type: 'TestType',
+      mentionCount: 0,
+      outgoing: [],
+      incoming: [],
+      mentions: [],
+    },
     'entity-1': {
       __typename: 'Entity',
       id: 'entity-1',
@@ -207,6 +218,31 @@ function ensureSeeded() {
     },
   };
 
+  // ADR-021: Claim A → Evidence X, Claim B → Evidence X (shared), Claim C → Evidence Y
+  const sharedEvidence = {
+    __typename: 'Evidence' as const,
+    id: 'cev-1',
+    createdAt,
+    createdBy: 'admin-1',
+    sourceType: 'DOCUMENT' as const,
+    sourceDocumentId: 'doc-1',
+    chunkId: 'chunk-doc-1-1',
+    startOffset: 20,
+    endOffset: 31,
+    snippet: 'Test Entity',
+  };
+  const evidenceY = {
+    __typename: 'Evidence' as const,
+    id: 'cev-2',
+    createdAt,
+    createdBy: 'admin-1',
+    sourceType: 'DOCUMENT' as const,
+    sourceDocumentId: 'doc-1',
+    chunkId: 'chunk-doc-1-1',
+    startOffset: 0,
+    endOffset: 12,
+    snippet: 'Getting Started',
+  };
   claimsStore = [
     {
       __typename: 'Claim',
@@ -214,17 +250,7 @@ function ensureSeeded() {
       text: 'Test Entity is mentioned in Getting Started.',
       status: 'DRAFT',
       createdAt,
-      evidence: [
-        {
-          __typename: 'ClaimEvidence',
-          id: 'cev-1',
-          claimId: 'claim-1',
-          documentId: 'doc-1',
-          createdAt,
-          mentionIds: ['mention-1'],
-          relationshipIds: [],
-        },
-      ],
+      evidence: [sharedEvidence],
     },
     {
       __typename: 'Claim',
@@ -232,17 +258,15 @@ function ensureSeeded() {
       text: 'Getting Started contains a specific mention span for Test Entity.',
       status: 'REVIEWED',
       createdAt,
-      evidence: [
-        {
-          __typename: 'ClaimEvidence',
-          id: 'cev-2',
-          claimId: 'claim-2',
-          documentId: 'doc-1',
-          createdAt,
-          mentionIds: ['mention-1'],
-          relationshipIds: [],
-        },
-      ],
+      evidence: [sharedEvidence],
+    },
+    {
+      __typename: 'Claim',
+      id: 'claim-3',
+      text: 'Document title refers to Getting Started.',
+      status: 'DRAFT',
+      createdAt,
+      evidence: [evidenceY],
     },
   ];
 
@@ -342,7 +366,18 @@ function extractMutationFieldName(query: string): string | null {
   return m?.[1] ?? null;
 }
 
-function assertNoForbiddenRequestedFields(query: string, operationName?: string) {
+function assertNoForbiddenRequestedFields(
+  query: string,
+  operationName?: string,
+  variables?: Record<string, unknown>,
+) {
+  // ADR-022: Reject ordering, comparison, relation-inference
+  if (variables?.orderBy !== undefined) failContract('ORDERING_FORBIDDEN: variables.orderBy');
+  if (variables?.sort !== undefined) failContract('ORDERING_FORBIDDEN: variables.sort');
+  const op = String(operationName ?? '');
+  if (/^Compare/i.test(op) || op === 'Compare') failContract(`COMPARISON_FORBIDDEN: operation "${op}"`);
+  if (/\brelated\b/i.test(query) || /\bsimilar\b/i.test(query)) failContract('RELATION_INFERENCE_FORBIDDEN: query requests related/similar');
+
   // Confidence is forbidden by the authoritative schema snapshot.
   if (/\bconfidence\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: confidence`);
   if (/\bprobability\b/i.test(query)) failContract(`Forbidden field requested in ${operationName ?? '(missing operationName)'}: probability`);
@@ -355,7 +390,6 @@ function assertNoForbiddenRequestedFields(query: string, operationName?: string)
 
   // Reviewer coordination UI must not request claim lifecycle fields.
   // (Claim detail surfaces legitimately do; we scope this guard by operationName.)
-  const op = String(operationName ?? '');
   const isReviewerCoordinationOp =
     /^(ReviewQueue|MyReviewRequests|ReviewRequestsByClaim|AssignReviewer|RespondToReviewAssignment)$/i.test(op) ||
     /review-?queue/i.test(op);
@@ -515,6 +549,22 @@ function ensureMentionForChunk(args: { documentId: string; chunkId: string; cont
   }
 }
 
+const ADR021_FORBIDDEN_KEYS = [
+  'confidence',
+  'probability',
+  'truthscore',
+  'similarity',
+  'relatedclaims',
+  'clusters',
+  'groups',
+  'weights',
+  'scores',
+  'centrality',
+  'degree',
+  'ranking',
+  'influence',
+];
+
 function assertNoConfidence(value: unknown, path = 'root', seen = new Set<object>()) {
   if (value === null || value === undefined) return;
 
@@ -531,14 +581,10 @@ function assertNoConfidence(value: unknown, path = 'root', seen = new Set<object
 
   for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
     const key = k.toLowerCase();
-    if (key.includes('confidence')) {
-      throw new Error(`[E2E contract] Unexpected confidence field "${k}" at ${path}.${k}`);
-    }
-    if (key.includes('probability')) {
-      throw new Error(`[E2E contract] Unexpected probability field "${k}" at ${path}.${k}`);
-    }
-    if (key.includes('truthscore')) {
-      throw new Error(`[E2E contract] Unexpected truthScore field "${k}" at ${path}.${k}`);
+    for (const forbidden of ADR021_FORBIDDEN_KEYS) {
+      if (key.includes(forbidden)) {
+        failContract(`ADR-021: Forbidden field "${k}" at ${path}.${k} (semantic leakage / graph metric)`);
+      }
     }
     assertNoConfidence(v, `${path}.${k}`, seen);
   }
@@ -599,7 +645,7 @@ export async function setupGraphQLMocks(route: Route) {
     }
 
     if (typeof parsedBody.query === 'string' && parsedBody.query) {
-      assertNoForbiddenRequestedFields(parsedBody.query, operationName);
+      assertNoForbiddenRequestedFields(parsedBody.query, operationName, parsedBody.variables);
     }
 
     // Handle different GraphQL operations
@@ -1011,13 +1057,30 @@ export async function setupGraphQLMocks(route: Route) {
 
       case 'ListClaims': {
         ensureSeeded();
+        const filter = (parsedBody.variables as { filter?: { lifecycle?: string; hasEvidence?: boolean } } | undefined)?.filter;
+        let filtered = claimsStore;
+        if (filter?.lifecycle) {
+          filtered = filtered.filter((c) => (c as { status?: string }).status === filter.lifecycle);
+        }
+        if (filter?.hasEvidence === true) {
+          filtered = filtered.filter((c) => {
+            const ev = (c as { evidence?: unknown[] }).evidence;
+            return Array.isArray(ev) && ev.length > 0;
+          });
+        }
+        if (filter?.hasEvidence === false) {
+          filtered = filtered.filter((c) => {
+            const ev = (c as { evidence?: unknown[] }).evidence;
+            return !Array.isArray(ev) || ev.length === 0;
+          });
+        }
         response = {
           status: 200,
           body: {
             data: {
-              claims: claimsStore.map((c) => {
-                const evidence = (c as { evidence?: Array<{ documentId?: string }> }).evidence ?? [];
-                const docIds = Array.from(new Set(evidence.map((e) => String(e.documentId ?? '')).filter(Boolean)));
+              claims: filtered.map((c) => {
+                const evidence = (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence ?? [];
+                const docIds = Array.from(new Set(evidence.map((e) => String(e.sourceDocumentId ?? '')).filter(Boolean)));
                 return {
                   ...c,
                   documents: docIds.map((id) => buildDocumentCore(id)).filter(Boolean),
@@ -1264,7 +1327,7 @@ export async function setupGraphQLMocks(route: Route) {
           body: {
             data: {
               claimsByDocument: claimsStore
-                .filter((c) => (c as { evidence?: Array<{ documentId?: string }> }).evidence?.some((e) => e.documentId === documentId))
+                .filter((c) => (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence?.some((e) => e.sourceDocumentId === documentId))
                 .map((c) => ({
                   ...c,
                   documents: [buildDocumentCore(documentId)].filter(Boolean),
@@ -1282,8 +1345,8 @@ export async function setupGraphQLMocks(route: Route) {
           body: {
             data: {
               claims: claimsStore.map((c) => {
-                const evidence = (c as { evidence?: Array<{ documentId?: string }> }).evidence ?? [];
-                const docIds = Array.from(new Set(evidence.map((e) => String(e.documentId ?? '')).filter(Boolean)));
+                const evidence = (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence ?? [];
+                const docIds = Array.from(new Set(evidence.map((e) => String(e.sourceDocumentId ?? '')).filter(Boolean)));
                 return {
                   ...c,
                   documents: docIds.map((id) => buildDocumentEvidenceView(id)).filter(Boolean),

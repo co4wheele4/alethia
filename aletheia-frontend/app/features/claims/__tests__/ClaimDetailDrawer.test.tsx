@@ -9,7 +9,7 @@ describe('ClaimDetailDrawer', () => {
     expect(screen.getByText(/Select a claim/i)).toBeInTheDocument();
   });
 
-  it('jumps to documents deep-link when mentionIds exist, else falls back to document route', async () => {
+  it('jumps to documents with chunk deep-link when chunkId exists, else document route', async () => {
     const user = userEvent.setup();
 
     const claim: any = {
@@ -22,17 +22,27 @@ describe('ClaimDetailDrawer', () => {
       evidence: [
         {
           id: 'ev1',
-          documentId: 'doc_1',
-          mentionIds: ['m1'],
-          relationshipIds: ['r1'],
-          __typename: 'ClaimEvidence',
+          sourceDocumentId: 'doc_1',
+          chunkId: 'chunk_1',
+          startOffset: 0,
+          endOffset: 5,
+          snippet: 'Claim',
+          createdAt: '2026-01-02T00:00:00.000Z',
+          createdBy: 'u1',
+          sourceType: 'DOCUMENT',
+          __typename: 'Evidence',
         },
         {
           id: 'ev2',
-          documentId: 'doc_1',
-          mentionIds: [],
-          relationshipIds: ['r2'],
-          __typename: 'ClaimEvidence',
+          sourceDocumentId: 'doc_1',
+          chunkId: null,
+          startOffset: null,
+          endOffset: null,
+          snippet: null,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          createdBy: 'u1',
+          sourceType: 'DOCUMENT',
+          __typename: 'Evidence',
         },
       ],
       __typename: 'Claim',
@@ -41,10 +51,9 @@ describe('ClaimDetailDrawer', () => {
     render(<ClaimDetailDrawer open={true} claim={claim} onClose={() => {}} />);
 
     const links = screen.getAllByRole('link', { name: /jump to evidence/i });
-    expect(links[0]).toHaveAttribute('href', '/documents?documentId=doc_1&mentionId=m1');
+    expect(links[0]).toHaveAttribute('href', '/documents/doc_1?chunkId=chunk_1');
     expect(links[1]).toHaveAttribute('href', '/documents/doc_1');
 
-    // Exercise interaction (no navigation in unit tests, but event handler runs).
     await user.click(links[0]);
   });
 
@@ -59,7 +68,20 @@ describe('ClaimDetailDrawer', () => {
             status: 'DRAFT',
             text: 'Claim text',
             documents: [],
-            evidence: [{ id: 'ev1', documentId: 'doc_1', mentionIds: ['m1'], relationshipIds: [], __typename: 'ClaimEvidence' }],
+            evidence: [
+              {
+                id: 'ev1',
+                sourceDocumentId: 'doc_1',
+                chunkId: 'chunk_1',
+                startOffset: 0,
+                endOffset: 5,
+                snippet: 'Claim',
+                createdAt: '2026-01-02T00:00:00.000Z',
+                createdBy: 'u1',
+                sourceType: 'DOCUMENT',
+                __typename: 'Evidence',
+              },
+            ],
             __typename: 'Claim',
           } as any
         }

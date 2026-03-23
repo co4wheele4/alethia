@@ -1,11 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 
-import {
-  GET_DOCUMENT_EVIDENCE_VIEW_QUERY,
-  LIST_CLAIMS_QUERY,
-  LIST_RELATIONSHIPS_QUERY,
-} from '@/src/graphql';
+import { GET_DOCUMENT_EVIDENCE_VIEW_QUERY, LIST_CLAIMS_QUERY, REVIEW_REQUESTS_BY_CLAIM_QUERY } from '@/src/graphql';
 import { ClaimReviewView } from '../components/ClaimReviewView';
 
 const docCore = {
@@ -45,13 +41,16 @@ const claim1 = {
   createdAt: '2026-01-02T00:00:00.000Z',
   evidence: [
     {
-      __typename: 'ClaimEvidence' as const,
+      __typename: 'Evidence' as const,
       id: 'cev1',
-      claimId: 'c1',
-      documentId: 'doc_1',
       createdAt: '2026-01-02T00:00:00.000Z',
-      mentionIds: ['m1'],
-      relationshipIds: [],
+      createdBy: 'u1',
+      sourceType: 'DOCUMENT',
+      sourceDocumentId: 'doc_1',
+      chunkId: 'chunk_1_0',
+      startOffset: 6,
+      endOffset: 10,
+      snippet: 'Test',
     },
   ],
   documents: [docCore],
@@ -109,8 +108,8 @@ describe('ClaimReviewView', () => {
         result: { data: { document: docEvidenceView } },
       },
       {
-        request: { query: LIST_RELATIONSHIPS_QUERY },
-        result: { data: { entityRelationships: [] } },
+        request: { query: REVIEW_REQUESTS_BY_CLAIM_QUERY, variables: { claimId: 'c1' } },
+        result: { data: { reviewRequestsByClaim: [] } },
       },
     ];
 

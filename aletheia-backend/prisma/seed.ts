@@ -210,7 +210,7 @@ async function main() {
   console.log(`✓ Inserted ${counts.aiQueries} AI query/queries`);
 
   // Insert AI query results
-  await prisma.aiQueryResult.create({ data: { queryId: query.id, answer: 'Chunk 0 introduces the purpose of the Aletheia project.', score: 0.95 } });
+  await prisma.aiQueryResult.create({ data: { queryId: query.id, answer: 'Chunk 0 introduces the purpose of the Aletheia project.' } });
   counts.aiQueryResults++;
   console.log(`✓ Inserted ${counts.aiQueryResults} AI query result(s)`);
 

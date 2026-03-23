@@ -52,7 +52,20 @@ describe('ClaimsView', () => {
       status: 'DRAFT',
       createdAt: '2026-01-02T00:00:00.000Z',
       documents: [{ id: 'doc_1', title: 'Doc 1', sourceLabel: 'src', __typename: 'Document' }],
-      evidence: [{ id: 'ev1', documentId: 'doc_1', mentionIds: ['m1'], relationshipIds: [], __typename: 'ClaimEvidence' }],
+      evidence: [
+        {
+          id: 'ev1',
+          sourceDocumentId: 'doc_1',
+          chunkId: 'chunk_1',
+          startOffset: 0,
+          endOffset: 5,
+          snippet: 'Claim',
+          createdAt: '2026-01-02T00:00:00.000Z',
+          createdBy: 'u1',
+          sourceType: 'DOCUMENT',
+          __typename: 'Evidence',
+        },
+      ],
       __typename: 'Claim',
     };
 
@@ -71,7 +84,7 @@ describe('ClaimsView', () => {
 
     expect(screen.getByLabelText('Claim detail drawer')).toBeInTheDocument();
     const jump = screen.getByRole('link', { name: /jump to evidence/i });
-    expect(jump).toHaveAttribute('href', '/documents?documentId=doc_1&mentionId=m1');
+    expect(jump).toHaveAttribute('href', '/documents/doc_1?chunkId=chunk_1');
 
     // Exercise claim drawer close handler for coverage.
     await user.click(screen.getByRole('button', { name: /close claim drawer/i }));

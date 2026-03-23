@@ -17,23 +17,25 @@ import {
 } from '@mui/material';
 
 import { ImmutableRecordBadge } from '../../integrity/components/ImmutableRecordBadge';
-import type { Claim, ClaimEvidence } from '../hooks/useClaims';
+import type { Claim, Evidence } from '../hooks/useClaims';
 import { ClaimStatusBadge } from './ClaimStatusBadge';
 
-function evidenceLabel(ev: ClaimEvidence) {
-  const parts: string[] = [];
-  parts.push(`doc=${ev.documentId}`);
-  if (ev.mentionIds.length) parts.push(`mentions=${ev.mentionIds.length}`);
-  if (ev.relationshipIds.length) parts.push(`relationships=${ev.relationshipIds.length}`);
-  return parts.join(' • ');
+function evidenceLabel(ev: Evidence) {
+  const docId = ev.sourceDocumentId ?? '—';
+  const chunkInfo = ev.chunkId ? `chunk=${ev.chunkId}` : null;
+  const spanInfo =
+    ev.startOffset != null && ev.endOffset != null
+      ? `span ${ev.startOffset}-${ev.endOffset}`
+      : null;
+  return [docId, chunkInfo, spanInfo].filter(Boolean).join(' • ');
 }
 
-function evidenceHref(ev: ClaimEvidence) {
-  const docId = encodeURIComponent(ev.documentId);
-  const mentionId = ev.mentionIds[0] ? encodeURIComponent(ev.mentionIds[0]) : null;
-  if (mentionId) return `/documents?documentId=${docId}&mentionId=${mentionId}`;
-  // Fallback: evidence is still reachable via document inspection.
-  return `/documents/${docId}`;
+function evidenceHref(ev: Evidence) {
+  const docId = ev.sourceDocumentId;
+  if (!docId) return '/documents';
+  const encoded = encodeURIComponent(docId);
+  if (ev.chunkId) return `/documents/${encoded}?chunkId=${encodeURIComponent(ev.chunkId)}`;
+  return `/documents/${encoded}`;
 }
 
 export function ClaimDetailDrawer(props: { open: boolean; claim: Claim | null; onClose: () => void }) {

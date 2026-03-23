@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * MentionHighlightOverlay — boundary-aligned highlight of evidence spans (ADR-020).
+ * Renders verbatim segment text; highlights mark evidence boundaries, not interpretation.
+ */
 import { Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 

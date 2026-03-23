@@ -1,0 +1,9 @@
+{
+  "testEnvironment": "node",
+  "testMatch": ["**/tests/guardrails.spec.ts"],
+  "moduleFileExtensions": ["ts", "js", "json"],
+  "transform": {
+    "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": { "esModuleInterop": true, "allowSyntheticDefaultImports": true } }]
+  },
+  "rootDir": ".."
+}

@@ -14,7 +14,6 @@ export type AiQueryHeader = {
 export type AiQueryResult = {
   __typename?: 'AiQueryResult';
   id: string;
-  score: number;
   answer: string;
   query: AiQueryHeader;
 };

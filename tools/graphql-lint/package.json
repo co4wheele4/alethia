@@ -1,0 +1,13 @@
+{
+  "name": "graphql-lint-aletheia",
+  "version": "1.0.0",
+  "description": "GraphQL query linting for Aletheia epistemic guardrails (ADR-022)",
+  "private": true,
+  "type": "commonjs",
+  "bin": {
+    "graphql-lint": "noSemanticQueries.cjs"
+  },
+  "dependencies": {
+    "graphql": "^16.12.0"
+  }
+}

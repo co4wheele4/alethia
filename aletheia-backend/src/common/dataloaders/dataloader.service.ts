@@ -394,26 +394,24 @@ export class DataLoaderService {
     this.evidenceMentionLinksByEvidenceLoader = new DataLoader<
       string,
       EntityRelationshipEvidenceMention[]
-    >(async (evidenceIds: readonly string[]) => {
+    >(async (ids: readonly string[]) => {
       const links: PrismaEntityRelationshipEvidenceMention[] =
         await this.prisma.entityRelationshipEvidenceMention.findMany({
-          where: { evidenceId: { in: [...evidenceIds] } },
+          where: { evidenceId: { in: [...ids] } },
         });
       const linksByEvidenceId = new Map<
         string,
         EntityRelationshipEvidenceMention[]
       >();
-      for (const evidenceId of evidenceIds) {
-        linksByEvidenceId.set(evidenceId, []);
+      for (const id of ids) {
+        linksByEvidenceId.set(id, []);
       }
       for (const link of links) {
         const list = linksByEvidenceId.get(link.evidenceId) ?? [];
         list.push(link as unknown as EntityRelationshipEvidenceMention);
         linksByEvidenceId.set(link.evidenceId, list);
       }
-      return evidenceIds.map(
-        (evidenceId) => linksByEvidenceId.get(evidenceId)!,
-      );
+      return ids.map((id) => linksByEvidenceId.get(id)!);
     });
 
     this.relationshipsByFromEntityLoader = new DataLoader<

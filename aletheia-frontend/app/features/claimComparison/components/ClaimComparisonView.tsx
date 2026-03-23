@@ -4,11 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client/react';
 
 import { useClaimsForComparison } from '../hooks/useClaimsForComparison';
 import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
-import { LIST_RELATIONSHIPS_QUERY } from '@/src/graphql';
 import { ClaimComparisonColumn } from './ClaimComparisonColumn';
 import { ClaimComparisonPanel } from './ClaimComparisonPanel';
 import { RequestReviewDialog } from './RequestReviewDialog';
@@ -16,32 +14,8 @@ import { useRequestReview } from '../../reviewerQueue';
 import { ReviewActivityPanel } from '../../reviewActivity/components/ReviewActivityPanel';
 import { useReviewActivityForClaim } from '../../reviewActivity/hooks/useReviewActivityForClaim';
 import type { ClaimEvidenceListModel } from './ClaimEvidenceList';
-import type { ClaimComparisonClaim, ClaimComparisonDocument, ClaimComparisonMention } from '../hooks/useClaimsForComparison';
+import type { ClaimComparisonClaim, ClaimComparisonDocument } from '../hooks/useClaimsForComparison';
 import type { ClaimEvidenceSnippetModel } from './ClaimEvidenceSnippet';
-
-type RelationshipEvidenceAnchor = {
-  __typename?: 'EntityRelationshipEvidence';
-  id: string;
-  chunkId: string;
-  startOffset?: number | null;
-  endOffset?: number | null;
-  chunk: {
-    __typename?: 'DocumentChunk';
-    id: string;
-    chunkIndex: number;
-    content: string;
-    documentId: string;
-    document: { __typename?: 'Document'; id: string; title: string; createdAt: string; sourceType?: string | null; sourceLabel?: string | null };
-  };
-};
-
-type Relationship = {
-  __typename?: 'EntityRelationship';
-  id: string;
-  evidence: RelationshipEvidenceAnchor[];
-};
-
-type ListRelationshipsData = { entityRelationships: Relationship[] };
 
 function fail(message: string): never {
   throw new Error(`[ClaimComparison] ${message}`);
@@ -51,80 +25,14 @@ function uniqueStrings(values: readonly string[]) {
   return Array.from(new Set(values.filter(Boolean)));
 }
 
-type MentionRef = {
-  mention: ClaimComparisonMention;
-  document: ClaimComparisonDocument;
-  chunkIndex: number;
-  chunkText: string;
-};
-
-function indexMentionsById(documents: ClaimComparisonDocument[]) {
-  const byId = new Map<string, MentionRef>();
-  for (const doc of documents ?? []) {
-    for (const chunk of doc.chunks ?? []) {
-      for (const mention of chunk.mentions ?? []) {
-        byId.set(mention.id, {
-          mention,
-          document: doc,
-          chunkIndex: chunk.chunkIndex,
-          chunkText: chunk.content ?? '',
-        });
-      }
-    }
-  }
-  return byId;
-}
-
-function indexMentionEntityIdsByMentionId(documents: ClaimComparisonDocument[]) {
-  const byId = new Map<string, string>();
-  for (const doc of documents ?? []) {
-    for (const chunk of doc.chunks ?? []) {
-      for (const mention of chunk.mentions ?? []) {
-        byId.set(mention.id, mention.entityId);
-      }
-    }
-  }
-  return byId;
-}
-
 function relatedClaimsFromSchema(args: { base: ClaimComparisonClaim; all: ClaimComparisonClaim[] }) {
   const { base, all } = args;
   const baseDocIds = new Set((base.documents ?? []).map((d) => d.id));
 
-  const baseMentionEntityIds = (() => {
-    const mentionIdToEntityId = indexMentionEntityIdsByMentionId(base.documents ?? []);
-    const entityIds = new Set<string>();
-    for (const ev of base.evidence ?? []) {
-      for (const mentionId of ev.mentionIds ?? []) {
-        const entityId = mentionIdToEntityId.get(mentionId);
-        if (!entityId) {
-          // Evidence references must be resolvable for offset-grounded inspection.
-          fail(`Base claim references mentionId=${mentionId} but it is missing from its documents/chunks/mentions payload.`);
-        }
-        entityIds.add(entityId);
-      }
-    }
-    return entityIds;
-  })();
-
-  const out = all
-    .filter((c) => c.id !== base.id)
-    .filter((c) => {
-      const sharesDoc = (c.documents ?? []).some((d) => baseDocIds.has(d.id));
-      if (sharesDoc) return true;
-
-      if (baseMentionEntityIds.size === 0) return false;
-      const mentionIdToEntityId = indexMentionEntityIdsByMentionId(c.documents ?? []);
-      for (const ev of c.evidence ?? []) {
-        for (const mentionId of ev.mentionIds ?? []) {
-          const entityId = mentionIdToEntityId.get(mentionId);
-          if (entityId && baseMentionEntityIds.has(entityId)) return true;
-        }
-      }
-      return false;
-    });
-
-  return out;
+  return all.filter(
+    (c) =>
+      c.id !== base.id && (c.documents ?? []).some((d) => baseDocIds.has(d.id))
+  );
 }
 
 function assertPresent<T>(value: T | null | undefined, label: string): NonNullable<T> {
@@ -139,86 +47,50 @@ function assertValidOffsets(args: { text: string; start: number; end: number; la
   if (end > text.length) fail(`${label} offsets exceed chunk length (${end} > ${text.length})`);
 }
 
-function buildEvidenceModel(args: {
-  claim: ClaimComparisonClaim;
-  relationshipsById: Map<string, Relationship>;
-  relationshipsPending: boolean;
-}): ClaimEvidenceListModel {
-  const { claim, relationshipsById, relationshipsPending } = args;
-
-  const mentionIndex = indexMentionsById(claim.documents ?? []);
-
+function buildEvidenceModel(claim: ClaimComparisonClaim): ClaimEvidenceListModel {
   const snippets: ClaimEvidenceSnippetModel[] = [];
 
-  const relationshipsReferenced = uniqueStrings((claim.evidence ?? []).flatMap((e) => e.relationshipIds ?? [])).sort();
-  const relationshipsPendingIds = relationshipsPending ? relationshipsReferenced : [];
-  const relationshipsWithNoEvidence: string[] = [];
+  const docById = new Map((claim.documents ?? []).map((d) => [d.id, d]));
 
   for (const ev of claim.evidence ?? []) {
-    for (const mentionId of uniqueStrings(ev.mentionIds ?? [])) {
-      const ref = mentionIndex.get(mentionId);
-      if (!ref) {
-        fail(
-          `Claim(${claim.id}) references mentionId=${mentionId}, but it is missing from documents/chunks/mentions (cannot render offsets).`
-        );
-      }
+    const docId = ev.sourceDocumentId;
+    const chunkId = ev.chunkId;
+    const startOffset = ev.startOffset;
+    const endOffset = ev.endOffset;
+    if (!docId || !chunkId || startOffset == null || endOffset == null) continue;
 
-      const startOffset = assertPresent(ref.mention.startOffset, `EntityMention(${ref.mention.id}).startOffset`);
-      const endOffset = assertPresent(ref.mention.endOffset, `EntityMention(${ref.mention.id}).endOffset`);
-      assertValidOffsets({ text: ref.chunkText ?? '', start: startOffset, end: endOffset, label: `EntityMention(${ref.mention.id})` });
+    const doc = docById.get(docId);
+    if (!doc) continue;
 
-      snippets.push({
-        kind: 'mention',
-        evidenceId: ev.id,
-        documentId: ref.document.id,
-        documentTitle: ref.document.title,
-        chunkIndex: ref.chunkIndex,
-        chunkText: ref.chunkText ?? '',
-        startOffset,
-        endOffset,
-        mentionId: ref.mention.id,
-        entityLabel: ref.mention.entity?.name ?? ref.mention.excerpt ?? null,
-      });
-    }
+    const chunk = doc.chunks?.find((c) => c.id === chunkId);
+    if (!chunk) continue;
 
-    // Relationship evidence anchors are fetched via LIST_RELATIONSHIPS_QUERY (no by-id query exists in schema).
-    for (const relationshipId of uniqueStrings(ev.relationshipIds ?? [])) {
-      if (relationshipsPending) continue;
-      const rel = relationshipsById.get(relationshipId);
-      if (!rel) fail(`Claim(${claim.id}) references relationshipId=${relationshipId}, but it is missing from entityRelationships.`);
+    const chunkText = chunk.content ?? '';
+    assertValidOffsets({ text: chunkText, start: startOffset, end: endOffset, label: `Evidence(${ev.id})` });
 
-      if (!Array.isArray(rel.evidence) || rel.evidence.length === 0) {
-        relationshipsWithNoEvidence.push(relationshipId);
-        continue;
-      }
+    const matchingMention = (chunk.mentions ?? []).find(
+      (m) => m.startOffset != null && m.endOffset != null && m.startOffset === startOffset && m.endOffset === endOffset
+    );
+    const mentionId = matchingMention?.id ?? '';
 
-      for (const anchor of rel.evidence) {
-        const startOffset = assertPresent(anchor.startOffset, `EntityRelationshipEvidence(${anchor.id}).startOffset`);
-        const endOffset = assertPresent(anchor.endOffset, `EntityRelationshipEvidence(${anchor.id}).endOffset`);
-        const chunkText = assertPresent(anchor.chunk?.content, `EntityRelationshipEvidence(${anchor.id}).chunk.content`);
-        assertValidOffsets({ text: chunkText, start: startOffset, end: endOffset, label: `EntityRelationshipEvidence(${anchor.id})` });
-        const doc = assertPresent(anchor.chunk?.document, `EntityRelationshipEvidence(${anchor.id}).chunk.document`);
-
-        snippets.push({
-          kind: 'relationship',
-          evidenceId: ev.id,
-          relationshipId,
-          anchorId: anchor.id,
-          documentId: doc.id,
-          documentTitle: doc.title,
-          chunkIndex: anchor.chunk.chunkIndex,
-          chunkText,
-          startOffset,
-          endOffset,
-        });
-      }
-    }
+    snippets.push({
+      kind: 'mention',
+      evidenceId: ev.id,
+      documentId: doc.id,
+      documentTitle: doc.title,
+      chunkIndex: chunk.chunkIndex,
+      chunkText,
+      startOffset,
+      endOffset,
+      mentionId,
+      entityLabel: ev.snippet ?? matchingMention?.excerpt ?? null,
+    });
   }
 
   return {
     snippets,
-    relationshipsWithNoEvidence: uniqueStrings(relationshipsWithNoEvidence).sort(),
-    relationshipsPending: relationshipsPendingIds,
+    relationshipsWithNoEvidence: [],
+    relationshipsPending: [],
   };
 }
 
@@ -266,34 +138,9 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
 
   const comparedClaims = useMemo(() => (base ? [base, ...related] : []), [base, related]);
 
-  const neededRelationshipIds = useMemo(() => {
-    const ids: string[] = [];
-    for (const c of comparedClaims) {
-      for (const ev of c.evidence ?? []) {
-        ids.push(...(ev.relationshipIds ?? []));
-      }
-    }
-    return uniqueStrings(ids).sort();
-  }, [comparedClaims]);
-
-  const relationshipsQuery = useQuery<ListRelationshipsData>(LIST_RELATIONSHIPS_QUERY, {
-    fetchPolicy: 'cache-first',
-    skip: neededRelationshipIds.length === 0,
-  });
-
-  const relationshipsById = useMemo(() => {
-    const m = new Map<string, Relationship>();
-    for (const r of relationshipsQuery.data?.entityRelationships ?? []) m.set(r.id, r);
-    return m;
-  }, [relationshipsQuery.data]);
-
   const { evidenceByClaimId, contractError } = useMemo(() => {
     if (!base) return { evidenceByClaimId: new Map<string, ClaimEvidenceListModel>(), contractError: null as Error | null };
-    if (relationshipsQuery.error) {
-      return { evidenceByClaimId: new Map<string, ClaimEvidenceListModel>(), contractError: relationshipsQuery.error };
-    }
 
-    const pending = neededRelationshipIds.length > 0 && relationshipsQuery.loading;
     try {
       const m = new Map<string, ClaimEvidenceListModel>();
       for (const c of comparedClaims) {
@@ -303,20 +150,13 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
         if (!Array.isArray(c.documents) || c.documents.length === 0) {
           fail(`Claim(${c.id}) violates contract: documents[] must be non-empty (for document titles and offset inspection)`);
         }
-        m.set(
-          c.id,
-          buildEvidenceModel({
-            claim: c,
-            relationshipsById,
-            relationshipsPending: pending,
-          })
-        );
+        m.set(c.id, buildEvidenceModel(c));
       }
       return { evidenceByClaimId: m, contractError: null };
     } catch (err) {
       return { evidenceByClaimId: new Map<string, ClaimEvidenceListModel>(), contractError: err instanceof Error ? err : new Error(String(err)) };
     }
-  }, [base, comparedClaims, neededRelationshipIds.length, relationshipsById, relationshipsQuery.error, relationshipsQuery.loading]);
+  }, [base, comparedClaims]);
 
   if (error) {
     return <Alert severity="error">{error.message}</Alert>;
@@ -358,7 +198,7 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
         modeCaption={
           withClaimIds.length
             ? 'Compared claims were explicitly selected via URL query params (with=...). No additional claims are inferred or added.'
-            : 'Related claims are derived client-side from schema fields only (shared document IDs and evidence-linked entity IDs).'
+            : 'Related claims are derived client-side from shared document IDs.'
         }
       />
 

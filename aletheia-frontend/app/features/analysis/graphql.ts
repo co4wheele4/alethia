@@ -14,7 +14,6 @@ export const ASK_AI_MUTATION = gql`
     askAi(userId: $userId, query: $query) {
       __typename
       id
-      score
       answer
       query {
         __typename
@@ -36,7 +35,6 @@ export const AI_QUERIES_BY_USER_QUERY = gql`
       results {
         __typename
         id
-        score
         answer
       }
     }

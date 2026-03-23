@@ -9,7 +9,8 @@ import { useEffect, useState } from 'react';
  */
 export function MSWProvider({ children }: { children: React.ReactNode }) {
   const shouldStart =
-    process.env.NEXT_PUBLIC_MSW === 'enabled' || process.env.NODE_ENV === 'development';
+    process.env.NEXT_PUBLIC_MSW !== 'disabled' &&
+    (process.env.NEXT_PUBLIC_MSW === 'enabled' || process.env.NODE_ENV === 'development');
   const [ready, setReady] = useState(!shouldStart);
 
   useEffect(() => {

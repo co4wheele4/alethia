@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { setupGraphQLMocks } from './helpers/msw-handlers';
 
 function attachMswErrorCollector(page: Page) {
   const errors: string[] = [];
@@ -39,6 +40,10 @@ async function login(page: Page) {
 }
 
 test.describe('MSW smoke (dev-like)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/graphql', setupGraphQLMocks);
+  });
+
   test('no unhandled MSW requests across core pages', async ({ page }) => {
     const mswErrors = attachMswErrorCollector(page);
 

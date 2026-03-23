@@ -22,5 +22,22 @@ describe('MSW guard handlers', () => {
     const bodyText = await res.text();
     expect(bodyText).toMatch(/\[MSW guard\]/i);
   });
+
+  it('ADR-021: fails when similarity or graph metric fields are requested', async () => {
+    const res = await fetch('http://example.test/graphql', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'query ListClaims { claims { id similarity } }',
+        variables: {},
+      }),
+    });
+
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(500);
+    const bodyText = await res.text();
+    expect(bodyText).toMatch(/ADR-021/i);
+    expect(bodyText).toMatch(/similarity/i);
+  });
 });
 

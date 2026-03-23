@@ -3,8 +3,8 @@
 import { useApolloClient } from '@apollo/client/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { GET_DOCUMENT_EVIDENCE_VIEW_QUERY, LIST_RELATIONSHIPS_QUERY } from '@/src/graphql';
-import { useClaims, type Claim, type ClaimEvidence, type ClaimStatus } from '../../claims/hooks/useClaims';
+import { GET_DOCUMENT_EVIDENCE_VIEW_QUERY } from '@/src/graphql';
+import { useClaims, type Claim, type Evidence, type ClaimStatus } from '../../claims/hooks/useClaims';
 import { useAdjudicateClaim, type ClaimLifecycleState } from './useAdjudicateClaim';
 
 export type ClaimReviewEvidenceItem =
@@ -90,120 +90,52 @@ type DocumentEvidenceView = {
   }>;
 };
 
-type Relationship = {
-  __typename?: 'EntityRelationship';
-  id: string;
-  evidence: Array<{
-    __typename?: 'EntityRelationshipEvidence';
-    id: string;
-    chunkId: string;
-    startOffset?: number | null;
-    endOffset?: number | null;
-    chunk: {
-      __typename?: 'DocumentChunk';
-      id: string;
-      chunkIndex: number;
-      content: string;
-      documentId: string;
-      document: {
-        __typename?: 'Document';
-        id: string;
-        title: string;
-        sourceLabel?: string | null;
-      };
-    };
-  }>;
-};
-
 type GetDocumentEvidenceViewData = { document: DocumentEvidenceView | null };
 type GetDocumentEvidenceViewVars = { id: string };
-type ListRelationshipsData = { entityRelationships: Relationship[] };
 
-function mentionEvidenceItems(args: {
-  claimEvidence: ClaimEvidence[];
+/** Build evidence items from Evidence spans (ADR-019). Evidence has locator (chunkId, startOffset, endOffset) directly.
+ * ADR-020: snippets are verbatim from chunk content; no paraphrase or summarization. */
+function evidenceSpanItems(args: {
+  claimEvidence: Evidence[];
   docsById: Map<string, DocumentEvidenceView>;
 }): ClaimReviewEvidenceItem[] {
   const { claimEvidence, docsById } = args;
   const items: ClaimReviewEvidenceItem[] = [];
 
   for (const ev of claimEvidence) {
-    const doc = docsById.get(ev.documentId);
+    const docId = ev.sourceDocumentId;
+    if (!docId) continue;
+    const doc = docsById.get(docId);
     if (!doc) continue;
 
-    const mentionIds = uniqueStrings(ev.mentionIds);
-    if (mentionIds.length === 0) continue;
+    const chunkId = ev.chunkId;
+    const startOffset = ev.startOffset;
+    const endOffset = ev.endOffset;
+    if (chunkId == null || startOffset == null || endOffset == null) continue;
 
-    for (const chunk of doc.chunks ?? []) {
-      for (const m of chunk.mentions ?? []) {
-        if (!mentionIds.includes(m.id)) continue;
-        const startOffset = assertPresent(m.startOffset, `EntityMention(${m.id}).startOffset`);
-        const endOffset = assertPresent(m.endOffset, `EntityMention(${m.id}).endOffset`);
-        const snippet =
-          sliceByOffsets(chunk.content ?? '', startOffset, endOffset) ??
-          fail(`EntityMention(${m.id}) offsets could not be applied to chunk content`);
+    const chunk = doc.chunks?.find((c) => c.id === chunkId);
+    if (!chunk) continue;
 
-        items.push({
-          kind: 'mention',
-          evidenceId: ev.id,
-          documentId: doc.id,
-          documentTitle: doc.title,
-          sourceLabel: doc.sourceLabel ?? null,
-          chunkId: chunk.id,
-          chunkIndex: chunk.chunkIndex,
-          startOffset,
-          endOffset,
-          snippet,
-          mentionId: m.id,
-          entityName: m.entity?.name ?? m.excerpt ?? null,
-          jumpHref: `/documents?documentId=${encodeURIComponent(doc.id)}&mentionId=${encodeURIComponent(m.id)}`,
-        });
-      }
-    }
-  }
+    const snippet =
+      ev.snippet ??
+      sliceByOffsets(chunk.content ?? '', startOffset, endOffset) ??
+      '';
 
-  return items;
-}
-
-function relationshipEvidenceItems(args: {
-  claimEvidence: ClaimEvidence[];
-  relationshipsById: Map<string, Relationship>;
-}): ClaimReviewEvidenceItem[] {
-  const { claimEvidence, relationshipsById } = args;
-  const items: ClaimReviewEvidenceItem[] = [];
-
-  for (const ev of claimEvidence) {
-    const relationshipIds = uniqueStrings(ev.relationshipIds);
-    for (const relationshipId of relationshipIds) {
-      const rel = relationshipsById.get(relationshipId);
-      if (!rel) continue;
-
-      for (const anchor of rel.evidence ?? []) {
-        const startOffset = assertPresent(anchor.startOffset, `EntityRelationshipEvidence(${anchor.id}).startOffset`);
-        const endOffset = assertPresent(anchor.endOffset, `EntityRelationshipEvidence(${anchor.id}).endOffset`);
-        const content = assertPresent(anchor.chunk?.content, `EntityRelationshipEvidence(${anchor.id}).chunk.content`);
-        const snippet =
-          sliceByOffsets(content, startOffset, endOffset) ??
-          fail(`EntityRelationshipEvidence(${anchor.id}) offsets could not be applied to chunk content`);
-
-        const doc = assertPresent(anchor.chunk?.document, `EntityRelationshipEvidence(${anchor.id}).chunk.document`);
-
-        items.push({
-          kind: 'relationship',
-          evidenceId: ev.id,
-          relationshipId,
-          documentId: doc.id,
-          documentTitle: doc.title,
-          sourceLabel: doc.sourceLabel ?? null,
-          chunkId: anchor.chunkId,
-          chunkIndex: anchor.chunk.chunkIndex,
-          startOffset,
-          endOffset,
-          snippet,
-          // Relationship anchors don't guarantee a concrete mention jump; fall back to document route.
-          jumpHref: `/documents/${encodeURIComponent(doc.id)}`,
-        });
-      }
-    }
+    items.push({
+      kind: 'mention',
+      evidenceId: ev.id,
+      documentId: doc.id,
+      documentTitle: doc.title,
+      sourceLabel: doc.sourceLabel ?? null,
+      chunkId,
+      chunkIndex: chunk.chunkIndex,
+      startOffset,
+      endOffset,
+      snippet,
+      mentionId: '',
+      entityName: null,
+      jumpHref: `/documents/${encodeURIComponent(doc.id)}?chunkId=${encodeURIComponent(chunkId)}`,
+    });
   }
 
   return items;
@@ -221,17 +153,14 @@ export function useClaimReview(claimId: string) {
 
   const claimEvidence = useMemo(() => claim?.evidence ?? [], [claim]);
 
-  const needsRelationshipFetch = useMemo(
-    () => claimEvidence.some((e) => (e.relationshipIds ?? []).length > 0),
+  const documentIds = useMemo(
+    () => uniqueStrings(claimEvidence.map((e) => e.sourceDocumentId).filter(Boolean) as string[]),
     [claimEvidence]
   );
-
-  const documentIds = useMemo(() => uniqueStrings(claimEvidence.map((e) => e.documentId)), [claimEvidence]);
 
   const [evidenceLoading, setEvidenceLoading] = useState(false);
   const [evidenceError, setEvidenceError] = useState<Error | null>(null);
   const [docsById, setDocsById] = useState<Map<string, DocumentEvidenceView>>(new Map());
-  const [relationshipsById, setRelationshipsById] = useState<Map<string, Relationship>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
@@ -254,20 +183,8 @@ export function useClaimReview(claimId: string) {
           if (doc) docs.set(id, doc);
         }
 
-        const relsById = new Map<string, Relationship>();
-        if (needsRelationshipFetch) {
-          const relRes = await client.query<ListRelationshipsData>({
-            query: LIST_RELATIONSHIPS_QUERY,
-            fetchPolicy: 'cache-first',
-          });
-          for (const r of relRes.data?.entityRelationships ?? []) {
-            relsById.set(r.id, r);
-          }
-        }
-
         if (cancelled) return;
         setDocsById(docs);
-        setRelationshipsById(relsById);
       } catch (err) {
         if (cancelled) return;
         setEvidenceError(err instanceof Error ? err : new Error(String(err)));
@@ -281,7 +198,7 @@ export function useClaimReview(claimId: string) {
     return () => {
       cancelled = true;
     };
-  }, [client, claim, documentIds, needsRelationshipFetch]);
+  }, [client, claim, documentIds]);
 
   const { evidenceItems, contractError } = useMemo(() => {
     if (!claim) return { evidenceItems: [] as ClaimReviewEvidenceItem[], contractError: null as Error | null };
@@ -289,17 +206,14 @@ export function useClaimReview(claimId: string) {
     if (evidenceLoading || evidenceError) return { evidenceItems: [], contractError: null };
 
     try {
-      const items = [
-        ...mentionEvidenceItems({ claimEvidence, docsById }),
-        ...relationshipEvidenceItems({ claimEvidence, relationshipsById }),
-      ];
+      const items = evidenceSpanItems({ claimEvidence, docsById });
 
       // Evidence MUST be explicit. If we cannot resolve any concrete offset snippets AFTER loading completes,
       // this claim is not reviewable and the UI must surface a hard contract error (no silent fallback).
       if (items.length === 0) {
         throw new Error(
           `No renderable evidence snippets resolved for Claim(${claim.id}). ` +
-            `ClaimEvidence references must resolve to offset-based snippets.`
+            `Evidence references must resolve to offset-based snippets.`
         );
       }
 
@@ -307,7 +221,7 @@ export function useClaimReview(claimId: string) {
     } catch (err) {
       return { evidenceItems: [], contractError: err instanceof Error ? err : new Error(String(err)) };
     }
-  }, [claim, claimEvidence, docsById, relationshipsById, evidenceError, evidenceLoading]);
+  }, [claim, claimEvidence, docsById, evidenceError, evidenceLoading]);
 
   const allowedNext = useMemo(() => {
     if (!claim) return [];

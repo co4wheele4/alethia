@@ -35,16 +35,10 @@ function assertNoConflictMetadata(value: unknown, path = 'root', seen = new Set<
   }
 }
 
-function assertClaimEvidence(ev: FixtureClaimEvidence, label: string) {
+function assertEvidence(ev: FixtureClaimEvidence, label: string) {
   assertPresent(ev.id, `${label}.id`);
-  assertPresent(ev.claimId, `${label}.claimId`);
-  assertPresent(ev.documentId, `${label}.documentId`);
-  // Widen readonly tuple unions from the fixture into stable arrays for checks.
-  const mentionIds = [...(ev.mentionIds ?? [])];
-  const relationshipIds = [...(ev.relationshipIds ?? [])];
-  if (mentionIds.length === 0 && relationshipIds.length === 0) {
-    fail(`${label} must reference mentionIds and/or relationshipIds`);
-  }
+  assertPresent(ev.sourceDocumentId, `${label}.sourceDocumentId`);
+  assertPresent(ev.createdBy, `${label}.createdBy`);
 }
 
 function assertClaimGrounded(claim: FixtureClaim, label: string) {
@@ -54,7 +48,7 @@ function assertClaimGrounded(claim: FixtureClaim, label: string) {
   if (!Array.isArray(claim.evidence)) fail(`${label}.evidence must be an array`);
   const evidence = [...claim.evidence];
   if (evidence.length === 0) fail(`${label}.evidence must be non-empty`);
-  evidence.forEach((ev, idx) => assertClaimEvidence(ev, `${label}.evidence[${idx}]`));
+  evidence.forEach((ev, idx) => assertEvidence(ev, `${label}.evidence[${idx}]`));
 }
 
 function toDocumentEvidenceView(doc: FixtureDocument) {
@@ -97,7 +91,7 @@ function isFixtureDocument(doc: FixtureDocument | undefined): doc is FixtureDocu
 function toClaimForComparison(claim: FixtureClaim) {
   assertClaimGrounded(claim, `Claim(${claim.id})`);
 
-  const docIds = Array.from(new Set([...claim.evidence].map((e) => e.documentId)));
+  const docIds = Array.from(new Set([...claim.evidence].map((e) => e.sourceDocumentId).filter(Boolean)));
   const documents = docIds
     .map((id) => fixture.documents.find((d) => d.id === id))
     .filter(isFixtureDocument)
@@ -116,11 +110,14 @@ function toClaimForComparison(claim: FixtureClaim) {
     evidence: claim.evidence.map((ev) => ({
       __typename: ev.__typename,
       id: ev.id,
-      claimId: ev.claimId,
-      documentId: ev.documentId,
       createdAt: ev.createdAt,
-      mentionIds: ev.mentionIds,
-      relationshipIds: ev.relationshipIds,
+      createdBy: ev.createdBy,
+      sourceType: ev.sourceType,
+      sourceDocumentId: ev.sourceDocumentId,
+      chunkId: ev.chunkId ?? null,
+      startOffset: ev.startOffset ?? null,
+      endOffset: ev.endOffset ?? null,
+      snippet: ev.snippet ?? null,
     })),
     documents,
   };

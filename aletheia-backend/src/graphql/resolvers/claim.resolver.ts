@@ -16,7 +16,8 @@ import { PrismaService } from '@prisma/prisma.service';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 import { Claim } from '@models/claim.model';
-import { ClaimEvidence } from '@models/claim-evidence.model';
+import { Evidence } from '@models/evidence.model';
+import { ClaimFilterInput } from '@inputs/claim-filter.input';
 import { Document } from '@models/document.model';
 
 type GqlRequestContext = {
@@ -38,11 +39,11 @@ function failInvariant(message: string): never {
 // Calling them once here is side-effect free and keeps global coverage guarantees intact.
 const claimType = () => Claim;
 const claimListType = () => [Claim];
-const claimEvidenceListType = () => [ClaimEvidence];
+const evidenceListType = () => [Evidence];
 const documentListType = () => [Document];
 void claimType();
 void claimListType();
-void claimEvidenceListType();
+void evidenceListType();
 void documentListType();
 
 @Injectable({ scope: Scope.REQUEST })
@@ -56,20 +57,63 @@ export class ClaimResolver {
 
   @Query(claimListType, {
     description:
-      'List claims visible in the current workspace (scoped via evidence -> documents).',
+      'List claims visible in the current workspace (scoped via evidence -> documents). ADR-022: filter supports only lifecycle and hasEvidence.',
   })
-  async claims(@Context() ctx?: GqlRequestContext) {
+  async claims(
+    @Args('filter', { type: () => ClaimFilterInput, nullable: true })
+    filter: ClaimFilterInput | undefined,
+    @Context() ctx?: GqlRequestContext,
+  ) {
     const authUserId = ctx?.req?.user?.sub;
     if (!authUserId) return [];
 
-    return await this.prisma.claim.findMany({
-      where: {
-        evidence: {
-          some: {
-            document: { userId: authUserId },
+    const workspaceWhere = {
+      OR: [
+        {
+          evidenceLinks: {
+            some: {
+              evidence: {
+                sourceDocument: { userId: authUserId },
+              },
+            },
           },
         },
-      },
+        {
+          evidence: {
+            some: {
+              document: { userId: authUserId },
+            },
+          },
+        },
+      ],
+    } as const;
+
+    const lifecycleWhere =
+      filter?.lifecycle !== undefined && filter?.lifecycle !== null
+        ? { status: filter.lifecycle }
+        : undefined;
+
+    let evidenceConstraint: object | undefined;
+    if (filter?.hasEvidence === true) {
+      evidenceConstraint = {
+        OR: [{ evidence: { some: {} } }, { evidenceLinks: { some: {} } }],
+      };
+    } else if (filter?.hasEvidence === false) {
+      evidenceConstraint = {
+        AND: [{ evidence: { none: {} } }, { evidenceLinks: { none: {} } }],
+      };
+    }
+
+    const where = {
+      AND: [
+        workspaceWhere,
+        ...(lifecycleWhere ? [lifecycleWhere] : []),
+        ...(evidenceConstraint ? [evidenceConstraint] : []),
+      ],
+    };
+
+    return await this.prisma.claim.findMany({
+      where,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     });
   }
@@ -95,45 +139,87 @@ export class ClaimResolver {
     }
 
     return await this.prisma.claim.findMany({
-      where: { evidence: { some: { documentId } } },
+      where: {
+        OR: [
+          {
+            evidenceLinks: {
+              some: {
+                evidence: { sourceDocumentId: documentId },
+              },
+            },
+          },
+          { evidence: { some: { documentId } } },
+        ],
+      },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     });
   }
 
-  @ResolveField(claimEvidenceListType)
+  @ResolveField(evidenceListType)
   async evidence(@Parent() claim: Claim) {
-    const evidence = await this.prisma.claimEvidence.findMany({
+    const fromLinks = await this.prisma.claimEvidenceLink.findMany({
       where: { claimId: claim.id },
+      include: { evidence: true },
+      orderBy: [{ linkedAt: 'asc' }],
+    });
+    if (fromLinks.length > 0) {
+      return fromLinks.map((l) => l.evidence);
+    }
+    const legacy = await this.prisma.claimEvidence.findMany({
+      where: { claimId: claim.id },
+      include: { document: { select: { userId: true } } },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
-    if (evidence.length === 0) {
+    if (legacy.length === 0) {
       failInvariant(
         `Claim contract violation: Claim(${claim.id}) has no evidence anchors`,
       );
     }
-    return evidence as unknown as ClaimEvidence[];
+    return legacy.map((ce) => ({
+      id: ce.id,
+      createdAt: ce.createdAt,
+      createdBy: ce.document.userId,
+      sourceType: 'DOCUMENT',
+      sourceDocumentId: ce.documentId,
+      sourceUrl: null,
+      chunkId: null,
+      startOffset: null,
+      endOffset: null,
+      snippet: null,
+    })) as unknown as Evidence[];
   }
 
   @ResolveField(documentListType)
   async documents(@Parent() claim: Claim) {
-    const evidence = await this.prisma.claimEvidence.findMany({
+    const fromLinks = await this.prisma.claimEvidenceLink.findMany({
+      where: { claimId: claim.id },
+      include: { evidence: { select: { sourceDocumentId: true } } },
+    });
+    const legacy = await this.prisma.claimEvidence.findMany({
       where: { claimId: claim.id },
       select: { documentId: true },
     });
-    if (evidence.length === 0) {
-      failInvariant(
-        `Claim contract violation: Claim(${claim.id}) has no evidence anchors (documents cannot be derived)`,
-      );
-    }
 
-    // Preserve stable order of first appearance.
     const uniqueDocIds: string[] = [];
     const seen = new Set<string>();
-    for (const ev of evidence) {
+    for (const l of fromLinks) {
+      const docId = l.evidence.sourceDocumentId;
+      if (docId && !seen.has(docId)) {
+        seen.add(docId);
+        uniqueDocIds.push(docId);
+      }
+    }
+    for (const ev of legacy) {
       if (!seen.has(ev.documentId)) {
         seen.add(ev.documentId);
         uniqueDocIds.push(ev.documentId);
       }
+    }
+
+    if (uniqueDocIds.length === 0) {
+      failInvariant(
+        `Claim contract violation: Claim(${claim.id}) has no evidence anchors (documents cannot be derived)`,
+      );
     }
 
     const docs = await Promise.all(

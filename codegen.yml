@@ -1,0 +1,20 @@
+# GraphQL Codegen - Epistemic validation (ADR-022)
+# This config validates schema + operations for forbidden fields.
+# Fail if forbidden fields or args exist.
+#
+# Note: Aletheia does not currently use codegen for type generation.
+# This file provides the validation hook contract for future codegen adoption.
+
+schema: aletheia-backend/src/schema.gql
+
+documents: []
+
+generates:
+  # Validation-only: no actual generation
+  # Run schema:lint for ADR-022 validation
+  /dev/null:
+    plugins: []
+
+# Validation: schema:lint (scripts/schema-lint-adr022.cjs) must pass before codegen.
+# Forbidden in schema: score, confidence, rank, relevance, similar, related, summary, aggregate
+# Forbidden args: orderBy, sort, compare

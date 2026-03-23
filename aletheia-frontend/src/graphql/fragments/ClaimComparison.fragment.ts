@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-import { CLAIM_EVIDENCE_FIELDS } from './claim.fragment';
+import { EVIDENCE_FIELDS } from './claim.fragment';
 import { DOCUMENT_EVIDENCE_VIEW } from './documentEvidenceView.fragment';
 
 /**
@@ -24,13 +24,13 @@ export const CLAIM_COMPARISON_ASSERTION_FIELDS = gql`
 export const CLAIM_COMPARISON_EVIDENCE_FIELDS = gql`
   fragment ClaimComparisonEvidenceFields on Claim {
     evidence {
-      ...ClaimEvidenceFields
+      ...EvidenceFields
     }
     documents {
       ...DocumentEvidenceView
     }
   }
-  ${CLAIM_EVIDENCE_FIELDS}
+  ${EVIDENCE_FIELDS}
   ${DOCUMENT_EVIDENCE_VIEW}
 `;
 

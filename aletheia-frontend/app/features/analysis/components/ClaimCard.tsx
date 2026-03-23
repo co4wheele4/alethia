@@ -4,7 +4,6 @@ import { Box, Divider, Typography } from '@mui/material';
 import { alpha, lighten } from '@mui/material/styles';
 
 import type { AiQueryResult } from '../hooks/useAskAi';
-import { ClaimScoreIndicator } from './ClaimScoreIndicator';
 import { ClaimEvidenceStack } from './ClaimEvidenceStack';
 
 export interface ClaimCardProps {
@@ -40,10 +39,6 @@ export function ClaimCard(props: ClaimCardProps) {
       <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
         {claim.answer}
       </Typography>
-
-      <Divider sx={{ my: 2 }} />
-
-      <ClaimScoreIndicator score={claim.score ?? null} />
 
       <Divider sx={{ my: 2 }} />
 

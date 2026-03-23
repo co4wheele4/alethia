@@ -117,7 +117,6 @@ describe('AppResolver', () => {
           results: {
             create: {
               answer: mockAnswer,
-              score: 1,
             },
           },
         },

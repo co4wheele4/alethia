@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * ClaimEvidenceSnippet — verbatim evidence span with source fidelity (ADR-020).
+ * Preserves exact wording from chunk; shows source reference, offsets, and "View in source".
+ */
 import Link from 'next/link';
 import { Box, Button, Stack, Typography } from '@mui/material';
 
@@ -86,7 +90,7 @@ export function ClaimEvidenceSnippet(props: { item: ClaimEvidenceSnippetModel })
           </Typography>
         </Box>
         <Button component={Link} href={jumpHref} size="small" sx={{ textTransform: 'none', flex: '0 0 auto' }}>
-          Open source
+          View in source
         </Button>
       </Stack>
 

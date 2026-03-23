@@ -8,7 +8,6 @@ import { AI_QUERIES_BY_USER_QUERY } from '../graphql';
 export type AiQueryResultItem = {
   __typename?: 'AiQueryResult';
   id: string;
-  score: number;
   answer: string;
 };
 

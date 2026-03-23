@@ -35,7 +35,6 @@ export class AppResolver {
         results: {
           create: {
             answer,
-            score: 1,
           },
         },
       },

@@ -3,10 +3,8 @@
 import { Alert, Box, Typography } from '@mui/material';
 
 /**
- * ClaimEvidenceStack
- *
- * Placeholder until the backend returns explicit citations (documentId + chunkIndex).
- * We refuse to fabricate evidence links.
+ * ClaimEvidenceStack — placeholder for claims without resolvable evidence (ADR-020).
+ * ADR-020 §5: If a claim has no evidence, UI MUST explicitly state this; MUST NOT simulate or imply evidence.
  */
 export function ClaimEvidenceStack() {
   return (

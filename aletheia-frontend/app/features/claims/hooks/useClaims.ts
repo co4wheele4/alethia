@@ -7,15 +7,22 @@ import { CLAIMS_BY_DOCUMENT_QUERY, LIST_CLAIMS_QUERY } from '../graphql';
 
 export type ClaimStatus = 'DRAFT' | 'REVIEWED' | 'ACCEPTED' | 'REJECTED';
 
-export type ClaimEvidence = {
-  __typename?: 'ClaimEvidence';
+/** Evidence (ADR-019): reference to source material; no confidence or inference. */
+export type Evidence = {
+  __typename?: 'Evidence';
   id: string;
-  claimId: string;
-  documentId: string;
   createdAt: string;
-  mentionIds: string[];
-  relationshipIds: string[];
+  createdBy: string;
+  sourceType: string;
+  sourceDocumentId?: string | null;
+  chunkId?: string | null;
+  startOffset?: number | null;
+  endOffset?: number | null;
+  snippet?: string | null;
 };
+
+/** @deprecated Use Evidence. Kept for compatibility during migration. */
+export type ClaimEvidence = Evidence;
 
 export type ClaimDocument = {
   __typename?: 'Document';
@@ -31,7 +38,7 @@ export type Claim = {
   text: string;
   status: ClaimStatus;
   createdAt: string;
-  evidence: ClaimEvidence[];
+  evidence: Evidence[];
   documents: ClaimDocument[];
 };
 
