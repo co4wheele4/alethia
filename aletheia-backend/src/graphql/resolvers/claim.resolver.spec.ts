@@ -42,10 +42,9 @@ describe('ClaimResolver', () => {
 
   it('claims applies lifecycle filter when provided', async () => {
     claimFindMany.mockResolvedValue([] as any);
-    await resolver.claims(
-      { lifecycle: 'ACCEPTED' as any },
-      { req: { user: { sub: 'u1' } } } as any,
-    );
+    await resolver.claims({ lifecycle: 'ACCEPTED' as any }, {
+      req: { user: { sub: 'u1' } },
+    } as any);
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -59,19 +58,15 @@ describe('ClaimResolver', () => {
 
   it('claims applies hasEvidence:true filter when provided', async () => {
     claimFindMany.mockResolvedValue([] as any);
-    await resolver.claims(
-      { hasEvidence: true },
-      { req: { user: { sub: 'u1' } } } as any,
-    );
+    await resolver.claims({ hasEvidence: true }, {
+      req: { user: { sub: 'u1' } },
+    } as any);
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           AND: expect.arrayContaining([
             {
-              OR: [
-                { evidence: { some: {} } },
-                { evidenceLinks: { some: {} } },
-              ],
+              OR: [{ evidence: { some: {} } }, { evidenceLinks: { some: {} } }],
             },
           ]),
         }),
@@ -81,10 +76,9 @@ describe('ClaimResolver', () => {
 
   it('claims applies hasEvidence:false filter when provided', async () => {
     claimFindMany.mockResolvedValue([] as any);
-    await resolver.claims(
-      { hasEvidence: false },
-      { req: { user: { sub: 'u1' } } } as any,
-    );
+    await resolver.claims({ hasEvidence: false }, {
+      req: { user: { sub: 'u1' } },
+    } as any);
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({

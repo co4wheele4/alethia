@@ -21,9 +21,10 @@ describe('AssertNoDerivedSemanticsGuard', () => {
     >;
   });
 
-  function createContext(
-    body?: { query?: string; variables?: unknown },
-  ): ExecutionContext {
+  function createContext(body?: {
+    query?: string;
+    variables?: unknown;
+  }): ExecutionContext {
     const ctx = {
       getType: () => 'graphql',
       switchToHttp: () => ({}),
