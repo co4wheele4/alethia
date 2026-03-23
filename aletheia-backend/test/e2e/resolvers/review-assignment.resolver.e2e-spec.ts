@@ -19,9 +19,17 @@ describe('ReviewAssignmentResolver (ADR-016 reviewer responses)', () => {
   async function seedClaimVisibleToBothUsers() {
     const { prisma, testData } = context;
 
-    // Seed an admin-owned document so both users can have workspace visibility to the same claim.
+    // Seed an admin-owned document + chunk so admin has workspace visibility.
     const adminDoc = await prisma.document.create({
       data: { title: 'Admin Evidence Doc', userId: testData.admin.id },
+      select: { id: true },
+    });
+    const adminChunk = await prisma.documentChunk.create({
+      data: {
+        documentId: adminDoc.id,
+        chunkIndex: 0,
+        content: 'Admin chunk content',
+      },
       select: { id: true },
     });
 
@@ -36,14 +44,39 @@ describe('ReviewAssignmentResolver (ADR-016 reviewer responses)', () => {
       },
     });
 
-    // Evidence anchors granting visibility to BOTH workspaces:
-    // - user workspace (seeded document)
-    // - admin workspace (adminDoc)
-    await prisma.claimEvidence.createMany({
-      data: [
-        { claimId: claim.id, documentId: context.testData.document.id },
-        { claimId: claim.id, documentId: adminDoc.id },
-      ],
+    // ADR-019 Evidence + ClaimEvidenceLink (requestReview requires evidence-closed claim).
+    // User's document (testData.document + testData.chunk) for user workspace visibility.
+    const userEvidence = await prisma.evidence.create({
+      data: {
+        sourceType: 'DOCUMENT',
+        sourceDocumentId: testData.document.id,
+        chunkId: testData.chunk.id,
+        startOffset: 0,
+        endOffset: 5,
+        snippet: 'Test ',
+        createdBy: testData.user.id,
+      },
+      select: { id: true },
+    });
+    await prisma.claimEvidenceLink.create({
+      data: { evidenceId: userEvidence.id, claimId: claim.id },
+    });
+
+    // Admin's document for admin workspace visibility (assignReviewer).
+    const adminEvidence = await prisma.evidence.create({
+      data: {
+        sourceType: 'DOCUMENT',
+        sourceDocumentId: adminDoc.id,
+        chunkId: adminChunk.id,
+        startOffset: 0,
+        endOffset: 5,
+        snippet: 'Admin',
+        createdBy: testData.admin.id,
+      },
+      select: { id: true },
+    });
+    await prisma.claimEvidenceLink.create({
+      data: { evidenceId: adminEvidence.id, claimId: claim.id },
     });
 
     return { claimId: claim.id };

@@ -11,7 +11,6 @@ export { EntityRelationshipEvidenceMentionResolver } from './entity-relationship
 export { AiQueryResolver } from './ai-query.resolver';
 export { AiQueryResultResolver } from './ai-query.resolver';
 export { ClaimResolver } from './claim.resolver';
-export { ClaimEvidenceResolver } from './claim-evidence.resolver';
 export { EvidenceResolver } from './evidence.resolver';
 export { ClaimAdjudicationResolver } from './claim-adjudication.resolver';
 export { ReviewRequestResolver } from './review-request.resolver';

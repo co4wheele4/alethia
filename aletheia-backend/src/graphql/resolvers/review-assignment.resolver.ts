@@ -91,7 +91,22 @@ export class ReviewAssignmentResolver {
       where: {
         id: reviewRequestId,
         claim: {
-          evidence: { some: { document: { userId: assignedByUserId } } },
+          OR: [
+            {
+              evidenceLinks: {
+                some: {
+                  evidence: {
+                    sourceDocument: { userId: assignedByUserId },
+                  },
+                },
+              },
+            },
+            {
+              evidence: {
+                some: { document: { userId: assignedByUserId } },
+              },
+            },
+          ],
         },
       },
       select: { id: true, claimId: true },
@@ -102,7 +117,22 @@ export class ReviewAssignmentResolver {
     const reviewerHasVisibility = await this.prisma.claim.findFirst({
       where: {
         id: rr.claimId,
-        evidence: { some: { document: { userId: reviewerUserId } } },
+        OR: [
+          {
+            evidenceLinks: {
+              some: {
+                evidence: {
+                  sourceDocument: { userId: reviewerUserId },
+                },
+              },
+            },
+          },
+          {
+            evidence: {
+              some: { document: { userId: reviewerUserId } },
+            },
+          },
+        ],
       },
       select: { id: true },
     });

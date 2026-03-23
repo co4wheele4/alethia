@@ -45,7 +45,7 @@ describe('resolvers/index', () => {
     expect(resolvers.ClaimResolver).toBeDefined();
   });
 
-  it('should export ClaimEvidenceResolver', () => {
-    expect(resolvers.ClaimEvidenceResolver).toBeDefined();
+  it('should export EvidenceResolver', () => {
+    expect(resolvers.EvidenceResolver).toBeDefined();
   });
 });
