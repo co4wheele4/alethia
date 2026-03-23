@@ -40,6 +40,67 @@ describe('ClaimResolver', () => {
     expect(claimFindMany).not.toHaveBeenCalled();
   });
 
+  it('claims applies lifecycle filter when provided', async () => {
+    claimFindMany.mockResolvedValue([] as any);
+    await resolver.claims(
+      { lifecycle: 'ACCEPTED' as any },
+      { req: { user: { sub: 'u1' } } } as any,
+    );
+    expect(claimFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            expect.objectContaining({ status: 'ACCEPTED' }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it('claims applies hasEvidence:true filter when provided', async () => {
+    claimFindMany.mockResolvedValue([] as any);
+    await resolver.claims(
+      { hasEvidence: true },
+      { req: { user: { sub: 'u1' } } } as any,
+    );
+    expect(claimFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            {
+              OR: [
+                { evidence: { some: {} } },
+                { evidenceLinks: { some: {} } },
+              ],
+            },
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it('claims applies hasEvidence:false filter when provided', async () => {
+    claimFindMany.mockResolvedValue([] as any);
+    await resolver.claims(
+      { hasEvidence: false },
+      { req: { user: { sub: 'u1' } } } as any,
+    );
+    expect(claimFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            {
+              AND: [
+                { evidence: { none: {} } },
+                { evidenceLinks: { none: {} } },
+              ],
+            },
+          ]),
+        }),
+      }),
+    );
+  });
+
   it('claims queries by evidence->document.userId when authenticated', async () => {
     claimFindMany.mockResolvedValue([{ id: 'c1' }] as any);
     const result = await resolver.claims(undefined, {
@@ -182,6 +243,60 @@ describe('ClaimResolver', () => {
     await expect(resolver.documents({ id: 'c1' } as any)).rejects.toThrow(
       /missing Document\(doc_1\)/i,
     );
+  });
+
+  it('documents resolveField returns docs from links when present', async () => {
+    claimEvidenceLinkFindMany.mockResolvedValue([
+      { evidence: { sourceDocumentId: 'doc_1' } },
+      { evidence: { sourceDocumentId: 'doc_2' } },
+    ] as any);
+    claimEvidenceFindMany.mockResolvedValue([] as any);
+    const load = jest
+      .fn()
+      .mockImplementation(async (id: string) => ({ id }) as any);
+    dataLoaders.getDocumentLoader.mockReturnValue({ load } as any);
+
+    const result = await resolver.documents({ id: 'c1' } as any);
+    expect(result).toEqual([{ id: 'doc_1' }, { id: 'doc_2' }]);
+    expect(load).toHaveBeenCalledWith('doc_1');
+    expect(load).toHaveBeenCalledWith('doc_2');
+  });
+
+  it('documents resolveField skips null sourceDocumentId from links', async () => {
+    claimEvidenceLinkFindMany.mockResolvedValue([
+      { evidence: { sourceDocumentId: 'doc_1' } },
+      { evidence: { sourceDocumentId: null } },
+    ] as any);
+    claimEvidenceFindMany.mockResolvedValue([] as any);
+    const load = jest
+      .fn()
+      .mockImplementation(async (id: string) => ({ id }) as any);
+    dataLoaders.getDocumentLoader.mockReturnValue({ load } as any);
+
+    const result = await resolver.documents({ id: 'c1' } as any);
+    expect(result).toEqual([{ id: 'doc_1' }]);
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledWith('doc_1');
+  });
+
+  it('documents resolveField merges docs from both links and legacy', async () => {
+    claimEvidenceLinkFindMany.mockResolvedValue([
+      { evidence: { sourceDocumentId: 'doc_from_link' } },
+    ] as any);
+    claimEvidenceFindMany.mockResolvedValue([
+      { documentId: 'doc_from_legacy' },
+    ] as any);
+    const load = jest
+      .fn()
+      .mockImplementation(async (id: string) => ({ id }) as any);
+    dataLoaders.getDocumentLoader.mockReturnValue({ load } as any);
+
+    const result = await resolver.documents({ id: 'c1' } as any);
+    expect(result).toHaveLength(2);
+    expect(result.map((d: any) => d.id)).toEqual([
+      'doc_from_link',
+      'doc_from_legacy',
+    ]);
   });
 
   it('documents resolveField returns deduped documents in stable order', async () => {

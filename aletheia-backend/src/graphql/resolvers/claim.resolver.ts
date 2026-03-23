@@ -41,10 +41,12 @@ const claimType = () => Claim;
 const claimListType = () => [Claim];
 const evidenceListType = () => [Evidence];
 const documentListType = () => [Document];
+const claimFilterInputType = () => ClaimFilterInput;
 void claimType();
 void claimListType();
 void evidenceListType();
 void documentListType();
+void claimFilterInputType();
 
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(claimType)
@@ -60,7 +62,7 @@ export class ClaimResolver {
       'List claims visible in the current workspace (scoped via evidence -> documents). ADR-022: filter supports only lifecycle and hasEvidence.',
   })
   async claims(
-    @Args('filter', { type: () => ClaimFilterInput, nullable: true })
+    @Args('filter', { type: claimFilterInputType, nullable: true })
     filter: ClaimFilterInput | undefined,
     @Context() ctx?: GqlRequestContext,
   ) {

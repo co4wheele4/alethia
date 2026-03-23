@@ -41,6 +41,254 @@ describe('EvidenceResolver', () => {
     resolver = new EvidenceResolver(prisma);
   });
 
+  it('evidenceById returns evidence when found', async () => {
+    evidenceFindUnique.mockResolvedValue({ id: 'e1' } as any);
+    const result = await resolver.evidenceById('e1');
+    expect(result).toEqual({ id: 'e1' });
+    expect(evidenceFindUnique).toHaveBeenCalledWith({ where: { id: 'e1' } });
+  });
+
+  it('evidenceById returns null when not found', async () => {
+    evidenceFindUnique.mockResolvedValue(null);
+    const result = await resolver.evidenceById('e_missing');
+    expect(result).toBeNull();
+  });
+
+  it('createEvidence rejects UNAUTHORIZED when no user in context', async () => {
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+          sourceDocumentId: 'doc1',
+          chunkId: 'ch1',
+          startOffset: 0,
+          endOffset: 5,
+        } as any,
+        {} as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+  });
+
+  it('createEvidence rejects EVIDENCE_SOURCE_REQUIRED for URL without sourceUrl', async () => {
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.URL,
+        } as any,
+        ctx as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.EVIDENCE_SOURCE_REQUIRED },
+    });
+  });
+
+  it('createEvidence rejects EVIDENCE_SOURCE_REQUIRED for URL source', async () => {
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.URL,
+          sourceUrl: 'https://example.com',
+        } as any,
+        ctx as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.EVIDENCE_SOURCE_REQUIRED },
+    });
+  });
+
+  it('createEvidence rejects UNAUTHORIZED when document belongs to another user', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'other' });
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+          sourceDocumentId: 'doc1',
+          chunkId: 'ch1',
+          startOffset: 0,
+          endOffset: 5,
+        } as any,
+        ctx as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+  });
+
+  it('createEvidence rejects EVIDENCE_MALFORMED_OFFSETS when snippet does not match content', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue({
+      id: 'ch1',
+      documentId: 'doc1',
+      content: 'hello world',
+    });
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+          sourceDocumentId: 'doc1',
+          chunkId: 'ch1',
+          startOffset: 0,
+          endOffset: 5,
+          snippet: 'wrong',
+        } as any,
+        ctx as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.EVIDENCE_MALFORMED_OFFSETS },
+    });
+  });
+
+  it('createEvidence rejects EVIDENCE_MALFORMED_OFFSETS when offsets out of range', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue({
+      id: 'ch1',
+      documentId: 'doc1',
+      content: 'hello',
+    });
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+          sourceDocumentId: 'doc1',
+          chunkId: 'ch1',
+          startOffset: 0,
+          endOffset: 100,
+        } as any,
+        ctx as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.EVIDENCE_MALFORMED_OFFSETS },
+    });
+  });
+
+  it('createEvidence accepts valid snippet matching content', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue({
+      id: 'ch1',
+      documentId: 'doc1',
+      content: 'hello world',
+    });
+    evidenceCreate.mockResolvedValue({
+      id: 'ev1',
+      sourceDocumentId: 'doc1',
+      chunkId: 'ch1',
+      startOffset: 0,
+      endOffset: 5,
+    });
+
+    const result = await resolver.createEvidence(
+      {
+        sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+        sourceDocumentId: 'doc1',
+        chunkId: 'ch1',
+        startOffset: 0,
+        endOffset: 5,
+        snippet: 'hello',
+      } as any,
+      ctx as any,
+    );
+    expect(result.id).toBe('ev1');
+  });
+
+  it('createEvidence with snippet validation enters extractSpan and succeeds when snippet matches', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue({
+      id: 'ch1',
+      documentId: 'doc1',
+      content: 'abcdef',
+    });
+    evidenceCreate.mockResolvedValue({
+      id: 'ev1',
+      sourceDocumentId: 'doc1',
+      chunkId: 'ch1',
+      startOffset: 2,
+      endOffset: 5,
+    });
+
+    const result = await resolver.createEvidence(
+      {
+        sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+        sourceDocumentId: 'doc1',
+        chunkId: 'ch1',
+        startOffset: 2,
+        endOffset: 5,
+        snippet: 'cde',
+      } as any,
+      ctx as any,
+    );
+    expect(result.id).toBe('ev1');
+  });
+
+  it('createEvidence skips claim linking when claimIds is empty array', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue({
+      id: 'ch1',
+      documentId: 'doc1',
+      content: 'x',
+    });
+    evidenceCreate.mockResolvedValue({
+      id: 'ev1',
+      sourceDocumentId: 'doc1',
+      chunkId: 'ch1',
+      startOffset: 0,
+      endOffset: 1,
+    });
+
+    const result = await resolver.createEvidence(
+      {
+        sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+        sourceDocumentId: 'doc1',
+        chunkId: 'ch1',
+        startOffset: 0,
+        endOffset: 1,
+        claimIds: [],
+      } as any,
+      ctx as any,
+    );
+    expect(result.id).toBe('ev1');
+    expect(claimFindUnique).not.toHaveBeenCalled();
+    expect(claimEvidenceLinkUpsert).not.toHaveBeenCalled();
+  });
+
+  it('linkEvidenceToClaim rejects when claim not found', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'ev1',
+      sourceDocument: { userId: 'u1' },
+    });
+    claimFindUnique.mockResolvedValue(null);
+    await expect(
+      resolver.linkEvidenceToClaim('ev1', 'c_missing', ctx as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.CLAIM_NOT_FOUND },
+    });
+  });
+
+  it('linkEvidenceToClaim rejects when evidence has no source document', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'ev1',
+      sourceDocument: null,
+    });
+    await expect(
+      resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+  });
+
+  it('linkEvidenceToClaim rejects when evidence belongs to another user', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'ev1',
+      sourceDocument: { userId: 'other' },
+    });
+    await expect(
+      resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+  });
+
   it('evidence returns empty when unauthenticated', async () => {
     const result = await resolver.evidence({} as any);
     expect(result).toEqual([]);
@@ -130,6 +378,48 @@ describe('EvidenceResolver', () => {
     });
   });
 
+  it('createEvidence rejects EVIDENCE_SOURCE_NOT_FOUND when chunk does not exist', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue(null);
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+          sourceDocumentId: 'doc1',
+          chunkId: 'ch_missing',
+          startOffset: 0,
+          endOffset: 5,
+        } as any,
+        ctx as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.EVIDENCE_SOURCE_NOT_FOUND },
+    });
+  });
+
+  it('createEvidence rejects EVIDENCE_MALFORMED_OFFSETS when startOffset is negative', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue({
+      id: 'ch1',
+      documentId: 'doc1',
+      content: 'hello',
+    });
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+          sourceDocumentId: 'doc1',
+          chunkId: 'ch1',
+          startOffset: -1,
+          endOffset: 2,
+        } as any,
+        ctx as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.EVIDENCE_MALFORMED_OFFSETS },
+    });
+  });
+
   it('createEvidence rejects EVIDENCE_CHUNK_NOT_IN_SOURCE when chunk belongs to other doc', async () => {
     documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
     documentChunkFindUnique.mockResolvedValue({
@@ -151,6 +441,74 @@ describe('EvidenceResolver', () => {
     ).rejects.toMatchObject({
       extensions: { code: GQL_ERROR_CODES.EVIDENCE_CHUNK_NOT_IN_SOURCE },
     });
+  });
+
+  it('createEvidence skips snippet validation when snippet is empty string', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue({
+      id: 'ch1',
+      documentId: 'doc1',
+      content: 'hello',
+    });
+    evidenceCreate.mockResolvedValue({
+      id: 'ev1',
+      sourceDocumentId: 'doc1',
+      chunkId: 'ch1',
+      startOffset: 0,
+      endOffset: 5,
+    });
+
+    const result = await resolver.createEvidence(
+      {
+        sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+        sourceDocumentId: 'doc1',
+        chunkId: 'ch1',
+        startOffset: 0,
+        endOffset: 5,
+        snippet: '',
+      } as any,
+      ctx as any,
+    );
+    expect(result.id).toBe('ev1');
+  });
+
+  it('createEvidence links only to existing claims when claimIds include missing', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue({
+      id: 'ch1',
+      documentId: 'doc1',
+      content: 'hello',
+    });
+    evidenceCreate.mockResolvedValue({
+      id: 'ev1',
+      sourceDocumentId: 'doc1',
+      chunkId: 'ch1',
+      startOffset: 0,
+      endOffset: 5,
+    });
+    claimFindUnique
+      .mockResolvedValueOnce({ id: 'c1' })
+      .mockResolvedValueOnce(null);
+
+    const result = await resolver.createEvidence(
+      {
+        sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+        sourceDocumentId: 'doc1',
+        chunkId: 'ch1',
+        startOffset: 0,
+        endOffset: 5,
+        claimIds: ['c1', 'c_missing'],
+      } as any,
+      ctx as any,
+    );
+
+    expect(result.id).toBe('ev1');
+    expect(claimEvidenceLinkUpsert).toHaveBeenCalledTimes(1);
+    expect(claimEvidenceLinkUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { evidenceId_claimId: { evidenceId: 'ev1', claimId: 'c1' } },
+      }),
+    );
   });
 
   it('createEvidence creates evidence and optionally links to claims', async () => {
@@ -191,12 +549,64 @@ describe('EvidenceResolver', () => {
     );
   });
 
+  it('linkEvidenceToClaim rejects UNAUTHORIZED when no user in context', async () => {
+    await expect(
+      resolver.linkEvidenceToClaim('ev1', 'c1', {} as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+  });
+
   it('linkEvidenceToClaim rejects when evidence not found', async () => {
     evidenceFindUnique.mockResolvedValue(null);
     await expect(
       resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any),
     ).rejects.toMatchObject({
       extensions: { code: GQL_ERROR_CODES.EVIDENCE_NOT_FOUND },
+    });
+  });
+
+  it('createdByUser resolveField loads user', async () => {
+    const userFindUniqueOrThrow = jest.fn().mockResolvedValue({ id: 'u1' });
+    (prisma as any).user = { findUniqueOrThrow: userFindUniqueOrThrow };
+    const result = await resolver.createdByUser({ createdBy: 'u1' } as any);
+    expect(result).toEqual({ id: 'u1' });
+    expect(userFindUniqueOrThrow).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+    });
+  });
+
+  it('sourceDocument resolveField returns null when no sourceDocumentId', async () => {
+    const result = await resolver.sourceDocument({
+      sourceDocumentId: null,
+    } as any);
+    expect(result).toBeNull();
+    expect(documentFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('sourceDocument resolveField loads document when sourceDocumentId present', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1' } as any);
+    const result = await resolver.sourceDocument({
+      sourceDocumentId: 'doc1',
+    } as any);
+    expect(result).toEqual({ id: 'doc1' });
+    expect(documentFindUnique).toHaveBeenCalledWith({
+      where: { id: 'doc1' },
+    });
+  });
+
+  it('chunk resolveField returns null when no chunkId', async () => {
+    const result = await resolver.chunk({ chunkId: null } as any);
+    expect(result).toBeNull();
+    expect(documentChunkFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('chunk resolveField loads chunk when chunkId present', async () => {
+    documentChunkFindUnique.mockResolvedValue({ id: 'ch1' } as any);
+    const result = await resolver.chunk({ chunkId: 'ch1' } as any);
+    expect(result).toEqual({ id: 'ch1' });
+    expect(documentChunkFindUnique).toHaveBeenCalledWith({
+      where: { id: 'ch1' },
     });
   });
 
