@@ -49,20 +49,24 @@ describe('ClaimResolver', () => {
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          OR: [
+          AND: [
             {
-              evidenceLinks: {
-                some: {
-                  evidence: {
-                    sourceDocument: { userId: 'u1' },
+              OR: [
+                {
+                  evidenceLinks: {
+                    some: {
+                      evidence: {
+                        sourceDocument: { userId: 'u1' },
+                      },
+                    },
                   },
                 },
-              },
-            },
-            {
-              evidence: {
-                some: { document: { userId: 'u1' } },
-              },
+                {
+                  evidence: {
+                    some: { document: { userId: 'u1' } },
+                  },
+                },
+              ],
             },
           ],
         },
