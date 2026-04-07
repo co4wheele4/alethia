@@ -59,8 +59,8 @@
     "test:guardrails": "jest --config test/jest-guardrails.json"
   },
   "devDependencies": {
-    "@nestjs/common": "^11.1.11",
-    "@nestjs/core": "^11.1.11",
+    "@nestjs/common": "^11.1.18",
+    "@nestjs/core": "^11.1.18",
     "@nestjs/testing": "^11.1.11",
     "@types/bcrypt": "^6.0.0",
     "@types/jest": "^30.0.0",
