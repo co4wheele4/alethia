@@ -1,9 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from '@mui/material';
 
+import { WorkspaceEmptyHelp } from '../../../components/common/WorkspaceEmptyHelp';
 import { ContentSurface } from '../../../components/layout';
 import { useDocuments } from '../../documents/hooks/useDocuments';
 import { useClaims } from '../hooks/useClaims';
@@ -11,8 +13,8 @@ import { LadyJusticeProgressIndicator } from '../../../components/primitives/Lad
 import { ClaimDetailDrawer } from './ClaimDetailDrawer';
 import { ClaimsList } from './ClaimsList';
 
-export function ClaimsView(props: { userId: string | null }) {
-  const { userId } = props;
+export function ClaimsView(props: { userId: string | null; userRole?: string | null }) {
+  const { userId, userRole } = props;
   const router = useRouter();
   const { documents, loading: docsLoading, error: docsError } = useDocuments(userId);
 
@@ -38,7 +40,9 @@ export function ClaimsView(props: { userId: string | null }) {
           Claims
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Read-only assertions grounded in explicit evidence. Claims without evidence must never render.
+          Read-only assertions grounded in explicit evidence. Claims without evidence must never render. Inspect passages
+          per document under{' '}
+          <Link href="/evidence">Evidence</Link>.
         </Typography>
 
         {docsError ? (
@@ -79,6 +83,10 @@ export function ClaimsView(props: { userId: string | null }) {
           <Alert severity="error" sx={{ mb: 2 }}>
             {claimsError.message}
           </Alert>
+        ) : null}
+
+        {!docsLoading && !claimsLoading && !claimsError && !docsError && claims.length === 0 ? (
+          <WorkspaceEmptyHelp surface="claims" userRole={userRole} />
         ) : null}
 
         <Box sx={{ mb: 2 }}>

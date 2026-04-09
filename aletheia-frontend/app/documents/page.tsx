@@ -15,7 +15,7 @@ import { useSearchParams } from 'next/navigation';
 
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { getAuthToken } from '../features/auth/utils/auth';
-import { getUserIdFromToken } from '../features/auth/utils/jwt';
+import { getUserIdFromToken, getUserRoleFromToken } from '../features/auth/utils/jwt';
 import { DocumentsDashboard } from '../features/documents/components/DocumentsDashboard';
 
 function DocumentsPageInner() {
@@ -24,6 +24,7 @@ function DocumentsPageInner() {
   if (!isInitialized) return null;
   const stableToken = token ?? getAuthToken();
   const userId = getUserIdFromToken(stableToken);
+  const userRole = getUserRoleFromToken(stableToken);
 
   const initialIngestOpen = params.get('ingest') === '1';
   const initialSelectedId = params.get('documentId');
@@ -38,6 +39,7 @@ function DocumentsPageInner() {
   return (
     <DocumentsDashboard
       userId={userId}
+      userRole={userRole}
       initialIngestOpen={initialIngestOpen}
       initialSelectedId={initialSelectedId}
       initialMentionId={initialMentionId}

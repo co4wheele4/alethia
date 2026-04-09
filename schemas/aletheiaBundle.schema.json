@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aletheia.local/schemas/aletheiaBundle.schema.json",
+  "title": "AletheiaBundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "exportedAt",
+    "claims",
+    "evidence",
+    "claimEvidenceLinks",
+    "adjudicationLogs",
+    "reviewRequests",
+    "reviewAssignments",
+    "reviewerResponses",
+    "evidenceReproChecks",
+    "epistemicEvents"
+  ],
+  "properties": {
+    "version": { "type": "string", "const": "1" },
+    "exportedAt": { "type": "string", "format": "date-time" },
+    "claims": { "type": "array", "items": { "type": "object" } },
+    "evidence": { "type": "array", "items": { "type": "object" } },
+    "claimEvidenceLinks": { "type": "array", "items": { "type": "object" } },
+    "adjudicationLogs": { "type": "array", "items": { "type": "object" } },
+    "reviewRequests": { "type": "array", "items": { "type": "object" } },
+    "reviewAssignments": { "type": "array", "items": { "type": "object" } },
+    "reviewerResponses": { "type": "array", "items": { "type": "object" } },
+    "evidenceReproChecks": { "type": "array", "items": { "type": "object" } },
+    "epistemicEvents": { "type": "array", "items": { "type": "object" } }
+  }
+}

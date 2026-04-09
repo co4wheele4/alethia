@@ -24,3 +24,11 @@ export {
   ReviewerResponse,
   ReviewerResponseType,
 } from './reviewer-response.model';
+export {
+  EvidenceReproCheck,
+  EvidenceReproFetchStatusGql,
+  EvidenceReproHashMatchGql,
+} from './evidence-repro-check.model';
+export { ReviewQuorumStatus } from './review-quorum-status.model';
+export { EpistemicEvent, EpistemicEventTypeGql } from './epistemic-event.model';
+export { ImportResult } from './import-result.model';

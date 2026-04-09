@@ -1,20 +1,57 @@
 {
-  "DEV-GUARDRAILS": {
-    "enforcedBy": [
-      "eslint-plugin-aletheia",
-      "graphql-lint/noSemanticQueries.cjs",
-      "pr-checks/epistemicGuard.cjs",
-      "types/epistemic.ts"
+  "adr026": {
+    "title": "Evidence Reproducibility Verification",
+    "implementation": [
+      "aletheia-backend/prisma/migrations/20260409170000_adr026_adr029_structural_extensions/migration.sql",
+      "aletheia-backend/src/evidence-repro/evidence-repro-check.service.ts",
+      "aletheia-backend/src/graphql/resolvers/evidence-repro.resolver.ts",
+      "scripts/jobs/runEvidenceReproCheck.ts"
+    ],
+    "tests": [
+      "aletheia-backend/src/evidence-repro/evidence-repro-check.service.spec.ts",
+      "aletheia-backend/src/graphql/resolvers/evidence-repro.resolver.spec.ts"
     ]
   },
-  "ADR-024": {
-    "title": "Evidence Ingestion Constraints",
-    "enforcedBy": [
-      "aletheia-backend/scripts/adr024-evidence-ingestion.cjs",
-      "aletheia-backend/prisma/migrations/*_adr024_evidence_ingestion/migration.sql",
-      "aletheia-backend/src/common/utils/evidence-content-hash.ts",
-      "aletheia-backend/src/graphql/resolvers/evidence.resolver.ts",
-      "aletheia-frontend/src/test/msw/handlers/guards.handlers.ts"
+  "adr027": {
+    "title": "Database-Level Epistemic Constraints",
+    "implementation": [
+      "aletheia-backend/prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql"
+    ],
+    "tests": ["aletheia-backend/test/e2e/db/adr027-epistemic-constraints.e2e-spec.ts"]
+  },
+  "adr028": {
+    "title": "Evidence UX Navigation Improvements (Non-Semantic)",
+    "implementation": ["aletheia-frontend/app/features/evidence/components/EvidenceViewer.tsx"],
+    "tests": ["aletheia-frontend/e2e/evidence-viewer.spec.ts"]
+  },
+  "adr029": {
+    "title": "Epistemic Observability (Structural Only)",
+    "implementation": [
+      "aletheia-backend/prisma/migrations/20260409170000_adr026_adr029_structural_extensions/migration.sql",
+      "aletheia-backend/src/observability/logEpistemicEvent.ts",
+      "aletheia-backend/src/observability/epistemic-audit.interceptor.ts",
+      "aletheia-backend/src/graphql/resolvers/epistemic-events.resolver.ts"
+    ],
+    "tests": [
+      "aletheia-backend/src/observability/logEpistemicEvent.spec.ts",
+      "aletheia-backend/src/observability/epistemic-audit.interceptor.spec.ts",
+      "aletheia-backend/src/graphql/resolvers/epistemic-events.resolver.spec.ts"
     ]
+  },
+  "adr030": {
+    "title": "Quorum-Based Review Workflow Gate (Non-Adjudicative)",
+    "implementation": [
+      "aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.ts"
+    ],
+    "tests": ["aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.spec.ts"]
+  },
+  "adr031": {
+    "title": "Export/Import Snapshot Bundles (Structural Integrity)",
+    "implementation": [
+      "schemas/aletheiaBundle.schema.json",
+      "aletheia-backend/src/bundle/aletheia-bundle.service.ts",
+      "aletheia-backend/src/graphql/resolvers/aletheia-bundle.resolver.ts"
+    ],
+    "tests": ["aletheia-backend/src/bundle/aletheia-bundle.service.spec.ts"]
   }
 }

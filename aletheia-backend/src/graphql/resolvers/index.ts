@@ -16,3 +16,6 @@ export { ClaimAdjudicationResolver } from './claim-adjudication.resolver';
 export { ClaimAdjudicationService } from './claim-adjudication.service';
 export { ReviewRequestResolver } from './review-request.resolver';
 export { ReviewAssignmentResolver } from './review-assignment.resolver';
+export { EvidenceReproResolver } from './evidence-repro.resolver';
+export { AletheiaBundleResolver } from './aletheia-bundle.resolver';
+export { EpistemicEventsResolver } from './epistemic-events.resolver';

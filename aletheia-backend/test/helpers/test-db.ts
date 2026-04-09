@@ -32,6 +32,8 @@ export async function cleanDatabase(prisma: PrismaClient) {
   await prisma.reviewAssignment.deleteMany();
   await prisma.reviewRequest.deleteMany();
   await prisma.adjudicationLog.deleteMany();
+  await prisma.evidenceReproCheck.deleteMany();
+  await prisma.epistemicEvent.deleteMany();
   await prisma.claimEvidenceLink.deleteMany();
   await prisma.claimEvidence.deleteMany();
   await prisma.claim.deleteMany();

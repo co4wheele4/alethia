@@ -8,7 +8,7 @@ import { AppShell } from '../../components/layout';
 import { ClaimComparisonView } from '../../features/claimComparison';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { getAuthToken } from '../../features/auth/utils/auth';
-import { getUserIdFromToken } from '../../features/auth/utils/jwt';
+import { getUserIdFromToken, getUserRoleFromToken } from '../../features/auth/utils/jwt';
 
 function parseWithClaimIds(params: ReturnType<typeof useSearchParams>) {
   // ADR-005: schema-faithful routing only; treat query params as opaque IDs (no inference).
@@ -24,6 +24,7 @@ function ClaimComparisonPageInner() {
 
   const stableToken = token ?? getAuthToken();
   const userId = getUserIdFromToken(stableToken);
+  const userRole = getUserRoleFromToken(stableToken);
 
   if (!userId) {
     return <Alert severity="info">Claim comparison is available after login.</Alert>;
@@ -36,7 +37,7 @@ function ClaimComparisonPageInner() {
     return <Alert severity="info">Open claim comparison with /claims/compare?base=&lt;claimId&gt;.</Alert>;
   }
 
-  return <ClaimComparisonView baseClaimId={base} withClaimIds={withClaimIds} />;
+  return <ClaimComparisonView baseClaimId={base} withClaimIds={withClaimIds} userRole={userRole} />;
 }
 
 export default function ClaimComparisonPage() {

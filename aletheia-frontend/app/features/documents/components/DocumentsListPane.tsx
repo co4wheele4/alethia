@@ -22,6 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useMemo, useState } from 'react';
 import type { DocumentIndexItem } from '../hooks/useDocumentIndex';
 import { ContentSurface } from '../../../components/layout';
+import { WorkspaceEmptyHelp } from '../../../components/common/WorkspaceEmptyHelp';
 
 export function DocumentsListPane(props: {
   documents: DocumentIndexItem[];
@@ -34,6 +35,7 @@ export function DocumentsListPane(props: {
   busy: boolean;
   onDelete: (id: string) => Promise<void>;
   onOpenIngest: () => void;
+  userRole?: string | null;
 }) {
   const {
     documents,
@@ -46,6 +48,7 @@ export function DocumentsListPane(props: {
     busy,
     onDelete,
     onOpenIngest,
+    userRole,
   } = props;
 
   const [visibleCount, setVisibleCount] = useState(25);
@@ -87,9 +90,12 @@ export function DocumentsListPane(props: {
       ) : null}
 
       {allDocumentsCount === 0 && !loading ? (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          No documents yet. Add a source (upload, URL, or manual text) to begin.
-        </Alert>
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="info" sx={{ mb: 1 }}>
+            No documents yet. Add a source (upload, URL, or manual text) to begin.
+          </Alert>
+          <WorkspaceEmptyHelp surface="documents" userRole={userRole} />
+        </Box>
       ) : null}
 
       {allDocumentsCount > 0 && documents.length === 0 && !loading ? (

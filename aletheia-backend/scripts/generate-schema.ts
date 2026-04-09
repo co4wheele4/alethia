@@ -23,7 +23,7 @@ async function main() {
   if (dbUrl.trim().length === 0) {
     // PrismaService requires an explicit DATABASE_URL to initialize.
     // Keep the error loud and actionable.
-    // eslint-disable-next-line no-console
+
     console.error(
       'SCHEMA_SNAPSHOT_DRIFT: DATABASE_URL is required to generate backend schema snapshot.',
     );
@@ -36,10 +36,8 @@ async function main() {
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error('SCHEMA_SNAPSHOT_DRIFT: Failed to generate schema snapshot.');
-  // eslint-disable-next-line no-console
+
   console.error(err);
   process.exit(1);
 });
-

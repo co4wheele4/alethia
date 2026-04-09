@@ -1,40 +1,44 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": "(.*\\.e2e-spec\\.ts$|e2e/.*\\.e2e-spec\\.ts$)",
+  "testMatch": [
+    "<rootDir>/test/**/*.e2e-spec.ts",
+    "<rootDir>/test/e2e/**/*.e2e-spec.ts",
+    "<rootDir>/tests/seed/**/*.test.ts"
+  ],
   "maxWorkers": 1,
   "preset": "ts-jest/presets/default-esm",
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", {
       "useESM": true,
-      "tsconfig": "<rootDir>/../aletheia-backend/tsconfig.json"
+      "tsconfig": "<rootDir>/aletheia-backend/tsconfig.json"
     }]
   },
   "moduleNameMapper": {
-    "^@inputs/(.*)$": "<rootDir>/../aletheia-backend/src/graphql/inputs/$1",
-    "^@models$": "<rootDir>/../aletheia-backend/src/graphql/models/index",
-    "^@models/(.*)$": "<rootDir>/../aletheia-backend/src/graphql/models/$1",
-    "^@auth/(.*)$": "<rootDir>/../aletheia-backend/src/auth/$1",
-    "^@openai/(.*)$": "<rootDir>/../aletheia-backend/src/openai/$1",
-    "^@outputs/(.*)$": "<rootDir>/../aletheia-backend/src/graphql/outputs/$1",
-    "^@common/(.*)$": "<rootDir>/../aletheia-backend/src/common/$1",
-    "^@prisma/prisma\\.service$": "<rootDir>/../aletheia-backend/src/prisma/prisma.service",
-    "^@resolvers$": "<rootDir>/../aletheia-backend/src/graphql/resolvers/index",
-    "^@resolvers/(.*)$": "<rootDir>/../aletheia-backend/src/graphql/resolvers/$1"
+    "^@inputs/(.*)$": "<rootDir>/aletheia-backend/src/graphql/inputs/$1",
+    "^@models$": "<rootDir>/aletheia-backend/src/graphql/models/index",
+    "^@models/(.*)$": "<rootDir>/aletheia-backend/src/graphql/models/$1",
+    "^@auth/(.*)$": "<rootDir>/aletheia-backend/src/auth/$1",
+    "^@openai/(.*)$": "<rootDir>/aletheia-backend/src/openai/$1",
+    "^@outputs/(.*)$": "<rootDir>/aletheia-backend/src/graphql/outputs/$1",
+    "^@common/(.*)$": "<rootDir>/aletheia-backend/src/common/$1",
+    "^@prisma/prisma\\.service$": "<rootDir>/aletheia-backend/src/prisma/prisma.service",
+    "^@resolvers$": "<rootDir>/aletheia-backend/src/graphql/resolvers/index",
+    "^@resolvers/(.*)$": "<rootDir>/aletheia-backend/src/graphql/resolvers/$1"
   },
-  "setupFilesAfterEnv": ["<rootDir>/e2e/helpers/setup-e2e.ts"],
+  "setupFilesAfterEnv": ["<rootDir>/test/e2e/helpers/setup-e2e.ts"],
   "extensionsToTreatAsEsm": [".ts"],
   "collectCoverageFrom": [
-    "../aletheia-backend/src/**/*.(t|j)s",
-    "!../aletheia-backend/src/**/*.spec.ts",
-    "!../aletheia-backend/src/**/*.e2e-spec.ts",
-    "!../aletheia-backend/src/**/*.interface.ts",
-    "!../aletheia-backend/src/**/index.ts",
-    "!../aletheia-backend/src/**/*.model.ts",
-    "!../aletheia-backend/src/**/test-utils/**"
+    "aletheia-backend/src/**/*.(t|j)s",
+    "!aletheia-backend/src/**/*.spec.ts",
+    "!aletheia-backend/src/**/*.e2e-spec.ts",
+    "!aletheia-backend/src/**/*.interface.ts",
+    "!aletheia-backend/src/**/index.ts",
+    "!aletheia-backend/src/**/*.model.ts",
+    "!aletheia-backend/src/**/test-utils/**"
   ],
-  "coverageDirectory": "../coverage-e2e",
+  "coverageDirectory": "coverage-e2e",
   "coveragePathIgnorePatterns": [
     "/node_modules/",
     "\\.spec\\.ts$",

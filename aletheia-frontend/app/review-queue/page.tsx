@@ -27,6 +27,7 @@ function ReviewQueuePageInner() {
         currentUserId={currentUserId}
         currentUserRole={currentUserRole}
         onRefetch={refetch}
+        loading={loading}
       />
     </Stack>
   );

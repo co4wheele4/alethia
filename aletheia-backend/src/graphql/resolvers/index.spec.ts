@@ -48,4 +48,16 @@ describe('resolvers/index', () => {
   it('should export EvidenceResolver', () => {
     expect(resolvers.EvidenceResolver).toBeDefined();
   });
+
+  it('should export EvidenceReproResolver', () => {
+    expect(resolvers.EvidenceReproResolver).toBeDefined();
+  });
+
+  it('should export AletheiaBundleResolver', () => {
+    expect(resolvers.AletheiaBundleResolver).toBeDefined();
+  });
+
+  it('should export EpistemicEventsResolver', () => {
+    expect(resolvers.EpistemicEventsResolver).toBeDefined();
+  });
 });

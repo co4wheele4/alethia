@@ -407,12 +407,66 @@ model Evidence {
   sourceDocument Document?        @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
   chunk          DocumentChunk?   @relation(fields: [chunkId], references: [id], onDelete: Restrict)
   claimLinks     ClaimEvidenceLink[]
+  reproChecks    EvidenceReproCheck[]
 
   @@index([sourceDocumentId])
   @@index([chunkId])
   @@index([createdBy])
   @@index([createdAt])
   @@map("evidence")
+}
+
+////////////////////
+// EVIDENCE REPRODUCIBILITY (ADR-026; mechanical only)
+////////////////////
+
+enum EvidenceReproFetchStatus {
+  SUCCESS
+  FAILED
+}
+
+enum EvidenceReproHashMatch {
+  MATCH
+  MISMATCH
+  UNKNOWN
+}
+
+model EvidenceReproCheck {
+  id           String                  @id @default(uuid()) @map("id")
+  evidenceId   String                  @map("evidence_id")
+  checkedAt    DateTime                @default(now()) @map("checked_at")
+  fetchStatus  EvidenceReproFetchStatus @map("fetch_status")
+  hashMatch    EvidenceReproHashMatch  @map("hash_match")
+  fetchedHash  String?                 @map("fetched_hash")
+  errorMessage String?                 @map("error_message")
+
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+
+  @@index([evidenceId])
+  @@index([checkedAt])
+  @@map("evidence_repro_checks")
+}
+
+////////////////////
+// EPISTEMIC OBSERVABILITY (ADR-029; audit only)
+////////////////////
+
+enum EpistemicEventType {
+  GOVERNANCE_GRAPHQL_ERROR
+}
+
+model EpistemicEvent {
+  id         String             @id @default(uuid()) @map("id")
+  createdAt  DateTime           @default(now()) @map("created_at")
+  eventType  EpistemicEventType @map("event_type")
+  actorId    String?            @map("actor_id")
+  targetId   String?            @map("target_id")
+  errorCode  String             @map("error_code")
+  metadata   Json?              @map("metadata")
+
+  @@index([createdAt])
+  @@index([errorCode])
+  @@map("epistemic_events")
 }
 
 ////////////////////

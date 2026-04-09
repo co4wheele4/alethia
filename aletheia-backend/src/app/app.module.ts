@@ -2,7 +2,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { GraphQLJSON } from 'graphql-scalars';
 import { GraphQLThrottlerGuard } from '../common/guards/graphql-throttler.guard';
 import { AssertNoDerivedSemanticsGuard } from '../graphql/guards/assertNoDerivedSemantics';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -35,7 +36,13 @@ import {
   ClaimAdjudicationService,
   ReviewRequestResolver,
   ReviewAssignmentResolver,
+  EvidenceReproResolver,
+  AletheiaBundleResolver,
+  EpistemicEventsResolver,
 } from '@resolvers';
+import { EvidenceReproCheckService } from '../evidence-repro/evidence-repro-check.service';
+import { AletheiaBundleService } from '../bundle/aletheia-bundle.service';
+import { EpistemicAuditInterceptor } from '../observability/epistemic-audit.interceptor';
 import { AuthModule } from '../auth/auth.module';
 import { OpenAIModule } from '../openai/openai.module';
 import { IngestionModule } from '../ingestion/ingestion.module';
@@ -76,6 +83,7 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
       // Note: In Apollo Server 5, these are still valid options in NestJS GraphQL module
       playground: process.env.NODE_ENV !== 'production', // Enable in development only
       introspection: process.env.NODE_ENV !== 'production', // Enable in development only
+      resolvers: { JSON: GraphQLJSON },
     }),
   ],
   controllers: [AppController],
@@ -101,6 +109,11 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     ClaimAdjudicationResolver,
     ReviewRequestResolver,
     ReviewAssignmentResolver,
+    EvidenceReproCheckService,
+    AletheiaBundleService,
+    EvidenceReproResolver,
+    AletheiaBundleResolver,
+    EpistemicEventsResolver,
     // Apply rate limiting globally (GraphQL-compatible)
     {
       provide: APP_GUARD,
@@ -110,6 +123,10 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     {
       provide: APP_GUARD,
       useClass: AssertNoDerivedSemanticsGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: EpistemicAuditInterceptor,
     },
   ],
 })

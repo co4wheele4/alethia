@@ -18,12 +18,14 @@ import { DeleteDocumentMutationContainer } from './DeleteDocumentMutationContain
 
 export function DocumentsDashboard({
   userId,
+  userRole,
   initialIngestOpen,
   initialSelectedId,
   initialMentionId,
   initialChunkIndex,
 }: {
   userId: string | null;
+  userRole?: string | null;
   initialIngestOpen?: boolean;
   initialSelectedId?: string | null;
   initialMentionId?: string | null;
@@ -75,6 +77,7 @@ export function DocumentsDashboard({
                     await refetch();
                   }}
                   onOpenIngest={() => setIngestOpen(true)}
+                  userRole={userRole}
                 />
 
                 <Box>

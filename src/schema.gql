@@ -309,9 +309,30 @@ type EntityRelationshipEvidenceMention {
   mentionId: ID!
 }
 
+type EpistemicEvent {
+  actorId: String
+  createdAt: DateTime!
+  errorCode: String!
+  eventType: EpistemicEventType!
+  id: ID!
+  metadata: JSON
+  targetId: String
+}
+
+input EpistemicEventFilterInput {
+  createdAfter: DateTime
+  createdBefore: DateTime
+  errorCode: String
+}
+
+enum EpistemicEventType {
+  GOVERNANCE_GRAPHQL_ERROR
+}
+
 type Evidence {
   chunk: DocumentChunk
   chunkId: ID
+  contentSha256: String
   createdAt: DateTime!
   createdBy: ID!
   createdByUser: User!
@@ -325,6 +346,27 @@ type Evidence {
   startOffset: Int
 }
 
+type EvidenceReproCheck {
+  checkedAt: DateTime!
+  errorMessage: String
+  evidenceId: ID!
+  fetchStatus: EvidenceReproFetchStatus!
+  fetchedHash: String
+  hashMatch: EvidenceReproHashMatch!
+  id: ID!
+}
+
+enum EvidenceReproFetchStatus {
+  FAILED
+  SUCCESS
+}
+
+enum EvidenceReproHashMatch {
+  MATCH
+  MISMATCH
+  UNKNOWN
+}
+
 """
 Source type for evidence. DOCUMENT = ingested document; URL = external (future).
 """
@@ -333,12 +375,41 @@ enum EvidenceSourceKind {
   URL
 }
 
+input ExportBundleInput {
+  claimIds: [ID!]
+  createdAfter: DateTime
+  createdBefore: DateTime
+  epistemicEventsAfter: DateTime
+  epistemicEventsBefore: DateTime
+
+  """Include epistemic audit rows (explicit opt-in)."""
+  includeEpistemicEvents: Boolean
+  lifecycle: ClaimStatus
+}
+
+input ImportBundleInput {
+  allowOverwrite: Boolean!
+
+  """Aletheia bundle object matching schemas/aletheiaBundle.schema.json"""
+  bundle: JSON!
+}
+
+type ImportResult {
+  importedClaims: Int!
+  importedEvidence: Int!
+}
+
 input IngestDocumentInput {
   content: String!
   source: CreateDocumentSourceInput!
   title: String!
   userId: String!
 }
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 type Lesson {
   content: String
@@ -377,6 +448,9 @@ type Mutation {
   deleteEntityRelationship(id: String!): EntityRelationship!
   deleteLesson(id: String!): Lesson!
   deleteUser(id: String!): User!
+
+  """ADR-031: Structural import (admin only)."""
+  importBundle(input: ImportBundleInput!): ImportResult!
   ingestDocument(input: IngestDocumentInput!): Document!
   linkEvidenceToClaim(claimId: String!, evidenceId: String!): Evidence!
   login(email: String!, password: String!): String!
@@ -404,6 +478,8 @@ type Mutation {
 }
 
 type Query {
+  """ADR-029: Admin audit listing (structural filters only)."""
+  adminEpistemicEvents(filter: EpistemicEventFilterInput): [EpistemicEvent!]!
   aiQueries: [AiQuery!]!
   aiQueriesByUser(userId: String!): [AiQuery!]!
   aiQueriesPaged(skip: Int, take: Int): [AiQuery!]!
@@ -440,6 +516,12 @@ type Query {
   """List evidence visible to the current user (via document ownership)."""
   evidence: [Evidence!]!
   evidenceById(id: String!): Evidence
+
+  """ADR-026: List reproducibility check records for evidence (read-only)."""
+  evidenceReproChecks(evidenceId: ID!): [EvidenceReproCheck!]!
+
+  """ADR-031: Structural export (JSON bundle)."""
+  exportBundle(input: ExportBundleInput!): JSON!
   hello: String!
   ingestionHealthCheck: String!
   lesson(id: String!): Lesson
@@ -455,6 +537,11 @@ type Query {
   Reviewer queue (unassigned): review requests visible in the current workspace (coordination-only).
   """
   reviewQueue: [ReviewRequest!]!
+
+  """
+  ADR-030: Mechanical quorum counts for adjudication precondition (non-semantic).
+  """
+  reviewQuorumStatus(claimId: ID!): ReviewQuorumStatus!
 
   """
   Review requests for a claim visible in the current workspace (coordination-only; does not change claim status).
@@ -476,6 +563,12 @@ type ReviewAssignment {
   reviewRequestId: ID!
   reviewerResponse: ReviewerResponse
   reviewerUserId: ID!
+}
+
+type ReviewQuorumStatus {
+  acknowledgedCount: Int!
+  enabled: Boolean!
+  requiredCount: Int!
 }
 
 type ReviewRequest {

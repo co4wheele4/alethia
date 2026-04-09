@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Alert, Box, Divider, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
+import { WorkspaceEmptyHelp } from '../../../components/common/WorkspaceEmptyHelp';
 import { ContentSurface } from '../../../components/layout';
 import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { useDocuments } from '../../documents/hooks/useDocuments';
@@ -12,8 +14,8 @@ import { DocumentTextViewer } from './DocumentTextViewer';
 import { EntityEvidencePanel } from './EntityEvidencePanel';
 import { EntityListPanel } from './EntityListPanel';
 
-export function DocumentsEvidenceLayout(props: { userId: string | null }) {
-  const { userId } = props;
+export function DocumentsEvidenceLayout(props: { userId: string | null; userRole?: string | null }) {
+  const { userId, userRole } = props;
   const { documents, loading: docsLoading, error: docsError } = useDocuments(userId);
 
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
@@ -45,7 +47,9 @@ export function DocumentsEvidenceLayout(props: { userId: string | null }) {
           Document Evidence Viewer
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Select a document, select an entity, and inspect explicit evidence: provenance, chunk text, and offsets.
+          Select a document, select an entity, and inspect explicit evidence: provenance, chunk text, and offsets. Grounded
+          claims for your workspace are listed under{' '}
+          <Link href="/claims">Claims</Link>.
         </Typography>
 
         {docsError ? (
@@ -59,6 +63,10 @@ export function DocumentsEvidenceLayout(props: { userId: string | null }) {
             <LadyJusticeProgressIndicator size={18} />
             <Typography variant="body2">Loading documents…</Typography>
           </Box>
+        ) : null}
+
+        {!docsLoading && !docsError && documents.length === 0 ? (
+          <WorkspaceEmptyHelp surface="evidence" userRole={userRole} />
         ) : null}
 
         <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>

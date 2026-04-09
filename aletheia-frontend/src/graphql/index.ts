@@ -37,6 +37,8 @@ export { GET_CLAIMS_FOR_COMPARISON_QUERY } from './queries/getClaimsForCompariso
 export { REVIEW_QUEUE_QUERY } from './queries/reviewQueue.query';
 export { MY_REVIEW_REQUESTS_QUERY } from './queries/myReviewRequests.query';
 export { REVIEW_REQUESTS_BY_CLAIM_QUERY } from './queries/reviewRequestsByClaim.query';
+export { GET_EVIDENCE_DETAIL_QUERY } from './queries/evidenceDetail.query';
+export { REVIEW_QUORUM_STATUS_QUERY } from './queries/reviewQuorumStatus.query';
 
 export { ADJUDICATE_CLAIM_MUTATION } from './mutations/adjudicateClaim.mutation';
 export { REQUEST_REVIEW_MUTATION } from './mutations/requestReview.mutation';

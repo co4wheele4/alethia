@@ -1,8 +1,12 @@
-import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
-import { ClaimStatus as PrismaClaimStatus } from '@prisma/client';
+import {
+  ClaimStatus as PrismaClaimStatus,
+  ReviewerResponseType,
+} from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { Claim, ClaimLifecycleState, ClaimStatus } from '@models/claim.model';
+import { ReviewQuorumStatus } from '@models/review-quorum-status.model';
 import { OptionalJwtAuthGuard } from '@auth/guards/optional-jwt-auth.guard';
 import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 import { ClaimAdjudicationService } from './claim-adjudication.service';
@@ -18,6 +22,13 @@ type GqlRequestContext = {
 
 function getAuthUserId(ctx?: GqlRequestContext): string | undefined {
   return ctx?.req?.user?.sub ?? ctx?.req?.user?.id;
+}
+
+function getReviewQuorumConfig(): { enabled: boolean; count: number } {
+  const enabled = process.env.REVIEW_QUORUM_ENABLED === 'true';
+  const parsed = parseInt(process.env.REVIEW_QUORUM_COUNT || '2', 10);
+  const count = Number.isFinite(parsed) && parsed > 0 ? parsed : 2;
+  return { enabled, count };
 }
 
 function isAllowedTransition(
@@ -47,9 +58,11 @@ function isAllowedTransition(
 const claimType = () => Claim;
 const claimLifecycleStateType = () => ClaimLifecycleState;
 const idType = () => ID;
+const reviewQuorumStatusType = () => ReviewQuorumStatus;
 void claimType();
 void claimLifecycleStateType();
 void idType();
+void reviewQuorumStatusType();
 
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(claimType)
@@ -58,6 +71,59 @@ export class ClaimAdjudicationResolver {
     private readonly prisma: PrismaService,
     private readonly adjudication: ClaimAdjudicationService,
   ) {}
+
+  @Query(reviewQuorumStatusType, {
+    description:
+      'ADR-030: Mechanical quorum counts for adjudication precondition (non-semantic).',
+  })
+  @UseGuards(OptionalJwtAuthGuard)
+  async reviewQuorumStatus(
+    @Args('claimId', { type: idType }) claimId: string,
+    @Context() ctx?: GqlRequestContext,
+  ) {
+    const reviewerId = getAuthUserId(ctx);
+    if (!reviewerId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED_REVIEWER);
+
+    const existing = await this.prisma.claim.findFirst({
+      where: {
+        id: claimId,
+        OR: [
+          {
+            evidenceLinks: {
+              some: {
+                evidence: {
+                  sourceDocument: { userId: reviewerId },
+                },
+              },
+            },
+          },
+          { evidence: { some: { document: { userId: reviewerId } } } },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (!existing) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
+
+    const { enabled, count } = getReviewQuorumConfig();
+    const rrs = await this.prisma.reviewRequest.findMany({
+      where: { claimId: existing.id },
+      select: { id: true },
+    });
+    const rrIds = rrs.map((r) => r.id);
+    const acknowledgedCount = await this.prisma.reviewerResponse.count({
+      where: {
+        response: ReviewerResponseType.ACKNOWLEDGED,
+        reviewAssignment: { reviewRequestId: { in: rrIds } },
+      },
+    });
+
+    return {
+      enabled,
+      requiredCount: count,
+      acknowledgedCount,
+    };
+  }
 
   @Mutation(claimType, {
     description:
@@ -135,6 +201,33 @@ export class ClaimAdjudicationResolver {
         : decision === ClaimLifecycleState.ACCEPTED
           ? ClaimStatus.ACCEPTED
           : ClaimStatus.REJECTED;
+
+    // ADR-030: mechanical quorum gate for terminal adjudication only.
+    const { enabled: quorumEnabled, count: quorumCount } =
+      getReviewQuorumConfig();
+    if (
+      quorumEnabled &&
+      (decision === ClaimLifecycleState.ACCEPTED ||
+        decision === ClaimLifecycleState.REJECTED)
+    ) {
+      const rrs = await this.prisma.reviewRequest.findMany({
+        where: { claimId: existing.id },
+        select: { id: true },
+      });
+      if (rrs.length === 0) {
+        throw contractError(GQL_ERROR_CODES.REVIEW_QUORUM_NOT_MET);
+      }
+      const rrIds = rrs.map((r) => r.id);
+      const acknowledgedCount = await this.prisma.reviewerResponse.count({
+        where: {
+          response: ReviewerResponseType.ACKNOWLEDGED,
+          reviewAssignment: { reviewRequestId: { in: rrIds } },
+        },
+      });
+      if (acknowledgedCount < quorumCount) {
+        throw contractError(GQL_ERROR_CODES.REVIEW_QUORUM_NOT_MET);
+      }
+    }
 
     return this.adjudication.applyAdjudication({
       claimId: existing.id,
