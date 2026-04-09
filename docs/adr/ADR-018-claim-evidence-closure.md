@@ -1,7 +1,7 @@
 ADR-018: Claim Evidence Closure Invariant
-Status
 
-Accepted
+## Status
+Status: Accepted
 
 Date
 

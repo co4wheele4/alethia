@@ -45,6 +45,11 @@ jobs:
         env:
           GITHUB_BASE_REF: ${{ github.event.pull_request?.base?.ref || 'main' }}
 
+      - name: ADR-025 agent role diff guard (frontend app)
+        run: node tools/pr-checks/agentRoleGuard.cjs
+        env:
+          GITHUB_BASE_REF: ${{ github.event.pull_request?.base?.ref || 'main' }}
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest

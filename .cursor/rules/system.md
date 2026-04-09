@@ -10,6 +10,7 @@ The following Architecture Decision Records (ADRs) are **binding contracts**, no
 - ADR-005: GraphQL Contract & Data Guarantees
 - ADR-006: Confidence Semantics
 - ADR-007: Claim Semantics vs Evidence Semantics
+- ADR-025: Agent Role Restrictions (mechanical automation only; no inferential or authoritative agent outputs)
 
 You MUST:
 

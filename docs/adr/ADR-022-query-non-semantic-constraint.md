@@ -1,7 +1,7 @@
 # ADR-022: Query Non-Semantic Constraint
 
 ## Status
-ACCEPTED
+Status: ACCEPTED
 
 ## Date
 2026-03-22

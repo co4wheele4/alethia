@@ -49,7 +49,7 @@ function main() {
       if (re.test(lower) && !seen.has(term)) {
         const isComment = /^\s*[/*#]|^\s*\/\//.test(line.trim());
         const isTestOrMock = /\.(test|spec)\.|mock|fixture|handlers\.ts/.test(diff);
-        const isGuardOrDoc = /assertNoDerived|epistemicGuard|ADR-022|forbidden/.test(line);
+        const isGuardOrDoc = /assertNoDerived|epistemicGuard|ADR-022|ADR-025|agentRoleGuard|forbidden/.test(line);
         if (!isComment && !isGuardOrDoc) {
           if (isTestOrMock && (term === 'score' || term === 'rank')) {
             continue;

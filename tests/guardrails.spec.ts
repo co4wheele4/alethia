@@ -71,4 +71,24 @@ describe('Guardrails', function () {
       expect(result).toBeDefined();
     });
   });
+
+  describe('ADR-025 schema lint', function () {
+    it('passes on committed GraphQL schema', function () {
+      execSync('node aletheia-backend/scripts/schema-lint-adr025.cjs', {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      });
+    });
+  });
+
+  describe('ADR-025 agent role PR guard', function () {
+    it('exits 0 when no violations in current diff', function () {
+      execSync('node tools/pr-checks/agentRoleGuard.cjs', {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      });
+    });
+  });
 });
