@@ -264,7 +264,7 @@ describe('DocumentsListPane', () => {
       </TestWrapper>
     );
 
-    fireEvent.click(screen.getByText(/Add sources/i));
+    fireEvent.click(screen.getByTestId('open-ingest-dialog'));
     expect(onOpenIngest).toHaveBeenCalled();
   });
 });
