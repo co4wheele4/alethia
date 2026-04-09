@@ -13,5 +13,6 @@ export { AiQueryResultResolver } from './ai-query.resolver';
 export { ClaimResolver } from './claim.resolver';
 export { EvidenceResolver } from './evidence.resolver';
 export { ClaimAdjudicationResolver } from './claim-adjudication.resolver';
+export { ClaimAdjudicationService } from './claim-adjudication.service';
 export { ReviewRequestResolver } from './review-request.resolver';
 export { ReviewAssignmentResolver } from './review-assignment.resolver';

@@ -187,12 +187,37 @@ function assertNoAdr022DerivedSemantics(
   }
 }
 
+/** ADR-023: no batch adjudication or non-schema lifecycle mutation names in client requests. */
+function assertAdr023AdjudicationSurface(query: string, operationName?: string | null) {
+  const q = query;
+  if (/\badjudicateClaims\b/i.test(q) || /\bbatchAdjudicate\b/i.test(q) || /\bupdateClaim\b/i.test(q)) {
+    fail(
+      `ADR-023: forbidden adjudication/lifecycle mutation attempted: ${operationName ?? '(missing operationName)'}`,
+    );
+  }
+}
+
+/** ADR-024: no evidence mutation surface beyond create/link; no derived field names in requests. */
+function assertAdr024EvidenceIngestion(query: string, operationName?: string | null) {
+  if (/\bupdateEvidence\b/i.test(query)) {
+    fail(`ADR-024: updateEvidence is forbidden: ${operationName ?? '(missing operationName)'}`);
+  }
+  const q = query.toLowerCase();
+  if (/\bevidence\b/.test(q)) {
+    if (/\btags\b/.test(q) || /\bclassification\b/.test(q)) {
+      fail(`ADR-024: forbidden derived evidence field in ${operationName ?? '(missing operationName)'}`);
+    }
+  }
+}
+
 function assertNoForbiddenMutations(query: string, operationName?: string | null) {
   const isMutation = /\bmutation\b/.test(query);
   if (!isMutation) return;
 
   const op = String(operationName ?? '');
   const q = query;
+
+  assertAdr023AdjudicationSurface(q, operationName);
 
   // ADR-005/012/013: reviewer queues are coordination-only; they must not mutate claim lifecycle or imply adjudication.
   const reviewerQueueSignals = [
@@ -248,6 +273,7 @@ export const guardHandlers = [
       assertNoTruthScoreRequested(query, operationName);
       assertNoAdr021SemanticLeakageRequested(query, operationName);
       assertNoClaimLifecycleFieldsRequestedInReviewerCoordinationUI(query, operationName);
+      assertAdr024EvidenceIngestion(query, operationName);
       assertMutationDeclaredInSchema(query, operationName);
       assertNoForbiddenMutations(query, operationName);
     }

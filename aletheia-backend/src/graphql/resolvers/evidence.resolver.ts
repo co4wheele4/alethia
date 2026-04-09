@@ -20,9 +20,11 @@ import { User } from '@models/user.model';
 import { Document } from '@models/document.model';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { extractSpan } from '@common/utils/extract-span';
+import { evidenceContentSha256Hex } from '@common/utils/evidence-content-hash';
+import { getGqlAuthUserId } from '../utils/gql-auth-user';
 
 type GqlContext = {
-  req?: { user?: { sub?: string } };
+  req?: { user?: { sub?: string; id?: string } };
 };
 
 // Coverage discipline: Nest GraphQL type thunks are invoked at module load.
@@ -48,7 +50,7 @@ export class EvidenceResolver {
       'List evidence visible to the current user (via document ownership).',
   })
   async evidence(@Context() ctx?: GqlContext) {
-    const userId = ctx?.req?.user?.sub;
+    const userId = getGqlAuthUserId(ctx);
     if (!userId) return [];
 
     return this.prisma.evidence.findMany({
@@ -87,15 +89,15 @@ export class EvidenceResolver {
   }
 
   /**
-   * Create Evidence (ADR-019). Immutable after creation.
-   * Fail-fast: rejects missing source, missing locator, malformed offsets.
+   * Create Evidence (ADR-019 / ADR-024). Immutable after creation (DB-enforced).
+   * Fail-fast: rejects missing source, missing locator, malformed offsets, empty/non-verbatim content.
    */
   @Mutation(evidenceType)
   async createEvidence(
     @Args('input') input: CreateEvidenceInput,
     @Context() ctx?: GqlContext,
   ) {
-    const userId = ctx?.req?.user?.sub;
+    const userId = getGqlAuthUserId(ctx);
     if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
 
     const {
@@ -129,47 +131,47 @@ export class EvidenceResolver {
       throw contractError(GQL_ERROR_CODES.EVIDENCE_SOURCE_REQUIRED);
     }
 
-    // 2. Locator validation (for DOCUMENT)
-    if (sourceType === CreateEvidenceSourceKindInput.DOCUMENT) {
-      if (!chunkId || startOffset == null || endOffset == null) {
-        throw contractError(GQL_ERROR_CODES.EVIDENCE_LOCATOR_REQUIRED);
-      }
-      if (endOffset <= startOffset) {
-        throw contractError(GQL_ERROR_CODES.EVIDENCE_MALFORMED_OFFSETS);
-      }
-
-      const chunk = await this.prisma.documentChunk.findUnique({
-        where: { id: chunkId },
-        select: { id: true, documentId: true, content: true },
-      });
-      if (!chunk)
-        throw contractError(GQL_ERROR_CODES.EVIDENCE_SOURCE_NOT_FOUND);
-      if (chunk.documentId !== sourceDocumentId!) {
-        throw contractError(GQL_ERROR_CODES.EVIDENCE_CHUNK_NOT_IN_SOURCE);
-      }
-      if (startOffset < 0 || endOffset > chunk.content.length) {
-        throw contractError(GQL_ERROR_CODES.EVIDENCE_MALFORMED_OFFSETS);
-      }
-
-      // Validate snippet against content when provided
-      if (snippet != null && snippet !== '') {
-        const span = extractSpan(chunk.content, startOffset, endOffset);
-        if (snippet !== span) {
-          throw contractError(GQL_ERROR_CODES.EVIDENCE_MALFORMED_OFFSETS);
-        }
-      }
+    // 2. Locator + verbatim validation (DOCUMENT only: enum is DOCUMENT | URL and URL is rejected above)
+    if (!chunkId || startOffset == null || endOffset == null) {
+      throw contractError(GQL_ERROR_CODES.EVIDENCE_LOCATOR_REQUIRED);
+    }
+    if (endOffset <= startOffset) {
+      throw contractError(GQL_ERROR_CODES.EVIDENCE_MALFORMED_OFFSETS);
     }
 
-    // At this point DOCUMENT source guarantees sourceDocumentId, chunkId, offsets; URL never reaches create.
+    const chunk = await this.prisma.documentChunk.findUnique({
+      where: { id: chunkId },
+      select: { id: true, documentId: true, content: true },
+    });
+    if (!chunk) throw contractError(GQL_ERROR_CODES.EVIDENCE_SOURCE_NOT_FOUND);
+    if (chunk.documentId !== sourceDocumentId!) {
+      throw contractError(GQL_ERROR_CODES.EVIDENCE_CHUNK_NOT_IN_SOURCE);
+    }
+    if (startOffset < 0 || endOffset > chunk.content.length) {
+      throw contractError(GQL_ERROR_CODES.EVIDENCE_MALFORMED_OFFSETS);
+    }
+
+    // ADR-024: verbatim span must exactly match the chunk slice (end > start ⇒ non-empty for valid UTF-16 ranges).
+    const verbatim = extractSpan(chunk.content, startOffset, endOffset);
+    if (snippet == null || snippet === '') {
+      throw contractError(GQL_ERROR_CODES.EVIDENCE_VERBATIM_REQUIRED);
+    }
+    if (snippet !== verbatim) {
+      throw contractError(GQL_ERROR_CODES.EVIDENCE_MALFORMED_OFFSETS);
+    }
+
+    const contentSha256 = evidenceContentSha256Hex(verbatim);
+
     const evidence = await this.prisma.evidence.create({
       data: {
         sourceType: sourceType as unknown as EvidenceSourceKind,
-        sourceDocumentId: sourceDocumentId!,
+        sourceDocumentId: sourceDocumentId,
         sourceUrl,
-        chunkId: chunkId!,
-        startOffset: startOffset!,
-        endOffset: endOffset!,
-        snippet: snippet ?? undefined,
+        chunkId: chunkId,
+        startOffset: startOffset,
+        endOffset: endOffset,
+        snippet: verbatim,
+        contentSha256,
         createdBy: userId,
       },
     });
@@ -202,7 +204,7 @@ export class EvidenceResolver {
     @Args('claimId') claimId: string,
     @Context() ctx?: GqlContext,
   ) {
-    const userId = ctx?.req?.user?.sub;
+    const userId = getGqlAuthUserId(ctx);
     if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
 
     const ev = await this.prisma.evidence.findUnique({

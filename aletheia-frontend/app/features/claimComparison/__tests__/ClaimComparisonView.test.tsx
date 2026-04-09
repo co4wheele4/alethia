@@ -18,6 +18,21 @@ vi.mock('@apollo/client/react', async (importOriginal) => {
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 
+/** ADR-019 Evidence shape (matches buildEvidenceModel in ClaimComparisonView). */
+const comparisonEvidence = (id: string) =>
+  ({
+    __typename: 'Evidence' as const,
+    id,
+    createdAt: '2026-01-21T12:00:00.000Z',
+    createdBy: 'u1',
+    sourceType: 'DOCUMENT' as const,
+    sourceDocumentId: 'doc_1',
+    chunkId: 'chunk_1_0',
+    startOffset: 0,
+    endOffset: 8,
+    snippet: 'Aletheia',
+  }) satisfies comparisonHook.ClaimComparisonClaim['evidence'][number];
+
 describe('ClaimComparisonView', () => {
   beforeEach(() => {
     push.mockClear();
@@ -32,17 +47,7 @@ describe('ClaimComparisonView', () => {
           text: 'Claim one text',
           status: 'DRAFT',
           createdAt: '2026-01-21T12:00:00.000Z',
-          evidence: [
-            {
-              __typename: 'ClaimEvidence',
-              id: 'ev1',
-              claimId: 'c1',
-              documentId: 'doc_1',
-              createdAt: '2026-01-21T12:00:00.000Z',
-              mentionIds: ['m_1'],
-              relationshipIds: [],
-            },
-          ],
+          evidence: [comparisonEvidence('ev1')],
           documents: [
             {
               __typename: 'Document',
@@ -81,17 +86,7 @@ describe('ClaimComparisonView', () => {
           text: 'Claim two text',
           status: 'REVIEWED',
           createdAt: '2026-01-21T12:00:00.000Z',
-          evidence: [
-            {
-              __typename: 'ClaimEvidence',
-              id: 'ev2',
-              claimId: 'c2',
-              documentId: 'doc_1',
-              createdAt: '2026-01-21T12:00:00.000Z',
-              mentionIds: ['m_1'],
-              relationshipIds: [],
-            },
-          ],
+          evidence: [comparisonEvidence('ev2')],
           documents: [
             {
               __typename: 'Document',
@@ -147,7 +142,7 @@ describe('ClaimComparisonView', () => {
     expect(screen.getAllByText(/draft/i)[0]).toBeInTheDocument();
     expect(screen.getAllByText(/reviewed/i)[0]).toBeInTheDocument();
 
-    // Evidence snippet renders with offsets and highlight mark.
+    // Evidence snippet renders with offsets and highlight mark (ADR-019 Evidence + chunk offsets).
     expect(screen.getAllByText(/Source document:/i)[0]).toHaveTextContent('Doc 1');
     expect(screen.getAllByText(/offsets 0–8/i)[0]).toBeInTheDocument();
     expect(screen.getAllByTestId('mention-highlight-m_1')[0]).toHaveTextContent('Aletheia');
@@ -162,17 +157,7 @@ describe('ClaimComparisonView', () => {
           text: 'Claim one text',
           status: 'DRAFT',
           createdAt: '2026-01-21T12:00:00.000Z',
-          evidence: [
-            {
-              __typename: 'ClaimEvidence',
-              id: 'ev1',
-              claimId: 'c1',
-              documentId: 'doc_1',
-              createdAt: '2026-01-21T12:00:00.000Z',
-              mentionIds: ['m_1'],
-              relationshipIds: [],
-            },
-          ],
+          evidence: [comparisonEvidence('ev1')],
           documents: [
             {
               __typename: 'Document',

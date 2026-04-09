@@ -20,11 +20,13 @@ import { DocumentSource } from '@models/document-source.model';
 import { User } from '@models/user.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
+import { getGqlAuthUserId } from '../utils/gql-auth-user';
 
 type GqlRequestContext = {
   req?: {
     user?: {
       sub?: string;
+      id?: string;
     };
   };
 };
@@ -53,7 +55,7 @@ export class DocumentResolver {
     @Args('userId') userId: string,
     @Context() ctx?: GqlRequestContext,
   ) {
-    const authUserId = ctx?.req?.user?.sub;
+    const authUserId = getGqlAuthUserId(ctx);
     if (authUserId && authUserId !== userId) {
       throw new ForbiddenException('Cannot access documents for another user');
     }
@@ -66,7 +68,7 @@ export class DocumentResolver {
     @Args('userId') userId: string,
     @Context() ctx?: GqlRequestContext,
   ) {
-    const authUserId = ctx?.req?.user?.sub;
+    const authUserId = getGqlAuthUserId(ctx);
     if (authUserId && authUserId !== userId) {
       throw new ForbiddenException('Cannot create documents for another user');
     }
@@ -89,7 +91,7 @@ export class DocumentResolver {
     @Args('id') id: string,
     @Context() ctx?: GqlRequestContext,
   ) {
-    const authUserId = ctx?.req?.user?.sub;
+    const authUserId = getGqlAuthUserId(ctx);
     if (authUserId) {
       const existing = await this.prisma.document.findUnique({
         where: { id },

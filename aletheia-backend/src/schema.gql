@@ -312,6 +312,7 @@ type EntityRelationshipEvidenceMention {
 type Evidence {
   chunk: DocumentChunk
   chunkId: ID
+  contentSha256: String
   createdAt: DateTime!
   createdBy: ID!
   createdByUser: User!

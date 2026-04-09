@@ -33,6 +33,8 @@ function adjudicationErrorMessage(code: string) {
       return 'This claim no longer exists or is unavailable.';
     case 'CLAIM_NOT_EVIDENCE_CLOSED':
       return 'This claim is not evidence-closed; adjudication is blocked.';
+    case 'EVIDENCE_REQUIRED_FOR_ADJUDICATION':
+      return 'Adjudication requires evidence anchors; this claim does not meet the evidence gate (ADR-023).';
     case 'INVALID_LIFECYCLE_TRANSITION':
       return 'This claim can no longer be modified.';
     case 'UNEXPECTED_ERROR_CODE':

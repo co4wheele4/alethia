@@ -3,7 +3,7 @@ import { gql } from '@apollo/client';
 import { DOCUMENT_CORE_FIELDS } from './documentCoreFields.fragment';
 
 /**
- * Evidence fields for claim grounding (ADR-019).
+ * Evidence fields for claim grounding (ADR-019 / ADR-024).
  * Evidence is a reference to source material; no confidence or inference.
  */
 export const EVIDENCE_FIELDS = gql`
@@ -18,6 +18,7 @@ export const EVIDENCE_FIELDS = gql`
     startOffset
     endOffset
     snippet
+    contentSha256
   }
 `;
 

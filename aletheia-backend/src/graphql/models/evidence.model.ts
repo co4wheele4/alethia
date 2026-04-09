@@ -52,7 +52,11 @@ export class Evidence {
   @Field(() => Int, { nullable: true })
   endOffset?: number | null;
 
-  /** Optional verbatim snippet (not derived or summarized). */
+  /** Verbatim span text (ADR-024); must match chunk offsets when present. */
   @Field(() => String, { nullable: true })
   snippet?: string | null;
+
+  /** SHA-256 (hex) of UTF-8 verbatim span (ADR-024). */
+  @Field(() => String, { nullable: true })
+  contentSha256?: string | null;
 }

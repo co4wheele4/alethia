@@ -1,9 +1,11 @@
 import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
+import { ClaimStatus as PrismaClaimStatus } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { Claim, ClaimLifecycleState, ClaimStatus } from '@models/claim.model';
 import { OptionalJwtAuthGuard } from '@auth/guards/optional-jwt-auth.guard';
 import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
+import { ClaimAdjudicationService } from './claim-adjudication.service';
 
 type GqlRequestContext = {
   req?: {
@@ -52,7 +54,10 @@ void idType();
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(claimType)
 export class ClaimAdjudicationResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly adjudication: ClaimAdjudicationService,
+  ) {}
 
   @Mutation(claimType, {
     description:
@@ -114,14 +119,13 @@ export class ClaimAdjudicationResolver {
       select: { id: true },
     });
     if (!hasNewEvidence && !hasLegacyEvidence)
-      throw contractError(GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED);
+      throw contractError(GQL_ERROR_CODES.EVIDENCE_REQUIRED_FOR_ADJUDICATION);
 
     const currentStatus = existing.status as ClaimStatus;
     if (!isAllowedTransition(currentStatus, decision)) {
       throw contractError(GQL_ERROR_CODES.INVALID_LIFECYCLE_TRANSITION);
     }
 
-    const now = new Date();
     // Mapping is intentionally derived from the *allowed transitions*:
     // - DRAFT -> REVIEW maps to persisted status REVIEWED
     // - REVIEWED -> ACCEPTED/REJECTED maps to persisted status ACCEPTED/REJECTED
@@ -132,14 +136,13 @@ export class ClaimAdjudicationResolver {
           ? ClaimStatus.ACCEPTED
           : ClaimStatus.REJECTED;
 
-    return await this.prisma.claim.update({
-      where: { id: existing.id },
-      data: {
-        status: nextStatus,
-        reviewedAt: now,
-        reviewedBy: reviewerId,
-        reviewerNote: reviewerNote ?? null,
-      },
+    return this.adjudication.applyAdjudication({
+      claimId: existing.id,
+      adjudicatorId: reviewerId,
+      decision,
+      reviewerNote: reviewerNote ?? null,
+      previousStatus: existing.status,
+      nextStatus: nextStatus as PrismaClaimStatus,
     });
   }
 }

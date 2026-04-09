@@ -51,7 +51,9 @@ export class CreateEvidenceInput {
   @Min(0)
   endOffset?: number;
 
-  /** Optional verbatim snippet. Must match content at offsets when provided. */
+  /**
+   * Verbatim span text (ADR-024). Required for DOCUMENT: must exactly equal the chunk slice at [startOffset, endOffset).
+   */
   @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()

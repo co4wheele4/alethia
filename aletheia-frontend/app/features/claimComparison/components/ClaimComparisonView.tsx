@@ -14,15 +14,11 @@ import { useRequestReview } from '../../reviewerQueue';
 import { ReviewActivityPanel } from '../../reviewActivity/components/ReviewActivityPanel';
 import { useReviewActivityForClaim } from '../../reviewActivity/hooks/useReviewActivityForClaim';
 import type { ClaimEvidenceListModel } from './ClaimEvidenceList';
-import type { ClaimComparisonClaim, ClaimComparisonDocument } from '../hooks/useClaimsForComparison';
+import type { ClaimComparisonClaim } from '../hooks/useClaimsForComparison';
 import type { ClaimEvidenceSnippetModel } from './ClaimEvidenceSnippet';
 
 function fail(message: string): never {
   throw new Error(`[ClaimComparison] ${message}`);
-}
-
-function uniqueStrings(values: readonly string[]) {
-  return Array.from(new Set(values.filter(Boolean)));
 }
 
 function relatedClaimsFromSchema(args: { base: ClaimComparisonClaim; all: ClaimComparisonClaim[] }) {
@@ -33,11 +29,6 @@ function relatedClaimsFromSchema(args: { base: ClaimComparisonClaim; all: ClaimC
     (c) =>
       c.id !== base.id && (c.documents ?? []).some((d) => baseDocIds.has(d.id))
   );
-}
-
-function assertPresent<T>(value: T | null | undefined, label: string): NonNullable<T> {
-  if (value === null || value === undefined) fail(`${label} is missing`);
-  return value as NonNullable<T>;
 }
 
 function assertValidOffsets(args: { text: string; start: number; end: number; label: string }) {

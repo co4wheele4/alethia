@@ -1,6 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
+ * Full matrix (Chromium, Firefox, WebKit, mobile) runs in CI or when
+ * `PLAYWRIGHT_ALL_BROWSERS=1` (after `npx playwright install`).
+ * Default local runs use Chromium only so `npm test` / root test-all succeeds without
+ * every browser binary (common on Windows when only Chromium was installed).
+ */
+const useFullBrowserMatrix =
+  process.env.CI === 'true' || process.env.PLAYWRIGHT_ALL_BROWSERS === '1';
+
+/**
  * Playwright E2E test configuration
  * 
  * Playwright provides:
@@ -65,31 +74,35 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
 
-  // Configure projects for major browsers
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-    
-    // Mobile viewports
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-    },
-  ],
+  projects: useFullBrowserMatrix
+    ? [
+        {
+          name: 'chromium',
+          use: { ...devices['Desktop Chrome'] },
+        },
+        {
+          name: 'firefox',
+          use: { ...devices['Desktop Firefox'] },
+        },
+        {
+          name: 'webkit',
+          use: { ...devices['Desktop Safari'] },
+        },
+        {
+          name: 'Mobile Chrome',
+          use: { ...devices['Pixel 5'] },
+        },
+        {
+          name: 'Mobile Safari',
+          use: { ...devices['iPhone 12'] },
+        },
+      ]
+    : [
+        {
+          name: 'chromium',
+          use: { ...devices['Desktop Chrome'] },
+        },
+      ],
 
   /**
    * Web servers for E2E.
@@ -111,27 +124,34 @@ export default defineConfig({
               'npm run --workspace=aletheia-backend test:e2e:setup && ' +
               'npm run --workspace=aletheia-backend test:e2e:seed && ' +
               'npm run --workspace=aletheia-backend build && ' +
-              'npm run --workspace=aletheia-backend start:prod',
+              // start:prod must use the same DATABASE_URL/JWT_SECRET as seed (`.env.test`), not only root `.env`.
+              'npx dotenv-cli -e aletheia-backend/.env.test -- npm run --workspace=aletheia-backend start:prod',
             env: {
               ...process.env,
               PORT: '3050',
+              // Browser origin for Playwright webServer (see backend main.ts CORS).
+              ALLOWED_ORIGINS:
+                process.env.ALLOWED_ORIGINS ??
+                'http://127.0.0.1:3040,http://localhost:3040',
             },
             url: 'http://127.0.0.1:3050/graphql',
             reuseExistingServer: false,
-            timeout: 180 * 1000,
+            // migrate + seed + nest build + start can exceed 3m on cold machines / Windows.
+            timeout: 420 * 1000,
           },
           {
             // Frontend (production server for stability)
             command: 'npm run build && npm run start',
             env: {
               ...process.env,
+              PORT: '3040',
               NEXT_PUBLIC_MSW: 'disabled',
               NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
               NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3050/graphql',
             },
             url: 'http://127.0.0.1:3040',
             reuseExistingServer: false,
-            timeout: 180 * 1000,
+            timeout: 360 * 1000,
           },
         ]
       : {

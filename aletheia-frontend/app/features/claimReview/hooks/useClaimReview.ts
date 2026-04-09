@@ -59,11 +59,6 @@ function fail(message: string): never {
   throw new Error(`[ClaimReview] ${message}`);
 }
 
-function assertPresent<T>(value: T | null | undefined, label: string): NonNullable<T> {
-  if (value === null || value === undefined) fail(`${label} is missing`);
-  return value as NonNullable<T>;
-}
-
 function uniqueStrings(values: readonly string[]) {
   return Array.from(new Set(values.filter(Boolean)));
 }

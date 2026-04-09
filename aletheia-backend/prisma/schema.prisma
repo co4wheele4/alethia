@@ -394,9 +394,14 @@ model Evidence {
   endOffset   Int?    @map("end_offset")
 
   /**
-   * Optional verbatim snippet (not derived or summarized).
+   * Verbatim span text (not derived or summarized). ADR-024: required for DOCUMENT evidence on create.
    */
   snippet String? @map("snippet")
+
+  /**
+   * SHA-256 (hex) of UTF-8 verbatim span bytes. ADR-024: set on create; immutable thereafter.
+   */
+  contentSha256 String? @map("content_sha256")
 
   createdByUser  User             @relation("EvidenceCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
   sourceDocument Document?        @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
@@ -466,9 +471,38 @@ model Claim {
    */
   reviewRequests ReviewRequest[]
 
+  /**
+   * Immutable adjudication audit trail (ADR-023).
+   * One row per successful adjudicateClaim transition.
+   */
+  adjudicationLogs AdjudicationLog[]
+
   @@index([status])
   @@index([createdAt])
   @@map("claims")
+}
+
+/**
+ * Append-only adjudication audit log (ADR-023).
+ * Populated only by the adjudication service path; not exposed in GraphQL.
+ */
+model AdjudicationLog {
+  id              String      @id @default(uuid()) @map("id")
+  claimId         String      @map("claim_id")
+  adjudicatorId   String      @map("adjudicator_id")
+  /// GraphQL ClaimLifecycleState input (REVIEW | ACCEPTED | REJECTED).
+  decision        String      @map("decision")
+  previousStatus  ClaimStatus @map("previous_status")
+  newStatus       ClaimStatus @map("new_status")
+  reviewerNote    String?     @map("reviewer_note")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+  @@index([adjudicatorId])
+  @@index([createdAt])
+  @@map("adjudication_logs")
 }
 
 model ReviewRequest {

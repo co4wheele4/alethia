@@ -6,5 +6,15 @@
       "pr-checks/epistemicGuard.cjs",
       "types/epistemic.ts"
     ]
+  },
+  "ADR-024": {
+    "title": "Evidence Ingestion Constraints",
+    "enforcedBy": [
+      "aletheia-backend/scripts/adr024-evidence-ingestion.cjs",
+      "aletheia-backend/prisma/migrations/*_adr024_evidence_ingestion/migration.sql",
+      "aletheia-backend/src/common/utils/evidence-content-hash.ts",
+      "aletheia-backend/src/graphql/resolvers/evidence.resolver.ts",
+      "aletheia-frontend/src/test/msw/handlers/guards.handlers.ts"
+    ]
   }
 }

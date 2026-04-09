@@ -15,6 +15,10 @@ test.describe('Claims: review (single-claim)', () => {
   test.describe.configure({ mode: 'serial' });
 
   test.beforeEach(async ({ page }) => {
+    // Real-backend runs must hit Nest + seeded DB; MSW would issue a mock JWT that 3050 rejects.
+    if (process.env.PLAYWRIGHT_REAL_BACKEND === '1') {
+      return;
+    }
     await page.route('**/graphql', setupGraphQLMocks);
   });
 
@@ -47,7 +51,7 @@ test.describe('Claims: review (single-claim)', () => {
       expect(json.errors?.[0]?.extensions?.code).toBe('UNAUTHORIZED_REVIEWER');
     }
 
-    await login(page);
+    await login(page, 'alice@example.com');
     const token = await page.evaluate(() => localStorage.getItem('aletheia_auth_token'));
     expect(token).toBeTruthy();
 
@@ -76,6 +80,51 @@ test.describe('Claims: review (single-claim)', () => {
       const json = (await res.json()) as { errors?: Array<{ extensions?: { code?: string } }> };
       expect(json.errors?.[0]?.extensions?.code).toBe('INVALID_LIFECYCLE_TRANSITION');
     }
+
+    // ADR-023: evidence gate — legacy anchor without mention/relationship links
+    {
+      const res = await page.request.post(gqlUrl, {
+        headers: { authorization: `Bearer ${token}` },
+        data: {
+          query: mutation,
+          variables: {
+            claimId: 'claim-adjudication-no-closure',
+            decision: 'REVIEW',
+            reviewerNote: null,
+          },
+        },
+      });
+      const json = (await res.json()) as { errors?: Array<{ extensions?: { code?: string } }> };
+      expect(json.errors?.[0]?.extensions?.code).toBe('EVIDENCE_REQUIRED_FOR_ADJUDICATION');
+    }
+
+    // ADR-023: no updateClaim mutation in schema
+    {
+      const res = await page.request.post(gqlUrl, {
+        headers: { authorization: `Bearer ${token}` },
+        data: {
+          query: `mutation { updateClaim(id: "x", status: ACCEPTED) { id } }`,
+        },
+      });
+      const json = (await res.json()) as { errors?: Array<{ message?: string }> };
+      expect(json.errors?.length).toBeTruthy();
+      const msg = String(json.errors?.[0]?.message ?? '');
+      expect(msg.toLowerCase()).toMatch(/cannot query field|unknown field|updateclaim/i);
+    }
+
+    // ADR-024: no updateEvidence mutation in schema
+    {
+      const res = await page.request.post(gqlUrl, {
+        headers: { authorization: `Bearer ${token}` },
+        data: {
+          query: `mutation { updateEvidence(id: "x") { id } }`,
+        },
+      });
+      const json = (await res.json()) as { errors?: Array<{ message?: string }> };
+      expect(json.errors?.length).toBeTruthy();
+      const msg = String(json.errors?.[0]?.message ?? '');
+      expect(msg.toLowerCase()).toMatch(/cannot query field|unknown field|updateevidence/i);
+    }
   });
 
   test('accept persists across reload and enforces terminal state', async ({ page }) => {
@@ -88,12 +137,17 @@ test.describe('Claims: review (single-claim)', () => {
 
     await page.goto('/claims/claim-review-accept');
 
-    await expect(page.getByRole('heading', { name: 'Claim review' })).toBeVisible({ timeout: 20_000 });
+    // AppShell title uses Typography component="div" (not a heading role in the a11y tree).
+    await expect(page.getByRole('banner').getByText('Claim review')).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText('Claim').first()).toBeVisible({ timeout: 20_000 });
 
     // Evidence must be explicit and rendered.
     await expect(page.getByTestId('evidence-item')).toHaveCount(1);
-    await expect(page.getByTestId('evidence-snippet')).toBeVisible({ timeout: 20_000 });
+    const evidenceSnippet = page.getByTestId('evidence-snippet');
+    await expect(evidenceSnippet).toBeVisible({ timeout: 20_000 });
+    // ADR-024: visible snippet is non-empty verbatim surface (no placeholder-only UI).
+    const snippetText = (await evidenceSnippet.innerText()).trim();
+    expect(snippetText.length).toBeGreaterThan(2);
 
     const accept = page.getByRole('button', { name: 'Accept claim' });
     const reject = page.getByRole('button', { name: 'Reject claim' });
@@ -125,7 +179,8 @@ test.describe('Claims: review (single-claim)', () => {
 
     await page.goto('/claims/claim-review-reject');
 
-    await expect(page.getByRole('heading', { name: 'Claim review' })).toBeVisible({ timeout: 20_000 });
+    // AppShell title uses Typography component="div" (not a heading role in the a11y tree).
+    await expect(page.getByRole('banner').getByText('Claim review')).toBeVisible({ timeout: 20_000 });
 
     const accept = page.getByRole('button', { name: 'Accept claim' });
     const reject = page.getByRole('button', { name: 'Reject claim' });

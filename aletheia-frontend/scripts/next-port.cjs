@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Run Next.js with a port from env (default 3030).
  *
@@ -41,7 +40,6 @@ async function isPortFree(port) {
 
 async function firstFreePort(startPort, maxTries = 50) {
   for (let p = startPort, i = 0; i < maxTries; i += 1, p += 1) {
-    // eslint-disable-next-line no-await-in-loop
     const free = await isPortFree(p);
     if (free) return p;
   }

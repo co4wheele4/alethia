@@ -1,9 +1,11 @@
 # ADR-023: Adjudication Integrity Hardening
 
 ## Status
+
 ACCEPTED
 
 ## Date
+
 2026-03-23
 
 ---
@@ -26,18 +28,18 @@ This makes adjudication the **highest-risk mutation surface**.
 
 ### Threat Vectors
 
-1. **Indirect lifecycle mutation**
+1. Indirect lifecycle mutation
    - Updates via non-adjudication resolvers
    - ORM-level updates bypassing GraphQL
 
-2. **Coordination leakage**
+2. Coordination leakage
    - ReviewAssignment or ReviewerResponse influencing state
 
-3. **Batch or implicit adjudication**
+3. Batch or implicit adjudication
    - Bulk updates
    - Hidden transitions
 
-4. **Evidence bypass**
+4. Evidence bypass
    - Adjudicating claims without evidence (ADR-018 violation)
 
 ---
@@ -46,11 +48,11 @@ This makes adjudication the **highest-risk mutation surface**.
 
 Adjudication MUST be:
 
-- **Explicit** — One mutation, one transition, human-invoked
-- **Singular** — No alternative mutation paths for lifecycle
-- **Isolated** — No side-effect from coordination layers
-- **Evidence-gated** — Claims without evidence cannot be adjudicated (ADR-018)
-- **Fully auditable** — Every transition traceable
+- Explicit
+- Singular
+- Isolated
+- Evidence-gated
+- Fully auditable
 
 NO other mechanism may change claim lifecycle.
 
@@ -63,12 +65,10 @@ NO other mechanism may change claim lifecycle.
 Only allowed mutation:
 
 ```graphql
-adjudicateClaim(input: AdjudicateClaimInput!): Claim!
+adjudicateClaim(claimId: ID!, decision: ClaimLifecycleState!, reviewerNote: String): Claim!
 ```
 
-(or the equivalent scalar-args form: `adjudicateClaim(claimId: ID!, decision: ClaimLifecycleState!, reviewerNote: String): Claim!`)
-
-Any other resolver, batch operation, or data layer update that mutates `Claim.lifecycle` or `Claim.status` is **forbidden**.
+Any other resolver, batch operation, or data layer update that mutates `Claim.status` (or equivalent persistence) toward ACCEPTED or REJECTED is **forbidden**.
 
 ### 2. No Coordination Leakage
 
@@ -94,6 +94,18 @@ Any other resolver, batch operation, or data layer update that mutates `Claim.li
   - Timestamp
   - Previous and new lifecycle state
   - Optional reviewer note
+
+---
+
+## Implementation (repository)
+
+- **Exclusive ORM path**: `ClaimAdjudicationService` performs the only `prisma.claim.update` allowed for lifecycle transitions; CI enforces this via `aletheia-backend/scripts/adr023-lifecycle-integrity.cjs` (chained after ADR-022 in `npm run schema:lint`).
+- **Audit log**: `AdjudicationLog` / `adjudication_logs` — one append-only row per successful `adjudicateClaim` (claim id, adjudicator id, decision input, previous/new `Claim.status`, note, timestamp).
+- **Evidence gate error**: `EVIDENCE_REQUIRED_FOR_ADJUDICATION` when adjudication runs but the claim fails the same evidence-closure checks as before (ADR-018/019).
+- **Schema**: No `updateClaim` or batch adjudication mutations; only `adjudicateClaim(claimId, decision, reviewerNote)` (scalar args; no `AdjudicateClaimInput` in the current schema).
+- **Frontend / E2E**: MSW and Playwright guards reject non-schema lifecycle mutation names and assert coordination surfaces do not call adjudication (existing tests extended for ADR-023).
+
+**Not done (would require new ADR or product decision):** PostgreSQL triggers blocking direct `UPDATE claims SET status`; a global GraphQL field middleware that throws `LIFECYCLE_MUTATION_FORBIDDEN` for hypothetical future mutations. The DB is already constrained in practice by Prisma usage and CI allowlisting.
 
 ---
 

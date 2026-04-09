@@ -405,6 +405,13 @@ function assertNoForbiddenRequestedFields(
   // Claim lifecycle mutations (truth-adjacent) must never be invoked from the mocked E2E surface.
   const isMutation = /\bmutation\b/i.test(query);
   if (isMutation) {
+    if (/\badjudicateClaims\b/i.test(query) || /\bbatchAdjudicate\b/i.test(query) || /\bupdateClaim\b/i.test(query)) {
+      failContract(`ADR-023: forbidden adjudication/lifecycle mutation in ${operationName ?? '(missing operationName)'}`);
+    }
+    if (/\bupdateEvidence\b/i.test(query)) {
+      failContract(`ADR-024: updateEvidence is forbidden in ${operationName ?? '(missing operationName)'}`);
+    }
+
     const mutationFieldName = extractMutationFieldName(query);
     const schemaMutations = readSchemaMutationFields();
     if (!mutationFieldName) {

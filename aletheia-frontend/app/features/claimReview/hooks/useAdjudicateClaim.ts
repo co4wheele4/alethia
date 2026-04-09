@@ -11,12 +11,14 @@ export type AdjudicateClaimErrorCode =
   | 'UNAUTHORIZED_REVIEWER'
   | 'CLAIM_NOT_FOUND'
   | 'CLAIM_NOT_EVIDENCE_CLOSED'
+  | 'EVIDENCE_REQUIRED_FOR_ADJUDICATION'
   | 'INVALID_LIFECYCLE_TRANSITION';
 
 export type AdjudicateClaimError =
   | { code: 'UNAUTHORIZED_REVIEWER' }
   | { code: 'CLAIM_NOT_FOUND' }
   | { code: 'CLAIM_NOT_EVIDENCE_CLOSED' }
+  | { code: 'EVIDENCE_REQUIRED_FOR_ADJUDICATION' }
   | { code: 'INVALID_LIFECYCLE_TRANSITION' }
   | { code: 'UNEXPECTED_ERROR_CODE'; received: string }
   | { code: 'NETWORK_OR_UNKNOWN'; message: string };
@@ -51,6 +53,7 @@ function isKnownAdjudicationCode(code: string): code is AdjudicateClaimErrorCode
     code === 'UNAUTHORIZED_REVIEWER' ||
     code === 'CLAIM_NOT_FOUND' ||
     code === 'CLAIM_NOT_EVIDENCE_CLOSED' ||
+    code === 'EVIDENCE_REQUIRED_FOR_ADJUDICATION' ||
     code === 'INVALID_LIFECYCLE_TRANSITION'
   );
 }

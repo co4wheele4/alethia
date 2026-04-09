@@ -5,6 +5,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
+import { evidenceContentSha256Hex } from '../src/common/utils/evidence-content-hash';
+
 // Load .env.test if NODE_ENV is test or if explicitly requested, otherwise load .env
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.SEED_TEST_DB === 'true';
 if (isTestEnvironment) {
@@ -69,8 +71,16 @@ async function main() {
     // throw new Error('Production database seeding requires explicit confirmation');
   }
 
-  // Clear existing data
+  // Clear existing data (dependency order — matches test/helpers/test-db.ts)
   console.log('Clearing existing data...');
+  await prisma.reviewerResponse.deleteMany();
+  await prisma.reviewAssignment.deleteMany();
+  await prisma.reviewRequest.deleteMany();
+  await prisma.adjudicationLog.deleteMany();
+  await prisma.claimEvidenceLink.deleteMany();
+  await prisma.claimEvidence.deleteMany();
+  await prisma.claim.deleteMany();
+  await prisma.evidence.deleteMany();
   await prisma.aiQueryResult.deleteMany();
   await prisma.aiQuery.deleteMany();
   await prisma.embedding.deleteMany();
@@ -202,6 +212,54 @@ async function main() {
         ],
       },
     },
+  });
+  // ADR-023: visible legacy anchor without mention/relationship links → not evidence-closed for adjudication.
+  await prisma.claim.create({
+    data: {
+      id: 'claim-adjudication-no-closure',
+      text: 'Legacy evidence row without mention or relationship links (ADR-023 E2E).',
+      status: 'DRAFT',
+      evidence: {
+        create: [{ id: 'cev-no-closure-1', documentId: document.id }],
+      },
+    },
+  });
+
+  // ADR-019/024: GraphQL `claim.evidence` prefers ClaimEvidenceLink → Evidence with chunk offsets.
+  // Legacy-only rows map to null locators; the review UI needs real spans for E2E.
+  const verbatimSnippet = chunk.content.slice(20, 31);
+  const reviewSnippetSha = evidenceContentSha256Hex(verbatimSnippet);
+
+  const evidenceAccept = await prisma.evidence.create({
+    data: {
+      createdBy: alice.id,
+      sourceType: 'DOCUMENT',
+      sourceDocumentId: document.id,
+      chunkId: chunk.id,
+      startOffset: 20,
+      endOffset: 31,
+      snippet: verbatimSnippet,
+      contentSha256: reviewSnippetSha,
+    },
+  });
+  await prisma.claimEvidenceLink.create({
+    data: { claimId: 'claim-review-accept', evidenceId: evidenceAccept.id },
+  });
+
+  const evidenceReject = await prisma.evidence.create({
+    data: {
+      createdBy: alice.id,
+      sourceType: 'DOCUMENT',
+      sourceDocumentId: document.id,
+      chunkId: chunk.id,
+      startOffset: 20,
+      endOffset: 31,
+      snippet: verbatimSnippet,
+      contentSha256: reviewSnippetSha,
+    },
+  });
+  await prisma.claimEvidenceLink.create({
+    data: { claimId: 'claim-review-reject', evidenceId: evidenceReject.id },
   });
 
   // Insert AI queries

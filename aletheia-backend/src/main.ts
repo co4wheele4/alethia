@@ -70,6 +70,8 @@ async function bootstrap() {
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:3030', // Frontend dev server
+    'http://127.0.0.1:3040', // Playwright E2E (NEXT_PUBLIC_* prod server)
+    'http://localhost:3040',
   ];
   app.enableCors({
     origin: allowedOrigins,

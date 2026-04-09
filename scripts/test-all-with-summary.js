@@ -187,16 +187,20 @@ function extractStats(output, testType) {
   } else if (testType === 'lint') {
     // ESLint format: "✖ 5 problems (5 errors, 0 warnings)"
     const lintMatch = output.match(/✖\s+(\d+)\s+problems?\s+\((\d+)\s+errors?/i);
+    let lintErrorCount = 0;
     if (lintMatch) {
-      stats.failed = parseInt(lintMatch[2]) || 0;
-      stats.total = stats.failed;
+      lintErrorCount = parseInt(lintMatch[2], 10) || 0;
+      stats.failed = lintErrorCount;
+      stats.total = lintErrorCount;
     }
-    
-    // Extract files with lint errors
-    const lintFileMatches = output.matchAll(/^([^\s\n]+\.[jt]sx?)/gm);
-    for (const match of lintFileMatches) {
-      if (match[1] && !match[1].includes('node_modules') && !stats.failingFiles.includes(match[1])) {
-        stats.failingFiles.push(match[1]);
+
+    // Only list paths when there are errors — warnings still exit 0 but list files, which is not a "failure".
+    if (lintErrorCount > 0) {
+      const lintFileMatches = output.matchAll(/^([^\s\n]+\.[jt]sx?)/gm);
+      for (const match of lintFileMatches) {
+        if (match[1] && !match[1].includes('node_modules') && !stats.failingFiles.includes(match[1])) {
+          stats.failingFiles.push(match[1]);
+        }
       }
     }
   } else if (testType === 'type-check') {
@@ -220,11 +224,18 @@ function extractStats(output, testType) {
     }
   }
 
-  // Extract failing test file names (Jest format: "FAIL app/__tests__/hooks/useAuth.test.tsx")
-  const failMatches = output.matchAll(/FAIL\s+([^\s\n]+)/gi);
-  for (const match of failMatches) {
-    if (match[1] && !stats.failingFiles.includes(match[1])) {
-      stats.failingFiles.push(match[1]);
+  // Jest/Vitest print "FAIL path/to/file.test.tsx" for failed suites. Coverage and other tools can
+  // also emit lines containing "FAIL" plus a file path (e.g. uncovered line refs); only parse these
+  // when the test run actually reported failed tests.
+  if (
+    (testType === 'jest' || testType === 'vitest') &&
+    stats.failed > 0
+  ) {
+    const failMatches = output.matchAll(/(?:^|\r?\n)FAIL\s+([^\s\r\n]+)/gm);
+    for (const match of failMatches) {
+      if (match[1] && !stats.failingFiles.includes(match[1])) {
+        stats.failingFiles.push(match[1]);
+      }
     }
   }
 

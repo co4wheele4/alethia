@@ -1,26 +1,27 @@
 import { PrismaService } from '@prisma/prisma.service';
 import { ClaimAdjudicationResolver } from './claim-adjudication.resolver';
+import { ClaimAdjudicationService } from './claim-adjudication.service';
 import { ClaimLifecycleState, ClaimStatus } from '@models/claim.model';
 import { GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 
 describe('ClaimAdjudicationResolver', () => {
   let resolver: ClaimAdjudicationResolver;
   let prisma: PrismaService;
+  let adjudication: ClaimAdjudicationService;
   let claimFindFirst: jest.Mock;
   let claimEvidenceFindFirst: jest.Mock;
   let claimEvidenceLinkCount: jest.Mock;
-  let claimUpdate: jest.Mock;
+  let applyAdjudication: jest.Mock;
 
   beforeEach(() => {
     claimFindFirst = jest.fn();
     claimEvidenceFindFirst = jest.fn();
     claimEvidenceLinkCount = jest.fn();
-    claimUpdate = jest.fn();
+    applyAdjudication = jest.fn();
 
     prisma = {
       claim: {
         findFirst: claimFindFirst,
-        update: claimUpdate,
       },
       claimEvidence: {
         findFirst: claimEvidenceFindFirst,
@@ -28,7 +29,9 @@ describe('ClaimAdjudicationResolver', () => {
       claimEvidenceLink: { count: claimEvidenceLinkCount },
     } as unknown as PrismaService;
 
-    resolver = new ClaimAdjudicationResolver(prisma);
+    adjudication = { applyAdjudication } as unknown as ClaimAdjudicationService;
+
+    resolver = new ClaimAdjudicationResolver(prisma, adjudication);
   });
 
   it('rejects unauthenticated access with UNAUTHORIZED_REVIEWER', async () => {
@@ -59,9 +62,12 @@ describe('ClaimAdjudicationResolver', () => {
   });
 
   it('allows DRAFT -> REVIEW and persists adjudication metadata', async () => {
-    claimFindFirst.mockResolvedValue({ id: 'c1', status: ClaimStatus.DRAFT });
+    claimFindFirst.mockResolvedValue({ id: 'c1', status: 'DRAFT' });
     claimEvidenceLinkCount.mockResolvedValue(1);
-    claimUpdate.mockResolvedValue({ id: 'c1', status: ClaimStatus.REVIEWED });
+    applyAdjudication.mockResolvedValue({
+      id: 'c1',
+      status: ClaimStatus.REVIEWED,
+    });
 
     const result = await resolver.adjudicateClaim(
       'c1',
@@ -71,15 +77,14 @@ describe('ClaimAdjudicationResolver', () => {
     );
 
     expect(result).toEqual({ id: 'c1', status: ClaimStatus.REVIEWED });
-    expect(claimUpdate).toHaveBeenCalledWith(
+    expect(applyAdjudication).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'c1' },
-        data: expect.objectContaining({
-          status: ClaimStatus.REVIEWED,
-          reviewedAt: expect.any(Date),
-          reviewedBy: 'u1',
-          reviewerNote: null,
-        }),
+        claimId: 'c1',
+        adjudicatorId: 'u1',
+        decision: ClaimLifecycleState.REVIEW,
+        reviewerNote: null,
+        previousStatus: 'DRAFT',
+        nextStatus: ClaimStatus.REVIEWED,
       }),
     );
   });
@@ -87,10 +92,13 @@ describe('ClaimAdjudicationResolver', () => {
   it('allows REVIEW -> ACCEPTED', async () => {
     claimFindFirst.mockResolvedValue({
       id: 'c1',
-      status: ClaimStatus.REVIEWED,
+      status: 'REVIEWED',
     });
     claimEvidenceLinkCount.mockResolvedValue(1);
-    claimUpdate.mockResolvedValue({ id: 'c1', status: ClaimStatus.ACCEPTED });
+    applyAdjudication.mockResolvedValue({
+      id: 'c1',
+      status: ClaimStatus.ACCEPTED,
+    });
 
     const result = await resolver.adjudicateClaim(
       'c1',
@@ -100,13 +108,11 @@ describe('ClaimAdjudicationResolver', () => {
     );
 
     expect(result).toEqual({ id: 'c1', status: ClaimStatus.ACCEPTED });
-    expect(claimUpdate).toHaveBeenCalledWith(
+    expect(applyAdjudication).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          status: ClaimStatus.ACCEPTED,
-          reviewedBy: 'u1',
-          reviewerNote: 'ok',
-        }),
+        nextStatus: ClaimStatus.ACCEPTED,
+        adjudicatorId: 'u1',
+        reviewerNote: 'ok',
       }),
     );
   });
@@ -114,10 +120,13 @@ describe('ClaimAdjudicationResolver', () => {
   it('allows REVIEW -> REJECTED', async () => {
     claimFindFirst.mockResolvedValue({
       id: 'c1',
-      status: ClaimStatus.REVIEWED,
+      status: 'REVIEWED',
     });
     claimEvidenceLinkCount.mockResolvedValue(1);
-    claimUpdate.mockResolvedValue({ id: 'c1', status: ClaimStatus.REJECTED });
+    applyAdjudication.mockResolvedValue({
+      id: 'c1',
+      status: ClaimStatus.REJECTED,
+    });
 
     const result = await resolver.adjudicateClaim(
       'c1',
@@ -127,12 +136,10 @@ describe('ClaimAdjudicationResolver', () => {
     );
 
     expect(result).toEqual({ id: 'c1', status: ClaimStatus.REJECTED });
-    expect(claimUpdate).toHaveBeenCalledWith(
+    expect(applyAdjudication).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          status: ClaimStatus.REJECTED,
-          reviewerNote: 'bad evidence',
-        }),
+        nextStatus: ClaimStatus.REJECTED,
+        reviewerNote: 'bad evidence',
       }),
     );
   });
@@ -166,7 +173,7 @@ describe('ClaimAdjudicationResolver', () => {
     });
   });
 
-  it('rejects non-evidence-closed claims with CLAIM_NOT_EVIDENCE_CLOSED', async () => {
+  it('rejects claims without adjudication-grade evidence with EVIDENCE_REQUIRED_FOR_ADJUDICATION', async () => {
     claimFindFirst.mockResolvedValue({ id: 'c1', status: ClaimStatus.DRAFT });
     claimEvidenceLinkCount.mockResolvedValue(0);
     claimEvidenceFindFirst.mockResolvedValue(null);
@@ -176,7 +183,7 @@ describe('ClaimAdjudicationResolver', () => {
         req: { user: { sub: 'u1' } },
       } as any),
     ).rejects.toMatchObject({
-      extensions: { code: GQL_ERROR_CODES.CLAIM_NOT_EVIDENCE_CLOSED },
+      extensions: { code: GQL_ERROR_CODES.EVIDENCE_REQUIRED_FOR_ADJUDICATION },
     });
   });
 });

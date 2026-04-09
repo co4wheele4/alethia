@@ -1,3 +1,4 @@
+import { evidenceContentSha256Hex } from '../../../src/common/utils/evidence-content-hash';
 import { graphqlRequest } from '../../helpers/graphql-request';
 import {
   setupTestApp,
@@ -54,6 +55,7 @@ describe('ReviewAssignmentResolver (ADR-016 reviewer responses)', () => {
         startOffset: 0,
         endOffset: 5,
         snippet: 'Test ',
+        contentSha256: evidenceContentSha256Hex('Test '),
         createdBy: testData.user.id,
       },
       select: { id: true },
@@ -71,6 +73,7 @@ describe('ReviewAssignmentResolver (ADR-016 reviewer responses)', () => {
         startOffset: 0,
         endOffset: 5,
         snippet: 'Admin',
+        contentSha256: evidenceContentSha256Hex('Admin'),
         createdBy: testData.admin.id,
       },
       select: { id: true },

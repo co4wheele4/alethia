@@ -108,6 +108,7 @@ describe('EvidenceResolver', () => {
           chunkId: 'ch1',
           startOffset: 0,
           endOffset: 5,
+          snippet: 'hello',
         } as any,
         ctx as any,
       ),
@@ -243,6 +244,7 @@ describe('EvidenceResolver', () => {
         chunkId: 'ch1',
         startOffset: 0,
         endOffset: 1,
+        snippet: 'x',
         claimIds: [],
       } as any,
       ctx as any,
@@ -443,33 +445,51 @@ describe('EvidenceResolver', () => {
     });
   });
 
-  it('createEvidence skips snippet validation when snippet is empty string', async () => {
+  it('createEvidence rejects EVIDENCE_VERBATIM_REQUIRED when snippet is empty string (ADR-024)', async () => {
     documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
     documentChunkFindUnique.mockResolvedValue({
       id: 'ch1',
       documentId: 'doc1',
       content: 'hello',
     });
-    evidenceCreate.mockResolvedValue({
-      id: 'ev1',
-      sourceDocumentId: 'doc1',
-      chunkId: 'ch1',
-      startOffset: 0,
-      endOffset: 5,
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+          sourceDocumentId: 'doc1',
+          chunkId: 'ch1',
+          startOffset: 0,
+          endOffset: 5,
+          snippet: '',
+        } as any,
+        ctx as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.EVIDENCE_VERBATIM_REQUIRED },
     });
+  });
 
-    const result = await resolver.createEvidence(
-      {
-        sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
-        sourceDocumentId: 'doc1',
-        chunkId: 'ch1',
-        startOffset: 0,
-        endOffset: 5,
-        snippet: '',
-      } as any,
-      ctx as any,
-    );
-    expect(result.id).toBe('ev1');
+  it('createEvidence rejects EVIDENCE_VERBATIM_REQUIRED when snippet is omitted (ADR-024)', async () => {
+    documentFindUnique.mockResolvedValue({ id: 'doc1', userId: 'u1' });
+    documentChunkFindUnique.mockResolvedValue({
+      id: 'ch1',
+      documentId: 'doc1',
+      content: 'hello world',
+    });
+    await expect(
+      resolver.createEvidence(
+        {
+          sourceType: CreateEvidenceSourceKindInput.DOCUMENT,
+          sourceDocumentId: 'doc1',
+          chunkId: 'ch1',
+          startOffset: 0,
+          endOffset: 5,
+        } as any,
+        ctx as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.EVIDENCE_VERBATIM_REQUIRED },
+    });
   });
 
   it('createEvidence links only to existing claims when claimIds include missing', async () => {
@@ -497,6 +517,7 @@ describe('EvidenceResolver', () => {
         chunkId: 'ch1',
         startOffset: 0,
         endOffset: 5,
+        snippet: 'hello',
         claimIds: ['c1', 'c_missing'],
       } as any,
       ctx as any,
@@ -534,6 +555,7 @@ describe('EvidenceResolver', () => {
         chunkId: 'ch1',
         startOffset: 0,
         endOffset: 5,
+        snippet: 'hello',
         claimIds: ['c1'],
       } as any,
       ctx as any,
@@ -541,6 +563,14 @@ describe('EvidenceResolver', () => {
 
     expect(result.id).toBe('ev1');
     expect(evidenceCreate).toHaveBeenCalled();
+    expect(evidenceCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          contentSha256: expect.any(String),
+          snippet: 'hello',
+        }),
+      }),
+    );
     expect(claimEvidenceLinkUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { evidenceId_claimId: { evidenceId: 'ev1', claimId: 'c1' } },

@@ -19,11 +19,13 @@ import { Claim } from '@models/claim.model';
 import { Evidence } from '@models/evidence.model';
 import { ClaimFilterInput } from '@inputs/claim-filter.input';
 import { Document } from '@models/document.model';
+import { getGqlAuthUserId } from '../utils/gql-auth-user';
 
 type GqlRequestContext = {
   req?: {
     user?: {
       sub?: string;
+      id?: string;
     };
   };
 };
@@ -66,7 +68,7 @@ export class ClaimResolver {
     filter: ClaimFilterInput | undefined,
     @Context() ctx?: GqlRequestContext,
   ) {
-    const authUserId = ctx?.req?.user?.sub;
+    const authUserId = getGqlAuthUserId(ctx);
     if (!authUserId) return [];
 
     const workspaceWhere = {
@@ -128,7 +130,7 @@ export class ClaimResolver {
     @Args('documentId') documentId: string,
     @Context() ctx?: GqlRequestContext,
   ) {
-    const authUserId = ctx?.req?.user?.sub;
+    const authUserId = getGqlAuthUserId(ctx);
     if (!authUserId) return [];
 
     const doc = await this.prisma.document.findUnique({

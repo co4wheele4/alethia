@@ -32,6 +32,7 @@ import {
   ClaimResolver,
   EvidenceResolver,
   ClaimAdjudicationResolver,
+  ClaimAdjudicationService,
   ReviewRequestResolver,
   ReviewAssignmentResolver,
 } from '@resolvers';
@@ -96,6 +97,7 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     EntityRelationshipEvidenceMentionResolver,
     ClaimResolver,
     EvidenceResolver,
+    ClaimAdjudicationService,
     ClaimAdjudicationResolver,
     ReviewRequestResolver,
     ReviewAssignmentResolver,
