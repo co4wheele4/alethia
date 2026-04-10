@@ -132,6 +132,11 @@ enum CreateEvidenceSourceKindInput {
   URL
 }
 
+input CreateHtmlCrawlIngestionRunInput {
+  config: HtmlCrawlConfigInput!
+  seedUrl: String!
+}
+
 input CreateUserInput {
   email: String!
   name: String
@@ -338,6 +343,7 @@ type Evidence {
   createdByUser: User!
   endOffset: Int
   id: ID!
+  rawBodyBase64: String
   snippet: String
   sourceDocument: Document
   sourceDocumentId: ID
@@ -368,10 +374,11 @@ enum EvidenceReproHashMatch {
 }
 
 """
-Source type for evidence. DOCUMENT = ingested document; URL = external (future).
+Source type for evidence. DOCUMENT = ingested document; URL = external reference; HTML_PAGE = raw HTML bytes (ADR-032).
 """
 enum EvidenceSourceKind {
   DOCUMENT
+  HTML_PAGE
   URL
 }
 
@@ -385,6 +392,53 @@ input ExportBundleInput {
   """Include epistemic audit rows (explicit opt-in)."""
   includeEpistemicEvents: Boolean
   lifecycle: ClaimStatus
+}
+
+input HtmlCrawlConfigInput {
+  allowedDomains: [String!]!
+  crawlDepth: Int!
+  followMode: HtmlCrawlFollowMode!
+  includeQueryParams: Boolean!
+  maxPages: Int!
+}
+
+enum HtmlCrawlFetchStatus {
+  FAILED
+  SUCCESS
+}
+
+enum HtmlCrawlFollowMode {
+  STRICT_ONLY
+}
+
+type HtmlCrawlIngestionRun {
+  allowedDomains: [String!]!
+  crawlDepth: Int!
+  errorLog: String
+  fetchedEvidence: [HtmlCrawlIngestionRunEvidence!]!
+  finishedAt: DateTime
+  followMode: HtmlCrawlFollowMode!
+  id: ID!
+  includeQueryParams: Boolean!
+  maxPages: Int!
+  seedUrl: String!
+  startedAt: DateTime!
+  status: HtmlCrawlRunStatus!
+}
+
+type HtmlCrawlIngestionRunEvidence {
+  depth: Int!
+  errorMessage: String
+  evidence: Evidence
+  evidenceId: ID
+  fetchStatus: HtmlCrawlFetchStatus!
+  url: String!
+}
+
+enum HtmlCrawlRunStatus {
+  FAILED
+  PARTIAL
+  SUCCESS
 }
 
 input ImportBundleInput {
@@ -438,6 +492,7 @@ type Mutation {
   createEntityMention(data: CreateEntityMentionInput!): EntityMention!
   createEntityRelationship(data: CreateEntityRelationshipInput!): EntityRelationship!
   createEvidence(input: CreateEvidenceInput!): Evidence!
+  createHtmlCrawlIngestionRun(input: CreateHtmlCrawlIngestionRunInput!): HtmlCrawlIngestionRun!
   createLesson(content: String, title: String!, userId: String!): Lesson!
   createUser(data: CreateUserInput!): User!
   deleteChunk(id: String!): DocumentChunk!
@@ -523,6 +578,8 @@ type Query {
   """ADR-031: Structural export (JSON bundle)."""
   exportBundle(input: ExportBundleInput!): JSON!
   hello: String!
+  htmlCrawlIngestionRun(id: ID!): HtmlCrawlIngestionRun
+  htmlCrawlIngestionRuns: [HtmlCrawlIngestionRun!]!
   ingestionHealthCheck: String!
   lesson(id: String!): Lesson
   lessons: [Lesson!]!

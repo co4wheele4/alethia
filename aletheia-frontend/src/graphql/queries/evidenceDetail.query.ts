@@ -10,6 +10,7 @@ export const GET_EVIDENCE_DETAIL_QUERY = gql`
       sourceUrl
       snippet
       contentSha256
+      rawBodyBase64
     }
     evidenceReproChecks(evidenceId: $id) {
       id

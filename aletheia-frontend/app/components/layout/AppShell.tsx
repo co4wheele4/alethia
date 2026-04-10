@@ -97,6 +97,11 @@ export function AppShell(props: AppShellProps) {
         { href: '/entities', label: 'Entities', description: 'Extracted mentions and relationships' },
         { href: '/questions', label: 'Questions', description: 'Gated workspace (claims must link to evidence)' },
         { href: '/provenance', label: 'Provenance', description: 'Auditability & transformation steps' },
+        {
+          href: '/ingestion/html-crawl-runs',
+          label: 'HTML crawl runs',
+          description: 'Deterministic crawl audit (ADR-032)',
+        },
       ],
     [navItems]
   );

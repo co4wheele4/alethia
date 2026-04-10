@@ -32,3 +32,10 @@ export {
 export { ReviewQuorumStatus } from './review-quorum-status.model';
 export { EpistemicEvent, EpistemicEventTypeGql } from './epistemic-event.model';
 export { ImportResult } from './import-result.model';
+export {
+  HtmlCrawlIngestionRun,
+  HtmlCrawlIngestionRunEvidence,
+  HtmlCrawlFollowModeGql,
+  HtmlCrawlRunStatusGql,
+  HtmlCrawlFetchStatusGql,
+} from './html-crawl-ingestion.model';

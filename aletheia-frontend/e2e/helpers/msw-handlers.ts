@@ -1507,6 +1507,96 @@ export async function setupGraphQLMocks(route: Route) {
         break;
       }
 
+      case 'HtmlCrawlRuns': {
+        const createdAt = new Date('2026-03-01T12:00:00.000Z').toISOString();
+        response = {
+          status: 200,
+          body: {
+            data: {
+              htmlCrawlIngestionRuns: [
+                {
+                  __typename: 'HtmlCrawlIngestionRun',
+                  id: 'crawl-run-1',
+                  seedUrl: 'https://example.com/seed',
+                  startedAt: createdAt,
+                  status: 'SUCCESS',
+                  crawlDepth: 1,
+                  maxPages: 10,
+                },
+              ],
+            },
+          },
+        };
+        break;
+      }
+
+      case 'HtmlCrawlRunDetail': {
+        const id = varString(parsedBody.variables, 'id') ?? '';
+        const createdAt = new Date('2026-03-01T12:00:00.000Z').toISOString();
+        response = {
+          status: 200,
+          body: {
+            data: {
+              htmlCrawlIngestionRun:
+                id === 'crawl-run-1'
+                  ? {
+                      __typename: 'HtmlCrawlIngestionRun',
+                      id: 'crawl-run-1',
+                      seedUrl: 'https://example.com/seed',
+                      crawlDepth: 1,
+                      maxPages: 10,
+                      allowedDomains: ['example.com'],
+                      includeQueryParams: false,
+                      followMode: 'STRICT_ONLY',
+                      startedAt: createdAt,
+                      finishedAt: createdAt,
+                      status: 'SUCCESS',
+                      errorLog: null,
+                      fetchedEvidence: [
+                        {
+                          __typename: 'HtmlCrawlIngestionRunEvidence',
+                          evidenceId: 'html-ev-1',
+                          url: 'https://example.com/seed',
+                          depth: 0,
+                          fetchStatus: 'SUCCESS',
+                          errorMessage: null,
+                        },
+                      ],
+                    }
+                  : null,
+            },
+          },
+        };
+        break;
+      }
+
+      case 'GetEvidenceDetail': {
+        const eid = varString(parsedBody.variables, 'id') ?? '';
+        const createdAt = new Date('2026-03-01T12:00:00.000Z').toISOString();
+        const html = '<html><body>Exact mock bytes</body></html>';
+        response = {
+          status: 200,
+          body: {
+            data: {
+              evidenceById:
+                eid === 'html-ev-1'
+                  ? {
+                      __typename: 'Evidence',
+                      id: 'html-ev-1',
+                      createdAt,
+                      sourceType: 'URL',
+                      sourceUrl: 'https://example.com/seed',
+                      snippet: html,
+                      contentSha256: '0000000000000000000000000000000000000000000000000000000000000000',
+                    }
+                  : null,
+              evidenceReproChecks: [],
+            },
+          },
+        };
+        break;
+      }
+
       default:
         // Some clients omit `operationName` in the request body. Fall back to a simple query-shape match
         // for the small set of operations used in our E2E suite.

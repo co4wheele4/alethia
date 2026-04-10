@@ -25,5 +25,16 @@
       "@auth/*": ["src/auth/*"],
       "@common/*": ["src/common/*"]
     }
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/ingestion/htmlCrawlRunner.ts",
+    "src/ingestion/htmlCrawlRunner.spec.ts",
+    "src/ingestion/html-crawl-ingestion.service.ts",
+    "src/graphql/resolvers/html-crawl-ingestion.resolver.ts",
+    "src/graphql/inputs/html-crawl-ingestion.input.ts",
+    "src/graphql/models/html-crawl-ingestion.model.ts",
+    "src/common/utils/evidence-raw-body-hash.ts"
+  ]
 }

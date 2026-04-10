@@ -45,6 +45,20 @@ describe('EvidenceViewer', () => {
     expect(screen.getByTestId('evidence-viewer-content').textContent).toBe('ij');
   });
 
+  it('renders URL snippet HTML verbatim without semantic labels', () => {
+    const html = '<html><body>hi</body></html>';
+    render(
+      <EvidenceViewer
+        content={html}
+        sourceTypeLabel="URL"
+        createdAtLabel="2020-01-01T00:00:00.000Z"
+      />,
+    );
+    expect(screen.getByTestId('evidence-viewer-content').textContent).toBe(html);
+    const viewer = screen.getByTestId('evidence-viewer').textContent ?? '';
+    expect(viewer.toLowerCase()).not.toMatch(/summary|highlight|relevant|recommended/);
+  });
+
   it('copy puts full content on clipboard', async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);

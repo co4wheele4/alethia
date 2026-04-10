@@ -6,12 +6,13 @@ import { Field, ID, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 export enum EvidenceSourceKind {
   DOCUMENT = 'DOCUMENT',
   URL = 'URL',
+  HTML_PAGE = 'HTML_PAGE',
 }
 
 registerEnumType(EvidenceSourceKind, {
   name: 'EvidenceSourceKind',
   description:
-    'Source type for evidence. DOCUMENT = ingested document; URL = external (future).',
+    'Source type for evidence. DOCUMENT = ingested document; URL = external reference; HTML_PAGE = raw HTML bytes (ADR-032).',
 });
 
 /**
@@ -56,7 +57,11 @@ export class Evidence {
   @Field(() => String, { nullable: true })
   snippet?: string | null;
 
-  /** SHA-256 (hex) of UTF-8 verbatim span (ADR-024). */
+  /** SHA-256 (hex) of UTF-8 verbatim span (ADR-024); HTML_PAGE = raw body bytes (ADR-032). */
   @Field(() => String, { nullable: true })
   contentSha256?: string | null;
+
+  /** Base64 of raw stored body bytes (HTML_PAGE only). */
+  @Field(() => String, { nullable: true })
+  rawBodyBase64?: string | null;
 }

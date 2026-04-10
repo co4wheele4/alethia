@@ -25,7 +25,9 @@ export class EvidenceReproCheckService {
       throw new Error(`Evidence not found: ${evidenceId}`);
     }
 
-    if (ev.sourceType !== EvidenceSourceKind.URL || !ev.sourceUrl) {
+    const urlBacked = ev.sourceType === EvidenceSourceKind.URL && ev.sourceUrl;
+
+    if (!urlBacked) {
       return this.prisma.evidenceReproCheck.create({
         data: {
           evidenceId,
@@ -38,7 +40,8 @@ export class EvidenceReproCheckService {
     }
 
     try {
-      const res = await fetch(ev.sourceUrl, {
+      const sourceUrl = ev.sourceUrl as string;
+      const res = await fetch(sourceUrl, {
         redirect: 'follow',
         headers: { 'User-Agent': 'AletheiaEvidenceReproCheck/1.0' },
       });

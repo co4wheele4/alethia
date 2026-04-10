@@ -42,6 +42,8 @@ model User {
    */
   evidenceCreated Evidence[] @relation("EvidenceCreatedBy")
 
+  htmlCrawlIngestionRuns HtmlCrawlIngestionRun[]
+
   @@map("users")
 }
 
@@ -359,11 +361,13 @@ model AiQueryResult {
 /**
  * Source kind for Evidence.
  * DOCUMENT = references an ingested Document (via chunk).
- * URL = external URL (future; not yet implemented).
+ * URL = external URL reference (repro check; no persisted body in typical flow).
+ * HTML_PAGE = raw HTML bytes from deterministic crawl ingestion (ADR-032).
  */
 enum EvidenceSourceKind {
   DOCUMENT
   URL
+  HTML_PAGE
 }
 
 /**
@@ -399,21 +403,86 @@ model Evidence {
   snippet String? @map("snippet")
 
   /**
-   * SHA-256 (hex) of UTF-8 verbatim span bytes. ADR-024: set on create; immutable thereafter.
+   * SHA-256 (hex): DOCUMENT = UTF-8 verbatim span bytes (ADR-024).
+   * HTML_PAGE = raw response body bytes (ADR-032).
    */
   contentSha256 String? @map("content_sha256")
+
+  /**
+   * Raw fetched body bytes for HTML_PAGE evidence only (immutable snapshot). ADR-032.
+   */
+  rawBody Bytes? @map("raw_body")
 
   createdByUser  User             @relation("EvidenceCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
   sourceDocument Document?        @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
   chunk          DocumentChunk?   @relation(fields: [chunkId], references: [id], onDelete: Restrict)
   claimLinks     ClaimEvidenceLink[]
   reproChecks    EvidenceReproCheck[]
+  htmlCrawlIngestionLinks HtmlCrawlIngestionRunEvidence[]
 
   @@index([sourceDocumentId])
   @@index([chunkId])
   @@index([createdBy])
   @@index([createdAt])
   @@map("evidence")
+}
+
+////////////////////
+// HTML CRAWL INGESTION (ADR-032; audit-only run records, immutable evidence)
+////////////////////
+
+enum HtmlCrawlFollowMode {
+  STRICT_ONLY
+}
+
+enum HtmlCrawlRunStatus {
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+enum HtmlCrawlFetchStatus {
+  SUCCESS
+  FAILED
+}
+
+model HtmlCrawlIngestionRun {
+  id                 String              @id @default(uuid()) @map("id")
+  createdByUserId    String              @map("created_by_user_id")
+  seedUrl            String              @map("seed_url")
+  crawlDepth         Int                 @map("crawl_depth")
+  maxPages           Int                 @map("max_pages")
+  allowedDomains     String[]            @map("allowed_domains")
+  includeQueryParams Boolean             @map("include_query_params")
+  followMode         HtmlCrawlFollowMode @map("follow_mode")
+  startedAt          DateTime            @map("started_at")
+  finishedAt         DateTime?           @map("finished_at")
+  status             HtmlCrawlRunStatus  @map("status")
+  errorLog           String?             @map("error_log")
+
+  createdByUser User                             @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  evidenceRows  HtmlCrawlIngestionRunEvidence[]
+
+  @@index([createdByUserId])
+  @@index([startedAt])
+  @@map("html_crawl_ingestion_runs")
+}
+
+model HtmlCrawlIngestionRunEvidence {
+  id           String               @id @default(uuid()) @map("id")
+  runId        String               @map("run_id")
+  evidenceId   String?              @map("evidence_id")
+  url          String               @map("url")
+  depth        Int                  @map("depth")
+  fetchStatus  HtmlCrawlFetchStatus @map("fetch_status")
+  errorMessage String?              @map("error_message")
+
+  run      HtmlCrawlIngestionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  evidence Evidence?             @relation(fields: [evidenceId], references: [id], onDelete: SetNull)
+
+  @@index([runId])
+  @@index([evidenceId])
+  @@map("html_crawl_ingestion_run_evidence")
 }
 
 ////////////////////

@@ -19,6 +19,7 @@ const SCHEMA_MUTATION_FIELDS = new Set<string>([
   'createChunk',
   'createDocument',
   'createEmbedding',
+  'createHtmlCrawlIngestionRun',
   'createEntity',
   'createEntityMention',
   'createEntityRelationship',

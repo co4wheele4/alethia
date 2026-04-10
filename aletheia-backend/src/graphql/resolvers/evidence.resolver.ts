@@ -8,9 +8,10 @@ import {
   Parent,
 } from '@nestjs/graphql';
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
+import { EvidenceSourceKind as PrismaEvidenceSourceKind } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
-import { Evidence, EvidenceSourceKind } from '@models/evidence.model';
+import { Evidence } from '@models/evidence.model';
 import {
   CreateEvidenceInput,
   CreateEvidenceSourceKindInput,
@@ -55,15 +56,43 @@ export class EvidenceResolver {
 
     return this.prisma.evidence.findMany({
       where: {
-        sourceDocument: { userId },
+        OR: [
+          { sourceDocument: { userId } },
+          {
+            sourceType: {
+              in: [
+                PrismaEvidenceSourceKind.URL,
+                PrismaEvidenceSourceKind.HTML_PAGE,
+              ],
+            },
+            createdBy: userId,
+          },
+        ],
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     });
   }
 
   @Query(evidenceType, { nullable: true })
-  async evidenceById(@Args('id') id: string) {
-    return this.prisma.evidence.findUnique({ where: { id } });
+  async evidenceById(@Args('id') id: string, @Context() ctx?: GqlContext) {
+    const userId = getGqlAuthUserId(ctx);
+    if (!userId) return null;
+
+    const ev = await this.prisma.evidence.findUnique({
+      where: { id },
+      include: { sourceDocument: { select: { userId: true } } },
+    });
+    if (!ev) return null;
+
+    if (ev.sourceType === PrismaEvidenceSourceKind.DOCUMENT) {
+      if (ev.sourceDocument?.userId !== userId) return null;
+    } else if (ev.sourceType === PrismaEvidenceSourceKind.URL) {
+      if (ev.createdBy !== userId) return null;
+    } else {
+      return null;
+    }
+
+    return ev;
   }
 
   @ResolveField(userType)
@@ -164,7 +193,7 @@ export class EvidenceResolver {
 
     const evidence = await this.prisma.evidence.create({
       data: {
-        sourceType: sourceType as unknown as EvidenceSourceKind,
+        sourceType: PrismaEvidenceSourceKind.DOCUMENT,
         sourceDocumentId: sourceDocumentId,
         sourceUrl,
         chunkId: chunkId,
@@ -212,7 +241,15 @@ export class EvidenceResolver {
       include: { sourceDocument: { select: { userId: true } } },
     });
     if (!ev) throw contractError(GQL_ERROR_CODES.EVIDENCE_NOT_FOUND);
-    if (ev.sourceDocument?.userId !== userId) {
+    if (ev.sourceType === PrismaEvidenceSourceKind.DOCUMENT) {
+      if (ev.sourceDocument?.userId !== userId) {
+        throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
+      }
+    } else if (ev.sourceType === PrismaEvidenceSourceKind.URL) {
+      if (ev.createdBy !== userId) {
+        throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
+      }
+    } else {
       throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
     }
 

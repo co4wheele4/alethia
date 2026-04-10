@@ -17,6 +17,7 @@ type EvidenceDetailData = {
     sourceUrl?: string | null;
     snippet?: string | null;
     contentSha256?: string | null;
+    rawBodyBase64?: string | null;
   } | null;
   evidenceReproChecks: Array<{
     id: string;
@@ -52,6 +53,7 @@ export default function EvidenceDetailPage() {
           <>
             <EvidenceViewer
               content={ev.snippet ?? ''}
+              rawBodyBase64={ev.rawBodyBase64}
               sourceUrl={ev.sourceUrl}
               contentSha256={ev.contentSha256}
               sourceTypeLabel={ev.sourceType}

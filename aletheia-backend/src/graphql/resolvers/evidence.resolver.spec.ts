@@ -42,15 +42,85 @@ describe('EvidenceResolver', () => {
   });
 
   it('evidenceById returns evidence when found', async () => {
-    evidenceFindUnique.mockResolvedValue({ id: 'e1' } as any);
-    const result = await resolver.evidenceById('e1');
-    expect(result).toEqual({ id: 'e1' });
-    expect(evidenceFindUnique).toHaveBeenCalledWith({ where: { id: 'e1' } });
+    evidenceFindUnique.mockResolvedValue({
+      id: 'e1',
+      sourceType: 'DOCUMENT',
+      createdBy: 'u1',
+      sourceDocument: { userId: 'u1' },
+    } as any);
+    const result = await resolver.evidenceById('e1', ctx as any);
+    expect(result).toMatchObject({ id: 'e1' });
+    expect(evidenceFindUnique).toHaveBeenCalledWith({
+      where: { id: 'e1' },
+      include: { sourceDocument: { select: { userId: true } } },
+    });
   });
 
   it('evidenceById returns null when not found', async () => {
     evidenceFindUnique.mockResolvedValue(null);
-    const result = await resolver.evidenceById('e_missing');
+    const result = await resolver.evidenceById('e_missing', ctx as any);
+    expect(result).toBeNull();
+  });
+
+  it('evidenceById returns null when unauthenticated', async () => {
+    evidenceFindUnique.mockResolvedValue({ id: 'e1' } as any);
+    const result = await resolver.evidenceById('e1', {} as any);
+    expect(result).toBeNull();
+    expect(evidenceFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('evidenceById returns null when sourceType is not DOCUMENT or URL', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'e1',
+      sourceType: 'OTHER',
+      createdBy: 'u1',
+      sourceDocument: null,
+    } as any);
+    const result = await resolver.evidenceById('e1', ctx as any);
+    expect(result).toBeNull();
+  });
+
+  it('evidenceById returns null when URL evidence was created by another user', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'e1',
+      sourceType: 'URL',
+      createdBy: 'other',
+      sourceDocument: null,
+    } as any);
+    const result = await resolver.evidenceById('e1', ctx as any);
+    expect(result).toBeNull();
+  });
+
+  it('evidenceById returns null for unknown source kinds', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'e1',
+      sourceType: 'UNKNOWN_KIND',
+      createdBy: 'u1',
+      sourceDocument: null,
+    } as any);
+    const result = await resolver.evidenceById('e1', ctx as any);
+    expect(result).toBeNull();
+  });
+
+  it('evidenceById returns null for legacy DB-only source kinds (e.g. HTML_PAGE)', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'e1',
+      sourceType: 'HTML_PAGE',
+      createdBy: 'u1',
+      sourceDocument: null,
+    } as any);
+    const result = await resolver.evidenceById('e1', ctx as any);
+    expect(result).toBeNull();
+  });
+
+  it('evidenceById returns null when DOCUMENT evidence is not in the user workspace', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'e1',
+      sourceType: 'DOCUMENT',
+      createdBy: 'u1',
+      sourceDocument: { userId: 'other' },
+    } as any);
+    const result = await resolver.evidenceById('e1', ctx as any);
     expect(result).toBeNull();
   });
 
@@ -257,6 +327,7 @@ describe('EvidenceResolver', () => {
   it('linkEvidenceToClaim rejects when claim not found', async () => {
     evidenceFindUnique.mockResolvedValue({
       id: 'ev1',
+      sourceType: 'DOCUMENT',
       sourceDocument: { userId: 'u1' },
     });
     claimFindUnique.mockResolvedValue(null);
@@ -270,6 +341,7 @@ describe('EvidenceResolver', () => {
   it('linkEvidenceToClaim rejects when evidence has no source document', async () => {
     evidenceFindUnique.mockResolvedValue({
       id: 'ev1',
+      sourceType: 'DOCUMENT',
       sourceDocument: null,
     });
     await expect(
@@ -282,6 +354,7 @@ describe('EvidenceResolver', () => {
   it('linkEvidenceToClaim rejects when evidence belongs to another user', async () => {
     evidenceFindUnique.mockResolvedValue({
       id: 'ev1',
+      sourceType: 'DOCUMENT',
       sourceDocument: { userId: 'other' },
     });
     await expect(
@@ -303,7 +376,15 @@ describe('EvidenceResolver', () => {
     expect(result).toEqual([{ id: 'e1' }]);
     expect(evidenceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { sourceDocument: { userId: 'u1' } },
+        where: {
+          OR: [
+            { sourceDocument: { userId: 'u1' } },
+            {
+              sourceType: { in: ['URL', 'HTML_PAGE'] },
+              createdBy: 'u1',
+            },
+          ],
+        },
       }),
     );
   });
@@ -643,6 +724,7 @@ describe('EvidenceResolver', () => {
   it('linkEvidenceToClaim links evidence to claim', async () => {
     evidenceFindUnique.mockResolvedValue({
       id: 'ev1',
+      sourceType: 'DOCUMENT',
       sourceDocument: { userId: 'u1' },
     });
     claimFindUnique.mockResolvedValue({ id: 'c1' });
@@ -656,5 +738,50 @@ describe('EvidenceResolver', () => {
         create: { evidenceId: 'ev1', claimId: 'c1' },
       }),
     );
+  });
+
+  it('linkEvidenceToClaim links URL evidence owned by user', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'ev1',
+      sourceType: 'URL',
+      createdBy: 'u1',
+      sourceDocument: null,
+    });
+    claimFindUnique.mockResolvedValue({ id: 'c1' });
+    claimEvidenceLinkUpsert.mockResolvedValue({});
+
+    const result = await resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any);
+    expect(result.id).toBe('ev1');
+    expect(claimEvidenceLinkUpsert).toHaveBeenCalled();
+  });
+
+  it('linkEvidenceToClaim rejects when URL evidence was created by another user', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'ev1',
+      sourceType: 'URL',
+      createdBy: 'other',
+      sourceDocument: null,
+    });
+    await expect(
+      resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+    expect(claimEvidenceLinkUpsert).not.toHaveBeenCalled();
+  });
+
+  it('linkEvidenceToClaim rejects legacy DB-only evidence kinds not in GraphQL', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'ev1',
+      sourceType: 'HTML_PAGE',
+      createdBy: 'u1',
+      sourceDocument: null,
+    });
+    await expect(
+      resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+    expect(claimEvidenceLinkUpsert).not.toHaveBeenCalled();
   });
 });
