@@ -620,6 +620,16 @@ model AdjudicationLog {
   reviewerNote    String?     @map("reviewer_note")
   createdAt       DateTime    @default(now()) @map("created_at")
 
+  /**
+   * ADR-036: Previous log entry hash in append-only chain (nullable for first row).
+   */
+  prevHash  String? @map("prev_hash")
+  /**
+   * ADR-036: SHA-256 hex over canonical payload including prevHash.
+   * Nullable for rows predating ADR-036 backfill.
+   */
+  entryHash String? @map("entry_hash")
+
   claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
 
   @@index([claimId])

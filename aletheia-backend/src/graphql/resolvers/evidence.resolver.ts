@@ -1,6 +1,7 @@
 import {
   Args,
   Context,
+  Int,
   Mutation,
   Query,
   ResolveField,
@@ -23,6 +24,7 @@ import { DocumentChunk } from '@models/document-chunk.model';
 import { extractSpan } from '@common/utils/extract-span';
 import { evidenceContentSha256Hex } from '@common/utils/evidence-content-hash';
 import { getGqlAuthUserId } from '../utils/gql-auth-user';
+import { assertAdr034ListPagination } from '@common/list-pagination';
 
 type GqlContext = {
   req?: { user?: { sub?: string; id?: string } };
@@ -34,11 +36,13 @@ const evidenceListType = () => [Evidence];
 const userType = () => User;
 const documentType = () => Document;
 const documentChunkType = () => DocumentChunk;
+const intArgType = () => Int;
 void evidenceType();
 void evidenceListType();
 void userType();
 void documentType();
 void documentChunkType();
+void intArgType();
 
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(evidenceType)
@@ -50,9 +54,15 @@ export class EvidenceResolver {
     description:
       'List evidence visible to the current user (via document ownership).',
   })
-  async evidence(@Context() ctx?: GqlContext) {
+  async evidence(
+    @Args('limit', { type: intArgType }) limit: number,
+    @Args('offset', { type: intArgType }) offset: number,
+    @Context() ctx?: GqlContext,
+  ) {
     const userId = getGqlAuthUserId(ctx);
     if (!userId) return [];
+
+    assertAdr034ListPagination(limit, offset);
 
     return this.prisma.evidence.findMany({
       where: {
@@ -70,6 +80,8 @@ export class EvidenceResolver {
         ],
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      skip: offset,
     });
   }
 

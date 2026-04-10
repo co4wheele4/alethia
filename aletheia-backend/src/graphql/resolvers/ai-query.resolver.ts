@@ -14,6 +14,9 @@ import { User } from '@models/user.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+const intArgType = () => Int;
+void intArgType();
+
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(() => AiQuery)
 @UseGuards(JwtAuthGuard)
@@ -49,8 +52,8 @@ export class AiQueryResolver {
 
   @Query(() => [AiQuery])
   async aiQueriesPaged(
-    @Args('skip', { type: () => Int, nullable: true }) skip = 0,
-    @Args('take', { type: () => Int, nullable: true }) take = 20,
+    @Args('skip', { type: intArgType, nullable: true }) skip = 0,
+    @Args('take', { type: intArgType, nullable: true }) take = 20,
   ) {
     const validatedSkip = skip != null && skip >= 0 ? skip : 0;
     const validatedTake = take != null && take >= 0 ? take : 20;

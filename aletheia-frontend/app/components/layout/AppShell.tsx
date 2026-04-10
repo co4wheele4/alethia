@@ -90,6 +90,7 @@ export function AppShell(props: AppShellProps) {
       navItems ?? [
         { href: '/dashboard', label: 'Overview', description: 'System entrypoint (non-interpretive)' },
         { href: '/documents', label: 'Documents', description: 'Immutable sources and chunks' },
+        { href: '/search', label: 'Search', description: 'Non-semantic claim search (ADR-033)' },
         { href: '/evidence', label: 'Evidence', description: 'Chunk-level inspection & comparison' },
         { href: '/claims', label: 'Claims', description: 'Read-only assertions (always grounded)' },
         { href: '/claims/graph', label: 'Claim graph', description: 'Read-only claim–evidence topology (ADR-021)' },

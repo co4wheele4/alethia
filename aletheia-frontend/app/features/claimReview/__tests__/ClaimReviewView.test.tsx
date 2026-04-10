@@ -91,7 +91,7 @@ describe('ClaimReviewView', () => {
   it('renders claim + evidence and enables adjudication when reviewable', async () => {
     const mocks = [
       {
-        request: { query: LIST_CLAIMS_QUERY },
+        request: { query: LIST_CLAIMS_QUERY, variables: { limit: 500, offset: 0 } },
         result: {
           data: {
             claims: [

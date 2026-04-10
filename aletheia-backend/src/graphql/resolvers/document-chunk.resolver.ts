@@ -17,6 +17,9 @@ import { AiExtractionSuggestion } from '@models/ai-extraction-suggestion.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+const intArgType = () => Int;
+void intArgType();
+
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(() => DocumentChunk)
 @UseGuards(JwtAuthGuard)
@@ -57,7 +60,7 @@ export class DocumentChunkResolver {
   @Mutation(() => DocumentChunk)
   async createChunk(
     @Args('documentId') documentId: string,
-    @Args('chunkIndex', { type: () => Int }) chunkIndex: number,
+    @Args('chunkIndex', { type: intArgType }) chunkIndex: number,
     @Args('content') content: string,
   ) {
     return await this.prisma.documentChunk.create({

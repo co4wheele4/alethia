@@ -57,7 +57,7 @@ describe('useClaims', () => {
   it('lists workspace claims', async () => {
     const mocks = [
       {
-        request: { query: LIST_CLAIMS_QUERY },
+        request: { query: LIST_CLAIMS_QUERY, variables: { limit: 500, offset: 0 } },
         result: { data: { claims: [claim1] } },
       },
     ];
@@ -74,7 +74,10 @@ describe('useClaims', () => {
   it('lists claims by document', async () => {
     const mocks = [
       {
-        request: { query: CLAIMS_BY_DOCUMENT_QUERY, variables: { documentId: 'doc_1' } },
+        request: {
+          query: CLAIMS_BY_DOCUMENT_QUERY,
+          variables: { documentId: 'doc_1', limit: 500, offset: 0 },
+        },
         result: { data: { claimsByDocument: [claim1] } },
       },
     ];

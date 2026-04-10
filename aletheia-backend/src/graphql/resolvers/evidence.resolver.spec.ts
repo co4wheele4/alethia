@@ -365,14 +365,14 @@ describe('EvidenceResolver', () => {
   });
 
   it('evidence returns empty when unauthenticated', async () => {
-    const result = await resolver.evidence({} as any);
+    const result = await resolver.evidence(100, 0, {} as any);
     expect(result).toEqual([]);
     expect(evidenceFindMany).not.toHaveBeenCalled();
   });
 
   it('evidence queries by sourceDocument.userId when authenticated', async () => {
     evidenceFindMany.mockResolvedValue([{ id: 'e1' }] as any);
-    const result = await resolver.evidence(ctx as any);
+    const result = await resolver.evidence(100, 0, ctx as any);
     expect(result).toEqual([{ id: 'e1' }]);
     expect(evidenceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -385,6 +385,8 @@ describe('EvidenceResolver', () => {
             },
           ],
         },
+        take: 100,
+        skip: 0,
       }),
     );
   });

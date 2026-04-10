@@ -119,7 +119,11 @@ describe('DocumentIndex (read-only)', () => {
     const client = createApolloClient();
 
     try {
-      const sub = execute(client.link, { query: DOCUMENTS_INDEX_QUERY }, { client }).subscribe({
+      const sub = execute(
+        client.link,
+        { query: DOCUMENTS_INDEX_QUERY, variables: { limit: 500, offset: 0 } },
+        { client },
+      ).subscribe({
         next: () => {},
         error: () => {},
         complete: () => {},

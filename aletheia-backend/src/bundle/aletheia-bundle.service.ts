@@ -9,6 +9,33 @@ import { evidenceContentSha256Hex } from '../common/utils/evidence-content-hash'
 
 const BUNDLE_VERSION = '1';
 
+/** ADR-037: Reject semantic extension keys at import boundary (recursive, case-insensitive on keys). */
+const FORBIDDEN_IMPORT_KEYS = new Set([
+  'confidence',
+  'score',
+  'rank',
+  'relevance',
+  'similarity',
+  'embedding',
+]);
+
+function assertNoForbiddenImportKeys(value: unknown, path: string): void {
+  if (value === null || value === undefined) return;
+  if (Array.isArray(value)) {
+    value.forEach((v, i) => assertNoForbiddenImportKeys(v, `${path}[${i}]`));
+    return;
+  }
+  if (typeof value === 'object') {
+    const o = value as Record<string, unknown>;
+    for (const k of Object.keys(o)) {
+      if (FORBIDDEN_IMPORT_KEYS.has(k.toLowerCase())) {
+        throw contractError(GQL_ERROR_CODES.BUNDLE_VALIDATION_FAILED);
+      }
+      assertNoForbiddenImportKeys(o[k], `${path}.${k}`);
+    }
+  }
+}
+
 export type ExportBundleInput = {
   claimIds?: string[];
   lifecycle?: ClaimStatus;
@@ -126,6 +153,8 @@ export class AletheiaBundleService {
   ): Promise<{ importedClaims: number; importedEvidence: number }> {
     if (!bundle || bundle.version !== BUNDLE_VERSION)
       throw contractError(GQL_ERROR_CODES.BUNDLE_VALIDATION_FAILED);
+
+    assertNoForbiddenImportKeys(bundle, 'bundle');
 
     const claimsIn = bundle.claims as Array<{ id: string }>;
     const evidenceIn = bundle.evidence as Array<{

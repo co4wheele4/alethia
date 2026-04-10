@@ -3,6 +3,7 @@ import { ClaimStatus } from '@prisma/client';
 
 import { PrismaService } from '@prisma/prisma.service';
 import { ClaimLifecycleState } from '@models/claim.model';
+import { adjudicationEntryHashHex } from '@common/integrity/adjudication-entry-hash';
 
 /**
  * ADR-023: Sole service path that mutates claim status for adjudication.
@@ -22,6 +23,18 @@ export class ClaimAdjudicationService {
   }) {
     const now = new Date();
     return this.prisma.$transaction(async (tx) => {
+      const last = await tx.adjudicationLog.findFirst({
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        select: { entryHash: true },
+      });
+      const prevHash = last?.entryHash ?? null;
+      const entryHash = adjudicationEntryHashHex({
+        prevHash,
+        claimId: args.claimId,
+        adjudicatorId: args.adjudicatorId,
+        decision: String(args.decision),
+        createdAt: now,
+      });
       await tx.adjudicationLog.create({
         data: {
           claimId: args.claimId,
@@ -30,6 +43,8 @@ export class ClaimAdjudicationService {
           previousStatus: args.previousStatus,
           newStatus: args.nextStatus,
           reviewerNote: args.reviewerNote,
+          prevHash,
+          entryHash,
         },
       });
       return tx.claim.update({

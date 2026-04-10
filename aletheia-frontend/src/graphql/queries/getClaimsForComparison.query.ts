@@ -9,8 +9,8 @@ import { CLAIM_COMPARISON_ASSERTION_FIELDS, CLAIM_COMPARISON_EVIDENCE_FIELDS } f
  * so the comparison view selects two claims client-side from the returned list.
  */
 export const GET_CLAIMS_FOR_COMPARISON_QUERY = gql`
-  query GetClaimsForComparison {
-    claims {
+  query GetClaimsForComparison($limit: Int!, $offset: Int!) {
+    claims(limit: $limit, offset: $offset) {
       ...ClaimComparisonAssertionFields
       ...ClaimComparisonEvidenceFields
     }

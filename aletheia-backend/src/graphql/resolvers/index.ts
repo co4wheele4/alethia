@@ -19,3 +19,5 @@ export { ReviewAssignmentResolver } from './review-assignment.resolver';
 export { EvidenceReproResolver } from './evidence-repro.resolver';
 export { AletheiaBundleResolver } from './aletheia-bundle.resolver';
 export { EpistemicEventsResolver } from './epistemic-events.resolver';
+export { SearchResolver } from './search.resolver';
+export { IntegrityResolver } from './integrity.resolver';

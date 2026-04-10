@@ -6,6 +6,7 @@ import {
   ResolveField,
   Parent,
   Context,
+  Int,
 } from '@nestjs/graphql';
 import {
   UseGuards,
@@ -21,6 +22,7 @@ import { User } from '@models/user.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 import { getGqlAuthUserId } from '../utils/gql-auth-user';
+import { assertAdr034ListPagination } from '@common/list-pagination';
 
 type GqlRequestContext = {
   req?: {
@@ -30,6 +32,9 @@ type GqlRequestContext = {
     };
   };
 };
+
+const intArgType = () => Int;
+void intArgType();
 
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(() => Document)
@@ -41,8 +46,16 @@ export class DocumentResolver {
   ) {}
 
   @Query(() => [Document])
-  async documents() {
-    return await this.prisma.document.findMany();
+  async documents(
+    @Args('limit', { type: intArgType }) limit: number,
+    @Args('offset', { type: intArgType }) offset: number,
+  ) {
+    assertAdr034ListPagination(limit, offset);
+    return await this.prisma.document.findMany({
+      take: limit,
+      skip: offset,
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
   }
 
   @Query(() => Document, { nullable: true })

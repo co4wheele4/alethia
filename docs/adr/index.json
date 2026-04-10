@@ -53,5 +53,67 @@
       "aletheia-backend/src/graphql/resolvers/aletheia-bundle.resolver.ts"
     ],
     "tests": ["aletheia-backend/src/bundle/aletheia-bundle.service.spec.ts"]
+  },
+  "adr033": {
+    "title": "Non-Semantic Search Constraints",
+    "implementation": [
+      "docs/adr/ADR-033-non-semantic-search.md",
+      "aletheia-backend/src/graphql/resolvers/search.resolver.ts",
+      "aletheia-backend/src/common/search/prisma-string-filter.ts",
+      "aletheia-backend/src/graphql/guards/assertNoDerivedSemantics.ts",
+      "aletheia-frontend/app/search/page.tsx",
+      "aletheia-frontend/src/graphql/queries/searchClaims.query.ts"
+    ],
+    "tests": [
+      "aletheia-backend/src/graphql/resolvers/search.resolver.spec.ts",
+      "aletheia-backend/src/common/search/prisma-string-filter.spec.ts",
+      "aletheia-frontend/e2e/adr-033-search.spec.ts"
+    ]
+  },
+  "adr034": {
+    "title": "Query Complexity / Depth Limits",
+    "implementation": [
+      "docs/adr/ADR-034-query-complexity-limits.md",
+      "aletheia-backend/src/graphql/graphql-validation-rules.ts",
+      "aletheia-backend/src/app/graphql-config.ts",
+      "aletheia-backend/src/common/list-pagination.ts",
+      "aletheia-backend/src/graphql/resolvers/claim.resolver.ts",
+      "aletheia-backend/src/graphql/resolvers/evidence.resolver.ts",
+      "aletheia-backend/src/graphql/resolvers/document.resolver.ts"
+    ],
+    "tests": [
+      "aletheia-backend/src/common/list-pagination.spec.ts",
+      "aletheia-backend/src/graphql/resolvers/claim.resolver.spec.ts"
+    ]
+  },
+  "adr035": {
+    "title": "Workspace Isolation + RBAC",
+    "implementation": ["docs/adr/ADR-035-workspace-isolation-rbac.md"],
+    "tests": []
+  },
+  "adr036": {
+    "title": "Tamper-Evident Integrity Guarantees",
+    "implementation": [
+      "docs/adr/ADR-036-tamper-evident-integrity.md",
+      "aletheia-backend/prisma/migrations/20260410140000_adr036_adjudication_hash_chain/migration.sql",
+      "aletheia-backend/src/common/integrity/adjudication-entry-hash.ts",
+      "aletheia-backend/src/integrity/integrity.service.ts",
+      "aletheia-backend/src/graphql/resolvers/integrity.resolver.ts",
+      "aletheia-backend/src/graphql/resolvers/claim-adjudication.service.ts"
+    ],
+    "tests": [
+      "aletheia-backend/src/common/integrity/adjudication-entry-hash.spec.ts",
+      "aletheia-backend/src/integrity/integrity.service.spec.ts",
+      "aletheia-backend/src/graphql/resolvers/claim-adjudication.service.spec.ts"
+    ]
+  },
+  "adr037": {
+    "title": "External Interface Constraints",
+    "implementation": [
+      "docs/adr/ADR-037-external-interface-constraints.md",
+      "schemas/aletheiaBundle.schema.json",
+      "aletheia-backend/src/bundle/aletheia-bundle.service.ts"
+    ],
+    "tests": ["aletheia-backend/src/bundle/aletheia-bundle.service.spec.ts"]
   }
 }

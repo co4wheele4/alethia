@@ -82,6 +82,7 @@ function assertClaimsGrounded(claims: ClaimComparisonClaim[]) {
 
 export function useClaimsForComparison() {
   const query = useQuery<GetClaimsForComparisonData>(GET_CLAIMS_FOR_COMPARISON_QUERY, {
+    variables: { limit: 500, offset: 0 },
     fetchPolicy: 'cache-and-network',
   });
 

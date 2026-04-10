@@ -125,9 +125,37 @@ function toClaim(claim: FixtureClaim) {
   };
 }
 
+const ADR033_ORDER = new Set([
+  'CREATED_AT_ASC',
+  'CREATED_AT_DESC',
+  'ID_ASC',
+  'ID_DESC',
+]);
+
 export const claimHandlers = [
-  graphql.query('ListClaims', () => {
-    const data = { claims: fixture.claims.map(toClaim) };
+  graphql.query('SearchClaims', ({ variables }) => {
+    const input = (variables as { input?: { orderBy?: string; queryText?: string } } | undefined)
+      ?.input;
+    if (!input?.orderBy || !ADR033_ORDER.has(input.orderBy)) {
+      fail(`SearchClaims: orderBy must be one of ${[...ADR033_ORDER].join(', ')}`);
+    }
+    const q = input.queryText ?? '';
+    const filtered =
+      q === ''
+        ? fixture.claims
+        : fixture.claims.filter((c) =>
+            c.text.toLowerCase().includes(q.toLowerCase()),
+          );
+    const data = { searchClaims: filtered.map(toClaim) };
+    assertNoConfidence(data, 'data');
+    return HttpResponse.json({ data });
+  }),
+
+  graphql.query('ListClaims', ({ variables }) => {
+    const limit = (variables as { limit?: number } | undefined)?.limit ?? 500;
+    const offset = (variables as { offset?: number } | undefined)?.offset ?? 0;
+    const mapped = fixture.claims.map(toClaim);
+    const data = { claims: mapped.slice(offset, offset + limit) };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });
   }),

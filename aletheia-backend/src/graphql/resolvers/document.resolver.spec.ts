@@ -101,17 +101,22 @@ describe('DocumentResolver', () => {
         mockDocuments as unknown as typeof mockDocuments,
       );
 
-      const result = await resolver.documents();
+      const result = await resolver.documents(100, 0);
 
       expect(result).toEqual(mockDocuments);
-      expect(findManyMock).toHaveBeenCalled();
+      expect(findManyMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 100,
+          skip: 0,
+        }),
+      );
     });
 
     it('should return empty array when no documents exist', async () => {
       const findManyMock = prismaService.document.findMany as jest.Mock;
       findManyMock.mockResolvedValue([]);
 
-      const result = await resolver.documents();
+      const result = await resolver.documents(100, 0);
 
       expect(result).toEqual([]);
     });

@@ -239,6 +239,101 @@ describe('AletheiaBundleService', () => {
     });
   });
 
+  it('importBundle rejects forbidden keys (ADR-037)', async () => {
+    await expect(
+      service.importBundle(
+        {
+          version: '1',
+          exportedAt: '',
+          claims: [{ id: 'c1', confidence: 0.9 } as unknown as { id: string }],
+          evidence: [],
+          claimEvidenceLinks: [],
+          adjudicationLogs: [],
+          reviewRequests: [],
+          reviewAssignments: [],
+          reviewerResponses: [],
+          evidenceReproChecks: [],
+          epistemicEvents: [],
+        },
+        false,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.BUNDLE_VALIDATION_FAILED },
+    });
+  });
+
+  it('importBundle rejects forbidden keys nested under arrays (ADR-037)', async () => {
+    await expect(
+      service.importBundle(
+        {
+          version: '1',
+          exportedAt: '',
+          claims: [
+            {
+              id: 'c1',
+              meta: [{ score: 1 }],
+            } as unknown as { id: string },
+          ],
+          evidence: [],
+          claimEvidenceLinks: [],
+          adjudicationLogs: [],
+          reviewRequests: [],
+          reviewAssignments: [],
+          reviewerResponses: [],
+          evidenceReproChecks: [],
+          epistemicEvents: [],
+        },
+        false,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.BUNDLE_VALIDATION_FAILED },
+    });
+  });
+
+  it('importBundle traverses null and undefined property values during validation', async () => {
+    claimFindFirst.mockResolvedValue(null);
+    evidenceFindFirst.mockResolvedValue(null);
+    transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
+      fn({
+        claim: { createMany: jest.fn(), deleteMany: jest.fn() },
+        evidence: { createMany: jest.fn(), deleteMany: jest.fn() },
+        claimEvidenceLink: { createMany: jest.fn(), deleteMany: jest.fn() },
+        adjudicationLog: { createMany: jest.fn(), deleteMany: jest.fn() },
+        reviewRequest: { createMany: jest.fn(), deleteMany: jest.fn() },
+        reviewAssignment: { createMany: jest.fn(), deleteMany: jest.fn() },
+        reviewerResponse: {
+          deleteMany: jest.fn(),
+          createMany: jest.fn(),
+        },
+        evidenceReproCheck: { deleteMany: jest.fn(), createMany: jest.fn() },
+        epistemicEvent: { createMany: jest.fn() },
+      } as any),
+    );
+
+    await service.importBundle(
+      {
+        version: '1',
+        exportedAt: '',
+        claims: [
+          {
+            id: 'c1',
+            note: null,
+            extra: undefined,
+          } as unknown as { id: string },
+        ],
+        evidence: [],
+        claimEvidenceLinks: [],
+        adjudicationLogs: [],
+        reviewRequests: [],
+        reviewAssignments: [],
+        reviewerResponses: [],
+        evidenceReproChecks: [],
+        epistemicEvents: [],
+      },
+      false,
+    );
+  });
+
   it('importBundle commits empty structural bundle', async () => {
     claimFindFirst.mockResolvedValue(null);
     evidenceFindFirst.mockResolvedValue(null);

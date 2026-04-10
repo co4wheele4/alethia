@@ -21,7 +21,10 @@ describe('useClaimsForComparison', () => {
 
     const { result } = renderHook(() => useClaimsForComparison());
 
-    expect(useQuery).toHaveBeenCalledWith(GET_CLAIMS_FOR_COMPARISON_QUERY, { fetchPolicy: 'cache-and-network' });
+    expect(useQuery).toHaveBeenCalledWith(GET_CLAIMS_FOR_COMPARISON_QUERY, {
+      variables: { limit: 500, offset: 0 },
+      fetchPolicy: 'cache-and-network',
+    });
     expect(result.current.claims).toEqual([]);
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBeNull();

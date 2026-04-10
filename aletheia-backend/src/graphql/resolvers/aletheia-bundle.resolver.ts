@@ -10,12 +10,17 @@ import { ImportBundleInput } from '@inputs/import-bundle.input';
 import { ImportResult } from '@models/import-result.model';
 import { ClaimStatus } from '@prisma/client';
 
+const exportBundleReturnType = () => GraphQLJSON;
+const importBundleReturnType = () => ImportResult;
+void exportBundleReturnType();
+void importBundleReturnType();
+
 @Injectable({ scope: Scope.REQUEST })
 @Resolver()
 export class AletheiaBundleResolver {
   constructor(private readonly bundles: AletheiaBundleService) {}
 
-  @Query(() => GraphQLJSON, {
+  @Query(exportBundleReturnType, {
     description: 'ADR-031: Structural export (JSON bundle).',
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -32,7 +37,7 @@ export class AletheiaBundleResolver {
     });
   }
 
-  @Mutation(() => ImportResult, {
+  @Mutation(importBundleReturnType, {
     description: 'ADR-031: Structural import (admin only).',
   })
   @UseGuards(JwtAuthGuard, RolesGuard)

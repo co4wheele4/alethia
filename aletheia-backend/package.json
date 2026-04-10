@@ -56,6 +56,7 @@
     "dataloader": "^2.2.3",
     "express": "^5.2.1",
     "graphql": "^16.12.0",
+    "graphql-depth-limit": "^1.1.0",
     "graphql-scalars": "^1.25.0",
     "graphql-tools": "^9.0.26",
     "helmet": "^8.1.0",
@@ -110,7 +111,9 @@
       "ts"
     ],
     "rootDir": "src",
-    "testPathIgnorePatterns": ["/node_modules/"],
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
@@ -130,7 +133,8 @@
     "coveragePathIgnorePatterns": [
       "/node_modules/",
       "\\.spec\\.ts$",
-      "\\.interface\\.ts$"
+      "\\.interface\\.ts$",
+      "/types/.*\\.d\\.ts$"
     ],
     "moduleNameMapper": {
       "^@inputs/(.*)$": "<rootDir>/graphql/inputs/$1",

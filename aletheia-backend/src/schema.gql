@@ -147,6 +147,16 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+"""
+ADR-033: Sort key for search results (createdAt or id only; ascending or descending).
+"""
+enum DeterministicOrderBy {
+  CREATED_AT_ASC
+  CREATED_AT_DESC
+  ID_ASC
+  ID_DESC
+}
+
 type Document {
   chunks: [DocumentChunk!]!
   createdAt: DateTime!
@@ -460,6 +470,13 @@ input IngestDocumentInput {
   userId: String!
 }
 
+type IntegrityReport {
+  adjudicationBrokenChainCount: Int!
+  adjudicationHashMismatchCount: Int!
+  adjudicationMissingHashCount: Int!
+  evidenceMissingContentHashCount: Int!
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -547,16 +564,16 @@ type Query {
   """
   List claims visible in the current workspace (scoped via evidence -> documents). ADR-022: filter supports only lifecycle and hasEvidence.
   """
-  claims(filter: ClaimFilterInput): [Claim!]!
+  claims(filter: ClaimFilterInput, limit: Int!, offset: Int!): [Claim!]!
 
   """
   List claims grounded in a specific document (derived via claim evidence anchors).
   """
-  claimsByDocument(documentId: String!): [Claim!]!
+  claimsByDocument(documentId: String!, limit: Int!, offset: Int!): [Claim!]!
   document(id: String!): Document
   documentChunk(id: String!): DocumentChunk
   documentChunks: [DocumentChunk!]!
-  documents: [Document!]!
+  documents(limit: Int!, offset: Int!): [Document!]!
   documentsByUser(userId: String!): [Document!]!
   embedding(id: String!): Embedding
   embeddings: [Embedding!]!
@@ -569,7 +586,7 @@ type Query {
   entityRelationships: [EntityRelationship!]!
 
   """List evidence visible to the current user (via document ownership)."""
-  evidence: [Evidence!]!
+  evidence(limit: Int!, offset: Int!): [Evidence!]!
   evidenceById(id: String!): Evidence
 
   """ADR-026: List reproducibility check records for evidence (read-only)."""
@@ -604,8 +621,23 @@ type Query {
   Review requests for a claim visible in the current workspace (coordination-only; does not change claim status).
   """
   reviewRequestsByClaim(claimId: ID!): [ReviewRequest!]!
+
+  """
+  ADR-033: Non-semantic claim search (deterministic order; required limit/offset).
+  """
+  searchClaims(input: SearchClaimsInput!): [Claim!]!
+
+  """
+  ADR-033: Non-semantic evidence search (deterministic order; required limit/offset).
+  """
+  searchEvidence(input: SearchEvidenceInput!): [Evidence!]!
   user(id: String!): User
   users: [User!]!
+
+  """
+  ADR-036: Structural integrity validation (hash chain + evidence contentSha256 presence).
+  """
+  validateIntegrity(workspaceId: String!): IntegrityReport!
 }
 
 """Evidence kind for an entity relationship (currently only TEXT_SPAN)."""
@@ -663,6 +695,67 @@ enum ReviewerResponseType {
   DECLINED
 }
 
+input SearchClaimsFiltersInput {
+  """Claim createdAt >= this instant (optional)."""
+  createdAtAfter: DateTime
+
+  """Claim createdAt <= this instant (optional)."""
+  createdAtBefore: DateTime
+
+  """
+  Require at least one linked evidence row with this source kind (structural).
+  """
+  evidenceSourceType: EvidenceSourceKind
+
+  """Filter by claim lifecycle (optional)."""
+  lifecycle: ClaimStatus
+}
+
+input SearchClaimsInput {
+  """If true, matching is case-sensitive; if false, case-insensitive."""
+  caseSensitive: Boolean!
+  filters: SearchClaimsFiltersInput
+
+  """Page size (required; capped server-side)."""
+  limit: Int!
+  matchMode: TextMatchMode!
+
+  """Offset into the deterministic result set (required)."""
+  offset: Int!
+  orderBy: DeterministicOrderBy!
+
+  """
+  Text to match against claim text. Empty string applies no text predicate (filters only).
+  """
+  queryText: String!
+}
+
+input SearchEvidenceFiltersInput {
+  """Evidence createdAt >= this instant (optional)."""
+  createdAtAfter: DateTime
+
+  """Evidence createdAt <= this instant (optional)."""
+  createdAtBefore: DateTime
+
+  """Filter by evidence source kind (optional)."""
+  sourceType: EvidenceSourceKind
+}
+
+input SearchEvidenceInput {
+  """If true, matching is case-sensitive; if false, case-insensitive."""
+  caseSensitive: Boolean!
+  filters: SearchEvidenceFiltersInput
+  limit: Int!
+  matchMode: TextMatchMode!
+  offset: Int!
+  orderBy: DeterministicOrderBy!
+
+  """
+  Text to match against evidence snippet and sourceUrl. Empty string applies no text predicate.
+  """
+  queryText: String!
+}
+
 enum SuggestionKind {
   ENTITY_MENTION
   RELATIONSHIP
@@ -672,6 +765,13 @@ enum SuggestionStatus {
   ACCEPTED
   PENDING
   REJECTED
+}
+
+"""ADR-033: Exact, prefix, or substring match (no fuzzy or similarity)."""
+enum TextMatchMode {
+  EXACT
+  PREFIX
+  SUBSTRING
 }
 
 input UpdateEntityInput {

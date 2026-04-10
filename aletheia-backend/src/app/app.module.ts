@@ -39,7 +39,10 @@ import {
   EvidenceReproResolver,
   AletheiaBundleResolver,
   EpistemicEventsResolver,
+  SearchResolver,
+  IntegrityResolver,
 } from '@resolvers';
+import { IntegrityService } from '../integrity/integrity.service';
 import { EvidenceReproCheckService } from '../evidence-repro/evidence-repro-check.service';
 import { AletheiaBundleService } from '../bundle/aletheia-bundle.service';
 import { EpistemicAuditInterceptor } from '../observability/epistemic-audit.interceptor';
@@ -48,6 +51,10 @@ import { OpenAIModule } from '../openai/openai.module';
 import { IngestionModule } from '../ingestion/ingestion.module';
 import { DataLoaderModule } from '../common/dataloaders/dataloader.module';
 import { createGraphQLContext, formatGraphQLError } from './graphql-config';
+import {
+  adr034DepthLimitRule,
+  adr034QueryCostLimitRule,
+} from '../graphql/graphql-validation-rules';
 
 @Module({
   imports: [
@@ -78,6 +85,7 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       context: createGraphQLContext,
       formatError: formatGraphQLError,
+      validationRules: [adr034DepthLimitRule, adr034QueryCostLimitRule()],
       sortSchema: true, // Sort schema for better readability
       // Apollo Server 5 configuration - playground and introspection are still supported
       // Note: In Apollo Server 5, these are still valid options in NestJS GraphQL module
@@ -114,6 +122,9 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     EvidenceReproResolver,
     AletheiaBundleResolver,
     EpistemicEventsResolver,
+    SearchResolver,
+    IntegrityResolver,
+    IntegrityService,
     // Apply rate limiting globally (GraphQL-compatible)
     {
       provide: APP_GUARD,

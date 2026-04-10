@@ -1,6 +1,7 @@
 import {
   Args,
   Context,
+  Int,
   Parent,
   Query,
   ResolveField,
@@ -20,6 +21,7 @@ import { Evidence } from '@models/evidence.model';
 import { ClaimFilterInput } from '@inputs/claim-filter.input';
 import { Document } from '@models/document.model';
 import { getGqlAuthUserId } from '../utils/gql-auth-user';
+import { assertAdr034ListPagination } from '@common/list-pagination';
 
 type GqlRequestContext = {
   req?: {
@@ -44,11 +46,13 @@ const claimListType = () => [Claim];
 const evidenceListType = () => [Evidence];
 const documentListType = () => [Document];
 const claimFilterInputType = () => ClaimFilterInput;
+const intArgType = () => Int;
 void claimType();
 void claimListType();
 void evidenceListType();
 void documentListType();
 void claimFilterInputType();
+void intArgType();
 
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(claimType)
@@ -66,10 +70,14 @@ export class ClaimResolver {
   async claims(
     @Args('filter', { type: claimFilterInputType, nullable: true })
     filter: ClaimFilterInput | undefined,
+    @Args('limit', { type: intArgType }) limit: number,
+    @Args('offset', { type: intArgType }) offset: number,
     @Context() ctx?: GqlRequestContext,
   ) {
     const authUserId = getGqlAuthUserId(ctx);
     if (!authUserId) return [];
+
+    assertAdr034ListPagination(limit, offset);
 
     const workspaceWhere = {
       OR: [
@@ -119,6 +127,8 @@ export class ClaimResolver {
     return await this.prisma.claim.findMany({
       where,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      skip: offset,
     });
   }
 
@@ -128,6 +138,8 @@ export class ClaimResolver {
   })
   async claimsByDocument(
     @Args('documentId') documentId: string,
+    @Args('limit', { type: intArgType }) limit: number,
+    @Args('offset', { type: intArgType }) offset: number,
     @Context() ctx?: GqlRequestContext,
   ) {
     const authUserId = getGqlAuthUserId(ctx);
@@ -141,6 +153,8 @@ export class ClaimResolver {
     if (doc.userId !== authUserId) {
       throw new ForbiddenException('Cannot access claims for another user');
     }
+
+    assertAdr034ListPagination(limit, offset);
 
     return await this.prisma.claim.findMany({
       where: {
@@ -156,6 +170,8 @@ export class ClaimResolver {
         ],
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      skip: offset,
     });
   }
 
