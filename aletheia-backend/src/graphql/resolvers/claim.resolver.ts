@@ -191,9 +191,8 @@ export class ClaimResolver {
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
     if (legacy.length === 0) {
-      failInvariant(
-        `Claim contract violation: Claim(${claim.id}) has no evidence anchors`,
-      );
+      // ADR-018: Claims may exist without evidence; return an empty list (non-authoritative).
+      return [];
     }
     return legacy.map((ce) => ({
       id: ce.id,
@@ -237,9 +236,8 @@ export class ClaimResolver {
     }
 
     if (uniqueDocIds.length === 0) {
-      failInvariant(
-        `Claim contract violation: Claim(${claim.id}) has no evidence anchors (documents cannot be derived)`,
-      );
+      // ADR-018: No evidence anchors → no derived documents (empty list, not an error).
+      return [];
     }
 
     const docs = await Promise.all(

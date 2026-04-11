@@ -1,7 +1,7 @@
 # ADR-020: Evidence Rendering & Source Fidelity Guarantees
 
 ## Status
-Status: Accepted
+Status: ACCEPTED
 
 ## Date
 2026-01-29

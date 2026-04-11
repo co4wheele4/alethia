@@ -1,7 +1,7 @@
 # ADR-012: Review Request Semantics
 
 ## Status
-Status: Superseded
+Status: SUPERSEDED
 
 ## Date
 2026-01-27

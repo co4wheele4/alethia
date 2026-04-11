@@ -1,7 +1,7 @@
 # ADR-008: Claim Lifecycle & Review States
 
 ## Status
-Status: Adopted
+Status: ACCEPTED
 
 ## Date
 2026-01-22

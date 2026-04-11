@@ -18,8 +18,13 @@ const FORBIDDEN_FIELD_PATTERNS = [
   /related/i,
   /summary/i,
   /aggregate/i,
+  /conflict/i,
+  /recommended/i,
+  /weight/i,
+  /strength/i,
 ];
 
+/** ADR-022: Top-level query args that imply ranking/comparison (allowlisted exceptions handled elsewhere). */
 const FORBIDDEN_QUERY_ARG_PATTERNS = [/^orderBy$/i, /^sort$/i, /^compare/i];
 
 function matchesAny(name, patterns) {

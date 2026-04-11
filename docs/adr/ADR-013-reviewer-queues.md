@@ -1,7 +1,7 @@
 # ADR-013: Reviewer Queues
 
 ## Status
-Status: Superseded
+Status: SUPERSEDED
 
 ## Date
 2026-01-27

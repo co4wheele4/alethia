@@ -1,7 +1,6 @@
 # ADR-035: Workspace Isolation + RBAC
 
 ## Status
-
 Status: ACCEPTED
 
 ## Context

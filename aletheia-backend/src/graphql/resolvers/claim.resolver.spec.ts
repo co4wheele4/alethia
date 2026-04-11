@@ -195,12 +195,10 @@ describe('ClaimResolver', () => {
     );
   });
 
-  it('evidence resolveField fails when claim has no evidence', async () => {
+  it('evidence resolveField returns empty list when claim has no evidence (ADR-018)', async () => {
     claimEvidenceLinkFindMany.mockResolvedValue([] as any);
     claimEvidenceFindMany.mockResolvedValue([] as any);
-    await expect(resolver.evidence({ id: 'c1' } as any)).rejects.toThrow(
-      /Claim\(c1\).*no evidence anchors/i,
-    );
+    await expect(resolver.evidence({ id: 'c1' } as any)).resolves.toEqual([]);
   });
 
   it('evidence resolveField returns evidence anchors when present (from links)', async () => {
@@ -230,12 +228,10 @@ describe('ClaimResolver', () => {
     });
   });
 
-  it('documents resolveField fails when documents cannot be derived (no evidence)', async () => {
+  it('documents resolveField returns empty list when no evidence anchors (ADR-018)', async () => {
     claimEvidenceLinkFindMany.mockResolvedValue([] as any);
     claimEvidenceFindMany.mockResolvedValue([] as any);
-    await expect(resolver.documents({ id: 'c1' } as any)).rejects.toThrow(
-      /documents cannot be derived/i,
-    );
+    await expect(resolver.documents({ id: 'c1' } as any)).resolves.toEqual([]);
   });
 
   it('documents resolveField fails when referenced document is missing', async () => {

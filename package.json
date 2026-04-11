@@ -59,6 +59,8 @@
     "schema:check": "npm run schema:lint && npm run schema:snapshots:check",
     "verify:demo-ids": "node scripts/verify-demo-ids.cjs",
     "adr:check": "node scripts/check-adr-governance.cjs",
+    "adr:index:check": "node scripts/validate-adr-index.cjs",
+    "adr:index:publish": "node scripts/publish-adr-index.cjs",
     "guardrails:lint": "node tools/graphql-lint/noSemanticQueries.cjs",
     "guardrails:pr": "node tools/pr-checks/epistemicGuard.cjs",
     "guardrails:agent-role": "node tools/pr-checks/agentRoleGuard.cjs",

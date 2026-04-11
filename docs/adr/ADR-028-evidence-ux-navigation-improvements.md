@@ -39,7 +39,7 @@ The UI MUST NOT add confidence, rankings, comparative strength, or agent “verd
 
 - Component: `aletheia-frontend/app/features/evidence/components/EvidenceViewer.tsx`
 - Route: `aletheia-frontend/app/evidence/[id]/page.tsx`
-- Tests: `aletheia-frontend/app/features/evidence/__tests__/EvidenceViewer.test.tsx`, `aletheia-frontend/e2e/evidence-viewer.spec.ts` (when present)
+- Tests: `aletheia-frontend/app/features/evidence/__tests__/EvidenceViewer.test.tsx`, `aletheia-frontend/e2e/evidence.spec.ts`
 
 ---
 

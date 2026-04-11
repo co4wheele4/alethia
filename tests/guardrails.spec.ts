@@ -72,6 +72,16 @@ describe('Guardrails', function () {
     });
   });
 
+  describe('ADR index (docs/adr/index.json)', function () {
+    it('validates implementation/enforcement paths', function () {
+      execSync('node scripts/validate-adr-index.cjs', {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      });
+    });
+  });
+
   describe('ADR-025 schema lint', function () {
     it('passes on committed GraphQL schema', function () {
       execSync('node aletheia-backend/scripts/schema-lint-adr025.cjs', {

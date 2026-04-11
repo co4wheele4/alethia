@@ -1,7 +1,7 @@
 # ADR-003: Frontend Testing Strategy
 
 ## Status
-Status: Implemented
+Status: ACCEPTED
 
 ## Date
 2026-01-12
@@ -50,7 +50,7 @@ Snapshot testing is explicitly discouraged except for low-level, stable primitiv
 
 **Examples**
 - DocumentCard renders provenance metadata
-- EntityBadge displays confidence correctly
+- Entity labels render source attribution without confidence or scoring (ADR-006)
 - useDocumentUpload validates file type
 
 ---

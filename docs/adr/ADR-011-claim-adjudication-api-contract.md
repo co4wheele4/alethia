@@ -1,7 +1,7 @@
 # ADR-011: Claim Adjudication API Contract
 
 ## Status
-Status: Proposed → Targeted for Implementation
+Status: ACCEPTED
 
 ## Date
 2026-01-26

@@ -168,7 +168,17 @@ function main() {
     }
 
     const statusValue = m[1].trim();
-    if (statusValue === 'Superseded') {
+    const statusNorm = statusValue.toUpperCase();
+    const allowed = new Set(['ACCEPTED', 'REJECTED', 'SUPERSEDED', 'PROPOSED']);
+    if (!allowed.has(statusNorm)) {
+      fail(
+        'ADR_STATUS_CONTRACT',
+        `${rel}: Status must be one of ACCEPTED | REJECTED | SUPERSEDED | PROPOSED. Found: "${statusValue}".`,
+      );
+      continue;
+    }
+
+    if (statusNorm === 'SUPERSEDED') {
       supersededAdrIds.add(adrId);
 
       const mustHave = [
@@ -234,8 +244,15 @@ function main() {
       '.wav',
     ]);
 
+    const supersededReferenceAllowlistRel = new Set([
+      'scripts/publish-adr-index.cjs',
+      'scripts/validate-adr-index.cjs',
+      'docs/adr/index.json',
+    ]);
+
     for (const absFile of repoFiles) {
       const rel = toPosixRel(repoRoot, absFile);
+      if (supersededReferenceAllowlistRel.has(rel)) continue;
       const ext = path.extname(absFile).toLowerCase();
       if (binaryExts.has(ext)) continue;
 

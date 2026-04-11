@@ -37,11 +37,13 @@ type AiQueryResult {
 type Claim {
   createdAt: DateTime!
 
-  """Documents referenced by this claim, derived from evidence.documentId."""
+  """
+  Documents referenced via evidence anchors; empty when the claim has no linked evidence (ADR-018).
+  """
   documents: [Document!]!
 
   """
-  Grounding anchors for this claim (ADR-019). Claims must never be returned without evidence.
+  Linked evidence records (ADR-018/019). May be empty; claims without linked evidence are non-authoritative.
   """
   evidence: [Evidence!]!
   id: ID!

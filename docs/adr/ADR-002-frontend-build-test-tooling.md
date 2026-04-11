@@ -1,7 +1,7 @@
 # ADR-002: Frontend Build and Test Tooling
 
 ## Status
-Status: Implemented
+Status: ACCEPTED
 
 ## Date
 2026-01-12

@@ -315,6 +315,19 @@ When **`REVIEW_QUORUM_ENABLED=true`** (and optional **`REVIEW_QUORUM_COUNT`**, s
 
 ---
 
+## 18. HTML crawl ingestion runs (audit)
+
+**Routes:** `/ingestion/html-crawl-runs`, `/ingestion/html-crawl-runs/[runId]`
+
+- Inspect **deterministic** HTML crawl runs: configuration copied verbatim, per-URL fetch status, join to stored `Evidence` rows. This is **audit and storage** only—no relevance, ranking, or semantic “importance” (ADR-032).
+- Listed in the primary nav as **HTML crawl runs**.
+- **Test seed** alone may **not** insert crawl runs; create runs via your backend/GraphQL flow or rely on **Playwright** coverage, which mocks GraphQL for this UI (`e2e/html-crawl-ingestion.spec.ts`).
+- The **Evidence viewer** for HTML evidence shows stored bytes and optional sandboxed preview; see [section 6](#6-evidence-inspection) and ADR-032.
+
+**Example:** `http://localhost:3000/ingestion/html-crawl-runs`
+
+---
+
 ## Primary navigation reference
 
 The authenticated shell’s default sidebar (see `AppShell` in the frontend) includes:
@@ -323,6 +336,7 @@ The authenticated shell’s default sidebar (see `AppShell` in the frontend) inc
 |-----------------|--------------------|
 | Overview        | `/dashboard`       |
 | Documents       | `/documents`       |
+| Search          | `/search`          |
 | Evidence        | `/evidence`        |
 | Claims          | `/claims`          |
 | Claim graph     | `/claims/graph`    |
@@ -330,8 +344,9 @@ The authenticated shell’s default sidebar (see `AppShell` in the frontend) inc
 | Entities        | `/entities`        |
 | Questions       | `/questions`       |
 | Provenance      | `/provenance`      |
+| HTML crawl runs | `/ingestion/html-crawl-runs` |
 
-Additional URLs used in this walkthrough: `/demo`, `/onboarding`, `/documents?ingest=1`, `/claims/compare`, `/relationships`, `/analysis`, `/documents/[id]`, `/claims/[claimId]`, `/entities/[id]`, `/evidence/[evidenceId]`, `/admin/epistemic-events`.
+Additional URLs used in this walkthrough: `/demo`, `/onboarding`, `/documents?ingest=1`, `/claims/compare`, `/relationships`, `/analysis`, `/documents/[id]`, `/claims/[claimId]`, `/entities/[id]`, `/evidence/[evidenceId]`, `/admin/epistemic-events`, `/ingestion/html-crawl-runs/[runId]`.
 
 ---
 

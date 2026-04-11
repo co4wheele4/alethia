@@ -577,10 +577,8 @@ model Claim {
   reviewerNote String?   @map("reviewer_note")
 
   /**
-   * Grounding requirement:
-   * - Claims are higher-order assertions and MUST be inspectable via evidence anchors.
-   * - This relationship is required at the semantic level; API layers must fail loudly if empty.
-   * - ADR-019: Evidence is reusable across claims via this join table.
+   * Evidence anchors (ADR-018/019). Claims may exist with zero links (non-authoritative).
+   * Evidence is reusable across claims via this join table.
    */
   evidenceLinks ClaimEvidenceLink[]
   /** @deprecated Legacy claim-document grounding; migrated to Evidence + ClaimEvidenceLink. */

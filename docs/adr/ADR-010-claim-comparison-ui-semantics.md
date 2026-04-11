@@ -1,7 +1,7 @@
 # ADR-010: Claim Comparison UI Semantics
 
 ## Status
-Status: Proposed
+Status: ACCEPTED
 
 ## Date
 2026-01-23

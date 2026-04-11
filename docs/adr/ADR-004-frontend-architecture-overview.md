@@ -1,7 +1,7 @@
 # ADR-004: Frontend Architecture Overview
 
 ## Status
-Status: Implemented (Updated)
+Status: ACCEPTED
 
 ## Date
 2026-01-10  

@@ -1,7 +1,7 @@
 # ADR-019: Evidence Semantics & Structure
 
 ## Status
-Status: Accepted
+Status: ACCEPTED
 
 ## Date
 2026-01-29
