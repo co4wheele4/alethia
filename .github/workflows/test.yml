@@ -29,6 +29,9 @@ jobs:
       - name: Validate ADR index (implementation/enforcement paths)
         run: npm run adr:index:check
 
+      - name: ADR governance compliance (ACCEPTED vs SUPERSEDED references)
+        run: npm run test:adr-governance
+
   epistemic-guardrails:
     name: Epistemic Guardrails
     runs-on: ubuntu-latest

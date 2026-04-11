@@ -66,6 +66,7 @@ const ADRS = {
       'scripts/check-adr-governance.cjs',
       'scripts/check-schema-snapshots.cjs',
       '.cursor/rules/aletheia-frontend-authoritative.mdc',
+      'tests/adr/adrGovernanceCompliance.test.ts',
     ],
   },
   'ADR-006': {
@@ -145,34 +146,49 @@ const ADRS = {
   },
   'ADR-014': {
     title: 'Reviewer Roles & Qualifications',
-    status: 'PROPOSED',
+    status: 'ACCEPTED',
     implementation: [
       'aletheia-backend/src/graphql/resolvers/review-assignment.resolver.ts',
       'docs/adr/ADR-014-reviewer-roles-qualifications.md',
     ],
-    tests: ['aletheia-frontend/e2e/reviewer-assignment.spec.ts'],
-    enforcement: ['scripts/check-adr-governance.cjs'],
+    tests: [
+      'aletheia-frontend/e2e/reviewer-assignment.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: [
+      'scripts/check-adr-governance.cjs',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
   },
   'ADR-015': {
     title: 'Reviewer Assignment Semantics',
-    status: 'PROPOSED',
+    status: 'ACCEPTED',
     implementation: ['docs/adr/ADR-015-reviewer-assignment-semantics.md'],
-    tests: ['aletheia-backend/src/graphql/resolvers/review-assignment.resolver.spec.ts'],
-    enforcement: ['scripts/check-adr-governance.cjs'],
+    tests: [
+      'aletheia-backend/src/graphql/resolvers/review-assignment.resolver.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: ['scripts/check-adr-governance.cjs', 'tests/adr/adrGovernanceCompliance.test.ts'],
   },
   'ADR-016': {
     title: 'Reviewer Response Semantics',
-    status: 'PROPOSED',
+    status: 'ACCEPTED',
     implementation: ['docs/adr/ADR-016-reviewer-response-semantics.md'],
-    tests: ['aletheia-backend/src/graphql/resolvers/review-assignment.resolver.spec.ts'],
-    enforcement: ['scripts/check-adr-governance.cjs'],
+    tests: [
+      'aletheia-backend/src/graphql/resolvers/review-assignment.resolver.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: ['scripts/check-adr-governance.cjs', 'tests/adr/adrGovernanceCompliance.test.ts'],
   },
   'ADR-017': {
     title: 'Review Visibility & Audit Semantics',
-    status: 'PROPOSED',
+    status: 'ACCEPTED',
     implementation: ['docs/adr/ADR-017-review-visibility-audit-semantics.md'],
-    tests: ['aletheia-frontend/e2e/review-activity.spec.ts'],
-    enforcement: ['scripts/check-adr-governance.cjs'],
+    tests: [
+      'aletheia-frontend/e2e/review-activity.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: ['scripts/check-adr-governance.cjs', 'tests/adr/adrGovernanceCompliance.test.ts'],
   },
   'ADR-018': {
     title: 'Claim Evidence Closure Invariant',
@@ -182,8 +198,14 @@ const ADRS = {
       'aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.ts',
       'docs/adr/ADR-018-claim-evidence-closure.md',
     ],
-    tests: ['aletheia-backend/src/graphql/resolvers/claim.resolver.spec.ts'],
-    enforcement: ['aletheia-backend/prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql'],
+    tests: [
+      'aletheia-backend/src/graphql/resolvers/claim.resolver.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: [
+      'aletheia-backend/prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
   },
   'ADR-019': {
     title: 'Evidence Semantics & Structure',
@@ -219,8 +241,16 @@ const ADRS = {
       'tools/schema-lint/noDerivedSemantics.ts',
       'docs/adr/ADR-022-query-non-semantic-constraint.md',
     ],
-    tests: ['tests/guardrails.spec.ts', 'aletheia-frontend/e2e/query-semantics.spec.ts'],
-    enforcement: ['tools/graphql-lint/noSemanticQueries.cjs', 'tools/pr-checks/epistemicGuard.cjs'],
+    tests: [
+      'tests/guardrails.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+      'aletheia-frontend/e2e/query-semantics.spec.ts',
+    ],
+    enforcement: [
+      'tools/graphql-lint/noSemanticQueries.cjs',
+      'tools/pr-checks/epistemicGuard.cjs',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
   },
   'ADR-023': {
     title: 'Adjudication Integrity Hardening',

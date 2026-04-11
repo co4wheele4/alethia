@@ -1,14 +1,14 @@
 # ADR-017: Review Visibility & Audit Semantics
 
 ## Status
-Status: PROPOSED
+Status: ACCEPTED
 
 ## Date
 2026-01-29
 
 ## Context
 
-With ADR-012 through ADR-016, Aletheia now supports a complete, persisted
+With ADR-014 through ADR-016, Aletheia now supports a complete, persisted
 **review coordination layer**:
 - Review requests
 - Reviewer queues

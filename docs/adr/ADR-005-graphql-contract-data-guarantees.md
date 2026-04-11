@@ -32,7 +32,8 @@ ADR-005 is the **contract anchor** and is governed by:
 - **ADR-009** — **REJECTED** (semantic conflict detection; not normative — see ADR-010 / ADR-021)
 - **ADR-010** — Claim Comparison UI Semantics (structural inspection only)
 - **ADR-011** — Claim Adjudication API Contract
-- **ADR-014** — Review coordination persistence (**normative** for current semantics). **ADR-012** and **ADR-013** are **SUPERSEDED** by ADR-014 and are historical only.
+- **ADR-014** — Persisted review coordination (ReviewRequest, queues, assignments, responses; **normative** for coordination semantics)
+- **ADR-017** — Review activity visibility (read-only coordination surfaces)
 
 Any frontend behavior violating these ADRs is a defect.
 
@@ -119,8 +120,6 @@ Persisted review coordination (review requests, reviewer queues, assignments, re
 - Review intent is **non-mutating** with respect to claim lifecycle except via **explicit adjudication** (ADR-011)
 - Queues and assignments are **logistical constructs**; they MUST NOT imply adjudication, confidence, or verdicts
 - Acknowledgements and declines are **coordination signals** only
-
-**Historical note:** ADR-012 and ADR-013 are **SUPERSEDED**; the authoritative persisted model is ADR-014.
 
 ---
 

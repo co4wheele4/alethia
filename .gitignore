@@ -57,6 +57,9 @@ Thumbs.db
 .temp/
 .tmp/
 
+# Local ADR export bundles (generated; not the markdown source of truth)
+docs/adr/*.zip
+
 # Runtime data
 pids
 *.pid

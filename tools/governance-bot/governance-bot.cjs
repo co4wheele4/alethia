@@ -42,6 +42,7 @@ function main() {
   run('npm run schema:lint');
   run('npm run adr:check');
   run('npm run adr:index:check');
+  run('npm run test:adr-governance');
 
   const guardEnv = {};
   if (base && head) {

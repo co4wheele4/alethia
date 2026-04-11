@@ -64,7 +64,8 @@
     "guardrails:lint": "node tools/graphql-lint/noSemanticQueries.cjs",
     "guardrails:pr": "node tools/pr-checks/epistemicGuard.cjs",
     "guardrails:agent-role": "node tools/pr-checks/agentRoleGuard.cjs",
-    "test:guardrails": "jest --config test/jest-guardrails.json"
+    "test:guardrails": "jest --config test/jest-guardrails.json",
+    "test:adr-governance": "jest --config test/jest-adr.json"
   },
   "devDependencies": {
     "@nestjs/common": "^11.1.11",

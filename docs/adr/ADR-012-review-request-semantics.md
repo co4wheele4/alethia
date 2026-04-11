@@ -3,8 +3,13 @@
 ## Status
 Status: SUPERSEDED
 
+## SupersededBy
+ADR-014
+
 ## Date
 2026-01-27
+
+This ADR is historical only and MUST NOT be referenced as governing authority.
 
 > ⚠️ **Superseded**
 >

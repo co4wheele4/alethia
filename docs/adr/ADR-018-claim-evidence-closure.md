@@ -92,11 +92,15 @@ Participate in claim comparison views
 
 Be adjudicated
 
-Enter reviewer queues
+Enter reviewer queues (coordination surfaces per ADR-014)
 
 Be counted in any governance or audit metrics
 
 Claims without evidence MUST be excluded from these workflows by construction.
+
+Claims without evidence MUST NOT:
+
+Have `ReviewRequest`, `ReviewAssignment`, or `ReviewerResponse` records created for them (coordination is non-authoritative but still presupposes an evidence-closed claim under ADR-014)
 
 ### 3. UI Invariant
 
@@ -148,7 +152,7 @@ ADR-009 (REJECTED) / ADR-010: Comparison remains structural and evidence-first
 
 ADR-011: Adjudication remains explicit and manual
 
-ADR-014: Persisted review coordination presupposes evidence-closed claims; this ADR is authoritative and supersedes any weaker interpretations (superseded ADR-012/ADR-013 are non-normative)
+ADR-014: Persisted review coordination presupposes evidence-closed claims for any coordination artifacts that attach to a claim
 
 ## Consequences
 

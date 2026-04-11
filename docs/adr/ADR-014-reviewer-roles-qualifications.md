@@ -1,7 +1,7 @@
 # ADR-014: Reviewer Roles & Qualifications
 
 ## Status
-Status: PROPOSED
+Status: ACCEPTED
 
 ## Date
 2026-01-27
@@ -30,8 +30,9 @@ This ADR is governed by:
 - **ADR-005** — GraphQL Contract & Data Guarantees
 - **ADR-008** — Claim Lifecycle & Review States
 - **ADR-011** — Claim Adjudication API Contract
-- **ADR-012** — Review Request Semantics
-- **ADR-013** — Reviewer Queues
+- **ADR-015** — Reviewer Assignment Semantics
+- **ADR-016** — Reviewer Response Semantics
+- **ADR-017** — Review Visibility & Audit Semantics
 
 ---
 
