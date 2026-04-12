@@ -9,14 +9,17 @@
  */
 'use client';
 
+import { use } from 'react';
+
 import { AppShell, ContentSurface } from '../../components/layout';
 import { DocumentDetailPanel } from '../../features/documents/components/DocumentDetailPanel';
 
-export default function DocumentDetailPage({ params }: { params: { id: string } }) {
+export default function DocumentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   return (
     <AppShell title="Document">
       <ContentSurface>
-        <DocumentDetailPanel documentId={params.id} initialChunkIndex={null} />
+        <DocumentDetailPanel documentId={id} initialChunkIndex={null} />
       </ContentSurface>
     </AppShell>
   );

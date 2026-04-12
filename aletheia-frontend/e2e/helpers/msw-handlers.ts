@@ -1538,6 +1538,43 @@ export async function setupGraphQLMocks(route: Route) {
         break;
       }
 
+      case 'IngestDocument': {
+        ensureSeeded();
+        const input = (parsedBody.variables as { input?: Record<string, unknown> } | undefined)?.input;
+        const title = typeof input?.title === 'string' ? input.title : '';
+        const content = typeof input?.content === 'string' ? input.content : '';
+        const newDoc = {
+          id: `doc-${documentsStore.length + 1}`,
+          title,
+          createdAt: new Date().toISOString(),
+        };
+        documentsStore = [...documentsStore, newDoc];
+        const chunk0 = {
+          id: `chunk-${newDoc.id}-0`,
+          chunkIndex: 0,
+          content,
+        };
+        chunksStore[newDoc.id] = [chunk0];
+        ensureMentionForChunk({ documentId: newDoc.id, chunkId: chunk0.id, content: chunk0.content });
+        response = {
+          status: 200,
+          body: {
+            data: {
+              ingestDocument: {
+                __typename: 'Document',
+                id: newDoc.id,
+                title: newDoc.title,
+                createdAt: newDoc.createdAt,
+                sourceType: 'MANUAL',
+                sourceLabel: null,
+                chunks: [{ __typename: 'DocumentChunk', id: chunk0.id }],
+              },
+            },
+          },
+        };
+        break;
+      }
+
       case 'CreateChunk': {
         ensureSeeded();
         const documentId = varString(parsedBody.variables, 'documentId');

@@ -1218,6 +1218,7 @@ describe('DataLoaderService', () => {
         id: 'source-1',
         kind: 'MANUAL',
         documentId: 'doc-1',
+        lastModifiedMs: null,
       } as unknown as DocumentSource;
       (prismaService.documentSource.findMany as jest.Mock).mockResolvedValue([
         mockSource,
@@ -1229,6 +1230,26 @@ describe('DataLoaderService', () => {
       expect(result).toEqual(mockSource);
       expect(prismaService.documentSource.findMany).toHaveBeenCalledWith({
         where: { documentId: { in: ['doc-1'] } },
+      });
+    });
+
+    it('should stringify lastModifiedMs when the Prisma row has a BigInt value', async () => {
+      const mockRow = {
+        id: 'source-2',
+        kind: 'MANUAL',
+        documentId: 'doc-2',
+        lastModifiedMs: BigInt(1700000000000),
+      };
+      (prismaService.documentSource.findMany as jest.Mock).mockResolvedValue([
+        mockRow,
+      ]);
+
+      const loader = service.getDocumentSourceByDocumentLoader();
+      const result = await loader.load('doc-2');
+
+      expect(result).toEqual({
+        ...mockRow,
+        lastModifiedMs: '1700000000000',
       });
     });
 

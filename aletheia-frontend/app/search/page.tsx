@@ -101,7 +101,7 @@ export default function SearchPage() {
             onChange={(ev) => setQueryText(ev.target.value)}
             fullWidth
             helperText="Empty applies structural filters only (no text predicate)."
-            aria-label="claim-search-text"
+            slotProps={{ htmlInput: { 'aria-label': 'claim-search-text' } }}
           />
           <FormControl fullWidth>
             <InputLabel id="match-mode-label">Match mode</InputLabel>

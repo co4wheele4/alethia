@@ -21,6 +21,7 @@ export function ManualTextEditor(props: ManualTextEditorProps) {
         onChange={(e) => onTitleChange(e.target.value)}
         disabled={disabled}
         autoFocus
+        slotProps={{ htmlInput: { 'data-testid': 'ingest-manual-title' } }}
       />
       <TextField
         label="Text"
@@ -30,6 +31,7 @@ export function ManualTextEditor(props: ManualTextEditorProps) {
         minRows={8}
         multiline
         placeholder="Paste raw text to ingest. This becomes the auditable snapshot stored in chunks."
+        slotProps={{ htmlInput: { 'data-testid': 'ingest-manual-text' } }}
       />
       <Alert severity="info">
         Manual text is ingested as an immutable snapshot. After ingestion, you will inspect evidence chunks; you will

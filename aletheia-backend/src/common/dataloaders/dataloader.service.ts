@@ -31,6 +31,15 @@ import { EntityRelationshipEvidenceMention } from '@models/entity-relationship-e
 import { AiQuery, AiQueryResult } from '@models/ai-query.model';
 import { AiExtractionSuggestion } from '@models/ai-extraction-suggestion.model';
 
+/** Prisma stores `lastModifiedMs` as BigInt; GraphQL exposes it as String (ADR-031). */
+function documentSourceRowToGql(row: PrismaDocumentSource): DocumentSource {
+  return {
+    ...(row as unknown as DocumentSource),
+    lastModifiedMs:
+      row.lastModifiedMs == null ? null : String(row.lastModifiedMs),
+  };
+}
+
 /**
  * DataLoader service that provides batched loaders for all entity types
  * This service is request-scoped to ensure each GraphQL request has its own loaders
@@ -184,7 +193,7 @@ export class DataLoaderService {
       const sourceByDocumentId = new Map(
         sources.map((source) => [
           source.documentId,
-          source as unknown as DocumentSource,
+          documentSourceRowToGql(source),
         ]),
       );
       return documentIds.map(

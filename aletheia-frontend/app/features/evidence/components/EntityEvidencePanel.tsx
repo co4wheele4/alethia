@@ -14,11 +14,10 @@ function fail(message: string): never {
   throw new Error(`[Truth Surface] ${message}`);
 }
 
-function provenanceSummary(doc: EvidenceDocument) {
+/** Never throws — same contract as EvidenceDrawer: incomplete DB/cache must not crash /evidence. */
+function formatProvenanceLine(doc: EvidenceDocument): string | null {
   const src = doc.source;
-  if (!doc.sourceType || !doc.sourceLabel || !src) {
-    fail('Document provenance is missing (requires sourceType, sourceLabel, and source)');
-  }
+  if (!doc.sourceType || !doc.sourceLabel || !src) return null;
 
   const parts: string[] = [];
   parts.push(`sourceType=${String(doc.sourceType)}`);
@@ -69,9 +68,16 @@ export function EntityEvidencePanel(props: {
         </Typography>
       </Box>
 
-      <Alert severity="info" data-testid="truth-provenance">
+      <Alert severity={formatProvenanceLine(document) ? 'info' : 'warning'} data-testid="truth-provenance">
         <strong>{document.title}</strong>
-        <div>{provenanceSummary(document)}</div>
+        <div>
+          {formatProvenanceLine(document) ?? (
+            <>
+              Source metadata is incomplete (expected <code>sourceType</code>, <code>sourceLabel</code>, and{' '}
+              <code>Document.source</code>). Add a <code>document_sources</code> row or re-ingest this document.
+            </>
+          )}
+        </div>
       </Alert>
 
       <Divider />

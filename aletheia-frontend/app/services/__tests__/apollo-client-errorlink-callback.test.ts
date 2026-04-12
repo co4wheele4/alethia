@@ -107,6 +107,14 @@ describe('errorLinkHandler Tests', () => {
     expect(errorCalls.length).toBeGreaterThan(0);
   });
 
+  it('should not log Failed to fetch as console.error (transient browser / navigation)', () => {
+    errorLinkHandler(new TypeError('Failed to fetch'));
+    const networkCalls = consoleErrorSpy.mock.calls.filter((call: any[]) =>
+      String(call[0]).includes('[Network error]')
+    );
+    expect(networkCalls.length).toBe(0);
+  });
+
   it('should handle GraphQL errors with locations and path', () => {
     const graphQLError = new GraphQLError('Test error', {
       extensions: { code: 'TEST_ERROR' },

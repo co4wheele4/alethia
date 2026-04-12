@@ -232,7 +232,9 @@ describe('EvidenceExplorer', () => {
     const docInput = screen.getByLabelText(/Filter documents/i)
     await user.clear(docInput)
     await user.type(docInput, 'Two')
-    expect(screen.queryByText('Doc One')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByText('Doc One')).not.toBeInTheDocument()
+    })
     expect(screen.getByText('Doc Two')).toBeInTheDocument()
     await user.clear(docInput)
 
@@ -240,10 +242,12 @@ describe('EvidenceExplorer', () => {
     const entityInput = screen.getByLabelText(/Filter entities/i)
     await user.clear(entityInput)
     await user.type(entityInput, 'Two')
-    
+
     // Check that Entity One is gone FROM THE LIST
     const entityList = screen.getByLabelText('explorer-entities')
-    expect(within(entityList).queryByText('Entity One')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(within(entityList).queryByText('Entity One')).not.toBeInTheDocument()
+    })
     expect(within(entityList).getByText('Entity Two')).toBeInTheDocument()
   })
 

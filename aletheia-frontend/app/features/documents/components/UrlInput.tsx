@@ -23,8 +23,8 @@ export function UrlInput(props: UrlInputProps) {
         </Alert>
       ) : (
         <Alert severity="info">
-          URL import runs in your browser. Some sites block cross-origin fetch (CORS). If that happens, a backend
-          ingestion service is required to fetch and snapshot content server-side.
+          URL import uses this app&apos;s server to fetch public http(s) pages (avoids browser CORS). Some sites may
+          still block automated requests or return consent pages.
         </Alert>
       )}
 

@@ -83,7 +83,14 @@ export const errorLinkHandler = (error: unknown) => {
       });
     }
   } else {
-    // Network or other error
+    // Transient browser fetch failures (navigation abort, Strict Mode remount, flaky dev timing).
+    // Logging them as errors pollutes demos; real outages surface via UI + other errors.
+    if (
+      (error instanceof TypeError || error instanceof Error) &&
+      error.message === 'Failed to fetch'
+    ) {
+      return;
+    }
     console.error(`[Network error]: ${error}`);
   }
   /* v8 ignore stop */

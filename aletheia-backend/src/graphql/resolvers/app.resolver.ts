@@ -27,7 +27,7 @@ export class AppResolver {
   @Mutation(() => String)
   @UseGuards(JwtAuthGuard)
   async askAI(@Args('userId') userId: string, @Args('query') query: string) {
-    const answer = await this.openai.getEmbeddingResult(query); // ensure getEmbeddingResult exists
+    const answer = await this.openai.getEmbeddingResult(query);
     await this.prisma.aiQuery.create({
       data: {
         userId,

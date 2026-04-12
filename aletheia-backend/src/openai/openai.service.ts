@@ -43,7 +43,7 @@ export class OpenAIService {
       input: prompt,
     });
     const vector = response.data[0].embedding;
-    // You could store this vector in the DB (pgvector) for semantic search
+    // Opaque numeric payload for callers that persist an audit artifact; not used for ranking or ADR-033 search.
     return JSON.stringify(vector);
   }
 

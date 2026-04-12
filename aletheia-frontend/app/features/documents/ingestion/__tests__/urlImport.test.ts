@@ -1,20 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { importUrlToText } from '../urlImport';
 
+/** Mocks `/api/import-url` JSON contract used by `importUrlToText`. */
+function mockProxyResponse(payload: {
+  ok?: boolean;
+  status?: number;
+  body: Record<string, unknown>;
+}) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: payload.ok ?? true,
+      status: payload.status ?? 200,
+      json: async () => payload.body,
+    })
+  );
+}
+
 describe('urlImport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should import text from a URL', async () => {
-    const mockResponse = {
-      ok: true,
-      status: 200,
-      headers: new Headers({ 'content-type': 'text/plain' }),
-      url: 'https://example.com/page',
-      text: async () => 'hello world',
-    };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+    mockProxyResponse({
+      body: {
+        raw: 'hello world',
+        contentType: 'text/plain',
+        fetchedUrl: 'https://example.com/page',
+      },
+    });
 
     const result = await importUrlToText('https://example.com');
     expect(result.text).toBe('hello world');
@@ -23,13 +38,13 @@ describe('urlImport', () => {
   });
 
   it('should handle fetch failure', async () => {
-    const mockResponse = {
+    mockProxyResponse({
       ok: false,
-      status: 404,
-    };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+      status: 502,
+      body: { error: 'Upstream returned 404' },
+    });
 
-    await expect(importUrlToText('https://example.com')).rejects.toThrow('Failed to fetch URL (404)');
+    await expect(importUrlToText('https://example.com')).rejects.toThrow('Upstream returned 404');
   });
 
   it('should import and parse HTML from a URL', async () => {
@@ -51,14 +66,13 @@ describe('urlImport', () => {
         </body>
       </html>
     `;
-    const mockResponse = {
-      ok: true,
-      status: 200,
-      headers: new Headers({ 'content-type': 'text/html' }),
-      url: 'https://example.com/html',
-      text: async () => html,
-    };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+    mockProxyResponse({
+      body: {
+        raw: html,
+        contentType: 'text/html',
+        fetchedUrl: 'https://example.com/html',
+      },
+    });
 
     const result = await importUrlToText('https://example.com/html');
     expect(result.title).toBe('Test Page');
@@ -72,14 +86,13 @@ describe('urlImport', () => {
 
   it('should handle missing metadata in HTML', async () => {
     const html = '<html><body>Simple content</body></html>';
-    const mockResponse = {
-      ok: true,
-      status: 200,
-      headers: new Headers({ 'content-type': 'text/html' }),
-      url: 'https://example.com/simple',
-      text: async () => html,
-    };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+    mockProxyResponse({
+      body: {
+        raw: html,
+        contentType: 'text/html',
+        fetchedUrl: 'https://example.com/simple',
+      },
+    });
 
     const result = await importUrlToText('https://example.com/simple');
     expect(result.title).toBe('https://example.com/simple');
@@ -91,14 +104,13 @@ describe('urlImport', () => {
 
   it('should handle invalid date in metadata', async () => {
     const html = '<html><head><meta name="date" content="not-a-date" /></head><body>Content</body></html>';
-    const mockResponse = {
-      ok: true,
-      status: 200,
-      headers: new Headers({ 'content-type': 'text/html' }),
-      url: 'https://example.com/bad-date',
-      text: async () => html,
-    };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+    mockProxyResponse({
+      body: {
+        raw: html,
+        contentType: 'text/html',
+        fetchedUrl: 'https://example.com/bad-date',
+      },
+    });
 
     const result = await importUrlToText('https://example.com/bad-date');
     expect(result.publishedAtIso).toBeNull();
@@ -106,22 +118,19 @@ describe('urlImport', () => {
 
   it('should use time[datetime] if available', async () => {
     const html = '<html><body><time datetime="2023-02-02">Feb 2</time></body></html>';
-    const mockResponse = {
-      ok: true,
-      status: 200,
-      headers: new Headers({ 'content-type': 'text/html' }),
-      url: 'https://example.com/time',
-      text: async () => html,
-    };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+    mockProxyResponse({
+      body: {
+        raw: html,
+        contentType: 'text/html',
+        fetchedUrl: 'https://example.com/time',
+      },
+    });
 
     const result = await importUrlToText('https://example.com/time');
     expect(result.publishedAtIso).toBe('2023-02-02T00:00:00.000Z');
   });
 
   it('should handle missing doc.body in htmlToText', async () => {
-    // DOMParser.parseFromString can return a document without a body in some environments or with invalid HTML
-    // We mock DOMParser to return a doc with null body
     const mockDoc = {
       querySelectorAll: vi.fn().mockReturnValue([]),
       querySelector: vi.fn().mockReturnValue(null),
@@ -132,37 +141,54 @@ describe('urlImport', () => {
     }
     vi.stubGlobal('DOMParser', MockParser);
 
-    vi.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      headers: new Headers({ 'content-type': 'text/html' }),
-      text: () => Promise.resolve(''),
-      url: 'http://example.com/no-body',
-    } as any);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          raw: '',
+          contentType: 'text/html',
+          fetchedUrl: 'http://example.com/no-body',
+        }),
+      })
+    );
 
     const result = await importUrlToText('http://example.com/no-body');
     expect(result.text).toBe('');
     vi.unstubAllGlobals();
   });
 
-  it('should handle missing res.url', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      headers: new Headers({ 'content-type': 'text/plain' }),
-      text: async () => 'text',
-      // res.url is missing
-    }));
+  it('should handle missing fetchedUrl in proxy payload', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          raw: 'text',
+          contentType: 'text/plain',
+        }),
+      })
+    );
 
     const result = await importUrlToText('http://example.com/no-res-url');
     expect(result.fetchedUrl).toBe('http://example.com/no-res-url');
   });
 
   it('should handle null content-type', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      headers: new Headers({}), // null content-type
-      text: async () => 'plain text',
-      url: 'http://example.com/null-ct',
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          raw: 'plain text',
+          contentType: null,
+          fetchedUrl: 'http://example.com/null-ct',
+        }),
+      })
+    );
 
     const result = await importUrlToText('http://example.com/null-ct');
     expect(result.contentType).toBeNull();

@@ -134,4 +134,30 @@ describe('ADR governance compliance', () => {
       expect(data.adrs).toHaveProperty(id);
     }
   });
+
+  it('maps every ACCEPTED ADR to at least one enforcement path and one test path in index.json', () => {
+    const raw = fs.readFileSync(INDEX_PATH, 'utf8');
+    const data = JSON.parse(raw) as {
+      adrs?: Record<
+        string,
+        {
+          status?: string;
+          enforcement?: unknown[];
+          tests?: unknown[];
+        }
+      >;
+    };
+    expect(data.adrs).toBeDefined();
+    const gaps: string[] = [];
+    for (const [id, entry] of Object.entries(data.adrs ?? {})) {
+      if (entry.status !== 'ACCEPTED') continue;
+      if (!entry.enforcement?.length) {
+        gaps.push(`${id}: missing or empty enforcement[]`);
+      }
+      if (!entry.tests?.length) {
+        gaps.push(`${id}: missing or empty tests[]`);
+      }
+    }
+    expect(gaps).toEqual([]);
+  });
 });

@@ -65,14 +65,24 @@ async function bootstrap() {
     }),
   );
 
-  // CORS configuration
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  // CORS configuration — merge env with dev defaults so ALLOWED_ORIGINS in .env does not drop loopback
+  // (Playwright + run-demo-headed use http://127.0.0.1:3030+; CORS Origin must match the page host exactly).
+  const loopbackFrontendOrigins = Array.from(
+    { length: 19 },
+    (_, i) => `http://127.0.0.1:${3030 + i}`,
+  );
+  const defaultOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
-    'http://localhost:3030', // Frontend dev server
-    'http://127.0.0.1:3040', // Playwright E2E (NEXT_PUBLIC_* prod server)
+    'http://localhost:3030',
+    'http://127.0.0.1:3040',
     'http://localhost:3040',
+    ...loopbackFrontendOrigins,
   ];
+  const fromEnv = process.env.ALLOWED_ORIGINS?.split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  const allowedOrigins = [...new Set([...(fromEnv ?? []), ...defaultOrigins])];
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,

@@ -167,12 +167,13 @@ describe('useDocumentEvidence', () => {
     expect(result.current.entities[0].mentions.map((m) => m.chunkIndex)).toEqual([0, 1]);
   });
 
-  it('throws when document is missing after successful load', () => {
+  it('surfaces error when document is missing after successful load', () => {
     mockQuery({ data: { document: null } });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/Document\(d1\) is missing/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/Document\(d1\) is missing/);
   });
 
-  it('throws when provenance fields are missing', () => {
+  it('surfaces error when provenance fields are missing', () => {
     mockQuery({
       data: {
         document: {
@@ -182,15 +183,17 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/Document\.sourceType/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/Document\.sourceType/);
   });
 
-  it('throws when document has no chunks', () => {
+  it('surfaces error when document has no chunks', () => {
     mockQuery({ data: { document: { ...baseDoc, chunks: [] } } });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/no chunks/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/no chunks/);
   });
 
-  it('throws when there are no mentions', () => {
+  it('surfaces error when there are no mentions', () => {
     mockQuery({
       data: {
         document: {
@@ -199,10 +202,11 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/no mentions/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/no mentions/);
   });
 
-  it('throws when chunk content is missing', () => {
+  it('surfaces error when chunk content is missing', () => {
     mockQuery({
       data: {
         document: {
@@ -211,10 +215,11 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/content/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/content/);
   });
 
-  it('throws when mention entity is missing', () => {
+  it('surfaces error when mention entity is missing', () => {
     mockQuery({
       data: {
         document: {
@@ -228,10 +233,11 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/entity/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/entity/);
   });
 
-  it('throws when entityId does not match entity.id', () => {
+  it('surfaces error when entityId does not match entity.id', () => {
     mockQuery({
       data: {
         document: {
@@ -245,10 +251,11 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/entityId does not match/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/entityId does not match/);
   });
 
-  it('throws when mention chunkId does not match chunk id', () => {
+  it('surfaces error when mention chunkId does not match chunk id', () => {
     mockQuery({
       data: {
         document: {
@@ -262,10 +269,11 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/chunkId does not match/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/chunkId does not match/);
   });
 
-  it('throws when offsets are not numeric', () => {
+  it('surfaces error when offsets are not numeric', () => {
     mockQuery({
       data: {
         document: {
@@ -279,10 +287,11 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/numeric startOffset/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/numeric startOffset/);
   });
 
-  it('throws when offsets are invalid (end <= start)', () => {
+  it('surfaces error when offsets are invalid (end <= start)', () => {
     mockQuery({
       data: {
         document: {
@@ -296,10 +305,11 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/invalid offsets/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/invalid offsets/);
   });
 
-  it('throws when start offset is negative', () => {
+  it('surfaces error when start offset is negative', () => {
     mockQuery({
       data: {
         document: {
@@ -313,10 +323,11 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/invalid offsets/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/invalid offsets/);
   });
 
-  it('throws when offsets are out of bounds for chunk content', () => {
+  it('surfaces error when offsets are out of bounds for chunk content', () => {
     mockQuery({
       data: {
         document: {
@@ -330,7 +341,8 @@ describe('useDocumentEvidence', () => {
         },
       },
     });
-    expect(() => renderHook(() => useDocumentEvidence('d1'))).toThrow(/out of bounds/);
+    const { result } = renderHook(() => useDocumentEvidence('d1'));
+    expect(result.current.error?.message).toMatch(/out of bounds/);
   });
 
   it('sorts entity rows by entity name (localeCompare)', () => {

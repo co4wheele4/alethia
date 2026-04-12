@@ -1,22 +1,59 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import * as ingestModule from '../hooks/useIngestDocuments';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { CREATE_CHUNK_MUTATION, CREATE_DOCUMENT_MUTATION, DOCUMENTS_BY_USER_QUERY } from '../graphql';
-import { vi } from 'vitest';
+import { DOCUMENTS_BY_USER_QUERY, INGEST_DOCUMENT_MUTATION } from '../graphql';
 
 const FIXED_DATE = '2023-01-01T12:00:00.000Z';
-const JSON_DATE = JSON.stringify(FIXED_DATE);
-const EXPECTED_CONTENT = `---\nsource:\n  kind: manual\n  provenanceType: \n  provenanceLabel: \n  provenanceConfirmed: \ningestedAt: ${JSON_DATE}\ncontentSha256: 0000000000000000000000000000000000000000000000000000000000000000\n---\nHello world`;
 
-const mocks = [
-  {
-    request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'Test Doc' } },
-    result: { data: { createDocument: { id: 'd1', title: 'Test Doc', createdAt: FIXED_DATE, __typename: 'Document' } } },
-  },
-  {
-    request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd1', chunkIndex: 0, content: EXPECTED_CONTENT } },
-    result: { data: { createChunk: { id: 'c1', chunkIndex: 0, content: '...', documentId: 'd1', __typename: 'DocumentChunk' } } },
-  },
+const docFields = {
+  __typename: 'Document' as const,
+  createdAt: FIXED_DATE,
+  sourceType: 'MANUAL',
+  sourceLabel: 'Hello world',
+};
+
+function ingestMock(input: {
+  title: string;
+  userId: string;
+  content: string;
+  source: Record<string, unknown>;
+  id: string;
+  chunkIds: string[];
+}) {
+  return {
+    request: {
+      query: INGEST_DOCUMENT_MUTATION,
+      variables: {
+        input: {
+          title: input.title,
+          userId: input.userId,
+          content: input.content,
+          source: input.source,
+        },
+      },
+    },
+    result: {
+      data: {
+        ingestDocument: {
+          id: input.id,
+          title: input.title,
+          ...docFields,
+          chunks: input.chunkIds.map((id) => ({ __typename: 'DocumentChunk' as const, id })),
+        },
+      },
+    },
+  };
+}
+
+const baseMocks = [
+  ingestMock({
+    title: 'Test Doc',
+    userId: 'u1',
+    content: 'Hello world',
+    source: { kind: 'MANUAL' },
+    id: 'd1',
+    chunkIds: ['c1'],
+  }),
   {
     request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
     result: { data: { documentsByUser: [] } },
@@ -24,16 +61,9 @@ const mocks = [
 ];
 
 describe('useIngestDocuments', () => {
-  beforeEach(() => {
-    vi.spyOn(Date.prototype, 'toISOString').mockReturnValue(FIXED_DATE);
-  });
-  afterEach(() => { vi.restoreAllMocks(); });
-
-  it('should orchestrate ingestion', async () => {
+  it('should orchestrate ingestion via ingestDocument', async () => {
     const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
+      wrapper: ({ children }) => <MockedProvider mocks={baseMocks}>{children}</MockedProvider>,
     });
     let ingestResult: { documentId: string; chunksCreated: number } | null = null;
     await act(async () => {
@@ -43,41 +73,31 @@ describe('useIngestDocuments', () => {
     expect(ingestResult).toEqual({ documentId: 'd1', chunksCreated: 1 });
   });
 
-  it('should split large text into chunks with paragraph breaks', async () => {
+  it('should report chunk count from server response', async () => {
     const largeText = 'A'.repeat(2100) + '\n\n' + 'B'.repeat(500);
-    const contentSha256 = '0000000000000000000000000000000000000000000000000000000000000000';
-    const header = `---\nsource:\n  kind: manual\n  provenanceType: \n  provenanceLabel: \n  provenanceConfirmed: \ningestedAt: ${JSON_DATE}\ncontentSha256: ${contentSha256}\n---\n`;
-    const chunk0 = `${header}${'A'.repeat(2100)}`;
-    const chunk1 = 'B'.repeat(500);
+    const mocks = [
+      ingestMock({
+        title: 'Large',
+        userId: 'u1',
+        content: largeText,
+        source: { kind: 'MANUAL' },
+        id: 'd-large',
+        chunkIds: ['c1', 'c2'],
+      }),
+      {
+        request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
+        result: { data: { documentsByUser: [] } },
+      },
+    ];
 
     const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={[
-          {
-            request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'Large' } },
-            result: { data: { createDocument: { id: 'd-large', title: 'Large', createdAt: FIXED_DATE, __typename: 'Document' } } },
-          },
-          {
-            request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd-large', chunkIndex: 0, content: chunk0 } },
-            result: { data: { createChunk: { id: 'c1', chunkIndex: 0, content: '...', documentId: 'd-large', __typename: 'DocumentChunk' } } },
-          },
-          {
-            request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd-large', chunkIndex: 1, content: chunk1 } },
-            result: { data: { createChunk: { id: 'c2', chunkIndex: 1, content: '...', documentId: 'd-large', __typename: 'DocumentChunk' } } },
-          },
-          {
-            request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
-            result: { data: { documentsByUser: [] } },
-          }
-        ]}>{children}</MockedProvider>
-      ),
+      wrapper: ({ children }) => <MockedProvider mocks={mocks}>{children}</MockedProvider>,
     });
 
     await act(async () => {
       await result.current.ingestOne({ title: 'Large', text: largeText, source: { kind: 'manual' } });
     });
     await waitFor(() => expect(result.current.progress.state).toBe('done'));
-    expect(result.current.progress.state).toBe('done');
     if (result.current.progress.state === 'done') {
       expect(result.current.progress.chunksCreated).toBe(2);
     }
@@ -87,55 +107,60 @@ describe('useIngestDocuments', () => {
     const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={[]}>{children}</MockedProvider>,
     });
-    
-    // Empty title
+
     let ingestResult: { documentId: string; chunksCreated: number } | null = null;
     await act(async () => {
       ingestResult = await result.current.ingestOne({ title: '', text: 'Hello', source: { kind: 'manual' } });
     });
     expect(ingestResult).toBeNull();
     expect(result.current.progress.state).toBe('error');
-    expect(result.current.progress.state).toBe('error');
     if (result.current.progress.state === 'error') {
       expect(result.current.progress.message).toContain('Title is required');
     }
 
-    // Empty text
     await act(async () => {
       ingestResult = await result.current.ingestOne({ title: 'T', text: ' ', source: { kind: 'manual' } });
     });
     expect(ingestResult).toBeNull();
-    expect(result.current.progress.state).toBe('error');
     expect(result.current.progress.state).toBe('error');
     if (result.current.progress.state === 'error') {
       expect(result.current.progress.message).toContain('No text content');
     }
   });
 
-  it('should handle failed document creation', async () => {
+  it('should handle failed ingestDocument', async () => {
     const failMocks = [
       {
-        request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'Fail' } },
-        result: { data: { createDocument: null } },
+        request: {
+          query: INGEST_DOCUMENT_MUTATION,
+          variables: {
+            input: {
+              title: 'Fail',
+              userId: 'u1',
+              content: 'Hello',
+              source: { kind: 'MANUAL' },
+            },
+          },
+        },
+        result: { data: { ingestDocument: null } },
       },
       {
         request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
         result: { data: { documentsByUser: [] } },
-      }
+      },
     ];
     const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={failMocks}>{children}</MockedProvider>,
     });
-    
+
     let ingestResult: { documentId: string; chunksCreated: number } | null = null;
     await act(async () => {
       ingestResult = await result.current.ingestOne({ title: 'Fail', text: 'Hello', source: { kind: 'manual' } });
     });
     expect(ingestResult).toBeNull();
     expect(result.current.progress.state).toBe('error');
-    expect(result.current.progress.state).toBe('error');
     if (result.current.progress.state === 'error') {
-      expect(result.current.progress.message).toContain('Failed to create document');
+      expect(result.current.progress.message).toContain('Failed to ingest');
     }
   });
 
@@ -143,25 +168,38 @@ describe('useIngestDocuments', () => {
     const { result } = renderHook(() => ingestModule.useIngestDocuments(null), {
       wrapper: ({ children }) => <MockedProvider mocks={[]}>{children}</MockedProvider>,
     });
-    await act(async () => { await result.current.ingestOne({ title: 'T', text: 'H', source: { kind: 'manual' } }); });
+    await act(async () => {
+      await result.current.ingestOne({ title: 'T', text: 'H', source: { kind: 'manual' } });
+    });
     expect(result.current.progress.state).toBe('error');
   });
 
-  it('should handle file source and boolean provenance', async () => {
+  it('should handle file source', async () => {
     const fileSource = {
-      kind: 'file' as const, filename: 't.txt', mimeType: 'text/plain', sizeBytes: 10, lastModifiedMs: 0,
+      kind: 'file' as const,
+      filename: 't.txt',
+      mimeType: 'text/plain',
+      sizeBytes: 10,
+      lastModifiedMs: 0,
       provenanceConfirmed: true,
     };
-    const content = `---\nsource:\n  kind: file\n  provenanceType: \n  provenanceLabel: \n  provenanceConfirmed: true\n  filename: t.txt\n  mimeType: text/plain\n  sizeBytes: 10\n  lastModifiedMs: 0\n  fileSha256: \ningestedAt: ${JSON_DATE}\ncontentSha256: 0000000000000000000000000000000000000000000000000000000000000000\n---\nH`;
+    const gqlSource = {
+      kind: 'FILE',
+      filename: 't.txt',
+      mimeType: 'text/plain',
+      sizeBytes: 10,
+      lastModifiedMs: '0',
+      fileSha256: undefined,
+    };
     const fileMocks = [
-      {
-        request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'F' } },
-        result: { data: { createDocument: { id: 'd2', title: 'F', createdAt: FIXED_DATE, __typename: 'Document' } } },
-      },
-      {
-        request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd2', chunkIndex: 0, content: content } },
-        result: { data: { createChunk: { id: 'c2', chunkIndex: 0, content: '...', documentId: 'd2', __typename: 'DocumentChunk' } } },
-      },
+      ingestMock({
+        title: 'F',
+        userId: 'u1',
+        content: 'H',
+        source: gqlSource,
+        id: 'd2',
+        chunkIds: ['c2'],
+      }),
       {
         request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
         result: { data: { documentsByUser: [] } },
@@ -170,23 +208,28 @@ describe('useIngestDocuments', () => {
     const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={fileMocks}>{children}</MockedProvider>,
     });
-    await act(async () => { await result.current.ingestOne({ title: 'F', text: 'H', source: fileSource }); });
+    await act(async () => {
+      await result.current.ingestOne({ title: 'F', text: 'H', source: fileSource });
+    });
     await waitFor(() => expect(result.current.progress.state).toBe('done'));
-    expect(result.current.progress.state).toBe('done');
   });
 
   it('should handle URL source', async () => {
-    const urlSource = { kind: 'url' as const, url: 'h://e.c', accessedAtIso: FIXED_DATE, provenanceConfirmed: false };
-    const content = `---\nsource:\n  kind: url\n  provenanceType: \n  provenanceLabel: \n  provenanceConfirmed: false\n  url: "h://e.c"\n  fetchedUrl: \n  contentType: \n  publisher: \n  author: \n  publishedAt: \n  accessedAt: ${JSON_DATE}\ningestedAt: ${JSON_DATE}\ncontentSha256: 0000000000000000000000000000000000000000000000000000000000000000\n---\nH`;
+    const urlSource = { kind: 'url' as const, url: 'https://e.c', accessedAtIso: FIXED_DATE, provenanceConfirmed: false };
+    const gqlSource = {
+      kind: 'URL',
+      requestedUrl: 'https://e.c',
+      accessedAt: FIXED_DATE,
+    };
     const urlMocks = [
-      {
-        request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'U' } },
-        result: { data: { createDocument: { id: 'd3', title: 'U', createdAt: FIXED_DATE, __typename: 'Document' } } },
-      },
-      {
-        request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd3', chunkIndex: 0, content: content } },
-        result: { data: { createChunk: { id: 'c3', chunkIndex: 0, content: '...', documentId: 'd3', __typename: 'DocumentChunk' } } },
-      },
+      ingestMock({
+        title: 'U',
+        userId: 'u1',
+        content: 'H',
+        source: gqlSource,
+        id: 'd3',
+        chunkIds: ['c3'],
+      }),
       {
         request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
         result: { data: { documentsByUser: [] } },
@@ -195,74 +238,10 @@ describe('useIngestDocuments', () => {
     const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
       wrapper: ({ children }) => <MockedProvider mocks={urlMocks}>{children}</MockedProvider>,
     });
-    await act(async () => { await result.current.ingestOne({ title: 'U', text: 'H', source: urlSource }); });
-    await waitFor(() => expect(result.current.progress.state).toBe('done'));
-    expect(result.current.progress.state).toBe('done');
-  });
-
-  it('should handle sha256 error', async () => {
-    const errorExpectedContent = `---\nsource:\n  kind: manual\n  provenanceType: \n  provenanceLabel: \n  provenanceConfirmed: \ningestedAt: ${JSON_DATE}\ncontentSha256: \n---\nHello world`;
-    const errorMocks = [
-      {
-        request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'Test Doc' } },
-        result: { data: { createDocument: { id: 'd1', title: 'Test Doc', createdAt: FIXED_DATE, __typename: 'Document' } } },
-      },
-      {
-        request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd1', chunkIndex: 0, content: errorExpectedContent } },
-        result: { data: { createChunk: { id: 'c1', chunkIndex: 0, content: '...', documentId: 'd1', __typename: 'DocumentChunk' } } },
-      },
-      {
-        request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
-        result: { data: { documentsByUser: [] } },
-      },
-    ];
-
-    const digestSpy = vi
-      .spyOn(globalThis.crypto.subtle, 'digest')
-      .mockRejectedValueOnce(new Error('fail'));
-
-    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={errorMocks}>{children}</MockedProvider>,
-    });
-    let ingestResult: { documentId: string; chunksCreated: number } | null = null;
     await act(async () => {
-      ingestResult = await result.current.ingestOne({ title: 'Test Doc', text: 'Hello world', source: { kind: 'manual' } });
+      await result.current.ingestOne({ title: 'U', text: 'H', source: urlSource });
     });
     await waitFor(() => expect(result.current.progress.state).toBe('done'));
-    expect(ingestResult).toEqual({ documentId: 'd1', chunksCreated: 1 });
-
-    digestSpy.mockRestore();
-  });
-
-  it('should handle missing crypto.subtle', async () => {
-    const errorExpectedContent = `---\nsource:\n  kind: manual\n  provenanceType: \n  provenanceLabel: \n  provenanceConfirmed: \ningestedAt: ${JSON_DATE}\ncontentSha256: \n---\nHello world`;
-    const errorMocks = [
-      {
-        request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'Test Doc' } },
-        result: { data: { createDocument: { id: 'd1', title: 'Test Doc', createdAt: FIXED_DATE, __typename: 'Document' } } },
-      },
-      {
-        request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd1', chunkIndex: 0, content: errorExpectedContent } },
-        result: { data: { createChunk: { id: 'c1', chunkIndex: 0, content: '...', documentId: 'd1', __typename: 'DocumentChunk' } } },
-      },
-      {
-        request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
-        result: { data: { documentsByUser: [] } },
-      },
-    ];
-
-    try {
-      vi.stubGlobal('crypto', { subtle: undefined });
-      const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
-        wrapper: ({ children }) => <MockedProvider mocks={errorMocks}>{children}</MockedProvider>,
-      });
-      await act(async () => {
-        await result.current.ingestOne({ title: 'Test Doc', text: 'Hello world', source: { kind: 'manual' } });
-      });
-      await waitFor(() => expect(result.current.progress.state).toBe('done'));
-    } finally {
-      vi.unstubAllGlobals();
-    }
   });
 
   it('splitIntoChunks should return empty array for empty text', () => {
@@ -283,85 +262,4 @@ describe('useIngestDocuments', () => {
     });
     expect(result.current.progress.state).toBe('idle');
   });
-
-  it('should handle special characters in safeYamlScalar', async () => {
-    const source = { kind: 'manual' as const, provenanceLabel: 'a:b#c' };
-    const content = `---\nsource:\n  kind: manual\n  provenanceType: \n  provenanceLabel: \"a:b#c\"\n  provenanceConfirmed: \ningestedAt: \"2023-01-01T12:00:00.000Z\"\ncontentSha256: 0000000000000000000000000000000000000000000000000000000000000000\n---\nH`;
-    const mocksWithSpecial = [
-      {
-        request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'T' } },
-        result: { data: { createDocument: { id: 'd1', title: 'T', createdAt: FIXED_DATE, __typename: 'Document' } } },
-      },
-      {
-        request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd1', chunkIndex: 0, content: content } },
-        result: { data: { createChunk: { id: 'c1', chunkIndex: 0, content: '...', documentId: 'd1', __typename: 'DocumentChunk' } } },
-      },
-      {
-        request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
-        result: { data: { documentsByUser: [] } },
-      },
-    ];
-    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={mocksWithSpecial}>{children}</MockedProvider>,
-    });
-    await act(async () => {
-      await result.current.ingestOne({ title: 'T', text: 'H', source });
-    });
-    await waitFor(() => expect(result.current.progress.state).toBe('done'));
-    expect(result.current.progress.state).toBe('done');
-  });
-
-  it('should handle null values in safeYamlScalar and safeYamlBool', async () => {
-    const source = { kind: 'manual' as const, provenanceType: undefined, provenanceConfirmed: undefined };
-    const content = `---\nsource:\n  kind: manual\n  provenanceType: \n  provenanceLabel: \n  provenanceConfirmed: \ningestedAt: \"2023-01-01T12:00:00.000Z\"\ncontentSha256: 0000000000000000000000000000000000000000000000000000000000000000\n---\nH`;
-    const mocksWithNulls = [
-      {
-        request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'T' } },
-        result: { data: { createDocument: { id: 'd1', title: 'T', createdAt: FIXED_DATE, __typename: 'Document' } } },
-      },
-      {
-        request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd1', chunkIndex: 0, content: content } },
-        result: { data: { createChunk: { id: 'c1', chunkIndex: 0, content: '...', documentId: 'd1', __typename: 'DocumentChunk' } } },
-      },
-      {
-        request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
-        result: { data: { documentsByUser: [] } },
-      },
-    ];
-    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={mocksWithNulls}>{children}</MockedProvider>,
-    });
-    await act(async () => {
-      await result.current.ingestOne({ title: 'T', text: 'H', source });
-    });
-    await waitFor(() => expect(result.current.progress.state).toBe('done'));
-    expect(result.current.progress.state).toBe('done');
-  });
-
-  it('should escape newlines in YAML scalars without quoting', async () => {
-    const source = { kind: 'manual' as const, provenanceLabel: 'line1\nline2' };
-    const content = `---\nsource:\n  kind: manual\n  provenanceType: \n  provenanceLabel: line1\\nline2\n  provenanceConfirmed: \ningestedAt: ${JSON_DATE}\ncontentSha256: 0000000000000000000000000000000000000000000000000000000000000000\n---\nH`;
-    const mocksWithNewline = [
-      {
-        request: { query: CREATE_DOCUMENT_MUTATION, variables: { userId: 'u1', title: 'NL' } },
-        result: { data: { createDocument: { id: 'd-nl', title: 'NL', createdAt: FIXED_DATE, __typename: 'Document' } } },
-      },
-      {
-        request: { query: CREATE_CHUNK_MUTATION, variables: { documentId: 'd-nl', chunkIndex: 0, content: content } },
-        result: { data: { createChunk: { id: 'c-nl', chunkIndex: 0, content: '...', documentId: 'd-nl', __typename: 'DocumentChunk' } } },
-      },
-      {
-        request: { query: DOCUMENTS_BY_USER_QUERY, variables: { userId: 'u1' } },
-        result: { data: { documentsByUser: [] } },
-      },
-    ];
-    const { result } = renderHook(() => ingestModule.useIngestDocuments('u1'), {
-      wrapper: ({ children }) => <MockedProvider mocks={mocksWithNewline}>{children}</MockedProvider>,
-    });
-    await act(async () => {
-      await result.current.ingestOne({ title: 'NL', text: 'H', source });
-    });
-    await waitFor(() => expect(result.current.progress.state).toBe('done'));
-  });
-
 });
