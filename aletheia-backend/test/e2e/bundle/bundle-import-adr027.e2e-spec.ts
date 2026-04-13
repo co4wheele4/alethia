@@ -110,7 +110,7 @@ describe('Bundle import vs ADR-027 triggers (e2e)', () => {
             snippet,
             contentSha256: hash,
             sourceUrl: null,
-            rawBodyBase64: null,
+            rawBody: null,
           } as unknown as Prisma.EvidenceCreateManyInput,
         ],
         claimEvidenceLinks: [
@@ -170,7 +170,7 @@ describe('Bundle import vs ADR-027 triggers (e2e)', () => {
             snippet,
             contentSha256: hash,
             sourceUrl: null,
-            rawBodyBase64: null,
+            rawBody: null,
           } as unknown as Prisma.EvidenceCreateManyInput,
         ],
         claimEvidenceLinks: [

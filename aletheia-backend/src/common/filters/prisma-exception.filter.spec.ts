@@ -64,6 +64,35 @@ describe('PrismaExceptionFilter', () => {
       ).toThrow(ConflictException);
     });
 
+    it('should throw ConflictException when code is empty but message indicates unique violation (driver adapter)', () => {
+      const exception = createPrismaError(
+        'duplicate key value violates unique constraint "users_email_key"',
+        '',
+      );
+
+      const mockContext: Partial<ArgumentsHost> = {
+        getType: jest.fn<any, any>(() => 'graphql'),
+        getArgs: jest.fn(),
+        getArgByIndex: jest.fn(),
+        switchToRpc: jest.fn(),
+        switchToHttp: jest.fn(),
+        switchToWs: jest.fn(),
+      };
+
+      const mockGqlContext = {
+        getContext: jest.fn(() => ({ req: {}, res: mockResponse })),
+        getInfo: jest.fn(() => ({})),
+      };
+
+      jest
+        .spyOn(GqlArgumentsHost, 'create')
+        .mockReturnValue(mockGqlContext as unknown as GqlArgumentsHost);
+
+      expect(() =>
+        filter.catch(exception, mockContext as ArgumentsHost),
+      ).toThrow(ConflictException);
+    });
+
     it('should throw BadRequestException for P2003 (foreign key)', () => {
       const exception = createPrismaError(
         'Foreign key constraint failed',

@@ -16,6 +16,32 @@ interface GraphQLContext {
   res?: Response;
 }
 
+/**
+ * Prisma 7 + driver adapters may surface the same failures with a missing/empty
+ * `code` while still using PrismaClientKnownRequestError. Map from message/meta
+ * so GraphQL returns structured errors (HTTP 200 + errors[]) instead of 500.
+ */
+function resolvePrismaErrorCode(
+  exception: PrismaClientKnownRequestError,
+): string {
+  const direct = exception.code?.trim();
+  if (direct) return direct;
+  const blob = `${exception.message}\n${JSON.stringify(exception.meta ?? {})}`;
+  if (/duplicate key|unique constraint/i.test(blob)) return 'P2002';
+  if (/foreign key constraint/i.test(blob)) return 'P2003';
+  return '';
+}
+
+function uniqueFieldLabel(exception: PrismaClientKnownRequestError): string {
+  const target = exception.meta?.target as string[] | undefined;
+  if (target?.length) return target[0] ?? 'field';
+  const m = exception.message.match(/unique constraint "([^"]+)"/i);
+  if (!m) return 'field';
+  const parts = m[1].split('_');
+  if (parts.length >= 2) return parts[parts.length - 2] ?? 'field';
+  return 'field';
+}
+
 @Catch(PrismaClientKnownRequestError)
 export class PrismaExceptionFilter
   implements ExceptionFilter, GqlExceptionFilter
@@ -27,11 +53,9 @@ export class PrismaExceptionFilter
     let error: Error;
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-    switch (exception.code) {
+    switch (resolvePrismaErrorCode(exception)) {
       case 'P2002': {
-        // Unique constraint violation
-        const target = exception.meta?.target as string[] | undefined;
-        const field = target?.[0] || 'field';
+        const field = uniqueFieldLabel(exception);
         error = new ConflictException(
           `A record with this ${field} already exists.`,
         );
