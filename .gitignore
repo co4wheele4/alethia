@@ -11,6 +11,7 @@ coverage-e2e/
 
 # Production
 dist/
+!tools/eslint-plugin-aletheia/dist/
 build/
 .next/
 *.tsbuildinfo
