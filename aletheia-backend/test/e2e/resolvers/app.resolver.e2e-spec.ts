@@ -46,22 +46,4 @@ describe('AppResolver (e2e)', () => {
       ).toBeInstanceOf(Array);
     });
   });
-
-  describe('Mutations', () => {
-    it('should create AI query via askAI', async () => {
-      const mutation = `
-        mutation AskAI($userId: String!, $query: String!) {
-          askAI(userId: $userId, query: $query)
-        }
-      `;
-      const variables = {
-        userId: context.testData.user.id,
-        query: 'What is Aletheia?',
-      };
-      const res = await graphqlRequest(context.app, mutation, variables);
-
-      expect(res.status).toBe(200);
-      expect((res.body?.data as { askAI?: unknown })?.askAI).toBeDefined();
-    });
-  });
 });

@@ -1,5 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { ClaimStatus, Prisma } from '@prisma/client';
+
+/** ADR-027: insert imported claims as DRAFT first, then apply bundle status after evidence/links/logs exist. */
+function claimDraftForImport(
+  row: Prisma.ClaimCreateManyInput,
+): Prisma.ClaimCreateManyInput {
+  return {
+    ...row,
+    status: ClaimStatus.DRAFT,
+    reviewedAt: null,
+    reviewedBy: null,
+    reviewerNote: null,
+  };
+}
 import { PrismaService } from '@prisma/prisma.service';
 import {
   contractError,
@@ -191,6 +204,9 @@ export class AletheiaBundleService {
     if (existingEv && !allowOverwrite)
       throw contractError(GQL_ERROR_CODES.IMPORT_COLLISION);
 
+    const originals = bundle.claims as Prisma.ClaimCreateManyInput[];
+    const draftClaims = originals.map((c) => claimDraftForImport(c));
+
     return this.prisma.$transaction(async (tx) => {
       if (allowOverwrite && (existingClaim || existingEv)) {
         const claimIds = claimIdList;
@@ -223,14 +239,15 @@ export class AletheiaBundleService {
         await tx.evidence.deleteMany({ where: { id: { in: evIds } } });
       }
 
-      if (claimsIn.length) {
-        await tx.claim.createMany({
-          data: bundle.claims as Prisma.ClaimCreateManyInput[],
-        });
-      }
+      // ADR-027 order: evidence → claims (DRAFT) → links → adjudication logs → restore statuses → coordination → repro → events
       if (evidenceIn.length) {
         await tx.evidence.createMany({
           data: bundle.evidence as Prisma.EvidenceCreateManyInput[],
+        });
+      }
+      if (draftClaims.length) {
+        await tx.claim.createMany({
+          data: draftClaims,
         });
       }
       const linksIn =
@@ -243,6 +260,21 @@ export class AletheiaBundleService {
       if (logsIn.length) {
         await tx.adjudicationLog.createMany({ data: logsIn });
       }
+
+      for (const orig of originals) {
+        const target = orig.status ?? ClaimStatus.DRAFT;
+        if (target === ClaimStatus.DRAFT) continue;
+        await tx.claim.update({
+          where: { id: orig.id as string },
+          data: {
+            status: target,
+            reviewedAt: orig.reviewedAt ?? null,
+            reviewedBy: orig.reviewedBy ?? null,
+            reviewerNote: orig.reviewerNote ?? null,
+          },
+        });
+      }
+
       const rrIn =
         bundle.reviewRequests as Prisma.ReviewRequestCreateManyInput[];
       if (rrIn.length) {

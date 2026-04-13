@@ -249,9 +249,9 @@ test.describe('Full demo walkthrough (real backend)', () => {
     await expect(page.getByText(/Documents/i).first()).toBeVisible({ timeout: 20_000 });
     await pauseBetweenDemoPages(page);
 
-    // Analysis workspace (inspection; may list documents when seed + user docs exist)
+    // Analysis route: explicit MVP-disabled messaging (no inference endpoints)
     await page.goto('/analysis');
-    await expect(page.getByText(/Analysis workspace/i).first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/disabled for MVP/i).first()).toBeVisible({ timeout: 20_000 });
     await pauseBetweenDemoPages(page);
 
     // Questions workspace (gate cleared via localStorage above)

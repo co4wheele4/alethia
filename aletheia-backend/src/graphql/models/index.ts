@@ -3,9 +3,6 @@ export { Lesson } from './lesson.model';
 export { Document } from './document.model';
 export { DocumentSource, DocumentSourceKind } from './document-source.model';
 export { DocumentChunk } from './document-chunk.model';
-export { Embedding } from './embedding.model';
-export { AiQuery } from './ai-query.model';
-export { AiQueryResult } from './ai-query.model';
 export { Entity } from './entity.model';
 export { EntityMention } from './entity-mention.model';
 export { EntityRelationship } from './entity-relationship.model';
@@ -14,7 +11,6 @@ export {
   RelationshipEvidenceKind,
 } from './entity-relationship-evidence.model';
 export { EntityRelationshipEvidenceMention } from './entity-relationship-evidence-mention.model';
-export { AiExtractionSuggestion } from './ai-extraction-suggestion.model';
 export { Claim, ClaimStatus } from './claim.model';
 export { ClaimEvidence } from './claim-evidence.model';
 export { Evidence, EvidenceSourceKind } from './evidence.model';

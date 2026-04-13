@@ -23,7 +23,6 @@ describe('DocumentResolver', () => {
     createdAt: new Date(),
     lessons: [],
     documents: [],
-    aiQueries: [],
   };
 
   const mockDocument: Document = {

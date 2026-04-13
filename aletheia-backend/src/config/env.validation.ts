@@ -17,8 +17,9 @@ class EnvironmentVariables {
   @IsString()
   DATABASE_URL!: string;
 
+  @IsOptional()
   @IsString()
-  OPENAI_API_KEY!: string;
+  OPENAI_API_KEY?: string;
 
   @IsOptional()
   @IsNumber()
@@ -60,15 +61,8 @@ export function validate(config: Record<string, unknown>) {
       config.DATABASE_URL =
         envDbUrl || 'postgresql://localhost:5432/aletheia?schema=public';
     }
-    if (!config.OPENAI_API_KEY) {
-      const envOpenAIApiKey = process.env.OPENAI_API_KEY;
-      if (!envOpenAIApiKey) {
-        console.warn(
-          '⚠️  WARNING: OPENAI_API_KEY not found in environment variables.\n' +
-            '   Using dummy key for development. Please create .env file with proper OPENAI_API_KEY.',
-        );
-      }
-      config.OPENAI_API_KEY = envOpenAIApiKey || 'dummy-key-for-development';
+    if (config.OPENAI_API_KEY === undefined) {
+      config.OPENAI_API_KEY = process.env.OPENAI_API_KEY ?? '';
     }
   }
 

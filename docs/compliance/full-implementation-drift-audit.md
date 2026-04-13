@@ -1,5 +1,7 @@
 # Full implementation drift audit (Aletheia)
 
+> **Note (2026-04-13):** Sections below that mention **GraphQL `Embedding`** / **`askAI`** describe an **older tree**. Current MVP remediation **removed** those surfaces; enforcement includes `aletheia-backend/scripts/schema-lint-mvp.cjs` and CI **`mvp-release-gate`**. Treat **§4 HIGH — Embedding** and **§7 item 1** as **historical** unless you are reading an old commit.
+
 ## 1. Audit metadata
 
 | Field | Value |
@@ -92,7 +94,7 @@ None verified for **claim lifecycle**, **evidence immutability**, **non-semantic
 
 | Item | Detail |
 | --- | --- |
-| **GraphQL `Embedding` surface** | Schema exposes `Embedding`, `createEmbedding`, `updateEmbedding`, and chunk `embeddings`. **ADR-033 search does not use these.** Risk is **misuse** as a relevance signal outside documented scope. Mitigation: keep search implementation free of embedding imports; governance and schema lints block semantic query fields. |
+| **GraphQL `Embedding` surface** *(superseded at 2026-04-13)* | **Historical:** older schema exposed embedding CRUD. **Current MVP:** types and mutations **removed**; `schema-lint-mvp.cjs` fails the build if they reappear. |
 | **ADR-035 workspace isolation** | Scoping exists (e.g. search visibility via document/user linkage). Full cross-tenant denial matrix is not exhaustively proven in this pass; index maps partial tests. |
 
 ### MEDIUM
@@ -136,7 +138,7 @@ None verified for **claim lifecycle**, **evidence immutability**, **non-semantic
 
 ## 7. Remaining gaps (tracked)
 
-1. **Embedding API:** If policy requires **zero** numeric embedding vectors in the public GraphQL API, a follow-up change would deprecate or gate `Embedding` mutations and fields (large breaking change; not done here).
+1. **Embedding API:** *(Addressed in MVP remediation — embedding GraphQL surface removed; see `aletheia-backend/scripts/schema-lint-mvp.cjs`)*. Further policy is **POST_MVP** if reintroduced via ADR.
 2. **ADR-035:** Strengthen integration tests for cross-workspace denial on all mutable and export/import paths if not already covered end-to-end.
 3. **Documentation:** Align or archive `UI_COMPONENT_MAPPING.md` so it cannot be mistaken for the shipped epistemic contract.
 

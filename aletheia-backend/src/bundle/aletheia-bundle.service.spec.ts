@@ -295,7 +295,11 @@ describe('AletheiaBundleService', () => {
     evidenceFindFirst.mockResolvedValue(null);
     transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
       fn({
-        claim: { createMany: jest.fn(), deleteMany: jest.fn() },
+        claim: {
+          createMany: jest.fn(),
+          deleteMany: jest.fn(),
+          update: jest.fn(),
+        },
         evidence: { createMany: jest.fn(), deleteMany: jest.fn() },
         claimEvidenceLink: { createMany: jest.fn(), deleteMany: jest.fn() },
         adjudicationLog: { createMany: jest.fn(), deleteMany: jest.fn() },
@@ -339,7 +343,11 @@ describe('AletheiaBundleService', () => {
     evidenceFindFirst.mockResolvedValue(null);
     transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
       fn({
-        claim: { createMany: jest.fn(), deleteMany: jest.fn() },
+        claim: {
+          createMany: jest.fn(),
+          deleteMany: jest.fn(),
+          update: jest.fn(),
+        },
         evidence: { createMany: jest.fn(), deleteMany: jest.fn() },
         claimEvidenceLink: { createMany: jest.fn(), deleteMany: jest.fn() },
         adjudicationLog: { createMany: jest.fn(), deleteMany: jest.fn() },
@@ -389,7 +397,7 @@ describe('AletheiaBundleService', () => {
         adjudicationLog: { deleteMany: del, createMany },
         claimEvidenceLink: { deleteMany: del, createMany },
         evidenceReproCheck: { deleteMany: del, createMany },
-        claim: { deleteMany: del, createMany },
+        claim: { deleteMany: del, createMany, update: jest.fn() },
         evidence: { deleteMany: del, createMany },
         epistemicEvent: { createMany },
       } as any),
@@ -428,7 +436,7 @@ describe('AletheiaBundleService', () => {
         adjudicationLog: { deleteMany: del, createMany: jest.fn() },
         claimEvidenceLink: { deleteMany: del, createMany: jest.fn() },
         evidenceReproCheck: { deleteMany: del, createMany: jest.fn() },
-        claim: { deleteMany: del, createMany: jest.fn() },
+        claim: { deleteMany: del, createMany: jest.fn(), update: jest.fn() },
         evidence: { deleteMany: del, createMany: jest.fn() },
         epistemicEvent: { createMany: jest.fn() },
       } as any),
@@ -461,7 +469,7 @@ describe('AletheiaBundleService', () => {
     const cm = jest.fn();
     transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
       fn({
-        claim: { createMany: cm, deleteMany: jest.fn() },
+        claim: { createMany: cm, deleteMany: jest.fn(), update: jest.fn() },
         evidence: { createMany: cm, deleteMany: jest.fn() },
         claimEvidenceLink: { createMany: cm, deleteMany: jest.fn() },
         adjudicationLog: { createMany: cm, deleteMany: jest.fn() },
@@ -490,5 +498,119 @@ describe('AletheiaBundleService', () => {
       false,
     );
     expect(cm.mock.calls.length).toBeGreaterThan(5);
+  });
+
+  it('importBundle restores lifecycle fields after DRAFT insert (ADR-027)', async () => {
+    claimFindFirst.mockResolvedValue(null);
+    evidenceFindFirst.mockResolvedValue(null);
+    const snippet = 'hello';
+    const h = evidenceContentSha256Hex(snippet);
+    const reviewedAt = new Date('2024-01-02T00:00:00.000Z');
+    const claimUpdate = jest.fn();
+    transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
+      fn({
+        claim: {
+          createMany: jest.fn(),
+          deleteMany: jest.fn(),
+          update: claimUpdate,
+        },
+        evidence: { createMany: jest.fn(), deleteMany: jest.fn() },
+        claimEvidenceLink: { createMany: jest.fn(), deleteMany: jest.fn() },
+        adjudicationLog: { createMany: jest.fn(), deleteMany: jest.fn() },
+        reviewRequest: { createMany: jest.fn(), deleteMany: jest.fn() },
+        reviewAssignment: { createMany: jest.fn(), deleteMany: jest.fn() },
+        reviewerResponse: { createMany: jest.fn(), deleteMany: jest.fn() },
+        evidenceReproCheck: { createMany: jest.fn(), deleteMany: jest.fn() },
+        epistemicEvent: { createMany: jest.fn() },
+      } as any),
+    );
+
+    await service.importBundle(
+      {
+        version: '1',
+        exportedAt: '',
+        claims: [
+          {
+            id: 'c1',
+            text: 't',
+            status: ClaimStatus.REVIEWED,
+            reviewedAt,
+            reviewedBy: 'user-1',
+            reviewerNote: 'ok',
+          },
+        ],
+        evidence: [{ id: 'e1', snippet, contentSha256: h }],
+        claimEvidenceLinks: [{ evidenceId: 'e1', claimId: 'c1' }],
+        adjudicationLogs: [],
+        reviewRequests: [],
+        reviewAssignments: [],
+        reviewerResponses: [],
+        evidenceReproChecks: [],
+        epistemicEvents: [],
+      },
+      false,
+    );
+
+    expect(claimUpdate).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+      data: {
+        status: ClaimStatus.REVIEWED,
+        reviewedAt,
+        reviewedBy: 'user-1',
+        reviewerNote: 'ok',
+      },
+    });
+  });
+
+  it('importBundle uses null lifecycle fields when originals omit them', async () => {
+    claimFindFirst.mockResolvedValue(null);
+    evidenceFindFirst.mockResolvedValue(null);
+    const snippet = 'hello';
+    const h = evidenceContentSha256Hex(snippet);
+    const claimUpdate = jest.fn();
+    transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
+      fn({
+        claim: {
+          createMany: jest.fn(),
+          deleteMany: jest.fn(),
+          update: claimUpdate,
+        },
+        evidence: { createMany: jest.fn(), deleteMany: jest.fn() },
+        claimEvidenceLink: { createMany: jest.fn(), deleteMany: jest.fn() },
+        adjudicationLog: { createMany: jest.fn(), deleteMany: jest.fn() },
+        reviewRequest: { createMany: jest.fn(), deleteMany: jest.fn() },
+        reviewAssignment: { createMany: jest.fn(), deleteMany: jest.fn() },
+        reviewerResponse: { createMany: jest.fn(), deleteMany: jest.fn() },
+        evidenceReproCheck: { createMany: jest.fn(), deleteMany: jest.fn() },
+        epistemicEvent: { createMany: jest.fn() },
+      } as any),
+    );
+
+    await service.importBundle(
+      {
+        version: '1',
+        exportedAt: '',
+        claims: [{ id: 'c1', text: 't', status: ClaimStatus.ACCEPTED }],
+        evidence: [{ id: 'e1', snippet, contentSha256: h }],
+        claimEvidenceLinks: [{ evidenceId: 'e1', claimId: 'c1' }],
+        adjudicationLogs: [],
+        reviewRequests: [],
+        reviewAssignments: [],
+        reviewerResponses: [],
+        evidenceReproChecks: [],
+        epistemicEvents: [],
+      },
+      false,
+    );
+
+    expect(claimUpdate).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+      data: {
+        status: ClaimStatus.ACCEPTED,
+        reviewedAt: null,
+        reviewedBy: null,
+        reviewerNote: null,
+      },
+    });
   });
 });

@@ -6,13 +6,11 @@ import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
 import { DocumentSource } from '@models/document-source.model';
 import { DocumentChunk } from '@models/document-chunk.model';
-import { Embedding } from '@models/embedding.model';
 import { Entity } from '@models/entity.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { EntityRelationship } from '@models/entity-relationship.model';
 import { EntityRelationshipEvidence } from '@models/entity-relationship-evidence.model';
 import { EntityRelationshipEvidenceMention } from '@models/entity-relationship-evidence-mention.model';
-import { AiQuery, AiQueryResult } from '@models/ai-query.model';
 
 describe('DataLoaderService', () => {
   let service: DataLoaderService;
@@ -34,9 +32,6 @@ describe('DataLoaderService', () => {
     documentChunk: {
       findMany: jest.fn(),
     },
-    embedding: {
-      findMany: jest.fn(),
-    },
     entity: {
       findMany: jest.fn(),
     },
@@ -51,15 +46,6 @@ describe('DataLoaderService', () => {
       findMany: jest.fn(),
     },
     entityRelationshipEvidenceMention: {
-      findMany: jest.fn(),
-    },
-    aiQuery: {
-      findMany: jest.fn(),
-    },
-    aiQueryResult: {
-      findMany: jest.fn(),
-    },
-    aiExtractionSuggestion: {
       findMany: jest.fn(),
     },
   };
@@ -103,7 +89,6 @@ describe('DataLoaderService', () => {
         createdAt: new Date(),
         lessons: [],
         documents: [],
-        aiQueries: [],
       };
       (prismaService.user.findMany as jest.Mock).mockResolvedValue([mockUser]);
 
@@ -125,7 +110,6 @@ describe('DataLoaderService', () => {
           createdAt: new Date(),
           lessons: [],
           documents: [],
-          aiQueries: [],
         },
         {
           id: 'user-2',
@@ -134,7 +118,6 @@ describe('DataLoaderService', () => {
           createdAt: new Date(),
           lessons: [],
           documents: [],
-          aiQueries: [],
         },
       ];
       (prismaService.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
@@ -170,7 +153,6 @@ describe('DataLoaderService', () => {
         createdAt: new Date(),
         lessons: [],
         documents: [],
-        aiQueries: [],
       };
       (prismaService.user.findMany as jest.Mock).mockResolvedValue([mockUser]);
 
@@ -512,97 +494,6 @@ describe('DataLoaderService', () => {
       const loader = service.getChunksByDocumentLoader();
       // Request doc-2 which has no chunks
       const result = await loader.load('doc-2');
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getEmbeddingLoader', () => {
-    it('should return a DataLoader', () => {
-      const loader = service.getEmbeddingLoader();
-      expect(loader).toBeDefined();
-    });
-
-    it('should load a single embedding', async () => {
-      const mockEmbedding = {
-        id: 'emb-1',
-        chunkId: 'chunk-1',
-        values: [0.1, 0.2, 0.3],
-      };
-      (prismaService.embedding.findMany as jest.Mock).mockResolvedValue([
-        mockEmbedding,
-      ]);
-
-      const loader = service.getEmbeddingLoader();
-      const result = await loader.load('emb-1');
-
-      expect(result).toEqual(mockEmbedding as unknown as Embedding);
-      expect(prismaService.embedding.findMany).toHaveBeenCalledWith({
-        where: { id: { in: ['emb-1'] } },
-      });
-    });
-
-    it('should return null for non-existent embedding', async () => {
-      (prismaService.embedding.findMany as jest.Mock).mockResolvedValue([]);
-
-      const loader = service.getEmbeddingLoader();
-      const result = await loader.load('non-existent');
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('getEmbeddingsByChunkLoader', () => {
-    it('should return a DataLoader', () => {
-      const loader = service.getEmbeddingsByChunkLoader();
-      expect(loader).toBeDefined();
-    });
-
-    it('should load embeddings for a chunk', async () => {
-      const mockEmbeddings = [
-        {
-          id: 'emb-1',
-          chunkId: 'chunk-1',
-          values: [0.1, 0.2, 0.3],
-        },
-      ];
-      (prismaService.embedding.findMany as jest.Mock).mockResolvedValue(
-        mockEmbeddings,
-      );
-
-      const loader = service.getEmbeddingsByChunkLoader();
-      const result = await loader.load('chunk-1');
-
-      expect(result).toEqual(mockEmbeddings as unknown as Embedding[]);
-      expect(prismaService.embedding.findMany).toHaveBeenCalledWith({
-        where: { chunkId: { in: ['chunk-1'] } },
-      });
-    });
-
-    it('should return empty array when chunk has no embeddings', async () => {
-      (prismaService.embedding.findMany as jest.Mock).mockResolvedValue([]);
-
-      const loader = service.getEmbeddingsByChunkLoader();
-      const result = await loader.load('chunk-1');
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle embeddings with unexpected chunkIds in batch', async () => {
-      const mockEmbeddings = [
-        {
-          id: 'emb-1',
-          chunkId: 'chunk-1',
-          values: [0.1, 0.2, 0.3],
-        },
-      ];
-      (prismaService.embedding.findMany as jest.Mock).mockResolvedValue(
-        mockEmbeddings,
-      );
-
-      const loader = service.getEmbeddingsByChunkLoader();
-      // Request chunk-2 which has no embeddings
-      const result = await loader.load('chunk-2');
 
       expect(result).toEqual([]);
     });
@@ -951,257 +842,6 @@ describe('DataLoaderService', () => {
       const loader = service.getRelationshipsByToEntityLoader();
       // Request entity-1 which has no incoming relationships
       const result = await loader.load('entity-1');
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getAiQueryLoader', () => {
-    it('should return a DataLoader', () => {
-      const loader = service.getAiQueryLoader();
-      expect(loader).toBeDefined();
-    });
-
-    it('should load a single AI query', async () => {
-      const mockQuery = {
-        id: 'query-1',
-        userId: 'user-1',
-        query: 'What is Aletheia?',
-        createdAt: new Date(),
-      };
-      (prismaService.aiQuery.findMany as jest.Mock).mockResolvedValue([
-        mockQuery,
-      ]);
-
-      const loader = service.getAiQueryLoader();
-      const result = await loader.load('query-1');
-
-      expect(result).toEqual(mockQuery as unknown as AiQuery);
-      expect(prismaService.aiQuery.findMany).toHaveBeenCalledWith({
-        where: { id: { in: ['query-1'] } },
-      });
-    });
-
-    it('should return null for non-existent query', async () => {
-      (prismaService.aiQuery.findMany as jest.Mock).mockResolvedValue([]);
-
-      const loader = service.getAiQueryLoader();
-      const result = await loader.load('non-existent');
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('getAiQueriesByUserLoader', () => {
-    it('should return a DataLoader', () => {
-      const loader = service.getAiQueriesByUserLoader();
-      expect(loader).toBeDefined();
-    });
-
-    it('should load queries for a user', async () => {
-      const mockQueries = [
-        {
-          id: 'query-1',
-          userId: 'user-1',
-          query: 'What is Aletheia?',
-          createdAt: new Date(),
-        },
-      ];
-      (prismaService.aiQuery.findMany as jest.Mock).mockResolvedValue(
-        mockQueries,
-      );
-
-      const loader = service.getAiQueriesByUserLoader();
-      const result = await loader.load('user-1');
-
-      expect(result).toEqual(mockQueries as unknown as AiQuery[]);
-      expect(prismaService.aiQuery.findMany).toHaveBeenCalledWith({
-        where: { userId: { in: ['user-1'] } },
-        orderBy: { createdAt: 'desc' },
-      });
-    });
-
-    it('should return empty array when user has no queries', async () => {
-      (prismaService.aiQuery.findMany as jest.Mock).mockResolvedValue([]);
-
-      const loader = service.getAiQueriesByUserLoader();
-      const result = await loader.load('user-1');
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle queries with unexpected userIds in batch', async () => {
-      const mockQueries = [
-        {
-          id: 'query-1',
-          userId: 'user-1',
-          query: 'What is Aletheia?',
-          createdAt: new Date(),
-        },
-      ];
-      (prismaService.aiQuery.findMany as jest.Mock).mockResolvedValue(
-        mockQueries,
-      );
-
-      const loader = service.getAiQueriesByUserLoader();
-      // Request user-2 which has no queries
-      const result = await loader.load('user-2');
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getAiQueryResultLoader', () => {
-    it('should return a DataLoader', () => {
-      const loader = service.getAiQueryResultLoader();
-      expect(loader).toBeDefined();
-    });
-
-    it('should load a single AI query result', async () => {
-      const mockResult = {
-        id: 'result-1',
-        queryId: 'query-1',
-        answer: 'Answer',
-        score: 0.9,
-        createdAt: new Date(),
-      };
-      (prismaService.aiQueryResult.findMany as jest.Mock).mockResolvedValue([
-        mockResult,
-      ]);
-
-      const loader = service.getAiQueryResultLoader();
-      const result = await loader.load('result-1');
-
-      expect(result).toEqual(mockResult as unknown as AiQueryResult);
-      expect(prismaService.aiQueryResult.findMany).toHaveBeenCalledWith({
-        where: { id: { in: ['result-1'] } },
-      });
-    });
-
-    it('should return null for non-existent result', async () => {
-      (prismaService.aiQueryResult.findMany as jest.Mock).mockResolvedValue([]);
-
-      const loader = service.getAiQueryResultLoader();
-      const result = await loader.load('non-existent');
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('getResultsByQueryLoader', () => {
-    it('should return a DataLoader', () => {
-      const loader = service.getResultsByQueryLoader();
-      expect(loader).toBeDefined();
-    });
-
-    it('should load results for a query', async () => {
-      const mockResults = [
-        {
-          id: 'result-1',
-          queryId: 'query-1',
-          answer: 'Answer 1',
-          score: 0.9,
-          createdAt: new Date(),
-        },
-      ];
-      (prismaService.aiQueryResult.findMany as jest.Mock).mockResolvedValue(
-        mockResults,
-      );
-
-      const loader = service.getResultsByQueryLoader();
-      const result = await loader.load('query-1');
-
-      expect(result).toEqual(mockResults as unknown as AiQueryResult[]);
-      expect(prismaService.aiQueryResult.findMany).toHaveBeenCalledWith({
-        where: { queryId: { in: ['query-1'] } },
-        orderBy: { createdAt: 'desc' },
-      });
-    });
-
-    it('should return empty array when query has no results', async () => {
-      (prismaService.aiQueryResult.findMany as jest.Mock).mockResolvedValue([]);
-
-      const loader = service.getResultsByQueryLoader();
-      const result = await loader.load('query-1');
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle results with unexpected queryIds in batch', async () => {
-      const mockResults = [
-        {
-          id: 'result-1',
-          queryId: 'query-1',
-          answer: 'Answer 1',
-          score: 0.9,
-          createdAt: new Date(),
-        },
-      ];
-      (prismaService.aiQueryResult.findMany as jest.Mock).mockResolvedValue(
-        mockResults,
-      );
-
-      const loader = service.getResultsByQueryLoader();
-      // Request query-2 which has no results
-      const result = await loader.load('query-2');
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getSuggestionsByChunkLoader', () => {
-    it('should return a DataLoader', () => {
-      const loader = service.getSuggestionsByChunkLoader();
-      expect(loader).toBeDefined();
-    });
-
-    it('should load suggestions for a chunk', async () => {
-      const mockSuggestions = [
-        {
-          id: 'suggestion-1',
-          chunkId: 'chunk-1',
-        },
-      ];
-      (
-        prismaService.aiExtractionSuggestion.findMany as jest.Mock
-      ).mockResolvedValue(mockSuggestions);
-
-      const loader = service.getSuggestionsByChunkLoader();
-      const result = await loader.load('chunk-1');
-
-      expect(result).toEqual(mockSuggestions as any);
-      expect(
-        prismaService.aiExtractionSuggestion.findMany,
-      ).toHaveBeenCalledWith({
-        where: { chunkId: { in: ['chunk-1'] } },
-      });
-    });
-
-    it('should return empty array when chunk has no suggestions', async () => {
-      (
-        prismaService.aiExtractionSuggestion.findMany as jest.Mock
-      ).mockResolvedValue([]);
-
-      const loader = service.getSuggestionsByChunkLoader();
-      const result = await loader.load('chunk-1');
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle suggestions with unexpected chunkIds in batch', async () => {
-      const mockSuggestions = [
-        {
-          id: 'suggestion-1',
-          chunkId: 'chunk-1',
-        },
-      ];
-      (
-        prismaService.aiExtractionSuggestion.findMany as jest.Mock
-      ).mockResolvedValue(mockSuggestions);
-
-      const loader = service.getSuggestionsByChunkLoader();
-      // Request chunk-2 which has no suggestions
-      const result = await loader.load('chunk-2');
 
       expect(result).toEqual([]);
     });

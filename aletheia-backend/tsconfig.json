@@ -17,7 +17,6 @@
       "@inputs/*": ["src/graphql/inputs/*"],
       "@models": ["src/graphql/models/index"],
       "@models/*": ["src/graphql/models/*"],
-      "@openai/*": ["src/openai/*"],
       "@outputs/*": ["src/graphql/outputs/*"],
       "@prisma/*": ["src/prisma/*"],
       "@resolvers": ["src/graphql/resolvers/index"],

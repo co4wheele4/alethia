@@ -22,9 +22,6 @@ import {
   DocumentResolver,
   DocumentChunkResolver,
   UserResolver,
-  AiQueryResolver,
-  AiQueryResultResolver,
-  EmbeddingResolver,
   EntityResolver,
   EntityMentionResolver,
   EntityRelationshipResolver,
@@ -47,7 +44,6 @@ import { EvidenceReproCheckService } from '../evidence-repro/evidence-repro-chec
 import { AletheiaBundleService } from '../bundle/aletheia-bundle.service';
 import { EpistemicAuditInterceptor } from '../observability/epistemic-audit.interceptor';
 import { AuthModule } from '../auth/auth.module';
-import { OpenAIModule } from '../openai/openai.module';
 import { IngestionModule } from '../ingestion/ingestion.module';
 import { DataLoaderModule } from '../common/dataloaders/dataloader.module';
 import { createGraphQLContext, formatGraphQLError } from './graphql-config';
@@ -73,8 +69,6 @@ import {
     ]),
     // Authentication
     AuthModule,
-    // OpenAI module
-    OpenAIModule,
     // Ingestion module
     IngestionModule,
     // DataLoader module for N+1 query optimization
@@ -103,9 +97,6 @@ import {
     DocumentResolver,
     DocumentChunkResolver,
     UserResolver,
-    AiQueryResolver,
-    AiQueryResultResolver,
-    EmbeddingResolver,
     EntityResolver,
     EntityMentionResolver,
     EntityRelationshipResolver,

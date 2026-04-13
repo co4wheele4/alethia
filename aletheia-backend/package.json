@@ -9,8 +9,8 @@
   "scripts": {
     "build": "nest build",
     "ci": "npm run lint && npx prisma validate && npm run test && npm run test:e2e",
-    "schema:generate": "node -r ts-node/register -r tsconfig-paths/register scripts/generate-schema.ts",
-    "schema:lint": "node scripts/schema-lint-adr022.cjs && node scripts/schema-lint-adr025.cjs && node scripts/schema-lint-adr032.cjs && node scripts/adr023-lifecycle-integrity.cjs && node scripts/adr024-evidence-ingestion.cjs",
+    "schema:generate": "npx ts-node --files -r tsconfig-paths/register scripts/generate-schema.ts",
+    "schema:lint": "node scripts/schema-lint-adr022.cjs && node scripts/schema-lint-adr025.cjs && node scripts/schema-lint-adr032.cjs && node scripts/schema-lint-mvp.cjs && node scripts/adr023-lifecycle-integrity.cjs && node scripts/adr024-evidence-ingestion.cjs",
     "adr023:lint": "node scripts/adr023-lifecycle-integrity.cjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "postinstall": "prisma generate",
@@ -141,7 +141,6 @@
       "^@models$": "<rootDir>/graphql/models/index",
       "^@models/(.*)$": "<rootDir>/graphql/models/$1",
       "^@auth/(.*)$": "<rootDir>/auth/$1",
-      "^@openai/(.*)$": "<rootDir>/openai/$1",
       "^@outputs/(.*)$": "<rootDir>/graphql/outputs/$1",
       "^@common/(.*)$": "<rootDir>/common/$1",
       "^@prisma/prisma.service$": "<rootDir>/prisma/prisma.service",

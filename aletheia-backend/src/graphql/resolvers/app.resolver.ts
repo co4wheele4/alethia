@@ -1,20 +1,15 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { Query, Resolver } from '@nestjs/graphql';
 import { PrismaService } from '../../prisma/prisma.service';
-import { OpenAIService } from '../../openai/openai.service';
-import { Lesson } from '@models/lesson.model';
+import { Lesson } from '../../graphql/models/lesson.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { UseGuards } from '@nestjs/common';
 
 @Resolver()
 export class AppResolver {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly openai: OpenAIService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   @Query(() => String)
   hello() {
-    // Public endpoint - no auth required
     return 'Hello, Aletheia!';
   }
 
@@ -22,23 +17,5 @@ export class AppResolver {
   @UseGuards(JwtAuthGuard)
   async lessons() {
     return await this.prisma.lesson.findMany();
-  }
-
-  @Mutation(() => String)
-  @UseGuards(JwtAuthGuard)
-  async askAI(@Args('userId') userId: string, @Args('query') query: string) {
-    const answer = await this.openai.getEmbeddingResult(query);
-    await this.prisma.aiQuery.create({
-      data: {
-        userId,
-        query,
-        results: {
-          create: {
-            answer,
-          },
-        },
-      },
-    });
-    return answer;
   }
 }

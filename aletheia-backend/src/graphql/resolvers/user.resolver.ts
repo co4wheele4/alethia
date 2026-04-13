@@ -11,7 +11,6 @@ import { User } from '@models/user.model';
 import { PrismaService } from '@prisma/prisma.service';
 import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
-import { AiQuery } from '@models/ai-query.model';
 import { CreateUserInput, UpdateUserInput } from '@inputs/user.input';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { Roles } from '@auth/decorators/roles.decorator';
@@ -68,10 +67,5 @@ export class UserResolver {
   @ResolveField(() => [Document])
   async documents(@Parent() user: User) {
     return this.dataLoaders.getDocumentsByUserLoader().load(user.id);
-  }
-
-  @ResolveField(() => [AiQuery])
-  async aiQueries(@Parent() user: User) {
-    return this.dataLoaders.getAiQueriesByUserLoader().load(user.id);
   }
 }

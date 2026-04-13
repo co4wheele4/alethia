@@ -24,5 +24,4 @@ export * from '../features/search/components';
 export * from '../features/ethical/components';
 export * from '../features/dev/components';
 export * from '../features/supergraph/components';
-export * from '../features/analysis/components';
 export { LoginForm } from '../features/auth/components/LoginForm';

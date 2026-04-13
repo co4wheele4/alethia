@@ -7,7 +7,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   push:
-    branches: [main]
+    # Must include the repository default branch (currently `master`) or pushes bypass this gate.
+    branches: [main, master, develop]
 
 permissions:
   contents: read
@@ -16,6 +17,11 @@ jobs:
   governance-bot:
     name: governance-bot
     runs-on: ubuntu-latest
+
+    # `schema:generate` runs `prisma generate`, which requires DATABASE_URL to be set even though
+    # no database connection is opened for codegen. Real DB-backed tests live in MVP Release Gate.
+    env:
+      DATABASE_URL: postgresql://governance_bot:governance_bot@127.0.0.1:5432/governance_bot
 
     steps:
       - name: Checkout repository (full history for diff range)
@@ -68,5 +74,6 @@ jobs:
           set -euo pipefail
           node tools/governance-bot/governance-bot.cjs --base "${BASE_SHA}" --head "${HEAD_SHA}"
 
-      - name: Run unit tests (guardrails and governance bot)
-        run: npm test
+      # Full unit/e2e matrix is enforced by MVP Release Gate; this job stays mechanical (diff + schema + guardrails).
+      - name: Guardrails tests (ADR-022 tooling)
+        run: npm run test:guardrails

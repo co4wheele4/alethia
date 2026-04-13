@@ -6,9 +6,6 @@ import { DocumentChunk } from '@models/document-chunk.model';
 import { Entity } from '@models/entity.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { EntityRelationship } from '@models/entity-relationship.model';
-import { Embedding } from '@models/embedding.model';
-import { AiQuery } from '@models/ai-query.model';
-import { AiQueryResult } from '@models/ai-query.model';
 
 export const createMockUser = (overrides?: Partial<User>): User => ({
   id: 'user-1',
@@ -17,7 +14,6 @@ export const createMockUser = (overrides?: Partial<User>): User => ({
   createdAt: new Date('2024-01-01'),
   lessons: [],
   documents: [],
-  aiQueries: [],
   ...overrides,
 });
 
@@ -48,7 +44,6 @@ export const createMockDocumentChunk = (
   documentId: 'doc-1',
   chunkIndex: 0,
   content: 'Test content',
-  // embeddings: [], // Removed - not a direct field on DocumentChunk model
   ...overrides,
 });
 
@@ -100,29 +95,3 @@ export const createMockEntityRelationship = (
     evidence: evidence ?? [],
   };
 };
-
-export const createMockEmbedding = (
-  overrides?: Partial<Embedding>,
-): Embedding => ({
-  id: 'embedding-1',
-  values: [0.1, 0.2, 0.3],
-  chunk: createMockDocumentChunk(),
-  ...overrides,
-});
-
-export const createMockAiQuery = (overrides?: Partial<AiQuery>): AiQuery => ({
-  id: 'query-1',
-  query: 'What is Aletheia?',
-  user: createMockUser(),
-  createdAt: new Date('2024-01-01'),
-  ...overrides,
-});
-
-export const createMockAiQueryResult = (
-  overrides?: Partial<AiQueryResult>,
-): AiQueryResult => ({
-  id: 'result-1',
-  answer: 'Aletheia is a system for truth discovery.',
-  query: createMockAiQuery(),
-  ...overrides,
-});

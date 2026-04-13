@@ -65,7 +65,9 @@ async function fetchUrlWithSsrfGuards(
 ): Promise<Response> {
   let current = validatedFirst;
   for (let hop = 0; hop < MAX_REDIRECTS; hop++) {
-    // First hop uses a URL already validated by the caller; subsequent hops validate redirects.
+    // First hop: `validatedFirst` was returned by `assertPublicHttpUrlForServerFetch`.
+    // Later hops: `current` was reassigned from `assertPublicHttpUrlForServerFetch` on each redirect.
+    // codeql[js/request-forgery]: URL is DNS-validated and blocklisted before any outbound fetch (see ssrf-public-url.ts).
     const upstream = await fetch(current.href, {
       method: 'GET',
       redirect: 'manual',

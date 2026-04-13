@@ -3,7 +3,6 @@ import { DocumentChunkResolver } from './document-chunk.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { Document } from '@models/document.model';
-import { Embedding } from '@models/embedding.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
@@ -42,9 +41,6 @@ describe('DocumentChunkResolver', () => {
       document: {
         findUnique: jest.fn(),
       },
-      embedding: {
-        findMany: jest.fn(),
-      },
       entityMention: {
         findMany: jest.fn(),
       },
@@ -54,13 +50,7 @@ describe('DocumentChunkResolver', () => {
       getDocumentLoader: jest.fn().mockReturnValue({
         load: jest.fn().mockResolvedValue(null),
       }),
-      getEmbeddingsByChunkLoader: jest.fn().mockReturnValue({
-        load: jest.fn().mockResolvedValue([]),
-      }),
       getMentionsByChunkLoader: jest.fn().mockReturnValue({
-        load: jest.fn().mockResolvedValue([]),
-      }),
-      getSuggestionsByChunkLoader: jest.fn().mockReturnValue({
         load: jest.fn().mockResolvedValue([]),
       }),
     };
@@ -295,43 +285,6 @@ describe('DocumentChunkResolver', () => {
     });
   });
 
-  describe('embeddings', () => {
-    it('should resolve embeddings field', async () => {
-      const mockEmbeddings: Embedding[] = [
-        {
-          id: 'embedding-1',
-          values: [0.1, 0.2, 0.3],
-          chunk: mockChunk,
-        },
-      ];
-      const loadMock = jest.fn().mockResolvedValue(mockEmbeddings);
-      (
-        dataLoaderService.getEmbeddingsByChunkLoader as jest.Mock
-      ).mockReturnValue({
-        load: loadMock,
-      });
-
-      const result = await resolver.embeddings(mockChunk);
-
-      expect(result).toEqual(mockEmbeddings);
-      expect(loadMock).toHaveBeenCalledWith(mockChunk.id);
-    });
-
-    it('should return empty array when chunk has no embeddings', async () => {
-      const loadMock = jest.fn().mockResolvedValue([]);
-      (
-        dataLoaderService.getEmbeddingsByChunkLoader as jest.Mock
-      ).mockReturnValue({
-        load: loadMock,
-      });
-
-      const result = await resolver.embeddings(mockChunk);
-
-      expect(result).toEqual([]);
-      expect(loadMock).toHaveBeenCalledWith(mockChunk.id);
-    });
-  });
-
   describe('mentions', () => {
     it('should resolve mentions field', async () => {
       const mockMentions: EntityMention[] = [
@@ -370,23 +323,6 @@ describe('DocumentChunkResolver', () => {
       const result = await resolver.mentions(mockChunk);
 
       expect(result).toEqual([]);
-      expect(loadMock).toHaveBeenCalledWith(mockChunk.id);
-    });
-  });
-
-  describe('aiSuggestions', () => {
-    it('should resolve aiSuggestions field', async () => {
-      const mockSuggestions = [{ id: 's1' }];
-      const loadMock = jest.fn().mockResolvedValue(mockSuggestions);
-      (
-        dataLoaderService.getSuggestionsByChunkLoader as jest.Mock
-      ).mockReturnValue({
-        load: loadMock,
-      });
-
-      const result = await resolver.aiSuggestions(mockChunk);
-
-      expect(result).toEqual(mockSuggestions);
       expect(loadMock).toHaveBeenCalledWith(mockChunk.id);
     });
   });

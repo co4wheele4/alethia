@@ -17,10 +17,6 @@ describe('resolvers/index', () => {
     expect(resolvers.DocumentChunkResolver).toBeDefined();
   });
 
-  it('should export EmbeddingResolver', () => {
-    expect(resolvers.EmbeddingResolver).toBeDefined();
-  });
-
   it('should export EntityResolver', () => {
     expect(resolvers.EntityResolver).toBeDefined();
   });
@@ -31,14 +27,6 @@ describe('resolvers/index', () => {
 
   it('should export EntityRelationshipResolver', () => {
     expect(resolvers.EntityRelationshipResolver).toBeDefined();
-  });
-
-  it('should export AiQueryResolver', () => {
-    expect(resolvers.AiQueryResolver).toBeDefined();
-  });
-
-  it('should export AiQueryResultResolver', () => {
-    expect(resolvers.AiQueryResultResolver).toBeDefined();
   });
 
   it('should export ClaimResolver', () => {

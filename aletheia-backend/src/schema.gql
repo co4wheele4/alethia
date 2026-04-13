@@ -2,38 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type AiExtractionSuggestion {
-  chunkId: String!
-  createdAt: DateTime!
-  endOffset: Int
-  entityName: String
-  entityType: String
-  excerpt: String
-  id: ID!
-  kind: SuggestionKind!
-  objectName: String
-  objectType: String
-  relation: String
-  startOffset: Int
-  status: SuggestionStatus!
-  subjectName: String
-  subjectType: String
-}
-
-type AiQuery {
-  createdAt: DateTime!
-  id: ID!
-  query: String!
-  results: [AiQueryResult!]!
-  user: User!
-}
-
-type AiQueryResult {
-  answer: String!
-  id: ID!
-  query: AiQuery!
-}
-
 type Claim {
   createdAt: DateTime!
 
@@ -183,12 +151,10 @@ type Document {
 }
 
 type DocumentChunk {
-  aiSuggestions: [AiExtractionSuggestion!]
   chunkIndex: Int!
   content: String!
   document: Document!
   documentId: String!
-  embeddings: [Embedding!]!
   id: ID!
   mentions: [EntityMention!]!
 }
@@ -233,12 +199,6 @@ enum DocumentSourceKindInput {
   FILE
   MANUAL
   URL
-}
-
-type Embedding {
-  chunk: DocumentChunk!
-  id: ID!
-  values: [Float!]!
 }
 
 type Entity {
@@ -493,12 +453,8 @@ type Lesson {
 }
 
 type Mutation {
-  acceptSuggestion(id: ID!): AiExtractionSuggestion!
-
   """Adjudicate a claim by transitioning lifecycle state (ADR-011)."""
   adjudicateClaim(claimId: ID!, decision: ClaimLifecycleState!, reviewerNote: String): Claim!
-  askAI(query: String!, userId: String!): String!
-  askAi(query: String!, userId: String!): AiQueryResult!
 
   """
   Assign a reviewer (coordination-only; does not change truth, claim status, or adjudication).
@@ -506,7 +462,6 @@ type Mutation {
   assignReviewer(reviewRequestId: ID!, reviewerUserId: ID!): ReviewAssignment!
   createChunk(chunkIndex: Int!, content: String!, documentId: String!): DocumentChunk!
   createDocument(title: String!, userId: String!): Document!
-  createEmbedding(chunkId: String!, values: [Float!]!): Embedding!
   createEntity(data: CreateEntityInput!): Entity!
   createEntityMention(data: CreateEntityMentionInput!): EntityMention!
   createEntityRelationship(data: CreateEntityRelationshipInput!): EntityRelationship!
@@ -516,7 +471,6 @@ type Mutation {
   createUser(data: CreateUserInput!): User!
   deleteChunk(id: String!): DocumentChunk!
   deleteDocument(id: String!): Document!
-  deleteEmbedding(id: String!): Embedding!
   deleteEntity(id: String!): Entity!
   deleteEntityMention(id: String!): EntityMention!
   deleteEntityRelationship(id: String!): EntityRelationship!
@@ -528,9 +482,7 @@ type Mutation {
   ingestDocument(input: IngestDocumentInput!): Document!
   linkEvidenceToClaim(claimId: String!, evidenceId: String!): Evidence!
   login(email: String!, password: String!): String!
-  proposeExtraction(chunkId: ID!): [AiExtractionSuggestion!]!
   register(email: String!, name: String, password: String!): String!
-  rejectSuggestion(id: ID!): AiExtractionSuggestion!
 
   """
   Request review of a claim (coordination-only; does not change claim lifecycle).
@@ -543,7 +495,6 @@ type Mutation {
   respondToReviewAssignment(note: String, response: ReviewerResponseType!, reviewAssignmentId: ID!): ReviewerResponse!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
-  updateEmbedding(id: String!, values: [Float!]): Embedding!
   updateEntity(data: UpdateEntityInput!): Entity!
   updateEntityMention(data: UpdateEntityMentionInput!): EntityMention!
   updateEntityRelationship(data: UpdateEntityRelationshipInput!): EntityRelationship!
@@ -554,12 +505,6 @@ type Mutation {
 type Query {
   """ADR-029: Admin audit listing (structural filters only)."""
   adminEpistemicEvents(filter: EpistemicEventFilterInput): [EpistemicEvent!]!
-  aiQueries: [AiQuery!]!
-  aiQueriesByUser(userId: String!): [AiQuery!]!
-  aiQueriesPaged(skip: Int, take: Int): [AiQuery!]!
-  aiQuery(id: String!): AiQuery
-  aiQueryResult(id: String!): AiQueryResult
-  aiQueryResults: [AiQueryResult!]!
   chunk0ByDocument(documentId: String!): DocumentChunk
   chunksByDocument(documentId: String!): [DocumentChunk!]!
 
@@ -577,9 +522,6 @@ type Query {
   documentChunks: [DocumentChunk!]!
   documents(limit: Int!, offset: Int!): [Document!]!
   documentsByUser(userId: String!): [Document!]!
-  embedding(id: String!): Embedding
-  embeddings: [Embedding!]!
-  embeddingsByChunk(chunkId: String!): [Embedding!]!
   entities: [Entity!]!
   entity(id: String!): Entity
   entityMention(id: String!): EntityMention
@@ -758,17 +700,6 @@ input SearchEvidenceInput {
   queryText: String!
 }
 
-enum SuggestionKind {
-  ENTITY_MENTION
-  RELATIONSHIP
-}
-
-enum SuggestionStatus {
-  ACCEPTED
-  PENDING
-  REJECTED
-}
-
 """ADR-033: Exact, prefix, or substring match (no fuzzy or similarity)."""
 enum TextMatchMode {
   EXACT
@@ -802,7 +733,6 @@ input UpdateUserInput {
 }
 
 type User {
-  aiQueries: [AiQuery!]!
   createdAt: DateTime!
   documents: [Document!]!
   email: String!

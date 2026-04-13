@@ -35,22 +35,16 @@ export function ProvenanceInspector(props: ProvenanceInspectorProps) {
         key: 'chunking',
         label: 'Chunking',
         timestampIso: null,
-        status: 'inferred',
-        detail: `Derived from presence of ${chunks.length} chunk(s). Timestamp is not available from API.`,
+        status: 'known',
+        detail: `This document is represented as ${chunks.length} chunk record(s) returned by the API. Per-chunk timestamps are not exposed.`,
       },
       {
-        key: 'entity-extraction',
-        label: 'Entity extraction',
+        key: 'entity-mentions',
+        label: 'Entity mentions (structural)',
         timestampIso: null,
         status: 'unknown',
-        detail: 'No explicit extraction step/timestamp is available from API.',
-      },
-      {
-        key: 'embedding',
-        label: 'Embedding generation',
-        timestampIso: null,
-        status: 'unknown',
-        detail: 'No explicit embedding step/timestamp is available from API.',
+        detail:
+          'MVP does not surface automated extraction pipelines. Entity and relationship records, when present, are edited elsewhere as explicit structured data.',
       },
     ];
   }, [chunks.length, parsed0]);
@@ -76,7 +70,7 @@ export function ProvenanceInspector(props: ProvenanceInspectorProps) {
         <Alert severity="warning">No chunk 0 available; cannot parse ingestion provenance.</Alert>
       ) : !parsed0?.provenance ? (
         <Alert severity="warning">
-          Chunk 0 does not contain a provenance header. This may mean the ingestion pipeline did not embed it.
+          Chunk 0 does not contain a provenance header. This may mean the ingestion pipeline did not record one in chunk 0.
         </Alert>
       ) : (
         <Box

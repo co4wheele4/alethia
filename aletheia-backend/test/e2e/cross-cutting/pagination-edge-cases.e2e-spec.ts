@@ -12,22 +12,14 @@ describe('Pagination Edge Cases (e2e)', () => {
   beforeAll(async () => {
     context = await setupTestApp();
 
-    // Create multiple AI queries for pagination testing
+    // Extra documents for pagination (seed already has one document).
     for (let i = 0; i < 5; i++) {
-      await graphqlRequest(
-        context.app,
-        `
-        mutation AskAi($userId: String!, $query: String!) {
-          askAi(userId: $userId, query: $query) {
-            id
-          }
-        }
-      `,
-        {
+      await context.prisma.document.create({
+        data: {
+          title: `Pagination edge doc ${i}`,
           userId: context.testData.user.id,
-          query: `Pagination test query ${i}`,
         },
-      );
+      });
     }
   });
 
@@ -35,66 +27,63 @@ describe('Pagination Edge Cases (e2e)', () => {
     await teardownTestApp(context);
   });
 
-  it('should handle pagination with skip=0 and take=0', async () => {
+  it('should handle pagination with limit and offset', async () => {
     const query = `
-      query GetAiQueriesPaged($skip: Int, $take: Int) {
-        aiQueriesPaged(skip: $skip, take: $take) {
+      query Docs($limit: Int!, $offset: Int!) {
+        documents(limit: $limit, offset: $offset) {
           id
-          query
-        }
-      }
-    `;
-    const res = await graphqlRequest(context.app, query, { skip: 0, take: 0 });
-
-    expect(res.status).toBe(200);
-    expect(
-      (res.body?.data as { aiQueriesPaged?: unknown[] })?.aiQueriesPaged,
-    ).toBeInstanceOf(Array);
-    // With take=0, should return empty array or handle gracefully
-  });
-
-  it('should handle pagination with very large skip value', async () => {
-    const query = `
-      query GetAiQueriesPaged($skip: Int, $take: Int) {
-        aiQueriesPaged(skip: $skip, take: $take) {
-          id
-          query
+          title
         }
       }
     `;
     const res = await graphqlRequest(context.app, query, {
-      skip: 1000000,
-      take: 10,
+      limit: 1,
+      offset: 0,
     });
 
     expect(res.status).toBe(200);
     expect(
-      (res.body?.data as { aiQueriesPaged?: unknown[] })?.aiQueriesPaged,
+      (res.body?.data as { documents?: unknown[] })?.documents,
     ).toBeInstanceOf(Array);
-    expect(
-      (res.body?.data as { aiQueriesPaged?: unknown[] })?.aiQueriesPaged
-        ?.length,
-    ).toBe(0);
   });
 
-  it('should handle pagination with very large take value', async () => {
+  it('should handle pagination with very large offset', async () => {
     const query = `
-      query GetAiQueriesPaged($skip: Int, $take: Int) {
-        aiQueriesPaged(skip: $skip, take: $take) {
+      query Docs($limit: Int!, $offset: Int!) {
+        documents(limit: $limit, offset: $offset) {
           id
-          query
+          title
         }
       }
     `;
     const res = await graphqlRequest(context.app, query, {
-      skip: 0,
-      take: 1000000,
+      limit: 10,
+      offset: 1000000,
+    });
+
+    expect(res.status).toBe(200);
+    const docs = (res.body?.data as { documents?: unknown[] })?.documents;
+    expect(docs).toBeInstanceOf(Array);
+    expect(docs?.length).toBe(0);
+  });
+
+  it('should handle large limit without crashing', async () => {
+    const query = `
+      query Docs($limit: Int!, $offset: Int!) {
+        documents(limit: $limit, offset: $offset) {
+          id
+          title
+        }
+      }
+    `;
+    const res = await graphqlRequest(context.app, query, {
+      limit: 200,
+      offset: 0,
     });
 
     expect(res.status).toBe(200);
     expect(
-      (res.body?.data as { aiQueriesPaged?: unknown[] })?.aiQueriesPaged,
+      (res.body?.data as { documents?: unknown[] })?.documents,
     ).toBeInstanceOf(Array);
-    // Should return all available records, not crash
   });
 });

@@ -11,9 +11,7 @@ import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { Document } from '@models/document.model';
-import { Embedding } from '@models/embedding.model';
 import { EntityMention } from '@models/entity-mention.model';
-import { AiExtractionSuggestion } from '@models/ai-extraction-suggestion.model';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
@@ -92,18 +90,8 @@ export class DocumentChunkResolver {
       .load(chunkWithDocumentId.documentId);
   }
 
-  @ResolveField(() => [Embedding])
-  async embeddings(@Parent() chunk: DocumentChunk) {
-    return this.dataLoaders.getEmbeddingsByChunkLoader().load(chunk.id);
-  }
-
   @ResolveField(() => [EntityMention])
   async mentions(@Parent() chunk: DocumentChunk) {
     return this.dataLoaders.getMentionsByChunkLoader().load(chunk.id);
-  }
-
-  @ResolveField(() => [AiExtractionSuggestion])
-  async aiSuggestions(@Parent() chunk: DocumentChunk) {
-    return this.dataLoaders.getSuggestionsByChunkLoader().load(chunk.id);
   }
 }

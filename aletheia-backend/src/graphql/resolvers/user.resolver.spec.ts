@@ -18,7 +18,6 @@ describe('UserResolver', () => {
     createdAt: new Date(),
     lessons: [],
     documents: [],
-    aiQueries: [],
   };
 
   beforeEach(async () => {
@@ -37,9 +36,6 @@ describe('UserResolver', () => {
         load: jest.fn().mockResolvedValue([]),
       }),
       getDocumentsByUserLoader: jest.fn().mockReturnValue({
-        load: jest.fn().mockResolvedValue([]),
-      }),
-      getAiQueriesByUserLoader: jest.fn().mockReturnValue({
         load: jest.fn().mockResolvedValue([]),
       }),
     };
@@ -449,54 +445,6 @@ describe('UserResolver', () => {
       );
 
       await expect(resolver.documents(mockUser)).rejects.toThrow(
-        'Database error',
-      );
-    });
-  });
-
-  describe('aiQueries', () => {
-    it('should resolve aiQueries field', async () => {
-      const mockAiQueries = [
-        { id: 'query-1', query: 'What is AI?', userId: mockUser.id },
-        { id: 'query-2', query: 'How does ML work?', userId: mockUser.id },
-      ];
-      const loadMock = jest.fn().mockResolvedValue(mockAiQueries);
-      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue(
-        {
-          load: loadMock,
-        },
-      );
-
-      const result = await resolver.aiQueries(mockUser);
-
-      expect(result).toEqual(mockAiQueries);
-      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
-    });
-
-    it('should return empty array when user has no aiQueries', async () => {
-      const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue(
-        {
-          load: loadMock,
-        },
-      );
-
-      const result = await resolver.aiQueries(mockUser);
-
-      expect(result).toEqual([]);
-      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
-    });
-
-    it('should handle database errors', async () => {
-      const error = new Error('Database error');
-      const loadMock = jest.fn().mockRejectedValue(error);
-      (dataLoaderService.getAiQueriesByUserLoader as jest.Mock).mockReturnValue(
-        {
-          load: loadMock,
-        },
-      );
-
-      await expect(resolver.aiQueries(mockUser)).rejects.toThrow(
         'Database error',
       );
     });

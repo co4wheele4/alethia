@@ -17,21 +17,39 @@ describe('env.validation', () => {
   });
 
   it('should throw error when validation fails', () => {
-    const mockConfig = {
-      // Missing required DATABASE_URL
-      OPENAI_API_KEY: 'test-key',
-    };
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalDbUrl = process.env.DATABASE_URL;
+    process.env.NODE_ENV = 'test';
+    delete process.env.DATABASE_URL;
 
-    expect(() => validate(mockConfig)).toThrow();
+    try {
+      const mockConfig = {
+        OPENAI_API_KEY: 'test-key',
+      };
+      expect(() => validate(mockConfig)).toThrow();
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv ?? 'test';
+      if (originalDbUrl !== undefined) {
+        process.env.DATABASE_URL = originalDbUrl;
+      }
+    }
   });
 
-  it('should handle missing required fields', () => {
-    const mockConfig = {
-      DATABASE_URL: 'postgresql://localhost:5432/test',
-      // Missing OPENAI_API_KEY
-    };
+  it('allows missing OPENAI_API_KEY (optional for MVP; inference disabled)', () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'test';
 
-    expect(() => validate(mockConfig)).toThrow();
+    try {
+      const mockConfig = {
+        DATABASE_URL: 'postgresql://localhost:5432/test',
+      };
+
+      const result = validate(mockConfig);
+      expect(result.DATABASE_URL).toBe(mockConfig.DATABASE_URL);
+      expect(result.OPENAI_API_KEY).toBeUndefined();
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv ?? 'test';
+    }
   });
 
   it('should handle optional fields correctly', () => {
@@ -124,7 +142,7 @@ describe('env.validation', () => {
       expect(consoleWarnSpy).not.toHaveBeenCalled();
     });
 
-    it('should use fallback OPENAI_API_KEY in development when missing', () => {
+    it('should default OPENAI_API_KEY to empty in development when missing (no OpenAI in MVP)', () => {
       const originalApiKey = process.env.OPENAI_API_KEY;
       delete process.env.OPENAI_API_KEY;
       const mockConfig = {
@@ -133,10 +151,7 @@ describe('env.validation', () => {
 
       const result = validate(mockConfig);
 
-      expect(result.OPENAI_API_KEY).toBe('dummy-key-for-development');
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('WARNING: OPENAI_API_KEY not found'),
-      );
+      expect(result.OPENAI_API_KEY).toBe('');
 
       if (originalApiKey) {
         process.env.OPENAI_API_KEY = originalApiKey;
