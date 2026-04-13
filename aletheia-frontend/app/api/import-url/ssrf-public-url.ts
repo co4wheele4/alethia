@@ -43,6 +43,14 @@ function isBlockedIpString(ip: string): boolean {
   return false;
 }
 
+/** Node may leave brackets on IPv6 literals; `net.isIP` requires them stripped. */
+function stripIpv6Brackets(hostname: string): string {
+  if (hostname.startsWith('[') && hostname.endsWith(']')) {
+    return hostname.slice(1, -1);
+  }
+  return hostname;
+}
+
 function assertUrlShape(u: URL): void {
   if (u.protocol !== 'http:' && u.protocol !== 'https:') {
     throw new Error('Only http(s) URLs are allowed');
@@ -50,16 +58,17 @@ function assertUrlShape(u: URL): void {
   if (u.username !== '' || u.password !== '') {
     throw new Error('URLs with credentials are not allowed');
   }
-  const host = u.hostname.toLowerCase();
+  const rawHost = u.hostname;
+  const host = rawHost.toLowerCase();
   if (!host || host.includes('%')) {
     throw new Error('Invalid host');
   }
+  const hostNoBracket = stripIpv6Brackets(host);
   if (
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host === '0.0.0.0' ||
-    host === '[::1]' ||
-    host === '::1' ||
+    hostNoBracket === 'localhost' ||
+    hostNoBracket === '127.0.0.1' ||
+    hostNoBracket === '0.0.0.0' ||
+    hostNoBracket === '::1' ||
     host.endsWith('.localhost')
   ) {
     throw new Error('This host is not allowed');
@@ -79,7 +88,7 @@ export async function assertPublicHttpUrlForServerFetch(urlString: string): Prom
   }
   assertUrlShape(u);
 
-  const host = u.hostname;
+  const host = stripIpv6Brackets(u.hostname);
   const ipVer = isIP(host);
   if (ipVer === 4 || ipVer === 6) {
     if (isBlockedIpString(host)) {

@@ -35,11 +35,17 @@ export async function cleanDatabase(prisma: PrismaClient) {
   await prisma.evidenceReproCheck.deleteMany();
   await prisma.epistemicEvent.deleteMany();
   await prisma.claimEvidenceLink.deleteMany();
+  await prisma.claimEvidenceMention.deleteMany();
+  await prisma.claimEvidenceRelationship.deleteMany();
   await prisma.claimEvidence.deleteMany();
   await prisma.claim.deleteMany();
   await prisma.htmlCrawlIngestionRunEvidence.deleteMany();
   await prisma.htmlCrawlIngestionRun.deleteMany();
   await prisma.evidence.deleteMany();
+  await prisma.entityRelationshipEvidenceMention.deleteMany();
+  await prisma.entityRelationshipEvidence.deleteMany();
+  await prisma.aiExtractionSuggestion.deleteMany();
+  await prisma.documentSource.deleteMany();
   await prisma.aiQueryResult.deleteMany();
   await prisma.aiQuery.deleteMany();
   await prisma.embedding.deleteMany();

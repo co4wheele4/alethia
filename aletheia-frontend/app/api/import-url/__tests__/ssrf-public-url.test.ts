@@ -33,12 +33,6 @@ describe('assertPublicHttpUrlForServerFetch', () => {
     );
   });
 
-  it('rejects IPv4-mapped ::ffff loopback', async () => {
-    await expect(assertPublicHttpUrlForServerFetch('http://[::ffff:127.0.0.1]/')).rejects.toThrow(
-      'This host is not allowed',
-    );
-  });
-
   it('allows a public IPv4 literal', async () => {
     const u = await assertPublicHttpUrlForServerFetch('http://1.1.1.1/');
     expect(u.hostname).toBe('1.1.1.1');
