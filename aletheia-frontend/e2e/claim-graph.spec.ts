@@ -56,14 +56,11 @@ test.describe('ADR-021: Claim–Evidence Graph', () => {
       timeout: 20_000,
     });
 
-    const edges = page.getByTestId('graph-edge');
-    const edgeCount = await edges.count();
-    expect(edgeCount).toBe(3);
-
-    const claimNodes = page.getByTestId('graph-claim-node');
-    const evidenceNodes = page.getByTestId('graph-evidence-node');
-    expect(await claimNodes.count()).toBe(3);
-    expect(await evidenceNodes.count()).toBe(2);
+    // WebKit / Mobile Safari can paint the SVG edge layer after the heading; use auto-wait assertions.
+    const edgeTimeout = 30_000;
+    await expect(page.getByTestId('graph-edge')).toHaveCount(3, { timeout: edgeTimeout });
+    await expect(page.getByTestId('graph-claim-node')).toHaveCount(3, { timeout: edgeTimeout });
+    await expect(page.getByTestId('graph-evidence-node')).toHaveCount(2, { timeout: edgeTimeout });
   });
 
   test('Node Uniformity: all nodes rendered with same styling class', async ({ page }) => {
