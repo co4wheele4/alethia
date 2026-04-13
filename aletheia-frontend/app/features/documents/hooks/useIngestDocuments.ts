@@ -109,9 +109,12 @@ export function splitIntoChunks(text: string, targetChars = 2200) {
   const chunks: string[] = [];
   let cursor = 0;
   while (cursor < normalized.length) {
-    const end = Math.min(cursor + targetChars, normalized.length);
+    const end =
+      cursor + targetChars > normalized.length ? normalized.length : cursor + targetChars;
     const window = normalized.slice(cursor, end);
-    const lastBreak = Math.max(window.lastIndexOf('\n\n'), window.lastIndexOf('\n'));
+    const brPara = window.lastIndexOf('\n\n');
+    const brLine = window.lastIndexOf('\n');
+    const lastBreak = brPara >= brLine ? brPara : brLine;
     const cut = lastBreak > 200 ? cursor + lastBreak : end;
     chunks.push(normalized.slice(cursor, cut).trim());
     cursor = cut;
@@ -165,7 +168,8 @@ export function useIngestDocuments(userId: string | null) {
           return null;
         }
 
-        const chunksCreated = Math.max(ingested.chunks?.length ?? 0, 1);
+        const chunkLen = ingested.chunks?.length ?? 0;
+        const chunksCreated = chunkLen >= 1 ? chunkLen : 1;
         setProgress({ state: 'done', documentId: ingested.id, chunksCreated });
         return { documentId: ingested.id, chunksCreated };
       } catch (e: unknown) {

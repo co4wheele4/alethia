@@ -90,7 +90,7 @@ export default function SearchPage() {
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Structural text match and filters only. Results use the order you select (created time or
-        id). This page does not rank by match quality.
+        id). This page does not order results by match quality.
       </Typography>
 
       <Box component="form" onSubmit={onSubmit} sx={{ maxWidth: 720 }}>
@@ -164,7 +164,10 @@ export default function SearchPage() {
               label="Offset"
               type="number"
               value={offset}
-              onChange={(ev) => setOffset(Math.max(0, Number(ev.target.value) || 0))}
+              onChange={(ev) => {
+                const n = Number(ev.target.value) || 0;
+                setOffset(n < 0 ? 0 : n);
+              }}
               inputProps={{ min: 0 }}
               aria-label="claim-search-offset"
             />

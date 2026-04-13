@@ -107,9 +107,19 @@ export function normalizeCrawlUrl(
 }
 
 export function stableLexicographicSort(urls: string[]): string[] {
-  return [...urls].sort((a, b) =>
-    a.localeCompare(b, 'en', { sensitivity: 'variant' }),
-  );
+  const copy = [...urls];
+  for (let i = 0; i < copy.length; i++) {
+    for (let j = i + 1; j < copy.length; j++) {
+      if (
+        copy[i].localeCompare(copy[j], 'en', { sensitivity: 'variant' }) > 0
+      ) {
+        const t = copy[i];
+        copy[i] = copy[j];
+        copy[j] = t;
+      }
+    }
+  }
+  return copy;
 }
 
 type QueueItem = { url: string; depth: number };

@@ -49,6 +49,12 @@ function hexDump(bytes: Uint8Array): string {
   return lines.join('\n');
 }
 
+function clampInt(n: number, lo: number, hi: number): number {
+  if (n < lo) return lo;
+  if (n > hi) return hi;
+  return n;
+}
+
 export function EvidenceViewer(props: EvidenceViewerProps) {
   const {
     content,
@@ -93,7 +99,8 @@ export function EvidenceViewer(props: EvidenceViewerProps) {
   }, [content, mode, pageSize, storedBytes, latin1FromStored]);
 
   const [pageIndex, setPageIndex] = useState(0);
-  const safeIndex = Math.min(pageIndex, Math.max(0, pages.length - 1));
+  const pageUpper = pages.length <= 0 ? 0 : pages.length - 1;
+  const safeIndex = clampInt(pageIndex, 0, pageUpper);
   const shown = pages[safeIndex] ?? '';
 
   const preContent = storedBytes
@@ -211,7 +218,7 @@ export function EvidenceViewer(props: EvidenceViewerProps) {
               <Button
                 size="small"
                 disabled={safeIndex <= 0}
-                onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
+                onClick={() => setPageIndex((i) => (i - 1 < 0 ? 0 : i - 1))}
               >
                 Previous page
               </Button>
@@ -221,7 +228,12 @@ export function EvidenceViewer(props: EvidenceViewerProps) {
               <Button
                 size="small"
                 disabled={safeIndex >= pages.length - 1}
-                onClick={() => setPageIndex((i) => Math.min(pages.length - 1, i + 1))}
+                onClick={() =>
+                  setPageIndex((i) => {
+                    const last = pages.length - 1;
+                    return i + 1 > last ? last : i + 1;
+                  })
+                }
               >
                 Next page
               </Button>

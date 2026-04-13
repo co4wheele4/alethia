@@ -19,7 +19,7 @@ export default function AnalysisPage() {
       <Alert severity="info" sx={{ mb: 2 }}>
         Aletheia MVP does not expose automated inference, embeddings, or semantic extraction. Claims are
         statements—not facts. Evidence is stored and rendered as submitted or fetched. The system does not
-        score, rank, or infer correctness. Adjudication is explicit and human.
+        automated scoring, relevance ordering, or inferred correctness. Adjudication is explicit and human.
       </Alert>
       {isAuthenticated ? (
         <Box>
