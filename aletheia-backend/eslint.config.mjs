@@ -3,7 +3,7 @@ import eslint from '@eslint/js';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-import aletheiaPlugin from 'eslint-plugin-aletheia';
+import aletheiaPlugin from '../tools/eslint-plugin-aletheia/dist/index.js';
 
 const aletheia = aletheiaPlugin?.default ?? aletheiaPlugin;
 
