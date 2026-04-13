@@ -54,8 +54,8 @@ Statuses are taken from `docs/adr/index.json` (authoritative for automation). Ea
 | ADR-009 | REJECTED | Historical; guards ensure no conflict semantics in API |
 | ADR-010 | ACCEPTED | Comparison UI tests + epistemic PR guard |
 | ADR-011 | ACCEPTED | Adjudication service + migration `20260409160000_adr027_*` |
-| ADR-012 | SUPERSEDED | Supersession chain validated by ADR governance test |
-| ADR-013 | SUPERSEDED | Same |
+| Review-coordination predecessors (superseded pair in ADR index) | SUPERSEDED | Supersession chain validated by ADR governance test |
+| (same pair, second entry) | SUPERSEDED | Same |
 | ADR-014 — ADR-017 | ACCEPTED | Review coordination resolvers/tests + governance |
 | ADR-018 | ACCEPTED | Claim resolvers + DB triggers (review/terminal require evidence) |
 | ADR-019 | ACCEPTED | Evidence resolver + ingestion scripts |
