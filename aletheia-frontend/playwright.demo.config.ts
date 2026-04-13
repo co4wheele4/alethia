@@ -7,7 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: '.',
   testMatch: ['e2e/full-demo-walkthrough.spec.ts'],
-  timeout: 240 * 1000,
+  // Full walkthrough + 3s pauses between pages (see full-demo-walkthrough.spec.ts).
+  timeout: 15 * 60 * 1000,
   expect: { timeout: 20 * 1000 },
   fullyParallel: false,
   workers: 1,
@@ -23,7 +24,14 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Full window height (and width): fixed Desktop Chrome viewport is 1280×720.
+        viewport: null,
+        launchOptions: {
+          args: ['--start-maximized'],
+        },
+      },
     },
   ],
 });

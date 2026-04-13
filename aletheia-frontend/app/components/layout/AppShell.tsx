@@ -195,16 +195,19 @@ export function AppShell(props: AppShellProps) {
                   </Box>
                 </MenuItem>
 
-                {requireAuth ? <Divider /> : null}
-                {requireAuth ? (
-                  <MenuItem
-                    onClick={() => {
-                      closeNavMenu();
-                      logout();
-                    }}
-                  >
-                    <ListItemText primary="Logout" />
-                  </MenuItem>
+                {isAuthenticated ? (
+                  [
+                    <Divider key="logout-divider" />,
+                    <MenuItem
+                      key="logout"
+                      onClick={() => {
+                        closeNavMenu();
+                        logout();
+                      }}
+                    >
+                      <ListItemText primary="Logout" />
+                    </MenuItem>,
+                  ]
                 ) : null}
               </MenuList>
             </Paper>

@@ -723,6 +723,20 @@ describe('EvidenceResolver', () => {
     });
   });
 
+  it('rawBodyBase64 resolveField returns null when rawBody absent', () => {
+    expect(resolver.rawBodyBase64({} as any)).toBeNull();
+    expect(resolver.rawBodyBase64({ rawBody: null } as any)).toBeNull();
+  });
+
+  it('rawBodyBase64 resolveField encodes Buffer and Uint8Array', () => {
+    expect(
+      resolver.rawBodyBase64({ rawBody: Buffer.from('ab', 'utf8') } as any),
+    ).toBe(Buffer.from('ab', 'utf8').toString('base64'));
+    expect(
+      resolver.rawBodyBase64({ rawBody: new Uint8Array([97, 98]) } as any),
+    ).toBe(Buffer.from('ab', 'utf8').toString('base64'));
+  });
+
   it('linkEvidenceToClaim links evidence to claim', async () => {
     evidenceFindUnique.mockResolvedValue({
       id: 'ev1',

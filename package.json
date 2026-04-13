@@ -58,6 +58,8 @@
     "schema:lint": "npm run schema:lint --workspace=aletheia-backend",
     "schema:check": "npm run schema:lint && npm run schema:snapshots:check",
     "verify:demo-ids": "node scripts/verify-demo-ids.cjs",
+    "demo:headed": "node scripts/run-demo-headed.cjs",
+    "demo:headed:seed": "node scripts/run-demo-headed.cjs --seed",
     "adr:check": "node scripts/check-adr-governance.cjs",
     "adr:index:check": "node scripts/validate-adr-index.cjs",
     "adr:index:publish": "node scripts/publish-adr-index.cjs",

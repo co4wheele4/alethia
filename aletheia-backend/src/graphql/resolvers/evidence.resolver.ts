@@ -129,6 +129,17 @@ export class EvidenceResolver {
     return this.prisma.documentChunk.findUnique({ where: { id: e.chunkId } });
   }
 
+  /** Prisma column is `rawBody` (bytes); GraphQL exposes base64 for HTML_PAGE snapshots (ADR-032). */
+  @ResolveField('rawBodyBase64', () => String, { nullable: true })
+  rawBodyBase64(
+    @Parent() evidence: Evidence & { rawBody?: Buffer | Uint8Array | null },
+  ): string | null {
+    const raw = evidence.rawBody;
+    if (raw == null) return null;
+    const buf = Buffer.isBuffer(raw) ? raw : Buffer.from(raw);
+    return buf.toString('base64');
+  }
+
   /**
    * Create Evidence (ADR-019 / ADR-024). Immutable after creation (DB-enforced).
    * Fail-fast: rejects missing source, missing locator, malformed offsets, empty/non-verbatim content.

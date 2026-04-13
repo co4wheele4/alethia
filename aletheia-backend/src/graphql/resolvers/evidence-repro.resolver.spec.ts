@@ -35,14 +35,12 @@ describe('EvidenceReproResolver', () => {
     expect(rows).toHaveLength(1);
   });
 
-  it('EVIDENCE_NOT_FOUND when missing', async () => {
+  it('returns empty when evidence missing or not visible', async () => {
     evidenceFindFirst.mockResolvedValue(null);
     await expect(
       resolver.evidenceReproChecks('e1', {
         req: { user: { sub: 'u1' } },
       } as any),
-    ).rejects.toMatchObject({
-      extensions: { code: GQL_ERROR_CODES.EVIDENCE_NOT_FOUND },
-    });
+    ).resolves.toEqual([]);
   });
 });

@@ -592,7 +592,7 @@ type Query {
   evidenceById(id: String!): Evidence
 
   """ADR-026: List reproducibility check records for evidence (read-only)."""
-  evidenceReproChecks(evidenceId: ID!): [EvidenceReproCheck!]!
+  evidenceReproChecks(evidenceId: String!): [EvidenceReproCheck!]!
 
   """ADR-031: Structural export (JSON bundle)."""
   exportBundle(input: ExportBundleInput!): JSON!

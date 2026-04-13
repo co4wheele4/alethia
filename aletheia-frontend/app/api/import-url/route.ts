@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { assertPublicHttpUrlForServerFetch } from './ssrf-public-url';
+
 export const dynamic = 'force-dynamic';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 30_000;
+const MAX_REDIRECTS = 10;
+
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
 /** Public-domain placeholder HTML (example.com) for demos when TLS/proxy blocks server-side fetch. */
 const EXAMPLE_COM_FALLBACK_HTML = `<!doctype html>
@@ -42,27 +47,51 @@ function jsonFromExampleComFallback(fetchedUrl: string) {
   };
 }
 
-function assertSafePublicHttpUrl(urlString: string): URL {
-  let u: URL;
-  try {
-    u = new URL(urlString);
-  } catch {
-    throw new Error('Invalid URL');
+const FETCH_HEADERS = {
+  // Browser-like UA: some CDNs block minimal custom agents; TLS issues are separate (see fallback below).
+  'User-Agent':
+    'Mozilla/5.0 (compatible; AletheiaUrlImport/1.0; +https://www.iana.org/domains/example)',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.7',
+  'Accept-Language': 'en-US,en;q=0.9',
+} as const;
+
+/**
+ * Fetch with `redirect: manual` and re-validate each redirect target with
+ * {@link assertPublicHttpUrlForServerFetch} so redirects cannot bypass SSRF checks.
+ */
+async function fetchUrlWithSsrfGuards(
+  validatedFirst: URL,
+  signal: AbortSignal,
+): Promise<Response> {
+  let current = validatedFirst;
+  for (let hop = 0; hop < MAX_REDIRECTS; hop++) {
+    // First hop uses a URL already validated by the caller; subsequent hops validate redirects.
+    const upstream = await fetch(current.href, {
+      method: 'GET',
+      redirect: 'manual',
+      signal,
+      headers: { ...FETCH_HEADERS },
+    });
+
+    if (REDIRECT_STATUSES.has(upstream.status)) {
+      const loc = upstream.headers.get('location');
+      await upstream.body?.cancel();
+      if (!loc) {
+        return upstream;
+      }
+      let next: URL;
+      try {
+        next = new URL(loc, current);
+      } catch {
+        throw new Error('Invalid redirect URL');
+      }
+      current = await assertPublicHttpUrlForServerFetch(next.href);
+      continue;
+    }
+
+    return upstream;
   }
-  if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-    throw new Error('Only http(s) URLs are allowed');
-  }
-  const host = u.hostname.toLowerCase();
-  if (
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host === '0.0.0.0' ||
-    host === '[::1]' ||
-    host.endsWith('.localhost')
-  ) {
-    throw new Error('This host is not allowed');
-  }
-  return u;
+  throw new Error('Too many redirects');
 }
 
 export async function GET(request: NextRequest) {
@@ -73,7 +102,7 @@ export async function GET(request: NextRequest) {
 
   let target: URL;
   try {
-    target = assertSafePublicHttpUrl(urlParam.trim());
+    target = await assertPublicHttpUrlForServerFetch(urlParam.trim());
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Invalid URL';
     return NextResponse.json({ error: message }, { status: 400 });
@@ -83,18 +112,7 @@ export async function GET(request: NextRequest) {
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const upstream = await fetch(target.toString(), {
-      method: 'GET',
-      redirect: 'follow',
-      signal: controller.signal,
-      headers: {
-        // Browser-like UA: some CDNs block minimal custom agents; TLS issues are separate (see fallback below).
-        'User-Agent':
-          'Mozilla/5.0 (compatible; AletheiaUrlImport/1.0; +https://www.iana.org/domains/example)',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.7',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-    });
+    const upstream = await fetchUrlWithSsrfGuards(target, controller.signal);
 
     if (!upstream.ok) {
       if (allowExampleComDemoFallback() && isExampleComRootUrl(target)) {

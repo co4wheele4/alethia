@@ -178,6 +178,7 @@ export async function wipeAllTables(prisma: PrismaClient): Promise<void> {
   await prisma.claimEvidenceMention.deleteMany();
   await prisma.claimEvidenceRelationship.deleteMany();
   await prisma.claimEvidence.deleteMany();
+  await prisma.claim.deleteMany();
   await prisma.evidence.deleteMany();
   await prisma.entityRelationshipEvidenceMention.deleteMany();
   await prisma.entityRelationshipEvidence.deleteMany();
@@ -729,7 +730,27 @@ export async function insertTestSeed(prisma: PrismaClient): Promise<void> {
     assertNoForbiddenLanguage(row.text, `claim ${row.id}`);
   }
 
-  await prisma.claim.createMany({ data: claimRows });
+  // ADR-027: DB trigger requires evidence links to exist before a claim row is INSERTed as
+  // REVIEWED/ACCEPTED/REJECTED. Insert lifecycle claims as DRAFT first, attach evidence, insert
+  // adjudication logs, then UPDATE to final statuses (logs must exist before terminal status).
+  const initialClaimRows = claimRows.map((row) => {
+    if (
+      row.id === cids.draftNoEv1 ||
+      row.id === cids.draftNoEv2 ||
+      row.id === cids.draftWithEvNoRr
+    ) {
+      return row;
+    }
+    return {
+      ...row,
+      status: ClaimStatus.DRAFT,
+      reviewedAt: null,
+      reviewedBy: null,
+      reviewerNote: null,
+    };
+  });
+
+  await prisma.claim.createMany({ data: initialClaimRows });
 
   const links: { evidenceId: string; claimId: string; linkedAt: Date }[] = [
     // Showcase: central claim has five evidence rows
@@ -925,6 +946,63 @@ export async function insertTestSeed(prisma: PrismaClient): Promise<void> {
   }
 
   await prisma.adjudicationLog.createMany({ data: adjudicationRows });
+
+  await prisma.$transaction(async (tx) => {
+    for (const id of [cids.reviewedCentral, cids.reviewedSecA, cids.reviewedSecB] as const) {
+      const row = claimRows.find((r) => r.id === id)!;
+      await tx.claim.update({
+        where: { id },
+        data: {
+          status: ClaimStatus.REVIEWED,
+          reviewedAt: row.reviewedAt,
+          reviewedBy: row.reviewedBy,
+          reviewerNote: row.reviewerNote,
+        },
+      });
+    }
+    for (const id of [cids.accepted1, cids.accepted2, cids.accepted3] as const) {
+      const row = claimRows.find((r) => r.id === id)!;
+      await tx.claim.update({
+        where: { id },
+        data: {
+          status: ClaimStatus.REVIEWED,
+          reviewedAt: fixedTime(180),
+          reviewedBy: u.admin,
+          reviewerNote: 'Review (seed).',
+        },
+      });
+      await tx.claim.update({
+        where: { id },
+        data: {
+          status: ClaimStatus.ACCEPTED,
+          reviewedAt: row.reviewedAt,
+          reviewedBy: row.reviewedBy,
+          reviewerNote: row.reviewerNote,
+        },
+      });
+    }
+    for (const id of [cids.rejected1, cids.rejected2, cids.rejected3] as const) {
+      const row = claimRows.find((r) => r.id === id)!;
+      await tx.claim.update({
+        where: { id },
+        data: {
+          status: ClaimStatus.REVIEWED,
+          reviewedAt: fixedTime(220),
+          reviewedBy: u.admin,
+          reviewerNote: 'Review (seed).',
+        },
+      });
+      await tx.claim.update({
+        where: { id },
+        data: {
+          status: ClaimStatus.REJECTED,
+          reviewedAt: row.reviewedAt,
+          reviewedBy: row.reviewedBy,
+          reviewerNote: row.reviewerNote,
+        },
+      });
+    }
+  });
 
   await prisma.reviewRequest.createMany({
     data: [

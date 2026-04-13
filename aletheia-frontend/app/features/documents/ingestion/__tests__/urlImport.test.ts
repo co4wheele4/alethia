@@ -22,6 +22,43 @@ describe('urlImport', () => {
     vi.clearAllMocks();
   });
 
+  it('imports Google News search URL; fetchedUrl reflects one redirect level', async () => {
+    const requestedUrl =
+      'https://www.google.com/search?q=news&rlz=1C1GCEA_enUS1209US1209&oq=news';
+    // Simulates /api/import-url after one HTTP redirect (e.g. canonicalization); "one level deep" = single hop.
+    const fetchedAfterRedirect = `${requestedUrl}&sei=simulated`;
+
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>news - Google Search</title>
+</head>
+<body>
+  <div id="search">Top stories</div>
+</body>
+</html>`;
+
+    mockProxyResponse({
+      body: {
+        raw: html,
+        contentType: 'text/html; charset=UTF-8',
+        fetchedUrl: fetchedAfterRedirect,
+      },
+    });
+
+    const result = await importUrlToText(requestedUrl);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const proxyArg = (fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(proxyArg).toContain(encodeURIComponent('https://www.google.com/search?'));
+    expect(proxyArg).toContain(encodeURIComponent('q=news'));
+
+    expect(result.fetchedUrl).toBe(fetchedAfterRedirect);
+    expect(result.title).toBe('news - Google Search');
+    expect(result.text).toContain('Top stories');
+  });
+
   it('should import text from a URL', async () => {
     mockProxyResponse({
       body: {

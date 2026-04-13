@@ -174,7 +174,39 @@ describe('AppShell', () => {
     });
     expect(queryByTestId('nav-menu')).toBeInTheDocument();
 
-    // Logout exists when requireAuth is true
+    // Logout when authenticated (including shells with requireAuth={false}, e.g. /demo)
+    await act(async () => {
+      getByRole('menuitem', { name: /^logout$/i }).click();
+    });
+    expect(logout).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows Logout when authenticated even if requireAuth is false', async () => {
+    const replace = vi.fn();
+    // @ts-expect-error - mocking useRouter
+    vi.mocked(useRouter).mockReturnValue({ replace });
+
+    const logout = vi.fn();
+    // @ts-expect-error - mocking useAuth
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isInitialized: true,
+      logout,
+    });
+
+    const { getByRole } = render(
+      <AppShell title="Demo" requireAuth={false}>
+        <div>Walkthrough</div>
+      </AppShell>,
+    );
+
+    await act(async () => {
+      vi.runAllTimers();
+    });
+
+    await act(async () => {
+      getByRole('button', { name: /open mobile nav/i }).click();
+    });
     await act(async () => {
       getByRole('menuitem', { name: /^logout$/i }).click();
     });

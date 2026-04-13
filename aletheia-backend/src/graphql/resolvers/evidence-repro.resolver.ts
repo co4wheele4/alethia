@@ -1,4 +1,4 @@
-import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Query, Resolver } from '@nestjs/graphql';
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { PrismaService } from '@prisma/prisma.service';
@@ -27,7 +27,8 @@ export class EvidenceReproResolver {
       'ADR-026: List reproducibility check records for evidence (read-only).',
   })
   async evidenceReproChecks(
-    @Args('evidenceId', { type: () => ID }) evidenceId: string,
+    /** Matches `evidenceById(id)` — UUID strings as `String!` in GraphQL. */
+    @Args('evidenceId', { type: () => String }) evidenceId: string,
     @Context() ctx?: GqlContext,
   ) {
     const userId = getGqlAuthUserId(ctx);
@@ -40,8 +41,10 @@ export class EvidenceReproResolver {
       },
       select: { id: true },
     });
+    // Return empty when invisible or missing so combined queries (e.g. GetEvidenceDetail) do not
+    // error while `evidenceById` is null — same UX as "no repro rows yet".
     if (!ev) {
-      throw contractError(GQL_ERROR_CODES.EVIDENCE_NOT_FOUND);
+      return [];
     }
 
     return this.prisma.evidenceReproCheck.findMany({
