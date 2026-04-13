@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// `Desktop Chrome` includes `deviceScaleFactor`, which Playwright rejects when `viewport: null`.
+const { deviceScaleFactor, ...desktopChromeNoScale } = devices['Desktop Chrome'];
+void deviceScaleFactor;
+
 /**
  * Headed demo walkthrough: expects dev servers already running (`npm run demo -- --headed --seed`).
  * No webServer — PLAYWRIGHT_TEST_BASE_URL must point at the Next.js app (3030+).
@@ -25,7 +29,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: {
-        ...devices['Desktop Chrome'],
+        ...desktopChromeNoScale,
         // Full window height (and width): fixed Desktop Chrome viewport is 1280×720.
         viewport: null,
         launchOptions: {

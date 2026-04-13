@@ -38,7 +38,9 @@ function uniqueFieldLabel(exception: PrismaClientKnownRequestError): string {
   const m = exception.message.match(/unique constraint "([^"]+)"/i);
   if (!m) return 'field';
   const parts = m[1].split('_');
-  if (parts.length >= 2) return parts[parts.length - 2] ?? 'field';
+  if (parts.length >= 2) {
+    return parts[parts.length - 2] || 'field';
+  }
   return 'field';
 }
 

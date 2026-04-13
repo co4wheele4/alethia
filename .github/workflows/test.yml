@@ -80,12 +80,12 @@ jobs:
         run: npm run schema:snapshots:check
       
       - name: Run unit tests with coverage
-        run: npm run test:cov
+        run: npm run test:cov --workspace=aletheia-backend
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
-          files: ./coverage/lcov.info
+          files: aletheia-backend/coverage/lcov.info
           flags: unit
           name: unit-tests
 
