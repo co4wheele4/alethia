@@ -69,6 +69,7 @@ async function fetchUrlWithSsrfGuards(
   let current: URL = validatedFirst;
   for (let hop = 0; hop < MAX_REDIRECTS; hop++) {
     const safe = await assertPublicHttpUrlForServerFetch(current.href);
+    // codeql[js/request-forgery]: Each hop is vetted by assertPublicHttpUrlForServerFetch (DNS + BlockList); redirects re-checked every hop.
     const upstream = await fetch(safe.href, {
       method: 'GET',
       redirect: 'manual',
