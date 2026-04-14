@@ -61,8 +61,10 @@ test.describe('Global progress indicator', () => {
     await expect(drawLayer).toBeVisible({ timeout: 10_000 });
 
     // Reduced motion should disable animation via global CSS.
+    // Chromium often serializes `animation: none` as animation-name "" (empty); others use "none".
     const animationName = await drawLayer.evaluate((el) => getComputedStyle(el).animationName);
-    expect(String(animationName).toLowerCase()).toMatch(/none|initial|unset/);
+    const normalized = String(animationName).toLowerCase().trim();
+    expect(normalized).toMatch(/^(?:none|initial|unset)?$/);
   });
 });
 

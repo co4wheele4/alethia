@@ -17,6 +17,7 @@ import { Roles } from '@auth/decorators/roles.decorator';
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { Role } from '@auth/decorators/roles.decorator';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(() => User)
@@ -48,7 +49,17 @@ export class UserResolver {
 
   @Mutation(() => User)
   async updateUser(@Args('data') data: UpdateUserInput) {
-    const { id, ...updateData } = data;
+    const { id, email, name } = data;
+    const updateData: Prisma.UserUpdateInput = {};
+    if (email !== undefined && email !== null) {
+      updateData.email = email;
+    }
+    if (name !== undefined) {
+      updateData.name = name;
+    }
+    if (Object.keys(updateData).length === 0) {
+      return await this.prisma.user.findUniqueOrThrow({ where: { id } });
+    }
     return await this.prisma.user.update({ where: { id }, data: updateData });
   }
 
