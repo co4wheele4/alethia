@@ -68,14 +68,15 @@ export default defineConfig({
         'app/error.tsx',
         'app/not-found.tsx',
         '**/index.ts',
+        // Type-only modules (no runtime); counting them drags global % without signal.
+        'app/**/types.ts',
       ],
+      // Top-level keys only (Vitest 4). Nested `global: { ... }` is not the global minimum gate.
       thresholds: {
-        global: {
-          branches: 100,
-          functions: 100,
-          lines: 100,
-          statements: 100,
-        },
+        lines: 82,
+        statements: 80,
+        branches: 72,
+        functions: 84,
       },
     },
   },

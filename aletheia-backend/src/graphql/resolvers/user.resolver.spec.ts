@@ -25,6 +25,7 @@ describe('UserResolver', () => {
       user: {
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        findUniqueOrThrow: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
@@ -279,7 +280,7 @@ describe('UserResolver', () => {
       expect(result).toEqual(updatedUser);
       expect(prismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: { email: undefined, name: 'Updated Name' },
+        data: { name: 'Updated Name' },
       });
     });
 
@@ -298,22 +299,41 @@ describe('UserResolver', () => {
       expect(result).toEqual(updatedUser);
       expect(prismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: { email: 'test@example.com', name: undefined },
+        data: { email: 'test@example.com' },
       });
     });
 
     it('should update with both fields undefined', async () => {
       const updatedUser = { ...mockUser };
-      (prismaService.user.update as jest.Mock).mockResolvedValue(
+      (prismaService.user.findUniqueOrThrow as jest.Mock).mockResolvedValue(
         updatedUser as any,
       );
 
       const result = await resolver.updateUser({ id: '1' });
 
       expect(result).toEqual(updatedUser);
+      expect(prismaService.user.findUniqueOrThrow).toHaveBeenCalledWith({
+        where: { id: '1' },
+      });
+      expect(prismaService.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should omit null email (GraphQL null) and still clear name', async () => {
+      const updatedUser = { ...mockUser, name: null };
+      (prismaService.user.update as jest.Mock).mockResolvedValue(
+        updatedUser as any,
+      );
+
+      const result = await resolver.updateUser({
+        id: '1',
+        email: null,
+        name: null,
+      } as any);
+
+      expect(result).toEqual(updatedUser);
       expect(prismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: { email: undefined, name: undefined },
+        data: { name: null },
       });
     });
 
