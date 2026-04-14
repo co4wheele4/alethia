@@ -9,6 +9,9 @@ import { defineConfig, devices } from '@playwright/test';
 const useFullBrowserMatrix =
   process.env.CI === 'true' || process.env.PLAYWRIGHT_ALL_BROWSERS === '1';
 
+/** In CI always start fresh servers; locally reuse if 3040/3050 is already taken (e.g. `npm run dev`). */
+const reuseExistingServer = process.env.CI !== 'true';
+
 /**
  * Playwright E2E test configuration
  * 
@@ -135,7 +138,7 @@ export default defineConfig({
                 'http://127.0.0.1:3040,http://localhost:3040',
             },
             url: 'http://127.0.0.1:3050/graphql',
-            reuseExistingServer: false,
+            reuseExistingServer,
             // migrate + seed + nest build + start can exceed 3m on cold machines / Windows.
             timeout: 420 * 1000,
           },
@@ -150,7 +153,7 @@ export default defineConfig({
               NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3050/graphql',
             },
             url: 'http://127.0.0.1:3040',
-            reuseExistingServer: false,
+            reuseExistingServer,
             timeout: 360 * 1000,
           },
         ]
@@ -165,7 +168,7 @@ export default defineConfig({
             NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3040/graphql',
           },
           url: 'http://127.0.0.1:3040',
-          reuseExistingServer: false,
+          reuseExistingServer,
           timeout: 180 * 1000,
         },
 });
