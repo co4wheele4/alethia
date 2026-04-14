@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Prisma 7 `postinstall` runs `prisma generate`, which requires DATABASE_URL to be set even when
+# no database connection is opened (same pattern as `governance-bot.yml`).
+env:
+  DATABASE_URL: postgresql://ci_placeholder:ci_placeholder@127.0.0.1:5432/ci_placeholder
+
 jobs:
   adr-governance:
     name: ADR Governance Checks
