@@ -9,8 +9,8 @@ import { DOCUMENT_FRAGMENT } from '../fragments/document.fragment';
  * If the backend requires auth, Apollo's auth link still attaches the token.
  */
 export const LIST_DOCUMENTS_QUERY = gql`
-  query ListDocuments {
-    documents {
+  query ListDocuments($limit: Int!, $offset: Int!) {
+    documents(limit: $limit, offset: $offset) {
       ...DocumentFragment
       chunks {
         __typename

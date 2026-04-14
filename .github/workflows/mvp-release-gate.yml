@@ -1,0 +1,98 @@
+# Authoritative MVP merge gate: ADR hygiene, schema contract, PR diff guards, guardrails,
+# Postgres-backed backend e2e, and full test matrix (unit + Playwright).
+# Configure branch protection to require status: "mvp-release-gate".
+
+name: MVP Release Gate
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  mvp-release-gate:
+    name: mvp-release-gate
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: aletheia_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      CI: true
+      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/aletheia_test
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers (CI runs full browser matrix)
+        working-directory: aletheia-frontend
+        run: npx playwright install --with-deps
+
+      - name: Setup test database (Prisma migrate against service Postgres)
+        run: npm run test:e2e:setup
+
+      - name: MVP bundle-import e2e artifact present (ADR-027 / ADR-031)
+        run: node scripts/check-mvp-bundle-import-e2e.cjs
+
+      - name: ADR governance + index
+        run: npm run adr:check && npm run adr:index:check
+
+      - name: ADR compliance tests
+        run: npm run test:adr-governance
+
+      - name: Guardrails tests (ADR-022 tooling)
+        run: npm run test:guardrails
+
+      - name: Lint (all workspaces)
+        run: npm run lint
+
+      - name: GraphQL client query lint
+        run: node tools/graphql-lint/noSemanticQueries.cjs
+
+      - name: PR diff epistemic guard (ADR-022)
+        run: node tools/pr-checks/epistemicGuard.cjs
+        env:
+          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref || github.event.repository.default_branch || 'main' }}
+
+      - name: ADR-025 agent role diff guard
+        run: node tools/pr-checks/agentRoleGuard.cjs
+        env:
+          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref || github.event.repository.default_branch || 'main' }}
+
+      - name: Schema lint + snapshot consistency
+        run: npm run schema:check
+
+      - name: Regenerate GraphQL schema (must match committed snapshot)
+        run: |
+          npm run schema:generate --workspace=aletheia-backend
+          git diff --ignore-cr-at-eol --exit-code aletheia-backend/src/schema.gql
+
+      - name: Full test matrix (lint, typecheck, unit + backend e2e + Playwright)
+        run: node scripts/test-all-with-summary.js

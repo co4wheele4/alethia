@@ -117,7 +117,10 @@ describe('main.ts', () => {
 
     expect(testMockApp.enableCors).toHaveBeenCalledWith(
       expect.objectContaining({
-        origin: ['http://example.com', 'http://test.com'],
+        origin: expect.arrayContaining([
+          'http://example.com',
+          'http://test.com',
+        ]),
       }),
     );
 

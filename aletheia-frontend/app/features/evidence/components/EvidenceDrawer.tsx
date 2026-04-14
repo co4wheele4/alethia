@@ -9,15 +9,10 @@ import { useEntityMentions } from '../hooks/useEntityMentions';
 import { EvidenceList } from './EvidenceList';
 import { DocumentTextViewer } from './DocumentTextViewer';
 
-function fail(message: string): never {
-  throw new Error(`[Truth Surface] ${message}`);
-}
-
-function provenanceSummary(doc: NonNullable<ReturnType<typeof useDocumentEvidence>['document']>) {
+/** Never throws — incomplete provenance must not crash the drawer (cache merges, legacy rows). */
+function formatProvenanceLine(doc: NonNullable<ReturnType<typeof useDocumentEvidence>['document']>): string | null {
   const src = doc.source;
-  if (!doc.sourceType || !doc.sourceLabel || !src) {
-    fail('Document provenance is missing (requires sourceType, sourceLabel, and source)');
-  }
+  if (!doc.sourceType || !doc.sourceLabel || !src) return null;
   const parts: string[] = [];
   parts.push(`sourceType=${String(doc.sourceType)}`);
   parts.push(`sourceLabel=${String(doc.sourceLabel)}`);
@@ -126,9 +121,17 @@ export function EvidenceDrawer(props: {
         ) : null}
 
         {document ? (
-          <Alert severity="info" sx={{ mt: 2 }}>
+          <Alert severity={formatProvenanceLine(document) ? 'info' : 'warning'} sx={{ mt: 2 }}>
             <strong>{document.title}</strong>
-            <div>{provenanceSummary(document)}</div>
+            <div>
+              {formatProvenanceLine(document) ?? (
+                <>
+                  Source metadata is incomplete (expected <code>sourceType</code>, <code>sourceLabel</code>, and a{' '}
+                  <code>Document.source</code> row). Legacy or pre-source documents need a backfilled{' '}
+                  <code>document_sources</code> row or re-ingestion.
+                </>
+              )}
+            </div>
           </Alert>
         ) : null}
 

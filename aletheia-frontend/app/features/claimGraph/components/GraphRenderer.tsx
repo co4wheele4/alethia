@@ -11,8 +11,9 @@
 'use client';
 
 import { useMemo } from 'react';
+import type { MouseEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { Box } from '@mui/material';
-import Link from 'next/link';
 import type { ClaimEvidenceGraphData } from '../types';
 
 const NODE_R = 24;
@@ -52,7 +53,21 @@ export function GraphRenderer({
   evidenceHref,
   evidenceMeta,
 }: GraphRendererProps) {
+  const router = useRouter();
   const positions = useMemo(() => circularLayout(data.nodes), [data.nodes]);
+
+  function navigateSameOrigin(e: MouseEvent<Element>, href: string) {
+    if (
+      href.startsWith('/') &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !e.shiftKey &&
+      e.button === 0
+    ) {
+      e.preventDefault();
+      router.push(href);
+    }
+  }
 
   const cx = LAYOUT_RADIUS * 2;
   const cy = LAYOUT_RADIUS * 2;
@@ -115,9 +130,10 @@ export function GraphRenderer({
 
         return (
           <g key={node.id}>
-            <Link
+            <a
               href={href}
-              style={{ textDecoration: 'none', color: 'inherit' }}
+              onClick={(e) => navigateSameOrigin(e, href)}
+              style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
               aria-label={`${node.type}: ${label}`}
             >
               <circle
@@ -128,7 +144,6 @@ export function GraphRenderer({
                 stroke="currentColor"
                 strokeWidth={1.5}
                 data-testid={node.type === 'claim' ? 'graph-claim-node' : 'graph-evidence-node'}
-                style={{ cursor: 'pointer' }}
               />
               <text
                 x={x}
@@ -140,7 +155,7 @@ export function GraphRenderer({
               >
                 {label}
               </text>
-            </Link>
+            </a>
           </g>
         );
       })}

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { GraphQLFormattedError } from 'graphql';
+import { GQL_ERROR_CODES } from '../graphql/errors/graphql-error-codes';
 import { createGraphQLContext, formatGraphQLError } from './graphql-config';
 
 describe('GraphQL Config', () => {
@@ -69,6 +70,36 @@ describe('GraphQL Config', () => {
       expect(formatted.message).toBe('Test error');
       expect(formatted.extensions?.code).toBeUndefined();
       expect(formatted.path).toEqual(['test']);
+    });
+
+    it('maps graphql-depth-limit depth errors to QUERY_DEPTH_EXCEEDED', () => {
+      const mockError: GraphQLFormattedError = {
+        message: "foo 'bar' exceeds maximum operation depth of 14",
+        extensions: { code: 'GRAPHQL_VALIDATION_FAILED' },
+        path: ['q'],
+      };
+
+      const formatted = formatGraphQLError(mockError, null);
+
+      expect(formatted.message).toBe(GQL_ERROR_CODES.QUERY_DEPTH_EXCEEDED);
+      expect(formatted.extensions?.code).toBe(
+        GQL_ERROR_CODES.QUERY_DEPTH_EXCEEDED,
+      );
+    });
+
+    it('normalizes QUERY_COST_EXCEEDED messages', () => {
+      const mockError: GraphQLFormattedError = {
+        message: GQL_ERROR_CODES.QUERY_COST_EXCEEDED,
+        extensions: { code: 'GRAPHQL_VALIDATION_FAILED' },
+        path: ['q'],
+      };
+
+      const formatted = formatGraphQLError(mockError, null);
+
+      expect(formatted.message).toBe(GQL_ERROR_CODES.QUERY_COST_EXCEEDED);
+      expect(formatted.extensions?.code).toBe(
+        GQL_ERROR_CODES.QUERY_COST_EXCEEDED,
+      );
     });
   });
 });

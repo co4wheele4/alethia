@@ -7,11 +7,11 @@ import { DOCUMENT_CORE_FRAGMENT } from '../fragments/documentCore.fragment';
  *
  * IMPORTANT:
  * - Document selection MUST be fragment-based (no inline field selection on Document).
- * - No pagination assumptions: the schema currently exposes `documents: [Document!]!` with no args.
+ * - Pagination is required (ADR-034): limit + offset.
  */
 export const DOCUMENTS_INDEX_QUERY = gql`
-  query DocumentsIndex {
-    documents {
+  query DocumentsIndex($limit: Int!, $offset: Int!) {
+    documents(limit: $limit, offset: $offset) {
       ...DocumentCore
     }
   }

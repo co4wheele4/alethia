@@ -16,8 +16,19 @@ import { CreateEntityInput, UpdateEntityInput } from '@inputs/entity.input';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 
+const entityType = () => Entity;
+const entityListType = () => [Entity];
+const entityMentionListType = () => [EntityMention];
+const entityRelationshipListType = () => [EntityRelationship];
+const intFieldType = () => Int;
+void entityType();
+void entityListType();
+void entityMentionListType();
+void entityRelationshipListType();
+void intFieldType();
+
 @Injectable({ scope: Scope.REQUEST })
-@Resolver(() => Entity)
+@Resolver(entityType)
 @UseGuards(JwtAuthGuard)
 export class EntityResolver {
   constructor(
@@ -25,34 +36,34 @@ export class EntityResolver {
     private readonly dataLoaders: DataLoaderService,
   ) {}
 
-  @Query(() => [Entity])
+  @Query(entityListType)
   async entities() {
     return await this.prisma.entity.findMany();
   }
 
-  @Query(() => Entity, { nullable: true })
+  @Query(entityType, { nullable: true })
   async entity(@Args('id') id: string) {
     return await this.prisma.entity.findUnique({ where: { id } });
   }
 
-  @ResolveField(() => [EntityMention])
+  @ResolveField(entityMentionListType)
   async mentions(@Parent() entity: Entity) {
     return this.dataLoaders.getMentionsByEntityLoader().load(entity.id);
   }
 
-  @ResolveField(() => Int)
+  @ResolveField(intFieldType)
   async mentionCount(@Parent() entity: Entity) {
     return this.dataLoaders.getMentionCountByEntityLoader().load(entity.id);
   }
 
-  @ResolveField(() => [EntityRelationship])
+  @ResolveField(entityRelationshipListType)
   async outgoing(@Parent() entity: Entity) {
     return this.dataLoaders
       .getRelationshipsByFromEntityLoader()
       .load(entity.id);
   }
 
-  @ResolveField(() => [EntityRelationship])
+  @ResolveField(entityRelationshipListType)
   async incoming(@Parent() entity: Entity) {
     return this.dataLoaders.getRelationshipsByToEntityLoader().load(entity.id);
   }
@@ -61,12 +72,12 @@ export class EntityResolver {
   // Mutations
   // ------------------
 
-  @Mutation(() => Entity)
+  @Mutation(entityType)
   async createEntity(@Args('data') data: CreateEntityInput) {
     return await this.prisma.entity.create({ data });
   }
 
-  @Mutation(() => Entity)
+  @Mutation(entityType)
   async updateEntity(@Args('data') data: UpdateEntityInput) {
     return await this.prisma.entity.update({
       where: { id: data.id },
@@ -74,7 +85,7 @@ export class EntityResolver {
     });
   }
 
-  @Mutation(() => Entity)
+  @Mutation(entityType)
   async deleteEntity(@Args('id') id: string) {
     return await this.prisma.entity.delete({ where: { id } });
   }

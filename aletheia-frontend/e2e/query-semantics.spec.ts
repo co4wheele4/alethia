@@ -61,7 +61,8 @@ test.describe('ADR-022: Query semantics', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           operationName: 'ListClaims',
-          query: 'query ListClaims { claims { id status evidence { id } } }',
+          query:
+            'query ListClaims { claims(limit: 50, offset: 0) { id status evidence { id } } }',
         }),
       });
       return res.json();

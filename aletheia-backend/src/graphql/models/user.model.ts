@@ -1,7 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Lesson } from './lesson.model';
 import { Document } from './document.model';
-import { AiQuery } from './ai-query.model';
 
 @ObjectType()
 export class User {
@@ -22,7 +21,4 @@ export class User {
 
   @Field(() => [Document])
   documents!: Document[];
-
-  @Field(() => [AiQuery])
-  aiQueries!: AiQuery[];
 }

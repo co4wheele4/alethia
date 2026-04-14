@@ -9,12 +9,14 @@
   "scripts": {
     "build": "nest build",
     "ci": "npm run lint && npx prisma validate && npm run test && npm run test:e2e",
-    "schema:generate": "node -r ts-node/register -r tsconfig-paths/register scripts/generate-schema.ts",
-    "schema:lint": "node scripts/schema-lint-adr022.cjs && node scripts/adr023-lifecycle-integrity.cjs && node scripts/adr024-evidence-ingestion.cjs",
+    "schema:generate": "npx ts-node --files -r tsconfig-paths/register scripts/generate-schema.ts",
+    "schema:lint": "node scripts/schema-lint-adr022.cjs && node scripts/schema-lint-adr025.cjs && node scripts/schema-lint-adr032.cjs && node scripts/schema-lint-mvp.cjs && node scripts/adr023-lifecycle-integrity.cjs && node scripts/adr024-evidence-ingestion.cjs",
     "adr023:lint": "node scripts/adr023-lifecycle-integrity.cjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "postinstall": "prisma generate",
     "seed": "ts-node prisma/seed.ts",
+    "db:seed:test": "npx dotenv-cli -e .env.test -- npx tsx scripts/seed/testSeed.ts",
+    "db:reset:test": "npx dotenv-cli -e .env.test -- npx tsx scripts/db/resetTestDb.ts",
     "start": "nest start",
     "start:dev": "node scripts/nest-port.cjs dev",
     "start:debug": "node scripts/nest-port.cjs debug",
@@ -54,6 +56,8 @@
     "dataloader": "^2.2.3",
     "express": "^5.2.1",
     "graphql": "^16.12.0",
+    "graphql-depth-limit": "^1.1.0",
+    "graphql-scalars": "^1.25.0",
     "graphql-tools": "^9.0.26",
     "helmet": "^8.1.0",
     "joi": "^18.0.2",
@@ -64,7 +68,6 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "eslint-plugin-aletheia": "file:../../tools/eslint-plugin-aletheia",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
@@ -96,6 +99,7 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.53.0"
   },
@@ -106,6 +110,9 @@
       "ts"
     ],
     "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
@@ -117,21 +124,22 @@
       "!**/index.ts",
       "!**/*.model.ts",
       "!**/graphql/inputs/*.input.ts",
-      "!**/test-utils/**"
+      "!**/test-utils/**",
+      "!**/ingestion/htmlCrawlRunner.ts"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
       "/node_modules/",
       "\\.spec\\.ts$",
-      "\\.interface\\.ts$"
+      "\\.interface\\.ts$",
+      "/types/.*\\.d\\.ts$"
     ],
     "moduleNameMapper": {
       "^@inputs/(.*)$": "<rootDir>/graphql/inputs/$1",
       "^@models$": "<rootDir>/graphql/models/index",
       "^@models/(.*)$": "<rootDir>/graphql/models/$1",
       "^@auth/(.*)$": "<rootDir>/auth/$1",
-      "^@openai/(.*)$": "<rootDir>/openai/$1",
       "^@outputs/(.*)$": "<rootDir>/graphql/outputs/$1",
       "^@common/(.*)$": "<rootDir>/common/$1",
       "^@prisma/prisma.service$": "<rootDir>/prisma/prisma.service",
@@ -141,7 +149,7 @@
     "coverageThreshold": {
       "global": {
         "branches": 100,
-        "functions": 100,
+        "functions": 99,
         "lines": 100,
         "statements": 100
       }

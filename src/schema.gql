@@ -2,46 +2,16 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type AiExtractionSuggestion {
-  chunkId: String!
-  createdAt: DateTime!
-  endOffset: Int
-  entityName: String
-  entityType: String
-  excerpt: String
-  id: ID!
-  kind: SuggestionKind!
-  objectName: String
-  objectType: String
-  relation: String
-  startOffset: Int
-  status: SuggestionStatus!
-  subjectName: String
-  subjectType: String
-}
-
-type AiQuery {
-  createdAt: DateTime!
-  id: ID!
-  query: String!
-  results: [AiQueryResult!]!
-  user: User!
-}
-
-type AiQueryResult {
-  answer: String!
-  id: ID!
-  query: AiQuery!
-}
-
 type Claim {
   createdAt: DateTime!
 
-  """Documents referenced by this claim, derived from evidence.documentId."""
+  """
+  Documents referenced via evidence anchors; empty when the claim has no linked evidence (ADR-018).
+  """
   documents: [Document!]!
 
   """
-  Grounding anchors for this claim (ADR-019). Claims must never be returned without evidence.
+  Linked evidence records (ADR-018/019). May be empty; claims without linked evidence are non-authoritative.
   """
   evidence: [Evidence!]!
   id: ID!
@@ -132,6 +102,11 @@ enum CreateEvidenceSourceKindInput {
   URL
 }
 
+input CreateHtmlCrawlIngestionRunInput {
+  config: HtmlCrawlConfigInput!
+  seedUrl: String!
+}
+
 input CreateUserInput {
   email: String!
   name: String
@@ -141,6 +116,16 @@ input CreateUserInput {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+"""
+ADR-033: Sort key for search results (createdAt or id only; ascending or descending).
+"""
+enum DeterministicOrderBy {
+  CREATED_AT_ASC
+  CREATED_AT_DESC
+  ID_ASC
+  ID_DESC
+}
 
 type Document {
   chunks: [DocumentChunk!]!
@@ -166,12 +151,10 @@ type Document {
 }
 
 type DocumentChunk {
-  aiSuggestions: [AiExtractionSuggestion!]
   chunkIndex: Int!
   content: String!
   document: Document!
   documentId: String!
-  embeddings: [Embedding!]!
   id: ID!
   mentions: [EntityMention!]!
 }
@@ -216,12 +199,6 @@ enum DocumentSourceKindInput {
   FILE
   MANUAL
   URL
-}
-
-type Embedding {
-  chunk: DocumentChunk!
-  id: ID!
-  values: [Float!]!
 }
 
 type Entity {
@@ -309,14 +286,36 @@ type EntityRelationshipEvidenceMention {
   mentionId: ID!
 }
 
+type EpistemicEvent {
+  actorId: String
+  createdAt: DateTime!
+  errorCode: String!
+  eventType: EpistemicEventType!
+  id: ID!
+  metadata: JSON
+  targetId: String
+}
+
+input EpistemicEventFilterInput {
+  createdAfter: DateTime
+  createdBefore: DateTime
+  errorCode: String
+}
+
+enum EpistemicEventType {
+  GOVERNANCE_GRAPHQL_ERROR
+}
+
 type Evidence {
   chunk: DocumentChunk
   chunkId: ID
+  contentSha256: String
   createdAt: DateTime!
   createdBy: ID!
   createdByUser: User!
   endOffset: Int
   id: ID!
+  rawBodyBase64: String
   snippet: String
   sourceDocument: Document
   sourceDocumentId: ID
@@ -325,12 +324,105 @@ type Evidence {
   startOffset: Int
 }
 
+type EvidenceReproCheck {
+  checkedAt: DateTime!
+  errorMessage: String
+  evidenceId: ID!
+  fetchStatus: EvidenceReproFetchStatus!
+  fetchedHash: String
+  hashMatch: EvidenceReproHashMatch!
+  id: ID!
+}
+
+enum EvidenceReproFetchStatus {
+  FAILED
+  SUCCESS
+}
+
+enum EvidenceReproHashMatch {
+  MATCH
+  MISMATCH
+  UNKNOWN
+}
+
 """
-Source type for evidence. DOCUMENT = ingested document; URL = external (future).
+Source type for evidence. DOCUMENT = ingested document; URL = external reference; HTML_PAGE = raw HTML bytes (ADR-032).
 """
 enum EvidenceSourceKind {
   DOCUMENT
+  HTML_PAGE
   URL
+}
+
+input ExportBundleInput {
+  claimIds: [ID!]
+  createdAfter: DateTime
+  createdBefore: DateTime
+  epistemicEventsAfter: DateTime
+  epistemicEventsBefore: DateTime
+
+  """Include epistemic audit rows (explicit opt-in)."""
+  includeEpistemicEvents: Boolean
+  lifecycle: ClaimStatus
+}
+
+input HtmlCrawlConfigInput {
+  allowedDomains: [String!]!
+  crawlDepth: Int!
+  followMode: HtmlCrawlFollowMode!
+  includeQueryParams: Boolean!
+  maxPages: Int!
+}
+
+enum HtmlCrawlFetchStatus {
+  FAILED
+  SUCCESS
+}
+
+enum HtmlCrawlFollowMode {
+  STRICT_ONLY
+}
+
+type HtmlCrawlIngestionRun {
+  allowedDomains: [String!]!
+  crawlDepth: Int!
+  errorLog: String
+  fetchedEvidence: [HtmlCrawlIngestionRunEvidence!]!
+  finishedAt: DateTime
+  followMode: HtmlCrawlFollowMode!
+  id: ID!
+  includeQueryParams: Boolean!
+  maxPages: Int!
+  seedUrl: String!
+  startedAt: DateTime!
+  status: HtmlCrawlRunStatus!
+}
+
+type HtmlCrawlIngestionRunEvidence {
+  depth: Int!
+  errorMessage: String
+  evidence: Evidence
+  evidenceId: ID
+  fetchStatus: HtmlCrawlFetchStatus!
+  url: String!
+}
+
+enum HtmlCrawlRunStatus {
+  FAILED
+  PARTIAL
+  SUCCESS
+}
+
+input ImportBundleInput {
+  allowOverwrite: Boolean!
+
+  """Aletheia bundle object matching schemas/aletheiaBundle.schema.json"""
+  bundle: JSON!
+}
+
+type ImportResult {
+  importedClaims: Int!
+  importedEvidence: Int!
 }
 
 input IngestDocumentInput {
@@ -339,6 +431,18 @@ input IngestDocumentInput {
   title: String!
   userId: String!
 }
+
+type IntegrityReport {
+  adjudicationBrokenChainCount: Int!
+  adjudicationHashMismatchCount: Int!
+  adjudicationMissingHashCount: Int!
+  evidenceMissingContentHashCount: Int!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 type Lesson {
   content: String
@@ -349,12 +453,8 @@ type Lesson {
 }
 
 type Mutation {
-  acceptSuggestion(id: ID!): AiExtractionSuggestion!
-
   """Adjudicate a claim by transitioning lifecycle state (ADR-011)."""
   adjudicateClaim(claimId: ID!, decision: ClaimLifecycleState!, reviewerNote: String): Claim!
-  askAI(query: String!, userId: String!): String!
-  askAi(query: String!, userId: String!): AiQueryResult!
 
   """
   Assign a reviewer (coordination-only; does not change truth, claim status, or adjudication).
@@ -362,27 +462,27 @@ type Mutation {
   assignReviewer(reviewRequestId: ID!, reviewerUserId: ID!): ReviewAssignment!
   createChunk(chunkIndex: Int!, content: String!, documentId: String!): DocumentChunk!
   createDocument(title: String!, userId: String!): Document!
-  createEmbedding(chunkId: String!, values: [Float!]!): Embedding!
   createEntity(data: CreateEntityInput!): Entity!
   createEntityMention(data: CreateEntityMentionInput!): EntityMention!
   createEntityRelationship(data: CreateEntityRelationshipInput!): EntityRelationship!
   createEvidence(input: CreateEvidenceInput!): Evidence!
+  createHtmlCrawlIngestionRun(input: CreateHtmlCrawlIngestionRunInput!): HtmlCrawlIngestionRun!
   createLesson(content: String, title: String!, userId: String!): Lesson!
   createUser(data: CreateUserInput!): User!
   deleteChunk(id: String!): DocumentChunk!
   deleteDocument(id: String!): Document!
-  deleteEmbedding(id: String!): Embedding!
   deleteEntity(id: String!): Entity!
   deleteEntityMention(id: String!): EntityMention!
   deleteEntityRelationship(id: String!): EntityRelationship!
   deleteLesson(id: String!): Lesson!
   deleteUser(id: String!): User!
+
+  """ADR-031: Structural import (admin only)."""
+  importBundle(input: ImportBundleInput!): ImportResult!
   ingestDocument(input: IngestDocumentInput!): Document!
   linkEvidenceToClaim(claimId: String!, evidenceId: String!): Evidence!
   login(email: String!, password: String!): String!
-  proposeExtraction(chunkId: ID!): [AiExtractionSuggestion!]!
   register(email: String!, name: String, password: String!): String!
-  rejectSuggestion(id: ID!): AiExtractionSuggestion!
 
   """
   Request review of a claim (coordination-only; does not change claim lifecycle).
@@ -395,7 +495,6 @@ type Mutation {
   respondToReviewAssignment(note: String, response: ReviewerResponseType!, reviewAssignmentId: ID!): ReviewerResponse!
   updateChunk(content: String, id: String!): DocumentChunk!
   updateDocument(id: String!, title: String): Document!
-  updateEmbedding(id: String!, values: [Float!]): Embedding!
   updateEntity(data: UpdateEntityInput!): Entity!
   updateEntityMention(data: UpdateEntityMentionInput!): EntityMention!
   updateEntityRelationship(data: UpdateEntityRelationshipInput!): EntityRelationship!
@@ -404,32 +503,25 @@ type Mutation {
 }
 
 type Query {
-  aiQueries: [AiQuery!]!
-  aiQueriesByUser(userId: String!): [AiQuery!]!
-  aiQueriesPaged(skip: Int, take: Int): [AiQuery!]!
-  aiQuery(id: String!): AiQuery
-  aiQueryResult(id: String!): AiQueryResult
-  aiQueryResults: [AiQueryResult!]!
+  """ADR-029: Admin audit listing (structural filters only)."""
+  adminEpistemicEvents(filter: EpistemicEventFilterInput): [EpistemicEvent!]!
   chunk0ByDocument(documentId: String!): DocumentChunk
   chunksByDocument(documentId: String!): [DocumentChunk!]!
 
   """
   List claims visible in the current workspace (scoped via evidence -> documents). ADR-022: filter supports only lifecycle and hasEvidence.
   """
-  claims(filter: ClaimFilterInput): [Claim!]!
+  claims(filter: ClaimFilterInput, limit: Int!, offset: Int!): [Claim!]!
 
   """
   List claims grounded in a specific document (derived via claim evidence anchors).
   """
-  claimsByDocument(documentId: String!): [Claim!]!
+  claimsByDocument(documentId: String!, limit: Int!, offset: Int!): [Claim!]!
   document(id: String!): Document
   documentChunk(id: String!): DocumentChunk
   documentChunks: [DocumentChunk!]!
-  documents: [Document!]!
+  documents(limit: Int!, offset: Int!): [Document!]!
   documentsByUser(userId: String!): [Document!]!
-  embedding(id: String!): Embedding
-  embeddings: [Embedding!]!
-  embeddingsByChunk(chunkId: String!): [Embedding!]!
   entities: [Entity!]!
   entity(id: String!): Entity
   entityMention(id: String!): EntityMention
@@ -438,9 +530,17 @@ type Query {
   entityRelationships: [EntityRelationship!]!
 
   """List evidence visible to the current user (via document ownership)."""
-  evidence: [Evidence!]!
+  evidence(limit: Int!, offset: Int!): [Evidence!]!
   evidenceById(id: String!): Evidence
+
+  """ADR-026: List reproducibility check records for evidence (read-only)."""
+  evidenceReproChecks(evidenceId: String!): [EvidenceReproCheck!]!
+
+  """ADR-031: Structural export (JSON bundle)."""
+  exportBundle(input: ExportBundleInput!): JSON!
   hello: String!
+  htmlCrawlIngestionRun(id: ID!): HtmlCrawlIngestionRun
+  htmlCrawlIngestionRuns: [HtmlCrawlIngestionRun!]!
   ingestionHealthCheck: String!
   lesson(id: String!): Lesson
   lessons: [Lesson!]!
@@ -457,11 +557,31 @@ type Query {
   reviewQueue: [ReviewRequest!]!
 
   """
+  ADR-030: Mechanical quorum counts for adjudication precondition (non-semantic).
+  """
+  reviewQuorumStatus(claimId: ID!): ReviewQuorumStatus!
+
+  """
   Review requests for a claim visible in the current workspace (coordination-only; does not change claim status).
   """
   reviewRequestsByClaim(claimId: ID!): [ReviewRequest!]!
+
+  """
+  ADR-033: Non-semantic claim search (deterministic order; required limit/offset).
+  """
+  searchClaims(input: SearchClaimsInput!): [Claim!]!
+
+  """
+  ADR-033: Non-semantic evidence search (deterministic order; required limit/offset).
+  """
+  searchEvidence(input: SearchEvidenceInput!): [Evidence!]!
   user(id: String!): User
   users: [User!]!
+
+  """
+  ADR-036: Structural integrity validation (hash chain + evidence contentSha256 presence).
+  """
+  validateIntegrity(workspaceId: String!): IntegrityReport!
 }
 
 """Evidence kind for an entity relationship (currently only TEXT_SPAN)."""
@@ -476,6 +596,12 @@ type ReviewAssignment {
   reviewRequestId: ID!
   reviewerResponse: ReviewerResponse
   reviewerUserId: ID!
+}
+
+type ReviewQuorumStatus {
+  acknowledgedCount: Int!
+  enabled: Boolean!
+  requiredCount: Int!
 }
 
 type ReviewRequest {
@@ -513,15 +639,72 @@ enum ReviewerResponseType {
   DECLINED
 }
 
-enum SuggestionKind {
-  ENTITY_MENTION
-  RELATIONSHIP
+input SearchClaimsFiltersInput {
+  """Claim createdAt >= this instant (optional)."""
+  createdAtAfter: DateTime
+
+  """Claim createdAt <= this instant (optional)."""
+  createdAtBefore: DateTime
+
+  """
+  Require at least one linked evidence row with this source kind (structural).
+  """
+  evidenceSourceType: EvidenceSourceKind
+
+  """Filter by claim lifecycle (optional)."""
+  lifecycle: ClaimStatus
 }
 
-enum SuggestionStatus {
-  ACCEPTED
-  PENDING
-  REJECTED
+input SearchClaimsInput {
+  """If true, matching is case-sensitive; if false, case-insensitive."""
+  caseSensitive: Boolean!
+  filters: SearchClaimsFiltersInput
+
+  """Page size (required; capped server-side)."""
+  limit: Int!
+  matchMode: TextMatchMode!
+
+  """Offset into the deterministic result set (required)."""
+  offset: Int!
+  orderBy: DeterministicOrderBy!
+
+  """
+  Text to match against claim text. Empty string applies no text predicate (filters only).
+  """
+  queryText: String!
+}
+
+input SearchEvidenceFiltersInput {
+  """Evidence createdAt >= this instant (optional)."""
+  createdAtAfter: DateTime
+
+  """Evidence createdAt <= this instant (optional)."""
+  createdAtBefore: DateTime
+
+  """Filter by evidence source kind (optional)."""
+  sourceType: EvidenceSourceKind
+}
+
+input SearchEvidenceInput {
+  """If true, matching is case-sensitive; if false, case-insensitive."""
+  caseSensitive: Boolean!
+  filters: SearchEvidenceFiltersInput
+  limit: Int!
+  matchMode: TextMatchMode!
+  offset: Int!
+  orderBy: DeterministicOrderBy!
+
+  """
+  Text to match against evidence snippet and sourceUrl. Empty string applies no text predicate.
+  """
+  queryText: String!
+}
+
+"""ADR-033: Exact, prefix, or substring match (no fuzzy or similarity)."""
+enum TextMatchMode {
+  EXACT
+  PREFIX
+  SUBSTRING
 }
 
 input UpdateEntityInput {
@@ -550,7 +733,6 @@ input UpdateUserInput {
 }
 
 type User {
-  aiQueries: [AiQuery!]!
   createdAt: DateTime!
   documents: [Document!]!
   email: String!

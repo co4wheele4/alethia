@@ -8,7 +8,7 @@ describe('components index', () => {
   it('should export components from all categories', () => {
     // Components are exported flat, not nested by category
     // Check for representative components from each category
-    expect(components).toHaveProperty('AIRationalePanel'); // ai
+    expect(components).toHaveProperty('ThemeToggle'); // primitives
     expect(components).toHaveProperty('StatusPill'); // clarity
     expect(components).toHaveProperty('DataShapeInspector'); // dev
     expect(components).toHaveProperty('TradeoffCallout'); // ethical

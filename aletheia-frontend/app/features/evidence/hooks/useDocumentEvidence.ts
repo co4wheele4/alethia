@@ -197,25 +197,32 @@ export function useDocumentEvidence(documentId: string | null) {
   const document = query.data?.document ?? null;
 
   const checked = useMemo(() => {
-    if (!documentId) return { document: null as EvidenceDocument | null, entities: [] as DocumentEntityRow[] };
+    if (!documentId) return { document: null as EvidenceDocument | null, entities: [] as DocumentEntityRow[], integrityMessage: null as string | null };
 
-    // During loading (or while an error is present), do not throw. Let the caller render a loading/error state.
     if (query.loading || query.error) {
-      return { document: null as EvidenceDocument | null, entities: [] as DocumentEntityRow[] };
+      return { document: null as EvidenceDocument | null, entities: [] as DocumentEntityRow[], integrityMessage: null };
     }
 
-    const doc = assertPresent(document, `Document(${documentId})`);
-    assertDocumentProvenance(doc);
-    assertChunkAndMentions(doc);
-    const entities = buildEntitiesFromChunks(doc.chunks ?? []);
-    return { document: doc, entities };
+    try {
+      const doc = assertPresent(document, `Document(${documentId})`);
+      assertDocumentProvenance(doc);
+      assertChunkAndMentions(doc);
+      const entities = buildEntitiesFromChunks(doc.chunks ?? []);
+      return { document: doc, entities, integrityMessage: null };
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { document: null, entities: [] as DocumentEntityRow[], integrityMessage: msg };
+    }
   }, [document, documentId, query.error, query.loading]);
+
+  const combinedError =
+    query.error ?? (checked.integrityMessage ? new Error(checked.integrityMessage) : null);
 
   return {
     document: checked.document,
     entities: checked.entities,
     loading: query.loading,
-    error: query.error ?? null,
+    error: combinedError,
     refetch: query.refetch,
   };
 }

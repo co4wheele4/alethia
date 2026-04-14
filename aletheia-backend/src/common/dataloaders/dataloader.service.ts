@@ -7,29 +7,30 @@ import {
   Document as PrismaDocument,
   DocumentSource as PrismaDocumentSource,
   DocumentChunk as PrismaDocumentChunk,
-  Embedding as PrismaEmbedding,
   Entity as PrismaEntity,
   EntityMention as PrismaEntityMention,
   EntityRelationship as PrismaEntityRelationship,
   EntityRelationshipEvidence as PrismaEntityRelationshipEvidence,
   EntityRelationshipEvidenceMention as PrismaEntityRelationshipEvidenceMention,
-  AiQuery as PrismaAiQuery,
-  AiQueryResult as PrismaAiQueryResult,
-  AiExtractionSuggestion as PrismaAiExtractionSuggestion,
 } from '@prisma/client';
 import { User } from '@models/user.model';
 import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
 import { DocumentSource } from '@models/document-source.model';
 import { DocumentChunk } from '@models/document-chunk.model';
-import { Embedding } from '@models/embedding.model';
 import { Entity } from '@models/entity.model';
 import { EntityMention } from '@models/entity-mention.model';
 import { EntityRelationship } from '@models/entity-relationship.model';
 import { EntityRelationshipEvidence } from '@models/entity-relationship-evidence.model';
 import { EntityRelationshipEvidenceMention } from '@models/entity-relationship-evidence-mention.model';
-import { AiQuery, AiQueryResult } from '@models/ai-query.model';
-import { AiExtractionSuggestion } from '@models/ai-extraction-suggestion.model';
+/** Prisma stores `lastModifiedMs` as BigInt; GraphQL exposes it as String (ADR-031). */
+function documentSourceRowToGql(row: PrismaDocumentSource): DocumentSource {
+  return {
+    ...(row as unknown as DocumentSource),
+    lastModifiedMs:
+      row.lastModifiedMs == null ? null : String(row.lastModifiedMs),
+  };
+}
 
 /**
  * DataLoader service that provides batched loaders for all entity types
@@ -51,8 +52,6 @@ export class DataLoaderService {
     DocumentChunk | null
   >;
   private readonly chunksByDocumentLoader: DataLoader<string, DocumentChunk[]>;
-  private readonly embeddingLoader: DataLoader<string, Embedding | null>;
-  private readonly embeddingsByChunkLoader: DataLoader<string, Embedding[]>;
   private readonly entityLoader: DataLoader<string, Entity | null>;
   private readonly entityMentionLoader: DataLoader<
     string,
@@ -80,17 +79,6 @@ export class DataLoaderService {
   private readonly relationshipsByToEntityLoader: DataLoader<
     string,
     EntityRelationship[]
-  >;
-  private readonly aiQueryLoader: DataLoader<string, AiQuery | null>;
-  private readonly aiQueriesByUserLoader: DataLoader<string, AiQuery[]>;
-  private readonly aiQueryResultLoader: DataLoader<
-    string,
-    AiQueryResult | null
-  >;
-  private readonly resultsByQueryLoader: DataLoader<string, AiQueryResult[]>;
-  private readonly suggestionsByChunkLoader: DataLoader<
-    string,
-    AiExtractionSuggestion[]
   >;
 
   constructor(private readonly prisma: PrismaService) {
@@ -184,7 +172,7 @@ export class DataLoaderService {
       const sourceByDocumentId = new Map(
         sources.map((source) => [
           source.documentId,
-          source as unknown as DocumentSource,
+          documentSourceRowToGql(source),
         ]),
       );
       return documentIds.map(
@@ -224,40 +212,6 @@ export class DataLoaderService {
         return documentIds.map(
           (documentId) => chunksByDocument.get(documentId)!,
         );
-      },
-    );
-
-    // Embedding loaders
-    this.embeddingLoader = new DataLoader<string, Embedding | null>(
-      async (ids: readonly string[]) => {
-        const embeddings: PrismaEmbedding[] =
-          await this.prisma.embedding.findMany({
-            where: { id: { in: [...ids] } },
-          });
-        const embeddingMap = new Map(
-          embeddings.map((emb) => [emb.id, emb as unknown as Embedding]),
-        );
-        return ids.map((id) => embeddingMap.get(id) ?? null);
-      },
-    );
-
-    this.embeddingsByChunkLoader = new DataLoader<string, Embedding[]>(
-      async (chunkIds: readonly string[]) => {
-        const embeddings: PrismaEmbedding[] =
-          await this.prisma.embedding.findMany({
-            where: { chunkId: { in: [...chunkIds] } },
-          });
-        const embeddingsByChunk = new Map<string, Embedding[]>();
-        for (const chunkId of chunkIds) {
-          embeddingsByChunk.set(chunkId, []);
-        }
-        for (const embedding of embeddings) {
-          const chunkEmbeddings =
-            embeddingsByChunk.get(embedding.chunkId) ?? [];
-          chunkEmbeddings.push(embedding as unknown as Embedding);
-          embeddingsByChunk.set(embedding.chunkId, chunkEmbeddings);
-        }
-        return chunkIds.map((chunkId) => embeddingsByChunk.get(chunkId)!);
       },
     );
 
@@ -455,96 +409,6 @@ export class DataLoaderService {
       }
       return entityIds.map((entityId) => relationshipsByTo.get(entityId)!);
     });
-
-    // AiQuery loaders
-    this.aiQueryLoader = new DataLoader<string, AiQuery | null>(
-      async (ids: readonly string[]) => {
-        const queries: PrismaAiQuery[] = await this.prisma.aiQuery.findMany({
-          where: { id: { in: [...ids] } },
-        });
-        const queryMap = new Map(
-          queries.map((query) => [query.id, query as unknown as AiQuery]),
-        );
-        return ids.map((id) => queryMap.get(id) ?? null);
-      },
-    );
-
-    this.aiQueriesByUserLoader = new DataLoader<string, AiQuery[]>(
-      async (userIds: readonly string[]) => {
-        const queries: PrismaAiQuery[] = await this.prisma.aiQuery.findMany({
-          where: { userId: { in: [...userIds] } },
-          orderBy: { createdAt: 'desc' },
-        });
-        const queriesByUser = new Map<string, AiQuery[]>();
-        for (const userId of userIds) {
-          queriesByUser.set(userId, []);
-        }
-        for (const query of queries) {
-          const userQueries = queriesByUser.get(query.userId) ?? [];
-          userQueries.push(query as unknown as AiQuery);
-          queriesByUser.set(query.userId, userQueries);
-        }
-        return userIds.map((userId) => queriesByUser.get(userId)!);
-      },
-    );
-
-    // AiQueryResult loaders
-    this.aiQueryResultLoader = new DataLoader<string, AiQueryResult | null>(
-      async (ids: readonly string[]) => {
-        const results: PrismaAiQueryResult[] =
-          await this.prisma.aiQueryResult.findMany({
-            where: { id: { in: [...ids] } },
-          });
-        const resultMap = new Map(
-          results.map((result) => [
-            result.id,
-            result as unknown as AiQueryResult,
-          ]),
-        );
-        return ids.map((id) => resultMap.get(id) ?? null);
-      },
-    );
-
-    this.resultsByQueryLoader = new DataLoader<string, AiQueryResult[]>(
-      async (queryIds: readonly string[]) => {
-        const results: PrismaAiQueryResult[] =
-          await this.prisma.aiQueryResult.findMany({
-            where: { queryId: { in: [...queryIds] } },
-            orderBy: { createdAt: 'desc' },
-          });
-        const resultsByQuery = new Map<string, AiQueryResult[]>();
-        for (const queryId of queryIds) {
-          resultsByQuery.set(queryId, []);
-        }
-        for (const result of results) {
-          const queryResults = resultsByQuery.get(result.queryId) ?? [];
-          queryResults.push(result as unknown as AiQueryResult);
-          resultsByQuery.set(result.queryId, queryResults);
-        }
-        return queryIds.map((queryId) => resultsByQuery.get(queryId)!);
-      },
-    );
-
-    this.suggestionsByChunkLoader = new DataLoader<
-      string,
-      AiExtractionSuggestion[]
-    >(async (chunkIds: readonly string[]) => {
-      const suggestions: PrismaAiExtractionSuggestion[] =
-        await this.prisma.aiExtractionSuggestion.findMany({
-          where: { chunkId: { in: [...chunkIds] } },
-        });
-      const suggestionsByChunk = new Map<string, AiExtractionSuggestion[]>();
-      for (const chunkId of chunkIds) {
-        suggestionsByChunk.set(chunkId, []);
-      }
-      for (const suggestion of suggestions) {
-        const chunkSuggestions =
-          suggestionsByChunk.get(suggestion.chunkId) ?? [];
-        chunkSuggestions.push(suggestion as unknown as AiExtractionSuggestion);
-        suggestionsByChunk.set(suggestion.chunkId, chunkSuggestions);
-      }
-      return chunkIds.map((chunkId) => suggestionsByChunk.get(chunkId)!);
-    });
   }
 
   // User loaders
@@ -584,15 +448,6 @@ export class DataLoaderService {
 
   getChunksByDocumentLoader(): DataLoader<string, DocumentChunk[]> {
     return this.chunksByDocumentLoader;
-  }
-
-  // Embedding loaders
-  getEmbeddingLoader(): DataLoader<string, Embedding | null> {
-    return this.embeddingLoader;
-  }
-
-  getEmbeddingsByChunkLoader(): DataLoader<string, Embedding[]> {
-    return this.embeddingsByChunkLoader;
   }
 
   // Entity loaders
@@ -645,27 +500,5 @@ export class DataLoaderService {
 
   getRelationshipsByToEntityLoader(): DataLoader<string, EntityRelationship[]> {
     return this.relationshipsByToEntityLoader;
-  }
-
-  // AiQuery loaders
-  getAiQueryLoader(): DataLoader<string, AiQuery | null> {
-    return this.aiQueryLoader;
-  }
-
-  getAiQueriesByUserLoader(): DataLoader<string, AiQuery[]> {
-    return this.aiQueriesByUserLoader;
-  }
-
-  // AiQueryResult loaders
-  getAiQueryResultLoader(): DataLoader<string, AiQueryResult | null> {
-    return this.aiQueryResultLoader;
-  }
-
-  getResultsByQueryLoader(): DataLoader<string, AiQueryResult[]> {
-    return this.resultsByQueryLoader;
-  }
-
-  getSuggestionsByChunkLoader(): DataLoader<string, AiExtractionSuggestion[]> {
-    return this.suggestionsByChunkLoader;
   }
 }

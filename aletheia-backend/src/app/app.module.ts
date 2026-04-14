@@ -2,7 +2,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { GraphQLJSON } from 'graphql-scalars';
 import { GraphQLThrottlerGuard } from '../common/guards/graphql-throttler.guard';
 import { AssertNoDerivedSemanticsGuard } from '../graphql/guards/assertNoDerivedSemantics';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -21,9 +22,6 @@ import {
   DocumentResolver,
   DocumentChunkResolver,
   UserResolver,
-  AiQueryResolver,
-  AiQueryResultResolver,
-  EmbeddingResolver,
   EntityResolver,
   EntityMentionResolver,
   EntityRelationshipResolver,
@@ -35,12 +33,24 @@ import {
   ClaimAdjudicationService,
   ReviewRequestResolver,
   ReviewAssignmentResolver,
+  EvidenceReproResolver,
+  AletheiaBundleResolver,
+  EpistemicEventsResolver,
+  SearchResolver,
+  IntegrityResolver,
 } from '@resolvers';
+import { IntegrityService } from '../integrity/integrity.service';
+import { EvidenceReproCheckService } from '../evidence-repro/evidence-repro-check.service';
+import { AletheiaBundleService } from '../bundle/aletheia-bundle.service';
+import { EpistemicAuditInterceptor } from '../observability/epistemic-audit.interceptor';
 import { AuthModule } from '../auth/auth.module';
-import { OpenAIModule } from '../openai/openai.module';
 import { IngestionModule } from '../ingestion/ingestion.module';
 import { DataLoaderModule } from '../common/dataloaders/dataloader.module';
 import { createGraphQLContext, formatGraphQLError } from './graphql-config';
+import {
+  adr034DepthLimitRule,
+  adr034QueryCostLimitRule,
+} from '../graphql/graphql-validation-rules';
 
 @Module({
   imports: [
@@ -59,8 +69,6 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     ]),
     // Authentication
     AuthModule,
-    // OpenAI module
-    OpenAIModule,
     // Ingestion module
     IngestionModule,
     // DataLoader module for N+1 query optimization
@@ -71,11 +79,13 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       context: createGraphQLContext,
       formatError: formatGraphQLError,
+      validationRules: [adr034DepthLimitRule, adr034QueryCostLimitRule()],
       sortSchema: true, // Sort schema for better readability
       // Apollo Server 5 configuration - playground and introspection are still supported
       // Note: In Apollo Server 5, these are still valid options in NestJS GraphQL module
       playground: process.env.NODE_ENV !== 'production', // Enable in development only
       introspection: process.env.NODE_ENV !== 'production', // Enable in development only
+      resolvers: { JSON: GraphQLJSON },
     }),
   ],
   controllers: [AppController],
@@ -87,9 +97,6 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     DocumentResolver,
     DocumentChunkResolver,
     UserResolver,
-    AiQueryResolver,
-    AiQueryResultResolver,
-    EmbeddingResolver,
     EntityResolver,
     EntityMentionResolver,
     EntityRelationshipResolver,
@@ -101,6 +108,14 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     ClaimAdjudicationResolver,
     ReviewRequestResolver,
     ReviewAssignmentResolver,
+    EvidenceReproCheckService,
+    AletheiaBundleService,
+    EvidenceReproResolver,
+    AletheiaBundleResolver,
+    EpistemicEventsResolver,
+    SearchResolver,
+    IntegrityResolver,
+    IntegrityService,
     // Apply rate limiting globally (GraphQL-compatible)
     {
       provide: APP_GUARD,
@@ -110,6 +125,10 @@ import { createGraphQLContext, formatGraphQLError } from './graphql-config';
     {
       provide: APP_GUARD,
       useClass: AssertNoDerivedSemanticsGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: EpistemicAuditInterceptor,
     },
   ],
 })

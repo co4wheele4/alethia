@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -24,6 +25,7 @@ import { ClaimStatusBadge } from '../../claims/components/ClaimStatusBadge';
 import { ReviewActivityPanel } from '../../reviewActivity/components/ReviewActivityPanel';
 import { useRequestReview } from '../../reviewerQueue';
 import { useClaimReview } from '../hooks/useClaimReview';
+import { REVIEW_QUORUM_STATUS_QUERY } from '@/src/graphql/queries/reviewQuorumStatus.query';
 
 function adjudicationErrorMessage(code: string) {
   switch (code) {
@@ -37,6 +39,8 @@ function adjudicationErrorMessage(code: string) {
       return 'Adjudication requires evidence anchors; this claim does not meet the evidence gate (ADR-023).';
     case 'INVALID_LIFECYCLE_TRANSITION':
       return 'This claim can no longer be modified.';
+    case 'REVIEW_QUORUM_NOT_MET':
+      return 'The configured reviewer acknowledgement quorum is not met yet.';
     case 'UNEXPECTED_ERROR_CODE':
       return 'Unexpected adjudication error code (contract mismatch).';
     case 'NETWORK_OR_UNKNOWN':
@@ -70,6 +74,18 @@ export function ClaimReviewView(props: { claimId: string }) {
   const [note, setNote] = useState('');
   const router = useRouter();
   const requestReview = useRequestReview();
+
+  const { data: quorumData } = useQuery<{
+    reviewQuorumStatus: {
+      enabled: boolean;
+      requiredCount: number;
+      acknowledgedCount: number;
+    };
+  }>(REVIEW_QUORUM_STATUS_QUERY, {
+    variables: { claimId },
+    skip: !claimId,
+  });
+  const quorum = quorumData?.reviewQuorumStatus;
 
   const {
     claim,
@@ -212,6 +228,12 @@ export function ClaimReviewView(props: { claimId: string }) {
               <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
                 Review actions (human judgment)
               </Typography>
+
+              {quorum?.enabled ? (
+                <Typography variant="body2" data-testid="quorum-status" sx={{ mt: 1 }}>
+                  Quorum Status: {quorum.acknowledgedCount}/{quorum.requiredCount} acknowledged
+                </Typography>
+              ) : null}
 
               {actionsBlockedReason ? (
                 <Alert severity="warning" sx={{ mt: 1 }}>

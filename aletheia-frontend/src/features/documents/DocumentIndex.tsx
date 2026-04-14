@@ -15,7 +15,9 @@ type DocumentsIndexData = {
 };
 
 export function DocumentIndex() {
-  const { data, loading, error } = useQuery<DocumentsIndexData>(DOCUMENTS_INDEX_QUERY);
+  const { data, loading, error } = useQuery<DocumentsIndexData>(DOCUMENTS_INDEX_QUERY, {
+    variables: { limit: 500, offset: 0 },
+  });
 
   if (loading) {
     return (

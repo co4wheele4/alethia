@@ -1,6 +1,7 @@
 import {
   Args,
   Context,
+  Int,
   Parent,
   Query,
   ResolveField,
@@ -20,6 +21,7 @@ import { Evidence } from '@models/evidence.model';
 import { ClaimFilterInput } from '@inputs/claim-filter.input';
 import { Document } from '@models/document.model';
 import { getGqlAuthUserId } from '../utils/gql-auth-user';
+import { assertAdr034ListPagination } from '@common/list-pagination';
 
 type GqlRequestContext = {
   req?: {
@@ -44,11 +46,13 @@ const claimListType = () => [Claim];
 const evidenceListType = () => [Evidence];
 const documentListType = () => [Document];
 const claimFilterInputType = () => ClaimFilterInput;
+const intArgType = () => Int;
 void claimType();
 void claimListType();
 void evidenceListType();
 void documentListType();
 void claimFilterInputType();
+void intArgType();
 
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(claimType)
@@ -66,10 +70,14 @@ export class ClaimResolver {
   async claims(
     @Args('filter', { type: claimFilterInputType, nullable: true })
     filter: ClaimFilterInput | undefined,
+    @Args('limit', { type: intArgType }) limit: number,
+    @Args('offset', { type: intArgType }) offset: number,
     @Context() ctx?: GqlRequestContext,
   ) {
     const authUserId = getGqlAuthUserId(ctx);
     if (!authUserId) return [];
+
+    assertAdr034ListPagination(limit, offset);
 
     const workspaceWhere = {
       OR: [
@@ -119,6 +127,8 @@ export class ClaimResolver {
     return await this.prisma.claim.findMany({
       where,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      skip: offset,
     });
   }
 
@@ -128,6 +138,8 @@ export class ClaimResolver {
   })
   async claimsByDocument(
     @Args('documentId') documentId: string,
+    @Args('limit', { type: intArgType }) limit: number,
+    @Args('offset', { type: intArgType }) offset: number,
     @Context() ctx?: GqlRequestContext,
   ) {
     const authUserId = getGqlAuthUserId(ctx);
@@ -141,6 +153,8 @@ export class ClaimResolver {
     if (doc.userId !== authUserId) {
       throw new ForbiddenException('Cannot access claims for another user');
     }
+
+    assertAdr034ListPagination(limit, offset);
 
     return await this.prisma.claim.findMany({
       where: {
@@ -156,6 +170,8 @@ export class ClaimResolver {
         ],
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      skip: offset,
     });
   }
 
@@ -175,9 +191,8 @@ export class ClaimResolver {
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
     if (legacy.length === 0) {
-      failInvariant(
-        `Claim contract violation: Claim(${claim.id}) has no evidence anchors`,
-      );
+      // ADR-018: Claims may exist without evidence; return an empty list (non-authoritative).
+      return [];
     }
     return legacy.map((ce) => ({
       id: ce.id,
@@ -221,9 +236,8 @@ export class ClaimResolver {
     }
 
     if (uniqueDocIds.length === 0) {
-      failInvariant(
-        `Claim contract violation: Claim(${claim.id}) has no evidence anchors (documents cannot be derived)`,
-      );
+      // ADR-018: No evidence anchors → no derived documents (empty list, not an error).
+      return [];
     }
 
     const docs = await Promise.all(

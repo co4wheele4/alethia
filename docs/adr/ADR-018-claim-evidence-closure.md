@@ -1,13 +1,18 @@
-ADR-018: Claim Evidence Closure Invariant
-Status
+# ADR-018: Claim Evidence Closure Invariant
 
-Accepted
+## Status
+Status: ACCEPTED
 
-Date
-
+## Date
 2026-01-29
 
-Context
+## Supersedes
+None
+
+## SupersededBy
+None
+
+## Context
 
 Aletheia’s core principle is truth disclosure without inference. Claims are the atomic units of truth expression, but their authority derives exclusively from explicit evidence, not system inference, workflow progression, or UI affordances.
 
@@ -33,7 +38,7 @@ Future automation built on false authority
 
 A mechanical invariant is required.
 
-Decision
+## Decision
 
 Introduce Claim Evidence Closure as a system-wide invariant.
 
@@ -43,8 +48,9 @@ Claims MAY exist without evidence, but such claims are explicitly non-authoritat
 
 No inference, scoring, or confidence derivation is introduced.
 
-Definitions
-Claim Evidence Closure
+## Definitions
+
+### Claim Evidence Closure
 
 A claim is evidence-closed if and only if:
 
@@ -56,8 +62,9 @@ Evidence closure is binary and explicit.
 
 There is no partial closure, weighting, or confidence.
 
-Core Invariants
-1. Authority Invariant
+## Core Invariants
+
+### 1. Authority Invariant
 
 A claim without evidence:
 
@@ -77,7 +84,7 @@ Claim author
 
 Claim usage frequency
 
-2. Workflow Eligibility Invariant
+### 2. Workflow Eligibility Invariant
 
 Only evidence-closed claims MAY:
 
@@ -85,13 +92,17 @@ Participate in claim comparison views
 
 Be adjudicated
 
-Enter reviewer queues
+Enter reviewer queues (coordination surfaces per ADR-014)
 
 Be counted in any governance or audit metrics
 
 Claims without evidence MUST be excluded from these workflows by construction.
 
-3. UI Invariant
+Claims without evidence MUST NOT:
+
+Have `ReviewRequest`, `ReviewAssignment`, or `ReviewerResponse` records created for them (coordination is non-authoritative but still presupposes an evidence-closed claim under ADR-014)
+
+### 3. UI Invariant
 
 For claims without evidence:
 
@@ -107,7 +118,7 @@ Encourage interpretation of unevidenced claims as actionable
 
 Provide affordances that simulate authority
 
-4. Schema-Faithfulness Invariant
+### 4. Schema-Faithfulness Invariant
 
 Evidence closure:
 
@@ -119,7 +130,7 @@ Does not alter claim lifecycle semantics
 
 Evidence presence is a constraint, not a computed property.
 
-Non-Goals (Explicit)
+## Non-Goals (Explicit)
 
 This ADR does NOT:
 
@@ -133,20 +144,19 @@ Automate claim rejection
 
 Replace human adjudication (ADR-011)
 
-Relationship to Other ADRs
+## Relationship to Other ADRs
 
 ADR-005: No assumptions beyond schema
 
-ADR-009 / ADR-010: Comparison remains evidence-first
+ADR-009 (REJECTED) / ADR-010: Comparison remains structural and evidence-first
 
 ADR-011: Adjudication remains explicit and manual
 
-ADR-012 / ADR-013: Review workflows presuppose evidence-closed claims
+ADR-014: Persisted review coordination presupposes evidence-closed claims for any coordination artifacts that attach to a claim
 
-ADR-014: This ADR is authoritative and supersedes any weaker interpretations
+## Consequences
 
-Consequences
-Positive
+### Positive
 
 Eliminates implicit authority
 
@@ -156,7 +166,7 @@ Creates a hard epistemic boundary
 
 Enables safe future tooling and automation
 
-Negative
+### Negative
 
 Some existing UI paths may become unavailable
 
@@ -166,7 +176,7 @@ Slightly increases implementation complexity
 
 These tradeoffs are intentional.
 
-Outcome
+## Outcome
 
 Claim Evidence Closure is adopted as a mechanical invariant.
 

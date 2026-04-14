@@ -287,14 +287,20 @@ export const documentHandlers = [
     return HttpResponse.json({ data });
   }),
 
-  graphql.query('ListDocuments', () => {
-    const data = { documents: listDocuments() };
+  graphql.query('ListDocuments', ({ variables }) => {
+    const limit = (variables as { limit?: number } | undefined)?.limit ?? 500;
+    const offset = (variables as { offset?: number } | undefined)?.offset ?? 0;
+    const all = listDocuments();
+    const data = { documents: all.slice(offset, offset + limit) };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });
   }),
 
-  graphql.query('DocumentsIndex', () => {
-    const data = { documents: documentsIndex() };
+  graphql.query('DocumentsIndex', ({ variables }) => {
+    const limit = (variables as { limit?: number } | undefined)?.limit ?? 500;
+    const offset = (variables as { offset?: number } | undefined)?.offset ?? 0;
+    const all = documentsIndex();
+    const data = { documents: all.slice(offset, offset + limit) };
     assertNoConfidence(data, 'data');
     return HttpResponse.json({ data });
   }),

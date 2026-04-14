@@ -90,6 +90,7 @@ export function AppShell(props: AppShellProps) {
       navItems ?? [
         { href: '/dashboard', label: 'Overview', description: 'System entrypoint (non-interpretive)' },
         { href: '/documents', label: 'Documents', description: 'Immutable sources and chunks' },
+        { href: '/search', label: 'Search', description: 'Non-semantic claim search (ADR-033)' },
         { href: '/evidence', label: 'Evidence', description: 'Chunk-level inspection & comparison' },
         { href: '/claims', label: 'Claims', description: 'Read-only assertions (always grounded)' },
         { href: '/claims/graph', label: 'Claim graph', description: 'Read-only claim–evidence topology (ADR-021)' },
@@ -97,6 +98,11 @@ export function AppShell(props: AppShellProps) {
         { href: '/entities', label: 'Entities', description: 'Extracted mentions and relationships' },
         { href: '/questions', label: 'Questions', description: 'Gated workspace (claims must link to evidence)' },
         { href: '/provenance', label: 'Provenance', description: 'Auditability & transformation steps' },
+        {
+          href: '/ingestion/html-crawl-runs',
+          label: 'HTML crawl runs',
+          description: 'Deterministic crawl audit (ADR-032)',
+        },
       ],
     [navItems]
   );
@@ -189,16 +195,19 @@ export function AppShell(props: AppShellProps) {
                   </Box>
                 </MenuItem>
 
-                {requireAuth ? <Divider /> : null}
-                {requireAuth ? (
-                  <MenuItem
-                    onClick={() => {
-                      closeNavMenu();
-                      logout();
-                    }}
-                  >
-                    <ListItemText primary="Logout" />
-                  </MenuItem>
+                {isAuthenticated ? (
+                  [
+                    <Divider key="logout-divider" />,
+                    <MenuItem
+                      key="logout"
+                      onClick={() => {
+                        closeNavMenu();
+                        logout();
+                      }}
+                    >
+                      <ListItemText primary="Logout" />
+                    </MenuItem>,
+                  ]
                 ) : null}
               </MenuList>
             </Paper>

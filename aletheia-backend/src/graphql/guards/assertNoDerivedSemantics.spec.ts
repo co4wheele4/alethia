@@ -83,6 +83,27 @@ describe('AssertNoDerivedSemanticsGuard', () => {
     expect(() => guard.canActivate(ctx)).toThrow(GraphQLError);
   });
 
+  it('rejects invalid GraphQL documents', () => {
+    const ctx = createContext({
+      query: 'not graphql {{{',
+    });
+    expect(() => guard.canActivate(ctx)).toThrow(GraphQLError);
+  });
+
+  it('allows orderBy inside searchClaims input (ADR-033)', () => {
+    const ctx = createContext({
+      query: `query { searchClaims(input: {
+          queryText: ""
+          matchMode: EXACT
+          caseSensitive: true
+          orderBy: CREATED_AT_ASC
+          limit: 10
+          offset: 0
+        }) { id } }`,
+    });
+    expect(guard.canActivate(ctx)).toBe(true);
+  });
+
   it('throws when query requests score field', () => {
     const ctx = createContext({
       query: 'query { claim { id score } }',

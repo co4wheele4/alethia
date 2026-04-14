@@ -1,13 +1,11 @@
 import { Test } from '@nestjs/testing';
 import { AppResolver } from './app.resolver';
 import { PrismaService } from '../../prisma/prisma.service';
-import { OpenAIService } from '../../openai/openai.service';
 import { Lesson } from '@models/lesson.model';
 
 describe('AppResolver', () => {
   let resolver: AppResolver;
   let prismaService: jest.Mocked<PrismaService>;
-  let openAIService: jest.Mocked<OpenAIService>;
 
   const mockLesson: Lesson = {
     id: 'lesson-1',
@@ -22,13 +20,6 @@ describe('AppResolver', () => {
       lesson: {
         findMany: jest.fn(),
       },
-      aiQuery: {
-        create: jest.fn(),
-      },
-    };
-
-    const mockOpenAIService = {
-      getEmbeddingResult: jest.fn(),
     };
 
     const moduleRef: Awaited<
@@ -40,16 +31,11 @@ describe('AppResolver', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
-        {
-          provide: OpenAIService,
-          useValue: mockOpenAIService,
-        },
       ],
     }).compile();
 
     resolver = moduleRef.get<AppResolver>(AppResolver);
     prismaService = moduleRef.get(PrismaService);
-    openAIService = moduleRef.get(OpenAIService);
   });
 
   it('should be defined', () => {
@@ -85,42 +71,6 @@ describe('AppResolver', () => {
 
       expect(result).toEqual([]);
       expect(findManyMock).toHaveBeenCalled();
-    });
-  });
-
-  describe('askAI', () => {
-    it('should create an ai query with result and return answer', async () => {
-      const mockAnswer = 'Test answer';
-      const mockAiQuery = {
-        id: 'query-1',
-        userId: 'user-1',
-        query: 'Test query',
-        createdAt: new Date(),
-      };
-
-      const getEmbeddingResultMock =
-        openAIService.getEmbeddingResult as jest.Mock;
-      const createMock = prismaService.aiQuery.create as jest.Mock;
-      getEmbeddingResultMock.mockResolvedValue(mockAnswer);
-      createMock.mockResolvedValue(
-        mockAiQuery as unknown as typeof mockAiQuery,
-      );
-
-      const result = await resolver.askAI('user-1', 'Test query');
-
-      expect(result).toBe(mockAnswer);
-      expect(getEmbeddingResultMock).toHaveBeenCalledWith('Test query');
-      expect(createMock).toHaveBeenCalledWith({
-        data: {
-          userId: 'user-1',
-          query: 'Test query',
-          results: {
-            create: {
-              answer: mockAnswer,
-            },
-          },
-        },
-      });
     });
   });
 });

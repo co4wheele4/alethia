@@ -314,34 +314,6 @@ describe('Error Cases (e2e)', () => {
       }
     });
 
-    it('should handle invalid chunkId in createEmbedding', async () => {
-      const res = await graphqlRequest(
-        context.app,
-        `
-        mutation CreateEmbedding($chunkId: String!, $values: [Float!]!) {
-          createEmbedding(chunkId: $chunkId, values: $values) {
-            id
-            values
-          }
-        }
-      `,
-        {
-          chunkId: 'non-existent-chunk-id',
-          values: [0.1, 0.2, 0.3],
-        },
-      );
-
-      expect(res.status).toBe(200);
-      // Should have an error due to foreign key constraint
-      expect(
-        res.body?.errors ||
-          (res.body?.data as { createEmbedding?: unknown })?.createEmbedding,
-      ).toBeDefined();
-      if (res.body?.errors) {
-        expect(res.body.errors.length).toBeGreaterThan(0);
-      }
-    });
-
     it('should handle invalid entityId in createEntityMention', async () => {
       const res = await graphqlRequest(
         context.app,

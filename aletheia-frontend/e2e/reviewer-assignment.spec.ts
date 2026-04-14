@@ -108,7 +108,7 @@ test.describe('Reviewer assignment (coordination only)', () => {
     ).toBeVisible({ timeout: 20_000 });
     await expect(
       page.getByText(
-        'This queue is read-only. Requests are not assignments and do not imply conflict, correctness, or adjudication.',
+        /This queue is read-only\. Requests coordinate review handoff; they do not record adjudication outcomes or change\s+claim status here\./,
       ),
     ).toBeVisible({ timeout: 20_000 });
 

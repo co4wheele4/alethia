@@ -36,3 +36,8 @@ alwaysApply: true
 
 - Explainability comes from traceability, not probability.
 
+## Agent role (ADR-025)
+
+- Do not add copy, components, or schema fields that present agent **recommendations**, **verdicts**, or **comparative strength** of claims or evidence.
+- Use only mechanical automation (validation, policy checks, audits)—not interpretive agent outputs.
+

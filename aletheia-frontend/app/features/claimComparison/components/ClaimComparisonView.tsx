@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 
+import { WorkspaceEmptyHelp } from '../../../components/common/WorkspaceEmptyHelp';
 import { useClaimsForComparison } from '../hooks/useClaimsForComparison';
 import { LadyJusticeProgressIndicator } from '../../../components/primitives/LadyJusticeProgressIndicator';
 import { ClaimComparisonColumn } from './ClaimComparisonColumn';
@@ -85,8 +86,8 @@ function buildEvidenceModel(claim: ClaimComparisonClaim): ClaimEvidenceListModel
   };
 }
 
-export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?: string[] }) {
-  const { baseClaimId, withClaimIds = [] } = props;
+export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?: string[]; userRole?: string | null }) {
+  const { baseClaimId, withClaimIds = [], userRole } = props;
   const { claims, loading, error } = useClaimsForComparison();
   const router = useRouter();
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -160,6 +161,10 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
         <Typography variant="body2">Loading comparison data…</Typography>
       </Stack>
     );
+  }
+
+  if (!loading && claims.length === 0) {
+    return <WorkspaceEmptyHelp surface="claims" userRole={userRole} />;
   }
 
   if (!base) {

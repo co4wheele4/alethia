@@ -60,7 +60,7 @@ test.describe('Documents (extra coverage)', () => {
     });
     await expect(dialog.getByText('playwright-upload.txt')).toBeVisible();
 
-    const irreversible = dialog.getByLabel(/i understand ingestion is irreversible/i);
+    const irreversible = dialog.getByLabel('Confirm irreversible ingestion');
     const viewport = page.viewportSize();
     if (viewport && viewport.width < 500) {
       await irreversible.check({ force: true });
@@ -98,7 +98,7 @@ test.describe('Documents (extra coverage)', () => {
 
     await dialog.getByLabel('Title').fill('Filter Target');
     await dialog.getByLabel('Text').fill('Content for filter test.');
-    const irreversible = dialog.getByLabel(/i understand ingestion is irreversible/i);
+    const irreversible = dialog.getByLabel('Confirm irreversible ingestion');
     const viewport = page.viewportSize();
     if (viewport && viewport.width < 500) {
       await irreversible.check({ force: true });

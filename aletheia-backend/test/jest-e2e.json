@@ -4,6 +4,7 @@
   "testEnvironment": "node",
   "testRegex": "(.*\\.e2e-spec\\.ts$|e2e/.*\\.e2e-spec\\.ts$)",
   "maxWorkers": 1,
+  "runInBand": true,
   "preset": "ts-jest/presets/default-esm",
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", {
@@ -15,7 +16,6 @@
     "^@models$": "<rootDir>/../src/graphql/models/index",
     "^@models/(.*)$": "<rootDir>/../src/graphql/models/$1",
     "^@auth/(.*)$": "<rootDir>/../src/auth/$1",
-    "^@openai/(.*)$": "<rootDir>/../src/openai/$1",
     "^@outputs/(.*)$": "<rootDir>/../src/graphql/outputs/$1",
     "^@common/(.*)$": "<rootDir>/../src/common/$1",
     "^@prisma/prisma\\.service$": "<rootDir>/../src/prisma/prisma.service",

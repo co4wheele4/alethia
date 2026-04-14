@@ -1,14 +1,14 @@
 # ADR-016: Reviewer Response Semantics (Acknowledge / Decline)
 
 ## Status
-Status: Proposed
+Status: ACCEPTED
 
 ## Date
 2026-01-29
 
 ## Context
 
-With ADR-012 (Review Requests) and ADR-015 (Reviewer Assignment), Aletheia now supports
+With ADR-014 (persisted review coordination), ADR-015 (Reviewer Assignment), and related coordination ADRs, Aletheia supports
 **coordination of attention** without mutating claim truth, confidence, or lifecycle.
 
 However, the system currently lacks a way for reviewers to explicitly respond to an

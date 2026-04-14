@@ -1,8 +1,7 @@
 # ADR-023: Adjudication Integrity Hardening
 
 ## Status
-
-ACCEPTED
+Status: ACCEPTED
 
 ## Date
 

@@ -31,6 +31,8 @@ export function DocumentDetailsPane(props: {
 
   const drawerOpen = evidenceOpen || (canDeepLinkOpen && !deepLinkDismissed);
   const drawerMentionId = activeMentionId ?? (canDeepLinkOpen && !deepLinkDismissed ? deepLinkMentionId! : null);
+  /** Only load Truth Surface evidence when the drawer is open — newly ingested docs may lack mentions until extraction. */
+  const evidenceDocumentId = drawerOpen ? selectedId : null;
 
   if (!selectedId) {
     return (
@@ -83,7 +85,7 @@ export function DocumentDetailsPane(props: {
           setActiveMentionId(null);
           setDeepLinkDismissed(true);
         }}
-        documentId={selectedId}
+        documentId={evidenceDocumentId}
         mentionId={drawerMentionId}
       />
     </ContentSurface>

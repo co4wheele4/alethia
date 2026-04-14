@@ -6,6 +6,14 @@ on:
   push:
     branches: [main, master, develop]
 
+permissions:
+  contents: read
+
+# Prisma 7 `postinstall` runs `prisma generate`, which requires DATABASE_URL to be set even when
+# no database connection is opened (same pattern as `governance-bot.yml`).
+env:
+  DATABASE_URL: postgresql://ci_placeholder:ci_placeholder@127.0.0.1:5432/ci_placeholder
+
 jobs:
   adr-governance:
     name: ADR Governance Checks
@@ -26,6 +34,12 @@ jobs:
       - name: Enforce ADR governance hygiene
         run: npm run adr:check
 
+      - name: Validate ADR index (implementation/enforcement paths)
+        run: npm run adr:index:check
+
+      - name: ADR governance compliance (ACCEPTED vs SUPERSEDED references)
+        run: npm run test:adr-governance
+
   epistemic-guardrails:
     name: Epistemic Guardrails
     runs-on: ubuntu-latest
@@ -43,7 +57,12 @@ jobs:
       - name: PR diff epistemic scan
         run: node tools/pr-checks/epistemicGuard.cjs
         env:
-          GITHUB_BASE_REF: ${{ github.event.pull_request?.base?.ref || 'main' }}
+          GITHUB_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || github.event.repository.default_branch || 'main' }}
+
+      - name: ADR-025 agent role diff guard (frontend app)
+        run: node tools/pr-checks/agentRoleGuard.cjs
+        env:
+          GITHUB_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || github.event.repository.default_branch || 'main' }}
 
   unit-tests:
     name: Unit Tests
@@ -66,12 +85,12 @@ jobs:
         run: npm run schema:snapshots:check
       
       - name: Run unit tests with coverage
-        run: npm run test:cov
+        run: npm run test:cov --workspace=aletheia-backend
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
-          files: ./coverage/lcov.info
+          files: aletheia-backend/coverage/lcov.info
           flags: unit
           name: unit-tests
 
@@ -121,8 +140,9 @@ jobs:
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/aletheia_test
       
+      # Must match backend e2e (`aletheia-backend/test/jest-e2e.json`), not root `test/jest-e2e.json` — same matrix as MVP Release Gate.
       - name: Run e2e tests
-        run: npm run test:e2e
+        run: npm run test:e2e:cov --workspace=aletheia-backend
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/aletheia_test
 

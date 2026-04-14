@@ -3,6 +3,8 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // Playwright / alternate host hits dev server from 127.0.0.1 while Next binds localhost — avoids noisy warnings.
+  allowedDevOrigins: ["http://127.0.0.1:3030", "http://localhost:3030"],
   // Next.js 16: Turbopack is now the default bundler
   // Enable experimental features for React 19
   experimental: {

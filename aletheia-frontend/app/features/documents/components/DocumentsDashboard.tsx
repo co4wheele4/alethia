@@ -7,7 +7,7 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Alert, Box } from '@mui/material';
 
 import { DocumentsListPane } from './DocumentsListPane';
@@ -18,12 +18,14 @@ import { DeleteDocumentMutationContainer } from './DeleteDocumentMutationContain
 
 export function DocumentsDashboard({
   userId,
+  userRole,
   initialIngestOpen,
   initialSelectedId,
   initialMentionId,
   initialChunkIndex,
 }: {
   userId: string | null;
+  userRole?: string | null;
   initialIngestOpen?: boolean;
   initialSelectedId?: string | null;
   initialMentionId?: string | null;
@@ -32,6 +34,11 @@ export function DocumentsDashboard({
   const [requestedSelectedId, setRequestedSelectedId] = useState<string | null>(initialSelectedId ?? null);
   const [filter, setFilter] = useState('');
   const [ingestOpen, setIngestOpen] = useState(Boolean(initialIngestOpen));
+
+  // Deep link /documents?ingest=1 must open the dialog after client navigations (useState only uses the initial value on first mount).
+  useEffect(() => {
+    setIngestOpen(Boolean(initialIngestOpen));
+  }, [initialIngestOpen]);
 
   if (!userId) {
     return (
@@ -75,6 +82,7 @@ export function DocumentsDashboard({
                     await refetch();
                   }}
                   onOpenIngest={() => setIngestOpen(true)}
+                  userRole={userRole}
                 />
 
                 <Box>

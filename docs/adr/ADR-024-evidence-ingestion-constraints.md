@@ -1,8 +1,7 @@
 # ADR-024: Evidence Ingestion Constraints
 
 ## Status
-
-ACCEPTED
+Status: ACCEPTED
 
 ## Date
 

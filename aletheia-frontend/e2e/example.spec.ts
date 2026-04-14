@@ -151,7 +151,7 @@ test.describe('Documents (Dashboard)', () => {
 
     await page.getByLabel('Title').fill('Playwright Doc');
     await page.getByLabel('Text').fill('Playwright ingested content.');
-    const irreversible = page.getByLabel(/i understand ingestion is irreversible/i);
+    const irreversible = page.getByLabel('Confirm irreversible ingestion');
     if (isNarrow) {
       await irreversible.check({ force: true });
     } else {

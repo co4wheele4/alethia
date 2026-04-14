@@ -91,7 +91,7 @@ describe('useClaimReview', () => {
   it('resolves offset-based evidence items for a claim', async () => {
     const mocks = [
       {
-        request: { query: LIST_CLAIMS_QUERY },
+        request: { query: LIST_CLAIMS_QUERY, variables: { limit: 500, offset: 0 } },
         result: { data: { claims: [claim1] } },
       },
       {

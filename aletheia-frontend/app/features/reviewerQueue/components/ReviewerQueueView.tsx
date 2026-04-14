@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Alert, Box, Button, Chip, Divider, Stack, Typography } from '@mui/material';
 import { useCallback, useMemo, useState } from 'react';
 
+import { WorkspaceEmptyHelp } from '../../../components/common/WorkspaceEmptyHelp';
 import { useAssignReviewer } from '../hooks/useAssignReviewer';
 import { useReviewerResponse } from '../hooks/useReviewerResponse';
 import type {
@@ -104,8 +105,9 @@ export function ReviewerQueueView(props: {
   currentUserId: string | null;
   currentUserRole: string | null;
   onRefetch: () => Promise<unknown>;
+  loading?: boolean;
 }) {
-  const { items, currentUserId, currentUserRole, onRefetch } = props;
+  const { items, currentUserId, currentUserRole, onRefetch, loading = false } = props;
   const grouped = groupBySource(items);
   const isAdmin = currentUserRole === 'ADMIN';
   const [pendingAssignFor, setPendingAssignFor] = useState<string | null>(null);
@@ -163,9 +165,12 @@ export function ReviewerQueueView(props: {
       <Box>
         <Typography variant="h6">Pending review</Typography>
         <Typography variant="body2" color="text.secondary">
-          This queue is read-only. Requests are not assignments and do not imply conflict, correctness, or adjudication.
+          This queue is read-only. Requests coordinate review handoff; they do not record adjudication outcomes or change
+          claim status here.
         </Typography>
       </Box>
+
+      {!loading && items.length === 0 ? <WorkspaceEmptyHelp surface="review-queue" /> : null}
 
       <Divider />
 

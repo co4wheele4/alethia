@@ -811,46 +811,55 @@ export async function setupGraphQLMocks(route: Route) {
       }
 
       case 'ListDocuments': {
+        const limit =
+          typeof (parsedBody.variables as { limit?: number } | undefined)?.limit === 'number'
+            ? (parsedBody.variables as { limit: number }).limit
+            : 500;
+        const offset =
+          typeof (parsedBody.variables as { offset?: number } | undefined)?.offset === 'number'
+            ? (parsedBody.variables as { offset: number }).offset
+            : 0;
+        const mapped = documentsStore.map((d) => {
+          const chunks = chunksStore[d.id] ?? [];
+          const sourceId = `source-${d.id}`;
+          return {
+            __typename: 'Document',
+            id: d.id,
+            title: d.title,
+            createdAt: d.createdAt,
+            sourceType: 'URL',
+            sourceLabel: 'example.com',
+            source: {
+              __typename: 'DocumentSource',
+              id: sourceId,
+              documentId: d.id,
+              kind: 'URL',
+              ingestedAt: d.createdAt,
+              accessedAt: d.createdAt,
+              publishedAt: null,
+              author: null,
+              publisher: null,
+              filename: null,
+              mimeType: null,
+              contentType: null,
+              sizeBytes: null,
+              requestedUrl: 'https://example.com/getting-started',
+              fetchedUrl: 'https://example.com/getting-started',
+              contentSha256: null,
+              fileSha256: null,
+              lastModifiedMs: null,
+            },
+            chunks: chunks.map((c) => ({
+              __typename: 'DocumentChunk',
+              id: c.id,
+            })),
+          };
+        });
         response = {
           status: 200,
           body: {
             data: {
-              documents: documentsStore.map((d) => {
-                const chunks = chunksStore[d.id] ?? [];
-                const sourceId = `source-${d.id}`;
-                return {
-                  __typename: 'Document',
-                  id: d.id,
-                  title: d.title,
-                  createdAt: d.createdAt,
-                  sourceType: 'URL',
-                  sourceLabel: 'example.com',
-                  source: {
-                    __typename: 'DocumentSource',
-                    id: sourceId,
-                    documentId: d.id,
-                    kind: 'URL',
-                    ingestedAt: d.createdAt,
-                    accessedAt: d.createdAt,
-                    publishedAt: null,
-                    author: null,
-                    publisher: null,
-                    filename: null,
-                    mimeType: null,
-                    contentType: null,
-                    sizeBytes: null,
-                    requestedUrl: 'https://example.com/getting-started',
-                    fetchedUrl: 'https://example.com/getting-started',
-                    contentSha256: null,
-                    fileSha256: null,
-                    lastModifiedMs: null,
-                  },
-                  chunks: chunks.map((c) => ({
-                    __typename: 'DocumentChunk',
-                    id: c.id,
-                  })),
-                };
-              }),
+              documents: mapped.slice(offset, offset + limit),
             },
           },
         };
@@ -1062,9 +1071,75 @@ export async function setupGraphQLMocks(route: Route) {
         break;
       }
 
+      case 'SearchClaims': {
+        ensureSeeded();
+        const input = (parsedBody.variables as { input?: { orderBy?: string; queryText?: string } } | undefined)?.input;
+        const allowedOrder = new Set([
+          'CREATED_AT_ASC',
+          'CREATED_AT_DESC',
+          'ID_ASC',
+          'ID_DESC',
+        ]);
+        if (!input?.orderBy || !allowedOrder.has(input.orderBy)) {
+          response = {
+            status: 200,
+            body: {
+              errors: [{ message: 'INVALID_ORDER', extensions: { code: 'INVALID_ORDER' } }],
+            },
+          };
+          break;
+        }
+        const q = input.queryText ?? '';
+        let filtered = claimsStore;
+        if (q !== '') {
+          filtered = filtered.filter((c) =>
+            String((c as { text?: string }).text ?? '')
+              .toLowerCase()
+              .includes(q.toLowerCase()),
+          );
+        }
+        const sorted = [...filtered].sort((a, b) => {
+          const ac = String((a as { createdAt?: string }).createdAt ?? '');
+          const bc = String((b as { createdAt?: string }).createdAt ?? '');
+          const aid = String((a as { id?: string }).id ?? '');
+          const bid = String((b as { id?: string }).id ?? '');
+          if (input.orderBy === 'CREATED_AT_ASC') {
+            const cmp = ac.localeCompare(bc);
+            return cmp !== 0 ? cmp : aid.localeCompare(bid);
+          }
+          if (input.orderBy === 'CREATED_AT_DESC') {
+            const cmp = bc.localeCompare(ac);
+            return cmp !== 0 ? cmp : aid.localeCompare(bid);
+          }
+          if (input.orderBy === 'ID_ASC') return aid.localeCompare(bid);
+          return bid.localeCompare(aid);
+        });
+        response = {
+          status: 200,
+          body: {
+            data: {
+              searchClaims: sorted.map((c) => {
+                const evidence = (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence ?? [];
+                const docIds = Array.from(new Set(evidence.map((e) => String(e.sourceDocumentId ?? '')).filter(Boolean)));
+                return {
+                  ...c,
+                  documents: docIds.map((id) => buildDocumentCore(id)).filter(Boolean),
+                };
+              }),
+            },
+          },
+        };
+        break;
+      }
+
       case 'ListClaims': {
         ensureSeeded();
-        const filter = (parsedBody.variables as { filter?: { lifecycle?: string; hasEvidence?: boolean } } | undefined)?.filter;
+        const vars = parsedBody.variables as
+          | { filter?: { lifecycle?: string; hasEvidence?: boolean }; limit?: number; offset?: number }
+          | undefined;
+        const limit = typeof vars?.limit === 'number' ? vars.limit : 500;
+        const offset = typeof vars?.offset === 'number' ? vars.offset : 0;
+        const filter = vars?.filter;
         let filtered = claimsStore;
         if (filter?.lifecycle) {
           filtered = filtered.filter((c) => (c as { status?: string }).status === filter.lifecycle);
@@ -1081,21 +1156,24 @@ export async function setupGraphQLMocks(route: Route) {
             return !Array.isArray(ev) || ev.length === 0;
           });
         }
-        response = {
-          status: 200,
-          body: {
-            data: {
-              claims: filtered.map((c) => {
-                const evidence = (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence ?? [];
-                const docIds = Array.from(new Set(evidence.map((e) => String(e.sourceDocumentId ?? '')).filter(Boolean)));
-                return {
-                  ...c,
-                  documents: docIds.map((id) => buildDocumentCore(id)).filter(Boolean),
-                };
-              }),
+        {
+          const mapped = filtered.map((c) => {
+            const evidence = (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence ?? [];
+            const docIds = Array.from(new Set(evidence.map((e) => String(e.sourceDocumentId ?? '')).filter(Boolean)));
+            return {
+              ...c,
+              documents: docIds.map((id) => buildDocumentCore(id)).filter(Boolean),
+            };
+          });
+          response = {
+            status: 200,
+            body: {
+              data: {
+                claims: mapped.slice(offset, offset + limit),
+              },
             },
-          },
-        };
+          };
+        }
         break;
       }
 
@@ -1329,16 +1407,29 @@ export async function setupGraphQLMocks(route: Route) {
       case 'ClaimsByDocument': {
         ensureSeeded();
         const documentId = varString(parsedBody.variables, 'documentId') ?? '';
+        const limit =
+          typeof (parsedBody.variables as { limit?: number } | undefined)?.limit === 'number'
+            ? (parsedBody.variables as { limit: number }).limit
+            : 500;
+        const offset =
+          typeof (parsedBody.variables as { offset?: number } | undefined)?.offset === 'number'
+            ? (parsedBody.variables as { offset: number }).offset
+            : 0;
+        const mapped = claimsStore
+          .filter((c) =>
+            (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence?.some(
+              (e) => e.sourceDocumentId === documentId,
+            ),
+          )
+          .map((c) => ({
+            ...c,
+            documents: [buildDocumentCore(documentId)].filter(Boolean),
+          }));
         response = {
           status: 200,
           body: {
             data: {
-              claimsByDocument: claimsStore
-                .filter((c) => (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence?.some((e) => e.sourceDocumentId === documentId))
-                .map((c) => ({
-                  ...c,
-                  documents: [buildDocumentCore(documentId)].filter(Boolean),
-                })),
+              claimsByDocument: mapped.slice(offset, offset + limit),
             },
           },
         };
@@ -1347,18 +1438,27 @@ export async function setupGraphQLMocks(route: Route) {
 
       case 'GetClaimsForComparison': {
         ensureSeeded();
+        const limit =
+          typeof (parsedBody.variables as { limit?: number } | undefined)?.limit === 'number'
+            ? (parsedBody.variables as { limit: number }).limit
+            : 500;
+        const offset =
+          typeof (parsedBody.variables as { offset?: number } | undefined)?.offset === 'number'
+            ? (parsedBody.variables as { offset: number }).offset
+            : 0;
+        const mapped = claimsStore.map((c) => {
+          const evidence = (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence ?? [];
+          const docIds = Array.from(new Set(evidence.map((e) => String(e.sourceDocumentId ?? '')).filter(Boolean)));
+          return {
+            ...c,
+            documents: docIds.map((id) => buildDocumentEvidenceView(id)).filter(Boolean),
+          };
+        });
         response = {
           status: 200,
           body: {
             data: {
-              claims: claimsStore.map((c) => {
-                const evidence = (c as { evidence?: Array<{ sourceDocumentId?: string | null }> }).evidence ?? [];
-                const docIds = Array.from(new Set(evidence.map((e) => String(e.sourceDocumentId ?? '')).filter(Boolean)));
-                return {
-                  ...c,
-                  documents: docIds.map((id) => buildDocumentEvidenceView(id)).filter(Boolean),
-                };
-              }),
+              claims: mapped.slice(offset, offset + limit),
             },
           },
         };
@@ -1438,6 +1538,43 @@ export async function setupGraphQLMocks(route: Route) {
         break;
       }
 
+      case 'IngestDocument': {
+        ensureSeeded();
+        const input = (parsedBody.variables as { input?: Record<string, unknown> } | undefined)?.input;
+        const title = typeof input?.title === 'string' ? input.title : '';
+        const content = typeof input?.content === 'string' ? input.content : '';
+        const newDoc = {
+          id: `doc-${documentsStore.length + 1}`,
+          title,
+          createdAt: new Date().toISOString(),
+        };
+        documentsStore = [...documentsStore, newDoc];
+        const chunk0 = {
+          id: `chunk-${newDoc.id}-0`,
+          chunkIndex: 0,
+          content,
+        };
+        chunksStore[newDoc.id] = [chunk0];
+        ensureMentionForChunk({ documentId: newDoc.id, chunkId: chunk0.id, content: chunk0.content });
+        response = {
+          status: 200,
+          body: {
+            data: {
+              ingestDocument: {
+                __typename: 'Document',
+                id: newDoc.id,
+                title: newDoc.title,
+                createdAt: newDoc.createdAt,
+                sourceType: 'MANUAL',
+                sourceLabel: null,
+                chunks: [{ __typename: 'DocumentChunk', id: chunk0.id }],
+              },
+            },
+          },
+        };
+        break;
+      }
+
       case 'CreateChunk': {
         ensureSeeded();
         const documentId = varString(parsedBody.variables, 'documentId');
@@ -1501,6 +1638,96 @@ export async function setupGraphQLMocks(route: Route) {
           body: {
             data: {
               deleteDocument: { __typename: 'Document', id },
+            },
+          },
+        };
+        break;
+      }
+
+      case 'HtmlCrawlRuns': {
+        const createdAt = new Date('2026-03-01T12:00:00.000Z').toISOString();
+        response = {
+          status: 200,
+          body: {
+            data: {
+              htmlCrawlIngestionRuns: [
+                {
+                  __typename: 'HtmlCrawlIngestionRun',
+                  id: 'crawl-run-1',
+                  seedUrl: 'https://example.com/seed',
+                  startedAt: createdAt,
+                  status: 'SUCCESS',
+                  crawlDepth: 1,
+                  maxPages: 10,
+                },
+              ],
+            },
+          },
+        };
+        break;
+      }
+
+      case 'HtmlCrawlRunDetail': {
+        const id = varString(parsedBody.variables, 'id') ?? '';
+        const createdAt = new Date('2026-03-01T12:00:00.000Z').toISOString();
+        response = {
+          status: 200,
+          body: {
+            data: {
+              htmlCrawlIngestionRun:
+                id === 'crawl-run-1'
+                  ? {
+                      __typename: 'HtmlCrawlIngestionRun',
+                      id: 'crawl-run-1',
+                      seedUrl: 'https://example.com/seed',
+                      crawlDepth: 1,
+                      maxPages: 10,
+                      allowedDomains: ['example.com'],
+                      includeQueryParams: false,
+                      followMode: 'STRICT_ONLY',
+                      startedAt: createdAt,
+                      finishedAt: createdAt,
+                      status: 'SUCCESS',
+                      errorLog: null,
+                      fetchedEvidence: [
+                        {
+                          __typename: 'HtmlCrawlIngestionRunEvidence',
+                          evidenceId: 'html-ev-1',
+                          url: 'https://example.com/seed',
+                          depth: 0,
+                          fetchStatus: 'SUCCESS',
+                          errorMessage: null,
+                        },
+                      ],
+                    }
+                  : null,
+            },
+          },
+        };
+        break;
+      }
+
+      case 'GetEvidenceDetail': {
+        const eid = varString(parsedBody.variables, 'id') ?? '';
+        const createdAt = new Date('2026-03-01T12:00:00.000Z').toISOString();
+        const html = '<html><body>Exact mock bytes</body></html>';
+        response = {
+          status: 200,
+          body: {
+            data: {
+              evidenceById:
+                eid === 'html-ev-1'
+                  ? {
+                      __typename: 'Evidence',
+                      id: 'html-ev-1',
+                      createdAt,
+                      sourceType: 'URL',
+                      sourceUrl: 'https://example.com/seed',
+                      snippet: html,
+                      contentSha256: '0000000000000000000000000000000000000000000000000000000000000000',
+                    }
+                  : null,
+              evidenceReproChecks: [],
             },
           },
         };

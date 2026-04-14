@@ -1,7 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { IngestionResolver } from './ingestion.resolver';
 import { IngestionService } from './ingestion.service';
-import { ExtractionService } from './extraction.service';
 import { ForbiddenException } from '@nestjs/common';
 import { DocumentSourceKindInput } from '../graphql/inputs/document-source.input';
 import { DocumentChunkResolver } from '../graphql/resolvers/document-chunk.resolver';
@@ -11,16 +10,10 @@ import { DataLoaderService } from '../common/dataloaders/dataloader.service';
 describe('IngestionResolver', () => {
   let resolver: IngestionResolver;
   let service: jest.Mocked<IngestionService>;
-  let extractionService: jest.Mocked<ExtractionService>;
 
   beforeEach(async () => {
     const mockIngestionService = {
       ingest: jest.fn(),
-    };
-    const mockExtractionService = {
-      proposeExtraction: jest.fn(),
-      acceptSuggestion: jest.fn(),
-      rejectSuggestion: jest.fn(),
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -30,16 +23,11 @@ describe('IngestionResolver', () => {
           provide: IngestionService,
           useValue: mockIngestionService,
         },
-        {
-          provide: ExtractionService,
-          useValue: mockExtractionService,
-        },
       ],
     }).compile();
 
     resolver = moduleRef.get<IngestionResolver>(IngestionResolver);
     service = moduleRef.get(IngestionService);
-    extractionService = moduleRef.get(ExtractionService);
   });
 
   it('should be defined', () => {
@@ -47,7 +35,7 @@ describe('IngestionResolver', () => {
   });
 
   it('can be instantiated manually', () => {
-    const manualResolver = new IngestionResolver(service, extractionService);
+    const manualResolver = new IngestionResolver(service);
     expect(manualResolver).toBeDefined();
   });
 
@@ -122,26 +110,6 @@ describe('IngestionResolver', () => {
       const result = await resolver.ingestDocument(input as any, {});
 
       expect(result).toEqual(mockDoc);
-    });
-  });
-
-  describe('extraction mutations', () => {
-    it('proposeExtraction should call extractionService', async () => {
-      extractionService.proposeExtraction.mockResolvedValue([] as any);
-      await resolver.proposeExtraction('c1');
-      expect(extractionService.proposeExtraction).toHaveBeenCalledWith('c1');
-    });
-
-    it('acceptSuggestion should call extractionService', async () => {
-      extractionService.acceptSuggestion.mockResolvedValue({ id: 's1' } as any);
-      await resolver.acceptSuggestion('s1');
-      expect(extractionService.acceptSuggestion).toHaveBeenCalledWith('s1');
-    });
-
-    it('rejectSuggestion should call extractionService', async () => {
-      extractionService.rejectSuggestion.mockResolvedValue({ id: 's1' } as any);
-      await resolver.rejectSuggestion('s1');
-      expect(extractionService.rejectSuggestion).toHaveBeenCalledWith('s1');
     });
   });
 

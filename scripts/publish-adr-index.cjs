@@ -1,0 +1,422 @@
+/* eslint-disable no-console */
+/**
+ * Generates docs/adr/index.json from embedded metadata.
+ * Run after ADR doc changes: node scripts/publish-adr-index.cjs
+ */
+const fs = require('node:fs');
+const path = require('node:path');
+
+const repoRoot = path.resolve(__dirname, '..');
+
+/** @type {Record<string, { title: string; status: string; implementation: string[]; tests: string[]; enforcement: string[] }>} */
+const ADRS = {
+  'ADR-001': {
+    title: 'Frontend Architecture for Aletheia',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-frontend/next.config.ts',
+      'docs/adr/ADR-001-frontend-architecture.md',
+    ],
+    tests: ['aletheia-frontend/package.json'],
+    enforcement: ['scripts/check-adr-governance.cjs', '.github/workflows/governance-bot.yml'],
+  },
+  'ADR-002': {
+    title: 'Frontend Build, Test, and Tooling',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-frontend/package.json',
+      'docs/adr/ADR-002-frontend-build-test-tooling.md',
+    ],
+    tests: ['aletheia-frontend/vitest.config.ts'],
+    enforcement: ['scripts/check-adr-governance.cjs'],
+  },
+  'ADR-003': {
+    title: 'Frontend Testing Strategy',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-frontend/package.json',
+      'docs/adr/ADR-003-frontend-testing-strategy.md',
+    ],
+    tests: ['aletheia-frontend/vitest.config.ts'],
+    enforcement: ['scripts/check-adr-governance.cjs'],
+  },
+  'ADR-004': {
+    title: 'Frontend Architecture Overview',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-frontend/src/graphql/fragments/documentCoreFields.fragment.ts',
+      'docs/adr/ADR-004-frontend-architecture-overview.md',
+    ],
+    tests: ['aletheia-frontend/src/graphql/__tests__/graphql-contracts.test.ts'],
+    enforcement: ['scripts/check-schema-snapshots.cjs'],
+  },
+  'ADR-005': {
+    title: 'GraphQL Contract & Data Guarantees',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/schema.gql',
+      'scripts/check-schema-snapshots.cjs',
+      'docs/adr/ADR-005-graphql-contract-data-guarantees.md',
+    ],
+    tests: [
+      'aletheia-frontend/src/graphql/__tests__/adr-005-truth-surface-fragments.contract.test.ts',
+      'aletheia-frontend/app/services/__tests__/apollo-client-contract-no-confidence.test.ts',
+    ],
+    enforcement: [
+      'scripts/check-adr-governance.cjs',
+      'scripts/check-schema-snapshots.cjs',
+      '.cursor/rules/aletheia-frontend-authoritative.mdc',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+  },
+  'ADR-006': {
+    title: 'Confidence Semantics (Deferred Exposure)',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-frontend/app/services/apollo-client.ts',
+      'docs/adr/ADR-006-confidence-semantics-deferred-exposure.md',
+    ],
+    tests: ['aletheia-frontend/app/services/__tests__/apollo-client-contract-no-confidence.test.ts'],
+    enforcement: ['aletheia-frontend/src/test/msw/assertNoConfidence.ts'],
+  },
+  'ADR-007': {
+    title: 'Claim Semantics vs Evidence Semantics',
+    status: 'PROPOSED',
+    implementation: ['docs/adr/ADR-007-claim-semantics-vs-evidence-semantics.md'],
+    tests: ['aletheia-frontend/src/graphql/__tests__/graphql-contracts.test.ts'],
+    enforcement: ['scripts/check-adr-governance.cjs'],
+  },
+  'ADR-008': {
+    title: 'Claim Lifecycle & Review States',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.ts',
+      'docs/adr/ADR-008-claim-lifecycle-review-states.md',
+    ],
+    tests: [
+      'aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.spec.ts',
+      'aletheia-frontend/e2e/claim-review.spec.ts',
+    ],
+    enforcement: ['aletheia-backend/scripts/adr023-lifecycle-integrity.cjs'],
+  },
+  'ADR-009': {
+    title: 'Claim Comparison & Conflict Detection',
+    status: 'REJECTED',
+    implementation: ['docs/adr/ADR-009-claim-comparison-conflict-detection.md'],
+    tests: ['aletheia-frontend/app/features/claimComparison/__tests__/ClaimComparisonView.test.tsx'],
+    enforcement: [
+      'scripts/check-adr-governance.cjs',
+      'aletheia-backend/scripts/schema-lint-adr022.cjs',
+    ],
+  },
+  'ADR-010': {
+    title: 'Claim Comparison UI Semantics',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-frontend/app/features/claimComparison/components/ClaimComparisonView.tsx',
+      'docs/adr/ADR-010-claim-comparison-ui-semantics.md',
+    ],
+    tests: ['aletheia-frontend/app/features/claimComparison/__tests__/ClaimComparisonView.test.tsx'],
+    enforcement: ['tools/pr-checks/epistemicGuard.cjs'],
+  },
+  'ADR-011': {
+    title: 'Claim Adjudication API Contract',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.ts',
+      'aletheia-backend/src/graphql/resolvers/claim-adjudication.service.ts',
+      'docs/adr/ADR-011-claim-adjudication-api-contract.md',
+    ],
+    tests: ['aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.spec.ts'],
+    enforcement: ['aletheia-backend/prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql'],
+  },
+  'ADR-012': {
+    title: 'Review Request Semantics',
+    status: 'SUPERSEDED',
+    implementation: ['docs/adr/ADR-012-review-request-semantics.md'],
+    tests: ['aletheia-backend/src/graphql/resolvers/review-request.resolver.spec.ts'],
+    enforcement: ['scripts/check-adr-governance.cjs'],
+  },
+  'ADR-013': {
+    title: 'Reviewer Queues',
+    status: 'SUPERSEDED',
+    implementation: ['docs/adr/ADR-013-reviewer-queues.md'],
+    tests: ['aletheia-frontend/e2e/reviewer-assignment.spec.ts'],
+    enforcement: ['scripts/check-adr-governance.cjs'],
+  },
+  'ADR-014': {
+    title: 'Reviewer Roles & Qualifications',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/graphql/resolvers/review-assignment.resolver.ts',
+      'docs/adr/ADR-014-reviewer-roles-qualifications.md',
+    ],
+    tests: [
+      'aletheia-frontend/e2e/reviewer-assignment.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: [
+      'scripts/check-adr-governance.cjs',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+  },
+  'ADR-015': {
+    title: 'Reviewer Assignment Semantics',
+    status: 'ACCEPTED',
+    implementation: ['docs/adr/ADR-015-reviewer-assignment-semantics.md'],
+    tests: [
+      'aletheia-backend/src/graphql/resolvers/review-assignment.resolver.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: ['scripts/check-adr-governance.cjs', 'tests/adr/adrGovernanceCompliance.test.ts'],
+  },
+  'ADR-016': {
+    title: 'Reviewer Response Semantics',
+    status: 'ACCEPTED',
+    implementation: ['docs/adr/ADR-016-reviewer-response-semantics.md'],
+    tests: [
+      'aletheia-backend/src/graphql/resolvers/review-assignment.resolver.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: ['scripts/check-adr-governance.cjs', 'tests/adr/adrGovernanceCompliance.test.ts'],
+  },
+  'ADR-017': {
+    title: 'Review Visibility & Audit Semantics',
+    status: 'ACCEPTED',
+    implementation: ['docs/adr/ADR-017-review-visibility-audit-semantics.md'],
+    tests: [
+      'aletheia-frontend/e2e/review-activity.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: ['scripts/check-adr-governance.cjs', 'tests/adr/adrGovernanceCompliance.test.ts'],
+  },
+  'ADR-018': {
+    title: 'Claim Evidence Closure Invariant',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/graphql/resolvers/claim.resolver.ts',
+      'aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.ts',
+      'docs/adr/ADR-018-claim-evidence-closure.md',
+    ],
+    tests: [
+      'aletheia-backend/src/graphql/resolvers/claim.resolver.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+    enforcement: [
+      'aletheia-backend/prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+  },
+  'ADR-019': {
+    title: 'Evidence Semantics & Structure',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/prisma/schema.prisma',
+      'aletheia-backend/src/graphql/resolvers/evidence.resolver.ts',
+      'docs/adr/ADR-019-evidence-semantics-structure.md',
+    ],
+    tests: ['aletheia-backend/src/graphql/resolvers/evidence.resolver.spec.ts'],
+    enforcement: ['aletheia-backend/scripts/adr024-evidence-ingestion.cjs'],
+  },
+  'ADR-020': {
+    title: 'Evidence Rendering Source Fidelity',
+    status: 'ACCEPTED',
+    implementation: ['docs/adr/ADR-020-evidence-rendering-source-fidelity.md'],
+    tests: ['aletheia-frontend/app/features/claimReview/__tests__/ClaimReviewView.test.tsx'],
+    enforcement: ['tools/pr-checks/epistemicGuard.cjs'],
+  },
+  'ADR-021': {
+    title: 'Claim–Evidence Graph Integrity (Read-only Topology)',
+    status: 'ACCEPTED',
+    implementation: ['aletheia-frontend/app/claims/graph/page.tsx', 'docs/adr/ADR-021-claim-evidence-graph-integrity-read-only-topology.md'],
+    tests: ['aletheia-frontend/e2e/claim-graph.spec.ts'],
+    enforcement: ['scripts/check-adr-governance.cjs'],
+  },
+  'ADR-022': {
+    title: 'Query Non-Semantic Constraint',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/scripts/schema-lint-adr022.cjs',
+      'aletheia-backend/src/graphql/guards/assertNoDerivedSemantics.ts',
+      'tools/schema-lint/noDerivedSemantics.ts',
+      'docs/adr/ADR-022-query-non-semantic-constraint.md',
+    ],
+    tests: [
+      'tests/guardrails.spec.ts',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+      'aletheia-frontend/e2e/query-semantics.spec.ts',
+    ],
+    enforcement: [
+      'tools/graphql-lint/noSemanticQueries.cjs',
+      'tools/pr-checks/epistemicGuard.cjs',
+      'tests/adr/adrGovernanceCompliance.test.ts',
+    ],
+  },
+  'ADR-023': {
+    title: 'Adjudication Integrity Hardening',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/graphql/resolvers/claim-adjudication.service.ts',
+      'aletheia-backend/scripts/adr023-lifecycle-integrity.cjs',
+      'docs/adr/ADR-023-adjudication-integrity-hardening.md',
+    ],
+    tests: ['aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.spec.ts'],
+    enforcement: ['aletheia-backend/prisma/migrations/20260410140000_adr036_adjudication_hash_chain/migration.sql'],
+  },
+  'ADR-024': {
+    title: 'Evidence Ingestion Constraints',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/common/utils/evidence-content-hash.ts',
+      'aletheia-backend/scripts/adr024-evidence-ingestion.cjs',
+      'docs/adr/ADR-024-evidence-ingestion-constraints.md',
+    ],
+    tests: [
+      'aletheia-backend/src/common/utils/evidence-content-hash.spec.ts',
+      'aletheia-backend/src/graphql/resolvers/evidence.resolver.spec.ts',
+    ],
+    enforcement: ['aletheia-backend/scripts/adr024-evidence-ingestion.cjs'],
+  },
+  'ADR-025': {
+    title: 'Agent Role Restrictions',
+    status: 'ACCEPTED',
+    implementation: [
+      'tools/governance-bot/governance-bot.cjs',
+      'tools/pr-checks/agentRoleGuard.cjs',
+      'docs/adr/ADR-025-agent-role-restrictions.md',
+    ],
+    tests: ['tests/guardrails.spec.ts', 'aletheia-frontend/e2e/adr-025-agent-role.spec.ts'],
+    enforcement: ['aletheia-backend/scripts/schema-lint-adr025.cjs', '.github/workflows/governance-bot.yml'],
+  },
+  'ADR-026': {
+    title: 'Evidence Reproducibility Verification',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/evidence-repro/evidence-repro-check.service.ts',
+      'scripts/jobs/runEvidenceReproCheck.ts',
+      'docs/adr/ADR-026-evidence-reproducibility-verification.md',
+    ],
+    tests: ['aletheia-backend/src/evidence-repro/evidence-repro-check.service.spec.ts'],
+    enforcement: ['aletheia-backend/prisma/migrations/20260409170000_adr026_adr029_structural_extensions/migration.sql'],
+  },
+  'ADR-027': {
+    title: 'Database-Level Epistemic Constraints',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql',
+      'docs/adr/ADR-027-database-level-epistemic-constraints.md',
+    ],
+    tests: ['aletheia-backend/test/e2e/db/adr027-epistemic-constraints.e2e-spec.ts'],
+    enforcement: ['aletheia-backend/prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql'],
+  },
+  'ADR-028': {
+    title: 'Evidence UX Navigation Improvements (Non-Semantic)',
+    status: 'ACCEPTED',
+    implementation: ['aletheia-frontend/app/features/evidence/components/EvidenceViewer.tsx', 'docs/adr/ADR-028-evidence-ux-navigation-improvements.md'],
+    tests: ['aletheia-frontend/app/features/evidence/__tests__/EvidenceViewer.test.tsx'],
+    enforcement: ['scripts/check-adr-governance.cjs'],
+  },
+  'ADR-029': {
+    title: 'Epistemic Observability (Structural Only)',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/observability/logEpistemicEvent.ts',
+      'docs/adr/ADR-029-epistemic-observability.md',
+    ],
+    tests: ['aletheia-backend/src/observability/logEpistemicEvent.spec.ts'],
+    enforcement: ['aletheia-backend/src/observability/epistemic-audit.interceptor.ts'],
+  },
+  'ADR-030': {
+    title: 'Quorum-Based Review Workflow Gate (Non-Adjudicative)',
+    status: 'ACCEPTED',
+    implementation: ['aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.ts', 'docs/adr/ADR-030-review-quorum-workflow-gate.md'],
+    tests: ['aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.spec.ts'],
+    enforcement: ['aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.ts'],
+  },
+  'ADR-031': {
+    title: 'Export/Import Snapshot Bundles (Structural Integrity)',
+    status: 'ACCEPTED',
+    implementation: [
+      'schemas/aletheiaBundle.schema.json',
+      'aletheia-backend/src/bundle/aletheia-bundle.service.ts',
+      'docs/adr/ADR-031-export-import-snapshot-bundles.md',
+    ],
+    tests: ['aletheia-backend/src/bundle/aletheia-bundle.service.spec.ts'],
+    enforcement: ['schemas/aletheiaBundle.schema.json'],
+  },
+  'ADR-032': {
+    title: 'HTML Evidence Crawl Boundaries',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/ingestion/htmlCrawlRunner.ts',
+      'aletheia-backend/scripts/schema-lint-adr032.cjs',
+      'docs/adr/ADR-032-html-evidence-crawl-boundaries.md',
+    ],
+    tests: ['aletheia-backend/src/ingestion/htmlCrawlRunner.spec.ts'],
+    enforcement: ['aletheia-backend/scripts/schema-lint-adr032.cjs'],
+  },
+  'ADR-033': {
+    title: 'Non-Semantic Search Constraints',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/graphql/resolvers/search.resolver.ts',
+      'aletheia-backend/src/common/search/prisma-string-filter.ts',
+      'docs/adr/ADR-033-non-semantic-search.md',
+    ],
+    tests: ['aletheia-backend/src/graphql/resolvers/search.resolver.spec.ts', 'aletheia-frontend/e2e/adr-033-search.spec.ts'],
+    enforcement: ['aletheia-backend/src/common/search/prisma-string-filter.ts'],
+  },
+  'ADR-034': {
+    title: 'Query Complexity / Depth Limits',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/graphql/graphql-validation-rules.ts',
+      'aletheia-backend/src/app/graphql-config.ts',
+      'docs/adr/ADR-034-query-complexity-limits.md',
+    ],
+    tests: ['aletheia-backend/src/common/list-pagination.spec.ts', 'aletheia-backend/src/graphql/resolvers/claim.resolver.spec.ts'],
+    enforcement: ['aletheia-backend/src/graphql/graphql-validation-rules.ts'],
+  },
+  'ADR-035': {
+    title: 'Workspace Isolation + RBAC',
+    status: 'ACCEPTED',
+    implementation: ['docs/adr/ADR-035-workspace-isolation-rbac.md'],
+    tests: ['aletheia-backend/src/graphql/resolvers/search.resolver.spec.ts'],
+    enforcement: ['scripts/check-adr-governance.cjs', 'aletheia-backend/src/graphql/utils/gql-auth-user.ts'],
+  },
+  'ADR-036': {
+    title: 'Tamper-Evident Integrity Guarantees',
+    status: 'ACCEPTED',
+    implementation: [
+      'aletheia-backend/src/common/integrity/adjudication-entry-hash.ts',
+      'aletheia-backend/src/integrity/integrity.service.ts',
+      'docs/adr/ADR-036-tamper-evident-integrity.md',
+    ],
+    tests: ['aletheia-backend/src/integrity/integrity.service.spec.ts'],
+    enforcement: ['aletheia-backend/prisma/migrations/20260410140000_adr036_adjudication_hash_chain/migration.sql'],
+  },
+  'ADR-037': {
+    title: 'External Interface Constraints',
+    status: 'ACCEPTED',
+    implementation: [
+      'schemas/aletheiaBundle.schema.json',
+      'aletheia-backend/src/bundle/aletheia-bundle.service.ts',
+      'docs/adr/ADR-037-external-interface-constraints.md',
+    ],
+    tests: ['aletheia-backend/src/bundle/aletheia-bundle.service.spec.ts'],
+    enforcement: ['schemas/aletheiaBundle.schema.json'],
+  },
+};
+
+function main() {
+  const out = {
+    schemaVersion: 1,
+    generatedBy: 'scripts/publish-adr-index.cjs',
+    adrs: ADRS,
+  };
+  const dest = path.join(repoRoot, 'docs', 'adr', 'index.json');
+  fs.writeFileSync(dest, `${JSON.stringify(out, null, 2)}\n`, 'utf8');
+  console.log(`Wrote ${dest}`);
+}
+
+main();

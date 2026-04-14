@@ -88,6 +88,20 @@ export const CREATE_CHUNK_MUTATION = gql`
   ${CHUNK_FIELDS}
 `;
 
+/** Server-side ingestion: creates Document + DocumentSource + chunks (ADR-031). */
+export const INGEST_DOCUMENT_MUTATION = gql`
+  mutation IngestDocument($input: IngestDocumentInput!) {
+    ingestDocument(input: $input) {
+      ...DocumentFields
+      chunks {
+        __typename
+        id
+      }
+    }
+  }
+  ${DOCUMENT_FIELDS}
+`;
+
 export const DOCUMENT_QUERY = gql`
   query Document($id: String!) {
     document(id: $id) {

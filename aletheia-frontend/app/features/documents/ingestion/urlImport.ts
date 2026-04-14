@@ -1,8 +1,6 @@
 /**
- * URL import (client-side, best-effort)
- *
- * Note: Many sites block cross-origin fetch from browsers (CORS).
- * When fetch fails, we surface a clear error so users understand the limitation.
+ * URL import: fetches HTML/text via same-origin `/api/import-url` so the browser
+ * is not blocked by CORS when snapshotting public http(s) pages.
  */
 'use client';
 
@@ -40,15 +38,54 @@ function toIsoOrNull(value: string | null): string | null {
   return Number.isFinite(d.getTime()) ? d.toISOString() : null;
 }
 
-export async function importUrlToText(url: string): Promise<ImportedUrl> {
-  const res = await fetch(url, { method: 'GET' });
-  if (!res.ok) {
-    throw new Error(`Failed to fetch URL (${res.status}).`);
+async function fetchUrlViaServerProxy(targetUrl: string): Promise<{
+  raw: string;
+  contentType: string | null;
+  fetchedUrl: string;
+}> {
+  const qs = new URLSearchParams({ url: targetUrl });
+  const proxyUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/api/import-url?${qs}`
+      : `/api/import-url?${qs}`;
+
+  let res: Response;
+  try {
+    res = await fetch(proxyUrl, { method: 'GET' });
+  } catch (e) {
+    const base = e instanceof Error ? e.message : 'Network error';
+    throw new Error(
+      base === 'Failed to fetch'
+        ? 'Could not reach the URL import service. Wait for the page to finish loading, then try again.'
+        : base
+    );
   }
 
-  const contentType = res.headers.get('content-type');
-  const fetchedUrl = res.url || url;
-  const raw = await res.text();
+  let data: {
+    raw?: string;
+    contentType?: string | null;
+    fetchedUrl?: string;
+    error?: string;
+  };
+  try {
+    data = (await res.json()) as typeof data;
+  } catch {
+    throw new Error(
+      `URL import returned a non-JSON response (${res.status}). Is the Next.js dev server running?`
+    );
+  }
+  if (!res.ok) {
+    throw new Error(data.error ?? `Failed to fetch URL (${res.status}).`);
+  }
+  return {
+    raw: data.raw ?? '',
+    contentType: data.contentType ?? null,
+    fetchedUrl: data.fetchedUrl ?? targetUrl,
+  };
+}
+
+export async function importUrlToText(url: string): Promise<ImportedUrl> {
+  const { raw, contentType, fetchedUrl } = await fetchUrlViaServerProxy(url);
 
   // Default to HTML extraction when applicable; otherwise keep raw text.
   const isHtml = (contentType ?? '').toLowerCase().includes('text/html');

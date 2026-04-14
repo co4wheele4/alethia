@@ -1,6 +1,7 @@
 import {
   Args,
   Context,
+  Int,
   Mutation,
   Query,
   ResolveField,
@@ -8,9 +9,10 @@ import {
   Parent,
 } from '@nestjs/graphql';
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
+import { EvidenceSourceKind as PrismaEvidenceSourceKind } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
-import { Evidence, EvidenceSourceKind } from '@models/evidence.model';
+import { Evidence } from '@models/evidence.model';
 import {
   CreateEvidenceInput,
   CreateEvidenceSourceKindInput,
@@ -22,6 +24,7 @@ import { DocumentChunk } from '@models/document-chunk.model';
 import { extractSpan } from '@common/utils/extract-span';
 import { evidenceContentSha256Hex } from '@common/utils/evidence-content-hash';
 import { getGqlAuthUserId } from '../utils/gql-auth-user';
+import { assertAdr034ListPagination } from '@common/list-pagination';
 
 type GqlContext = {
   req?: { user?: { sub?: string; id?: string } };
@@ -33,11 +36,13 @@ const evidenceListType = () => [Evidence];
 const userType = () => User;
 const documentType = () => Document;
 const documentChunkType = () => DocumentChunk;
+const intArgType = () => Int;
 void evidenceType();
 void evidenceListType();
 void userType();
 void documentType();
 void documentChunkType();
+void intArgType();
 
 @Injectable({ scope: Scope.REQUEST })
 @Resolver(evidenceType)
@@ -49,21 +54,57 @@ export class EvidenceResolver {
     description:
       'List evidence visible to the current user (via document ownership).',
   })
-  async evidence(@Context() ctx?: GqlContext) {
+  async evidence(
+    @Args('limit', { type: intArgType }) limit: number,
+    @Args('offset', { type: intArgType }) offset: number,
+    @Context() ctx?: GqlContext,
+  ) {
     const userId = getGqlAuthUserId(ctx);
     if (!userId) return [];
 
+    assertAdr034ListPagination(limit, offset);
+
     return this.prisma.evidence.findMany({
       where: {
-        sourceDocument: { userId },
+        OR: [
+          { sourceDocument: { userId } },
+          {
+            sourceType: {
+              in: [
+                PrismaEvidenceSourceKind.URL,
+                PrismaEvidenceSourceKind.HTML_PAGE,
+              ],
+            },
+            createdBy: userId,
+          },
+        ],
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      skip: offset,
     });
   }
 
   @Query(evidenceType, { nullable: true })
-  async evidenceById(@Args('id') id: string) {
-    return this.prisma.evidence.findUnique({ where: { id } });
+  async evidenceById(@Args('id') id: string, @Context() ctx?: GqlContext) {
+    const userId = getGqlAuthUserId(ctx);
+    if (!userId) return null;
+
+    const ev = await this.prisma.evidence.findUnique({
+      where: { id },
+      include: { sourceDocument: { select: { userId: true } } },
+    });
+    if (!ev) return null;
+
+    if (ev.sourceType === PrismaEvidenceSourceKind.DOCUMENT) {
+      if (ev.sourceDocument?.userId !== userId) return null;
+    } else if (ev.sourceType === PrismaEvidenceSourceKind.URL) {
+      if (ev.createdBy !== userId) return null;
+    } else {
+      return null;
+    }
+
+    return ev;
   }
 
   @ResolveField(userType)
@@ -86,6 +127,17 @@ export class EvidenceResolver {
     const e = evidence as unknown as { chunkId: string | null };
     if (!e.chunkId) return null;
     return this.prisma.documentChunk.findUnique({ where: { id: e.chunkId } });
+  }
+
+  /** Prisma column is `rawBody` (bytes); GraphQL exposes base64 for HTML_PAGE snapshots (ADR-032). */
+  @ResolveField('rawBodyBase64', () => String, { nullable: true })
+  rawBodyBase64(
+    @Parent() evidence: Evidence & { rawBody?: Buffer | Uint8Array | null },
+  ): string | null {
+    const raw = evidence.rawBody;
+    if (raw == null) return null;
+    const buf = Buffer.isBuffer(raw) ? raw : Buffer.from(raw);
+    return buf.toString('base64');
   }
 
   /**
@@ -164,7 +216,7 @@ export class EvidenceResolver {
 
     const evidence = await this.prisma.evidence.create({
       data: {
-        sourceType: sourceType as unknown as EvidenceSourceKind,
+        sourceType: PrismaEvidenceSourceKind.DOCUMENT,
         sourceDocumentId: sourceDocumentId,
         sourceUrl,
         chunkId: chunkId,
@@ -212,7 +264,15 @@ export class EvidenceResolver {
       include: { sourceDocument: { select: { userId: true } } },
     });
     if (!ev) throw contractError(GQL_ERROR_CODES.EVIDENCE_NOT_FOUND);
-    if (ev.sourceDocument?.userId !== userId) {
+    if (ev.sourceType === PrismaEvidenceSourceKind.DOCUMENT) {
+      if (ev.sourceDocument?.userId !== userId) {
+        throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
+      }
+    } else if (ev.sourceType === PrismaEvidenceSourceKind.URL) {
+      if (ev.createdBy !== userId) {
+        throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
+      }
+    } else {
       throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
     }
 

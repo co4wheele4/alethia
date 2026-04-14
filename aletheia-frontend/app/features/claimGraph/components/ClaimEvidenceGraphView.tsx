@@ -10,6 +10,7 @@
 import { useMemo, useState } from 'react';
 import { Alert, Box, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 
+import { WorkspaceEmptyHelp } from '../../../components/common/WorkspaceEmptyHelp';
 import { ContentSurface } from '../../../components/layout';
 import { useDocuments } from '../../documents/hooks/useDocuments';
 import { useClaimGraphData } from '../hooks/useClaimGraphData';
@@ -28,8 +29,8 @@ function evidenceHref(
   return '/evidence';
 }
 
-export function ClaimEvidenceGraphView(props: { userId: string | null }) {
-  const { userId } = props;
+export function ClaimEvidenceGraphView(props: { userId: string | null; userRole?: string | null }) {
+  const { userId, userRole } = props;
   const [scopeDocumentId, setScopeDocumentId] = useState<string>('__all__');
   const activeDocumentId = useMemo(
     () => (scopeDocumentId === '__all__' ? null : scopeDocumentId),
@@ -91,9 +92,7 @@ export function ClaimEvidenceGraphView(props: { userId: string | null }) {
       ) : null}
 
       {data.nodes.length === 0 && !loading ? (
-        <Typography variant="body2" color="text.secondary">
-          No claims with evidence in scope.
-        </Typography>
+        <WorkspaceEmptyHelp surface="graph" userRole={userRole} />
       ) : (
         <GraphRenderer
           data={data}

@@ -1,14 +1,14 @@
 # ADR-015: Reviewer Assignment Semantics
 
 ## Status
-Status: Proposed
+Status: ACCEPTED
 
 ## Date
 2026-01-28
 
 ## Context
 
-Aletheia supports persisted **Review Requests** (ADR-012) as a coordination mechanism to surface claims that require human attention. Review requests are intentionally non-authoritative and do not change claim truth, lifecycle, or adjudication state.
+Aletheia supports persisted **Review Requests** as defined under **ADR-014** as a coordination mechanism to surface claims that require human attention. Review requests are intentionally non-authoritative and do not change claim truth, lifecycle, or adjudication state.
 
 As review volume grows, the system must support **assignment for coordination purposes** only:
 - To indicate who is *looking at* a request

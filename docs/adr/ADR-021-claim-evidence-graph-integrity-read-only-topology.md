@@ -1,7 +1,7 @@
 # ADR-021: Claim–Evidence Graph Integrity & Read-Only Topology
 
 ## Status
-Status: Accepted
+Status: ACCEPTED
 
 ## Date
 2026-01-29

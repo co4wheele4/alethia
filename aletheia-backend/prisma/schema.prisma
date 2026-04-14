@@ -42,6 +42,8 @@ model User {
    */
   evidenceCreated Evidence[] @relation("EvidenceCreatedBy")
 
+  htmlCrawlIngestionRuns HtmlCrawlIngestionRun[]
+
   @@map("users")
 }
 
@@ -359,11 +361,13 @@ model AiQueryResult {
 /**
  * Source kind for Evidence.
  * DOCUMENT = references an ingested Document (via chunk).
- * URL = external URL (future; not yet implemented).
+ * URL = external URL reference (repro check; no persisted body in typical flow).
+ * HTML_PAGE = raw HTML bytes from deterministic crawl ingestion (ADR-032).
  */
 enum EvidenceSourceKind {
   DOCUMENT
   URL
+  HTML_PAGE
 }
 
 /**
@@ -399,20 +403,139 @@ model Evidence {
   snippet String? @map("snippet")
 
   /**
-   * SHA-256 (hex) of UTF-8 verbatim span bytes. ADR-024: set on create; immutable thereafter.
+   * SHA-256 (hex): DOCUMENT = UTF-8 verbatim span bytes (ADR-024).
+   * HTML_PAGE = raw response body bytes (ADR-032).
    */
   contentSha256 String? @map("content_sha256")
+
+  /**
+   * Raw fetched body bytes for HTML_PAGE evidence only (immutable snapshot). ADR-032.
+   */
+  rawBody Bytes? @map("raw_body")
 
   createdByUser  User             @relation("EvidenceCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
   sourceDocument Document?        @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
   chunk          DocumentChunk?   @relation(fields: [chunkId], references: [id], onDelete: Restrict)
   claimLinks     ClaimEvidenceLink[]
+  reproChecks    EvidenceReproCheck[]
+  htmlCrawlIngestionLinks HtmlCrawlIngestionRunEvidence[]
 
   @@index([sourceDocumentId])
   @@index([chunkId])
   @@index([createdBy])
   @@index([createdAt])
   @@map("evidence")
+}
+
+////////////////////
+// HTML CRAWL INGESTION (ADR-032; audit-only run records, immutable evidence)
+////////////////////
+
+enum HtmlCrawlFollowMode {
+  STRICT_ONLY
+}
+
+enum HtmlCrawlRunStatus {
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+enum HtmlCrawlFetchStatus {
+  SUCCESS
+  FAILED
+}
+
+model HtmlCrawlIngestionRun {
+  id                 String              @id @default(uuid()) @map("id")
+  createdByUserId    String              @map("created_by_user_id")
+  seedUrl            String              @map("seed_url")
+  crawlDepth         Int                 @map("crawl_depth")
+  maxPages           Int                 @map("max_pages")
+  allowedDomains     String[]            @map("allowed_domains")
+  includeQueryParams Boolean             @map("include_query_params")
+  followMode         HtmlCrawlFollowMode @map("follow_mode")
+  startedAt          DateTime            @map("started_at")
+  finishedAt         DateTime?           @map("finished_at")
+  status             HtmlCrawlRunStatus  @map("status")
+  errorLog           String?             @map("error_log")
+
+  createdByUser User                             @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  evidenceRows  HtmlCrawlIngestionRunEvidence[]
+
+  @@index([createdByUserId])
+  @@index([startedAt])
+  @@map("html_crawl_ingestion_runs")
+}
+
+model HtmlCrawlIngestionRunEvidence {
+  id           String               @id @default(uuid()) @map("id")
+  runId        String               @map("run_id")
+  evidenceId   String?              @map("evidence_id")
+  url          String               @map("url")
+  depth        Int                  @map("depth")
+  fetchStatus  HtmlCrawlFetchStatus @map("fetch_status")
+  errorMessage String?              @map("error_message")
+
+  run      HtmlCrawlIngestionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  evidence Evidence?             @relation(fields: [evidenceId], references: [id], onDelete: SetNull)
+
+  @@index([runId])
+  @@index([evidenceId])
+  @@map("html_crawl_ingestion_run_evidence")
+}
+
+////////////////////
+// EVIDENCE REPRODUCIBILITY (ADR-026; mechanical only)
+////////////////////
+
+enum EvidenceReproFetchStatus {
+  SUCCESS
+  FAILED
+}
+
+enum EvidenceReproHashMatch {
+  MATCH
+  MISMATCH
+  UNKNOWN
+}
+
+model EvidenceReproCheck {
+  id           String                  @id @default(uuid()) @map("id")
+  evidenceId   String                  @map("evidence_id")
+  checkedAt    DateTime                @default(now()) @map("checked_at")
+  fetchStatus  EvidenceReproFetchStatus @map("fetch_status")
+  hashMatch    EvidenceReproHashMatch  @map("hash_match")
+  fetchedHash  String?                 @map("fetched_hash")
+  errorMessage String?                 @map("error_message")
+
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+
+  @@index([evidenceId])
+  @@index([checkedAt])
+  @@map("evidence_repro_checks")
+}
+
+////////////////////
+// EPISTEMIC OBSERVABILITY (ADR-029; audit only)
+////////////////////
+
+enum EpistemicEventType {
+  GOVERNANCE_GRAPHQL_ERROR
+}
+
+model EpistemicEvent {
+  id         String             @id @default(uuid()) @map("id")
+  createdAt  DateTime           @default(now()) @map("created_at")
+  eventType  EpistemicEventType @map("event_type")
+  actorId    String?            @map("actor_id")
+  targetId   String?            @map("target_id")
+  errorCode  String             @map("error_code")
+  metadata   Json?              @map("metadata")
+
+  @@index([createdAt])
+  @@index([errorCode])
+  @@map("epistemic_events")
 }
 
 ////////////////////
@@ -454,10 +577,8 @@ model Claim {
   reviewerNote String?   @map("reviewer_note")
 
   /**
-   * Grounding requirement:
-   * - Claims are higher-order assertions and MUST be inspectable via evidence anchors.
-   * - This relationship is required at the semantic level; API layers must fail loudly if empty.
-   * - ADR-019: Evidence is reusable across claims via this join table.
+   * Evidence anchors (ADR-018/019). Claims may exist with zero links (non-authoritative).
+   * Evidence is reusable across claims via this join table.
    */
   evidenceLinks ClaimEvidenceLink[]
   /** @deprecated Legacy claim-document grounding; migrated to Evidence + ClaimEvidenceLink. */
@@ -496,6 +617,16 @@ model AdjudicationLog {
   newStatus       ClaimStatus @map("new_status")
   reviewerNote    String?     @map("reviewer_note")
   createdAt       DateTime    @default(now()) @map("created_at")
+
+  /**
+   * ADR-036: Previous log entry hash in append-only chain (nullable for first row).
+   */
+  prevHash  String? @map("prev_hash")
+  /**
+   * ADR-036: SHA-256 hex over canonical payload including prevHash.
+   * Nullable for rows predating ADR-036 backfill.
+   */
+  entryHash String? @map("entry_hash")
 
   claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
 

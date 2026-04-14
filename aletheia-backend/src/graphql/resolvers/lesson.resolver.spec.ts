@@ -19,7 +19,6 @@ describe('LessonResolver', () => {
     createdAt: new Date(),
     lessons: [],
     documents: [],
-    aiQueries: [],
   };
 
   const mockLesson: Lesson = {

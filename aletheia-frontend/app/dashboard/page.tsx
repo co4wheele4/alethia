@@ -53,6 +53,9 @@ export default function DashboardPage() {
             <Button component={Link} href="/onboarding" variant="text" size="small" sx={{ textTransform: 'none' }}>
               Onboarding wizard
             </Button>
+            <Button component={Link} href="/demo" variant="text" size="small" sx={{ textTransform: 'none' }}>
+              Demo walkthrough
+            </Button>
           </Box>
 
           <Box

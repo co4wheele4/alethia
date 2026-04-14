@@ -60,12 +60,18 @@ export function assertClaimsGrounded(claims: Claim[]) {
 export function useClaims(documentId: string | null) {
   const useDocScoped = Boolean(documentId);
 
-  const variables = useMemo(() => ({ documentId: documentId ?? '' }), [documentId]);
+  const variables = useMemo(
+    () =>
+      useDocScoped
+        ? { documentId: documentId ?? '', limit: 500, offset: 0 }
+        : { limit: 500, offset: 0 },
+    [documentId, useDocScoped],
+  );
 
   const query = useQuery<ListClaimsData | ClaimsByDocumentData>(
     useDocScoped ? CLAIMS_BY_DOCUMENT_QUERY : LIST_CLAIMS_QUERY,
     {
-      variables: useDocScoped ? variables : undefined,
+      variables,
       skip: useDocScoped ? !documentId : false,
       fetchPolicy: 'cache-and-network',
     }

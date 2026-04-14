@@ -33,7 +33,7 @@ describe('ClaimResolver', () => {
   });
 
   it('claims returns empty list when unauthenticated', async () => {
-    const result = await resolver.claims(undefined, {
+    const result = await resolver.claims(undefined, 100, 0, {
       req: { user: {} },
     } as any);
     expect(result).toEqual([]);
@@ -42,7 +42,7 @@ describe('ClaimResolver', () => {
 
   it('claims applies lifecycle filter when provided', async () => {
     claimFindMany.mockResolvedValue([] as any);
-    await resolver.claims({ lifecycle: 'ACCEPTED' as any }, {
+    await resolver.claims({ lifecycle: 'ACCEPTED' as any }, 100, 0, {
       req: { user: { sub: 'u1' } },
     } as any);
     expect(claimFindMany).toHaveBeenCalledWith(
@@ -52,13 +52,15 @@ describe('ClaimResolver', () => {
             expect.objectContaining({ status: 'ACCEPTED' }),
           ]),
         }),
+        take: 100,
+        skip: 0,
       }),
     );
   });
 
   it('claims applies hasEvidence:true filter when provided', async () => {
     claimFindMany.mockResolvedValue([] as any);
-    await resolver.claims({ hasEvidence: true }, {
+    await resolver.claims({ hasEvidence: true }, 100, 0, {
       req: { user: { sub: 'u1' } },
     } as any);
     expect(claimFindMany).toHaveBeenCalledWith(
@@ -70,13 +72,15 @@ describe('ClaimResolver', () => {
             },
           ]),
         }),
+        take: 100,
+        skip: 0,
       }),
     );
   });
 
   it('claims applies hasEvidence:false filter when provided', async () => {
     claimFindMany.mockResolvedValue([] as any);
-    await resolver.claims({ hasEvidence: false }, {
+    await resolver.claims({ hasEvidence: false }, 100, 0, {
       req: { user: { sub: 'u1' } },
     } as any);
     expect(claimFindMany).toHaveBeenCalledWith(
@@ -91,13 +95,15 @@ describe('ClaimResolver', () => {
             },
           ]),
         }),
+        take: 100,
+        skip: 0,
       }),
     );
   });
 
   it('claims queries by evidence->document.userId when authenticated', async () => {
     claimFindMany.mockResolvedValue([{ id: 'c1' }] as any);
-    const result = await resolver.claims(undefined, {
+    const result = await resolver.claims(undefined, 100, 0, {
       req: { user: { sub: 'u1' } },
     } as any);
     expect(result).toEqual([{ id: 'c1' }]);
@@ -125,12 +131,14 @@ describe('ClaimResolver', () => {
             },
           ],
         },
+        take: 100,
+        skip: 0,
       }),
     );
   });
 
   it('claimsByDocument returns empty list when unauthenticated', async () => {
-    const result = await resolver.claimsByDocument('doc_1', {
+    const result = await resolver.claimsByDocument('doc_1', 100, 0, {
       req: { user: {} },
     } as any);
     expect(result).toEqual([]);
@@ -139,7 +147,7 @@ describe('ClaimResolver', () => {
 
   it('claimsByDocument returns empty list when document does not exist', async () => {
     documentFindUnique.mockResolvedValue(null as any);
-    const result = await resolver.claimsByDocument('doc_1', {
+    const result = await resolver.claimsByDocument('doc_1', 100, 0, {
       req: { user: { sub: 'u1' } },
     } as any);
     expect(result).toEqual([]);
@@ -151,7 +159,7 @@ describe('ClaimResolver', () => {
       userId: 'other',
     } as any);
     await expect(
-      resolver.claimsByDocument('doc_1', {
+      resolver.claimsByDocument('doc_1', 100, 0, {
         req: { user: { sub: 'u1' } },
       } as any),
     ).rejects.toThrow(ForbiddenException);
@@ -163,7 +171,7 @@ describe('ClaimResolver', () => {
       userId: 'u1',
     } as any);
     claimFindMany.mockResolvedValue([{ id: 'c1' }] as any);
-    const result = await resolver.claimsByDocument('doc_1', {
+    const result = await resolver.claimsByDocument('doc_1', 100, 0, {
       req: { user: { sub: 'u1' } },
     } as any);
     expect(result).toEqual([{ id: 'c1' }]);
@@ -181,16 +189,16 @@ describe('ClaimResolver', () => {
             { evidence: { some: { documentId: 'doc_1' } } },
           ],
         },
+        take: 100,
+        skip: 0,
       }),
     );
   });
 
-  it('evidence resolveField fails when claim has no evidence', async () => {
+  it('evidence resolveField returns empty list when claim has no evidence (ADR-018)', async () => {
     claimEvidenceLinkFindMany.mockResolvedValue([] as any);
     claimEvidenceFindMany.mockResolvedValue([] as any);
-    await expect(resolver.evidence({ id: 'c1' } as any)).rejects.toThrow(
-      /Claim\(c1\).*no evidence anchors/i,
-    );
+    await expect(resolver.evidence({ id: 'c1' } as any)).resolves.toEqual([]);
   });
 
   it('evidence resolveField returns evidence anchors when present (from links)', async () => {
@@ -220,12 +228,10 @@ describe('ClaimResolver', () => {
     });
   });
 
-  it('documents resolveField fails when documents cannot be derived (no evidence)', async () => {
+  it('documents resolveField returns empty list when no evidence anchors (ADR-018)', async () => {
     claimEvidenceLinkFindMany.mockResolvedValue([] as any);
     claimEvidenceFindMany.mockResolvedValue([] as any);
-    await expect(resolver.documents({ id: 'c1' } as any)).rejects.toThrow(
-      /documents cannot be derived/i,
-    );
+    await expect(resolver.documents({ id: 'c1' } as any)).resolves.toEqual([]);
   });
 
   it('documents resolveField fails when referenced document is missing', async () => {

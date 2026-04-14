@@ -1,19 +1,14 @@
-import { Resolver, Mutation, Args, Context, ID, Query } from '@nestjs/graphql';
+import { Resolver, Mutation, Args, Context, Query } from '@nestjs/graphql';
 import { UseGuards, ForbiddenException } from '@nestjs/common';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { IngestionService } from './ingestion.service';
-import { ExtractionService } from './extraction.service';
 import { IngestDocumentInput } from '../graphql/inputs/ingest-document.input';
 import { Document } from '@models/document.model';
-import { AiExtractionSuggestion } from '@models/ai-extraction-suggestion.model';
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
 export class IngestionResolver {
-  constructor(
-    private readonly ingestionService: IngestionService,
-    private readonly extractionService: ExtractionService,
-  ) {}
+  constructor(private readonly ingestionService: IngestionService) {}
 
   @Query(() => String)
   ingestionHealthCheck() {
@@ -31,22 +26,5 @@ export class IngestionResolver {
     }
 
     return await this.ingestionService.ingest(input);
-  }
-
-  @Mutation(() => [AiExtractionSuggestion])
-  async proposeExtraction(
-    @Args('chunkId', { type: () => ID }) chunkId: string,
-  ) {
-    return this.extractionService.proposeExtraction(chunkId);
-  }
-
-  @Mutation(() => AiExtractionSuggestion)
-  async acceptSuggestion(@Args('id', { type: () => ID }) id: string) {
-    return await this.extractionService.acceptSuggestion(id);
-  }
-
-  @Mutation(() => AiExtractionSuggestion)
-  async rejectSuggestion(@Args('id', { type: () => ID }) id: string) {
-    return await this.extractionService.rejectSuggestion(id);
   }
 }

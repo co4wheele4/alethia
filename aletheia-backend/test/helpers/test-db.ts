@@ -27,25 +27,18 @@ function verifyTestDatabase(): void {
 
 export async function cleanDatabase(prisma: PrismaClient) {
   verifyTestDatabase();
-  // Delete in reverse order of dependencies
-  await prisma.reviewerResponse.deleteMany();
-  await prisma.reviewAssignment.deleteMany();
-  await prisma.reviewRequest.deleteMany();
-  await prisma.adjudicationLog.deleteMany();
-  await prisma.claimEvidenceLink.deleteMany();
-  await prisma.claimEvidence.deleteMany();
-  await prisma.claim.deleteMany();
-  await prisma.evidence.deleteMany();
-  await prisma.aiQueryResult.deleteMany();
-  await prisma.aiQuery.deleteMany();
-  await prisma.embedding.deleteMany();
-  await prisma.entityMention.deleteMany();
-  await prisma.entityRelationship.deleteMany();
-  await prisma.entity.deleteMany();
-  await prisma.documentChunk.deleteMany();
-  await prisma.document.deleteMany();
-  await prisma.lesson.deleteMany();
-  await prisma.user.deleteMany();
+  // Nuclear reset: FK order is error-prone as the schema grows; truncate all public tables (not migrations).
+  await prisma.$executeRawUnsafe(`
+    DO $$ DECLARE r RECORD;
+    BEGIN
+      FOR r IN (
+        SELECT tablename FROM pg_tables
+        WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'
+      ) LOOP
+        EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' CASCADE';
+      END LOOP;
+    END $$;
+  `);
 }
 
 export async function seedTestData(prisma: PrismaClient) {

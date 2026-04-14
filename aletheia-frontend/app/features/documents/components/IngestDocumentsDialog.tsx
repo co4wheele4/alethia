@@ -130,8 +130,15 @@ export function IngestDocumentsDialog(props: {
   ]);
 
   return (
-    <Dialog open={open} onClose={onDialogClose} fullWidth maxWidth="md">
-      <DialogTitle>Ingest documents</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onDialogClose}
+      fullWidth
+      maxWidth="md"
+      aria-labelledby="ingest-documents-dialog-title"
+      data-testid="ingest-documents-dialog"
+    >
+      <DialogTitle id="ingest-documents-dialog-title">Ingest documents</DialogTitle>
       <DialogContent>
         {!canIngest ? (
           <Alert severity="info" sx={{ mb: 2 }}>
@@ -256,19 +263,19 @@ export function IngestDocumentsDialog(props: {
           />
         ) : null}
 
-        {canIngest ? (
+        <Box data-testid="ingest-irreversible-control" sx={{ mt: 2 }}>
           <FormControlLabel
-            sx={{ mt: 2 }}
             control={
               <Checkbox
                 checked={confirmedIrreversible}
                 onChange={(e) => setConfirmedIrreversible(e.target.checked)}
-                disabled={overallBusy}
+                disabled={overallBusy || !canIngest}
+                inputProps={{ 'aria-label': 'Confirm irreversible ingestion' }}
               />
             }
             label="I understand ingestion is irreversible and sources are immutable."
           />
-        ) : null}
+        </Box>
       </DialogContent>
 
       <DialogActions>

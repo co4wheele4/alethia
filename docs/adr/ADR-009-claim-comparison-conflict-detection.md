@@ -1,148 +1,40 @@
 # ADR-009: Claim Comparison & Conflict Detection
 
 ## Status
-Status: Proposed
+Status: REJECTED
 
 ## Date
 2026-01-22
 
+## Supersedes
+None
+
+## SupersededBy
+None
+
 ## Context
 
-As Aletheia accumulates claims across documents, users must be able to:
-- Compare claims that appear to assert the same or related facts
-- Identify when claims are consistent, overlapping, or contradictory
-- Understand *why* claims conflict, based strictly on evidence
+An earlier draft proposed **semantic** claim-to-claim relationships and **conflict detection** grounded in interpretive analysis of evidence.
 
-Without a formal model, “conflict detection” risks:
-- Implicit truth judgments
-- Hidden confidence scoring
-- Black-box AI assertions
-- UI behavior that oversteps evidence
-
-This ADR defines **how claims may be compared** and **how conflicts are detected and presented**—without violating evidence primacy or confidence constraints.
+That approach is **incompatible** with Aletheia’s non-negotiable bar on **inference** (no automated conflict detection, no semantic relationship typing such as CONFLICTING/EQUIVALENT/OVERLAPPING as system outputs, no relevance or similarity ranking).
 
 ---
 
-## Decision
+## Decision (REJECTED)
 
-Claim comparison and conflict detection are **interpretive overlays**, not truth engines.
+The system **does not** adopt automated conflict detection, claim-to-claim semantic relationship labels, or “conflict” signals computed from evidence overlap.
 
-Conflicts are *identified*, not *resolved*.
-All conflict signals MUST be explainable via evidence.
-
----
-
-## Definitions
-
-### Claim Comparison
-A structured analysis of two or more claims to determine their semantic relationship.
-
-### Conflict
-A condition where two claims:
-- Refer to overlapping subject matter
-- Are supported by evidence that cannot all be simultaneously true
-
----
-
-## Allowed Claim Relationships
-
-Claim-to-claim relationships MAY include:
-
-- **EQUIVALENT**
-  - Same assertion, different wording
-- **OVERLAPPING**
-  - Share some facts, differ in scope
-- **DISJOINT**
-  - Unrelated claims
-- **CONFLICTING**
-  - Cannot both be true given their evidence
-
-These labels are **descriptive**, not evaluative.
-
----
-
-## Evidence-Grounded Conflict Detection
-
-A conflict MAY be flagged ONLY IF:
-
-1. Claims reference overlapping entities or relationships  
-2. Evidence points to mutually exclusive facts  
-3. The conflict can be explained by showing:
-   - Documents
-   - Mentions
-   - Relationships
-
-No conflict may be flagged without evidence.
-
----
-
-## Frontend Semantics
-
-### UI Responsibilities
-
-- Display conflicts as *alerts*, not judgments
-- Always provide a “Why is this a conflict?” affordance
-- Allow users to inspect both claims side-by-side
-- Highlight conflicting evidence inline
-
-### Prohibited UI Behavior
-
-The UI MUST NOT:
-- Auto-select a “correct” claim
-- Suppress one claim in favor of another
-- Assign confidence or likelihood to conflicts
-- Merge conflicting claims automatically
-
----
-
-## Backend & Schema Expectations
-
-If supported by the backend, conflict detection MAY expose:
-
-- claimId
-- relatedClaimId
-- relationshipType (EQUIVALENT, OVERLAPPING, CONFLICTING)
-- evidenceRefs[]
-
-Conflict metadata MUST:
-- Be additive (no mutation of claims)
-- Be removable without breaking claims
-
----
-
-## Testing Implications
-
-- UI tests MUST fail if a conflict lacks evidence
-- MSW mocks MUST include explicit evidence for conflicts
-- Side-by-side comparison views MUST render deterministically
-
----
-
-## Relationship to Other ADRs
-
-- **ADR-004**: Conflict UI is a higher-level semantic overlay
-- **ADR-005**: All data must be schema-faithful
-- **ADR-006**: No confidence inference
-- **ADR-007**: Claims never replace evidence
-- **ADR-008**: Lifecycle state does not resolve conflicts
+**Normative comparison behavior** is defined only as **structural, side-by-side inspection** of claims and their **explicitly linked** evidence (see **ADR-010**, **ADR-018**, **ADR-021**).
 
 ---
 
 ## Consequences
 
-### Positive
-- Transparent reasoning
-- Auditable disagreement
-- Prevents silent contradictions
-- Supports expert review workflows
-
-### Negative
-- Increased UI complexity
-- Requires careful evidence visualization
+- No schema fields for `relatedClaim`, `conflict`, `relationshipType`, or similar derived semantics.
+- UI comparison surfaces MUST remain read-only structural juxtaposition without inferring agreement or disagreement.
 
 ---
 
-## Decision Outcome
+## Historical note
 
-Conflicts are **signals for investigation**, not conclusions.
-Truth remains grounded in evidence, not arbitration logic.
+Prior text in revision history that described semantic conflict workflows is **non-normative** and **MUST NOT** be implemented.

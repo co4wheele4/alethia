@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, LinearProgress, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 
+import { WorkspaceEmptyHelp } from '../components/common/WorkspaceEmptyHelp';
 import { AppShell, ContentSurface } from '../components/layout';
 import { LIST_RELATIONSHIPS_QUERY } from '@/src/graphql';
 
@@ -58,7 +59,7 @@ export default function RelationshipsPage() {
         ) : null}
 
         {!loading && !error && relationships.length === 0 ? (
-          <Alert severity="info">No relationships found.</Alert>
+          <WorkspaceEmptyHelp surface="relationships" />
         ) : null}
 
         {!loading && !error && relationships.length > 0 ? (
