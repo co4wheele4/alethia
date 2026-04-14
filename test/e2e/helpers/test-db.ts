@@ -34,6 +34,8 @@ export async function cleanDatabase(prisma: PrismaClient) {
   await prisma.entityMention.deleteMany();
   await prisma.entityRelationship.deleteMany();
   await prisma.entity.deleteMany();
+  // Evidence.chunkId -> document_chunks with onDelete: Restrict (ADR-019)
+  await prisma.evidence.deleteMany();
   await prisma.documentChunk.deleteMany();
   await prisma.document.deleteMany();
   await prisma.lesson.deleteMany();

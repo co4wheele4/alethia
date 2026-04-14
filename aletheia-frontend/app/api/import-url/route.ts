@@ -58,17 +58,18 @@ const FETCH_HEADERS = {
 /**
  * Fetch with `redirect: manual` and re-validate each redirect target with
  * {@link assertPublicHttpUrlForServerFetch} so redirects cannot bypass SSRF checks.
+ *
+ * Each outbound `fetch` uses `safe.href` where `safe` is the URL object returned by
+ * `assertPublicHttpUrlForServerFetch` in the same iteration (DNS + blocklist checks).
  */
 async function fetchUrlWithSsrfGuards(
   validatedFirst: URL,
   signal: AbortSignal,
 ): Promise<Response> {
-  let current = validatedFirst;
+  let current: URL = validatedFirst;
   for (let hop = 0; hop < MAX_REDIRECTS; hop++) {
-    // First hop: `validatedFirst` was returned by `assertPublicHttpUrlForServerFetch`.
-    // Later hops: `current` was reassigned from `assertPublicHttpUrlForServerFetch` on each redirect.
-    // codeql[js/request-forgery]: URL is DNS-validated and blocklisted before any outbound fetch (see ssrf-public-url.ts).
-    const upstream = await fetch(current.href, {
+    const safe = await assertPublicHttpUrlForServerFetch(current.href);
+    const upstream = await fetch(safe.href, {
       method: 'GET',
       redirect: 'manual',
       signal,
@@ -83,11 +84,11 @@ async function fetchUrlWithSsrfGuards(
       }
       let next: URL;
       try {
-        next = new URL(loc, current);
+        next = new URL(loc, safe);
       } catch {
         throw new Error('Invalid redirect URL');
       }
-      current = await assertPublicHttpUrlForServerFetch(next.href);
+      current = next;
       continue;
     }
 
