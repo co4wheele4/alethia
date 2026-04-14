@@ -45,7 +45,18 @@ Deletion / update rules remain as configured in the ruleset; Code scanning and c
 
 **Not done:** relying only on local tests, skipping hooks without a matching green CI run on `master`, or treating a green subset of workflows as equivalent to **`mvp-release-gate`** + **`governance-bot`**.
 
-## 5. Operational notes (executor)
+## 5. Landing this document on `master`
+
+This file was added in commit **`f25919d`** on branch **`docs/mvp-readiness-proof-2026-04-14`**, opened as **PR #7** (`https://github.com/co4wheele4/alethia/pull/7`). The PR re-ran the same gates; both required jobs succeeded:
+
+| Check | Result | Job URL |
+| --- | --- | --- |
+| **governance-bot** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24417725780/job/71331311981` |
+| **mvp-release-gate** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24417725882/job/71331312012` |
+
+If merge is still blocked in the UI, remaining blockers are **outside** these two checks (for example **code owner review** or other ruleset rules such as **Code scanning**). Complete those in GitHub; do not disable the required checks.
+
+## 6. Operational notes (executor)
 
 - **Push:** `git push` to `master` may be blocked or require bypass when rulesets / Code scanning are pending; resolve via GitHub UI / policy, not by disabling checks.
 - **Pre-push hook:** `scripts/git-hooks/pre-push` runs a large local matrix; it is **not** a substitute for Actions. For long-running local verification, rely on CI or run the same steps as `.github/workflows/mvp-release-gate.yml` deliberately.
