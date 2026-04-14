@@ -140,8 +140,9 @@ jobs:
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/aletheia_test
       
+      # Must match backend e2e (`aletheia-backend/test/jest-e2e.json`), not root `test/jest-e2e.json` — same matrix as MVP Release Gate.
       - name: Run e2e tests
-        run: npm run test:e2e
+        run: npm run test:e2e:cov --workspace=aletheia-backend
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/aletheia_test
 
