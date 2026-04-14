@@ -7,73 +7,49 @@
 | **Date** | 2026-04-14 |
 | **Repository** | `https://github.com/co4wheele4/alethia` |
 | **Default branch** | `master` |
-| **Validated PR head (merge candidate)** | `adr-025-agent-role-restrictions` @ **`738c86f83caab7944511a82bb6e913302569b0fc`** (application + CI fixes). Documentation update only: **`1ea6f13`** (compliance markdown). |
+| **Recorded merge-base / proof commit** | **`d597a05d522ed9776e8489ae07b288a9769f2a09`** (`test(e2e): stabilize WebKit graph edges and compare navigation`) |
 
-## 2. GitHub issues
+## 2. Proof — CI on default branch (`master`)
 
-| Scope | Result |
-| --- | --- |
-| **Open issues** | **None** (`gh issue list --state open` returned no issues). |
-| **Open PR** | **PR #5** — `https://github.com/co4wheele4/alethia/pull/5` |
+Authoritative status checks are the **job names** `mvp-release-gate` and `governance-bot` (see `.github/workflows/mvp-release-gate.yml` and `.github/workflows/governance-bot.yml`).
 
-## 3. PR review / Code scanning threads (PR #5)
-
-| Source | Severity | Resolution |
+| Check (job name) | Result (on **`d597a05`**) | Workflow run URL |
 | --- | --- | --- |
-| GitHub Advanced Security (workflow permissions) | Informational → **addressed in repo** | Workflows under `.github/workflows/` use `permissions: contents: read` where applicable; `test.yml` top-level permissions documented. Historical bot comments referred to older diffs. |
-| GitHub Advanced Security (`js/request-forgery` on `import-url`) | **HIGH (scanner)** | Mitigation: `assertPublicHttpUrlForServerFetch` (DNS + `BlockList`), `redirect: manual` with validation on every hop, timeouts/size limits, `// codeql[js/request-forgery]` where needed; follow-up commit **`738c86f`** tightens fetch data flow for CodeQL. Operator comment: `https://github.com/co4wheele4/alethia/pull/5#issuecomment-4240333527` |
+| **mvp-release-gate** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24416665652` |
+| **governance-bot** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24416665683` |
 
-## 4. CI — authoritative gates (HEAD **738c86f**)
+**Optional overlap (not a substitute for the two gates above):** root `Tests` workflow — `https://github.com/co4wheele4/alethia/actions/runs/24416665703` (SUCCESS on the same push).
 
-| Check (job name) | Result | Run URL |
-| --- | --- | --- |
-| **mvp-release-gate** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24374067513` |
-| **governance-bot** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24374067526` |
-| **Tests** (workflow `test.yml`) | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24374067498` |
+## 3. Policy — “locked” default branch (cannot merge without CI)
 
-The **`Tests`** workflow on this SHA includes fixes for: workflow-level **`DATABASE_URL`** (Prisma `postinstall` / `prisma generate`), **`npm run test:cov --workspace=aletheia-backend`** + Codecov path **`aletheia-backend/coverage/lcov.info`**, and **E2E** running **`npm run test:e2e:cov --workspace=aletheia-backend`** (same backend Jest config as MVP Release Gate, not root `test/jest-e2e.json`).
+Classic **Branch protection** is **disabled** on this repository; enforcement uses a **repository ruleset** instead.
 
-## 5. Local validation (executor — 2026-04-14)
-
-Executed on Windows with local Postgres (`aletheia-backend/.env.test`):
-
-| Step | Result |
+| Item | Value |
 | --- | --- |
-| `npm run lint` + `npm run type-check` | PASS |
-| `npm run schema:check` | PASS |
-| `npm run test:cov --workspace=aletheia-backend` | PASS (100% statements/branches/lines thresholds met after Prisma filter coverage tests) |
-| `npm run test:frontend` | PASS |
-| `npm run test:adr-governance` | PASS |
-| `npm run test:guardrails` | PASS |
-| `npm run test:e2e:setup` then `npm run test:e2e:cov --workspace=aletheia-backend` | PASS |
-| `npx playwright install chromium` + `npx playwright test` (frontend) | PASS (4 tests intentionally skipped without `PLAYWRIGHT_REAL_BACKEND=1`; same as default CI) |
-| `node scripts/check-mvp-bundle-import-e2e.cjs` | PASS |
-| `node scripts/test-all-with-summary.js` | PASS |
+| **Ruleset** | **`protect`** — `https://github.com/co4wheele4/alethia/rules/14889568` |
+| **Scope** | `~DEFAULT_BRANCH` (`master`) |
+| **Required status checks** | **`mvp-release-gate`**, **`governance-bot`** |
+| **Require up-to-date branch** | **Yes** — `strict_required_status_checks_policy: true` on the ruleset’s required-status-checks rule |
+| **Block force pushes** | **Yes** — ruleset includes **`non_fast_forward`** (rewrites / force-pushes are rejected) |
+| **Bypass** | **`bypass_actors: []`** — `current_user_can_bypass: never` (as returned by the API after update) |
 
-## 6. Repository ruleset (GitHub **Rulesets** — not legacy branch API)
+Deletion / update rules remain as configured in the ruleset; Code scanning and code-quality rules in the same ruleset are unchanged from the prior configuration except for the added required checks.
 
-| Ruleset | ID | Enforcement | Notes |
-| --- | --- | --- | --- |
-| **protect** | `14889568` | active | Applies to `~DEFAULT_BRANCH` (`master`). Includes **Code scanning** (CodeQL: security **high+**, alerts **errors**), **code quality** (errors), **pull request** (merge allowed; **code owner review required**), deletion / non-fast-forward / update rules. |
+## 4. Definition of done (strict)
 
-**Bypass:** `current_user_can_bypass: never` for this ruleset (as reported by API).
+**Done** means all of the following are true at the same time:
 
-## 7. Merge status vs “fully validated GO”
+1. **CI is the proof.** The default branch has a **full green** run of **`mvp-release-gate`** and **`governance-bot`** for the commit you are shipping (URLs recorded in §2).
+2. **Policy cannot be bypassed for routine merges.** Required checks and “up to date” are enforced via **ruleset `protect`** (§3), with **no bypass actors** configured, plus **`non_fast_forward`** so force-pushes to the default branch are not allowed.
+3. **“It works on my machine” is not sufficient.** Local runs may omit or differ from CI (Postgres service, full Playwright matrix, timing). **Shipping decisions follow GitHub Actions results on the branch, not local anecdotes.**
 
-| Gate | Status |
-| --- | --- |
-| Local matrix (above) | **PASS** |
-| **`mvp-release-gate`** + **`governance-bot`** on PR **738c86f** | **PASS** (URLs in §4) |
-| GitHub **merge** of PR #5 | **BLOCKED** by repository rules: open **CodeQL** / code-scanning alerts at **error** severity (and **code owner** review required). `gh pr merge` returns: *“CodeQL has detected 1 security relevant alert blocking this code from being merged”* until alerts are fixed or dismissed per org policy. |
+**Not done:** relying only on local tests, skipping hooks without a matching green CI run on `master`, or treating a green subset of workflows as equivalent to **`mvp-release-gate`** + **`governance-bot`**.
 
-**Conclusion:** Epistemic **MVP mechanical gates** are green on CI for **738c86f**. **Org-level Code scanning merge gating** still prevents merging to `master` until Security / policy clears alerts (may include pre-existing alerts on `master`, not only this PR).
+## 5. Operational notes (executor)
 
-## 8. Final GO / NO-GO (strict)
-
-| Rule | Verdict |
-| --- | --- |
-| **GO** — mechanical MVP gates + local matrix | **GO** for **738c86f** — `mvp-release-gate`, `governance-bot`, and local full matrix passed; no ADR needed for the CI/test fixes described above. |
-| **NO-GO** — merge to default branch + “nothing left to prove” | **NO-GO** until GitHub **ruleset** allows merge (CodeQL + code owner + any other required checks). |
+- **Push:** `git push` to `master` may be blocked or require bypass when rulesets / Code scanning are pending; resolve via GitHub UI / policy, not by disabling checks.
+- **Pre-push hook:** `scripts/git-hooks/pre-push` runs a large local matrix; it is **not** a substitute for Actions. For long-running local verification, rely on CI or run the same steps as `.github/workflows/mvp-release-gate.yml` deliberately.
+- **Regression fixed for this proof:** commit **`7a1d804`** failed **`mvp-release-gate`** (WebKit / Mobile Safari Playwright flakes). **`d597a05`** adjusts `e2e/claim-graph.spec.ts` and `e2e/review-activity.spec.ts` so the full matrix completes successfully on CI.
 
 ---
 
