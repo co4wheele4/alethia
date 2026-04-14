@@ -36,14 +36,14 @@ test.describe('ADR-021: Claim–Evidence Graph', () => {
       timeout: 20_000,
     });
 
-    const edges = page.getByTestId('graph-edge');
-    const count = await edges.count();
-    expect(count).toBeGreaterThanOrEqual(3);
+    // WebKit / Mobile Safari can paint the SVG edge layer after the heading; match the stable assertions below.
+    const edgeTimeout = 30_000;
+    await expect(page.getByTestId('graph-edge')).toHaveCount(3, { timeout: edgeTimeout });
 
     const claimNodes = page.getByTestId('graph-claim-node');
     const evidenceNodes = page.getByTestId('graph-evidence-node');
-    await expect(claimNodes.first()).toBeVisible();
-    await expect(evidenceNodes.first()).toBeVisible();
+    await expect(claimNodes.first()).toBeVisible({ timeout: edgeTimeout });
+    await expect(evidenceNodes.first()).toBeVisible({ timeout: edgeTimeout });
   });
 
   test('No Inferred Relationships: two claims sharing evidence produce only claim→evidence edges', async ({

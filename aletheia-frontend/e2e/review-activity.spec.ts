@@ -107,7 +107,11 @@ test.describe('Review activity visibility (read-only)', () => {
 
     await login(page);
 
-    await page.goto('/claims/compare?base=claim-1&with=claim-2');
+    // WebKit occasionally throws "internal error" waiting for full document `load` on client-heavy routes.
+    await page.goto('/claims/compare?base=claim-1&with=claim-2', {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
     await expect(page.getByText('Claim comparison').first()).toBeVisible({ timeout: 20_000 });
 
     // Indicator: count is visible.
