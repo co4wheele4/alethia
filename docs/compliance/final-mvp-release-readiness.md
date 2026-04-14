@@ -7,7 +7,7 @@
 | **Date** | 2026-04-14 |
 | **Repository** | `https://github.com/co4wheele4/alethia` |
 | **Default branch** | `master` |
-| **Validated PR head (merge candidate)** | `adr-025-agent-role-restrictions` @ **`738c86f83caab7944511a82bb6e913302569b0fc`** |
+| **Validated PR head (merge candidate)** | `adr-025-agent-role-restrictions` @ **`738c86f83caab7944511a82bb6e913302569b0fc`** (application + CI fixes). Documentation update only: **`1ea6f13`** (compliance markdown). |
 
 ## 2. GitHub issues
 
