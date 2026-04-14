@@ -71,8 +71,8 @@
     "test:adr-governance": "jest --config test/jest-adr.json"
   },
   "devDependencies": {
-    "@nestjs/common": "^11.1.11",
-    "@nestjs/core": "^11.1.11",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
     "@nestjs/testing": "^11.1.11",
     "@types/bcrypt": "^6.0.0",
     "@types/jest": "^30.0.0",
