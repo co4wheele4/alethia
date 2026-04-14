@@ -136,6 +136,7 @@
 | No lifecycle leaks via normal API | **PASS** (adjudication path); bundle import **PASS** after remediation (ADR-027 ordering + e2e) |
 | No semantic search in `searchClaims` / `searchEvidence` | **PASS** |
 | UI does not imply truth | **PASS** post-remediation (inference UI removed/disabled per remediation report) |
+| **Final launch executor (2026-04-14)** — full local matrix + `mvp-release-gate` + `governance-bot` on PR head **738c86f** | **Mechanical gates: PASS** — see **`docs/compliance/final-mvp-release-readiness.md`** for commands, run URLs, and merge blockers (GitHub Code scanning ruleset). |
 
 ---
 
@@ -144,6 +145,12 @@
 After engineering remediation, the repository targets **MVP GO** with **zero CRITICAL** violations in shipped schema and default API paths, as documented in **`docs/compliance/mvp-release-remediation-report.md`**. Required mechanical gates include **`npm run schema:check`**, MVP schema lint, and the **`mvp-release-gate`** workflow; GitHub branch protection must still require these checks.
 
 **Operator responsibilities:** GitHub **branch protection** must list required checks by **job name** (`mvp-release-gate`, `governance-bot`). Local runs without Docker/Postgres may still skip backend e2e; **CI is authoritative** for the full matrix.
+
+### 10.1 Final launch executor (2026-04-14)
+
+- **PR head validated:** `738c86f83caab7944511a82bb6e913302569b0fc` on branch `adr-025-agent-role-restrictions` (PR #5).
+- **CI (authoritative):** `mvp-release-gate` and `governance-bot` **SUCCESS** — URLs and evidence in **`docs/compliance/final-mvp-release-readiness.md`**.
+- **Merge to `master`:** Blocked by GitHub **ruleset** `protect` (Code scanning + code owner review), not by failing MVP mechanical tests. Resolve or dismiss Code scanning alerts per repository policy, then merge PR #5.
 
 ---
 

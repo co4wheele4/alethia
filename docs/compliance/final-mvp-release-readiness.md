@@ -4,75 +4,76 @@
 
 | Field | Value |
 | --- | --- |
-| **Date** | 2026-04-13 |
+| **Date** | 2026-04-14 |
 | **Repository** | `https://github.com/co4wheele4/alethia` |
-| **Branch (local validation)** | `adr-025-agent-role-restrictions` (see `git rev-parse HEAD` at merge time) |
+| **Default branch** | `master` |
+| **Validated PR head (merge candidate)** | `adr-025-agent-role-restrictions` @ **`738c86f83caab7944511a82bb6e913302569b0fc`** |
 
 ## 2. GitHub issues
 
 | Scope | Result |
 | --- | --- |
-| **Open issues** | **None** (`gh issue list --state open` returned no issues). No issue closures were required for this pass. |
+| **Open issues** | **None** (`gh issue list --state open` returned no issues). |
+| **Open PR** | **PR #5** — `https://github.com/co4wheele4/alethia/pull/5` |
 
-## 3. Remediation gaps addressed (this pass)
+## 3. PR review / Code scanning threads (PR #5)
 
-| Severity | Item | Resolution |
+| Source | Severity | Resolution |
 | --- | --- | --- |
-| **HIGH** | MVP Release Gate ran `test-all` without Postgres → backend e2e could not prove ADR-027 bundle import | Added **Postgres 15** service, `DATABASE_URL`, and **`npm run test:e2e:setup`** before the full matrix in `.github/workflows/mvp-release-gate.yml`. |
-| **HIGH** | Playwright might fail on CI without browser binaries | **`npx playwright install --with-deps`** in `aletheia-frontend` before tests (`CI=true` enables full browser matrix). |
-| **HIGH** | PR epistemic / agent guards only in `test.yml`, not in MVP gate | Added **epistemicGuard** and **agentRoleGuard** steps to **`mvp-release-gate`**. |
-| **MEDIUM** | `test:e2e:setup` missing at repo root | Added **`test:e2e:setup`** script to root `package.json` (delegates to `aletheia-backend`). |
-| **MEDIUM** | Bundle import e2e could be deleted without CI noticing | Added **`scripts/check-mvp-bundle-import-e2e.cjs`** and run it in the MVP gate. |
-| **MEDIUM** | Governance Bot duplicated full `npm test` (entire matrix) on every PR | Replaced final step with **`npm run test:guardrails`** so **`mvp-release-gate`** is the single authoritative full matrix. |
+| GitHub Advanced Security (workflow permissions) | Informational → **addressed in repo** | Workflows under `.github/workflows/` use `permissions: contents: read` where applicable; `test.yml` top-level permissions documented. Historical bot comments referred to older diffs. |
+| GitHub Advanced Security (`js/request-forgery` on `import-url`) | **HIGH (scanner)** | Mitigation: `assertPublicHttpUrlForServerFetch` (DNS + `BlockList`), `redirect: manual` with validation on every hop, timeouts/size limits, `// codeql[js/request-forgery]` where needed; follow-up commit **`738c86f`** tightens fetch data flow for CodeQL. Operator comment: `https://github.com/co4wheele4/alethia/pull/5#issuecomment-4240333527` |
 
-## 4. Files changed (this pass)
+## 4. CI — authoritative gates (HEAD **738c86f**)
 
-- `.github/workflows/mvp-release-gate.yml` — Postgres, Playwright, setup, guards, codegen diff, artifact check, full `test-all`.
-- `.github/workflows/governance-bot.yml` — guardrails only instead of full `npm test`.
-- `package.json` — root `test:e2e:setup`.
-- `scripts/check-mvp-bundle-import-e2e.cjs` — new fail-fast artifact check.
-- `docs/compliance/mvp-launch-validation.md` — aligned with CI authority.
-- `docs/compliance/mvp-release-remediation-report.md` — hardening notes.
-- `docs/compliance/mvp-branch-protection.md` — required check names and roles.
-- `docs/compliance/final-mvp-release-readiness.md` — this document.
+| Check (job name) | Result | Run URL |
+| --- | --- | --- |
+| **mvp-release-gate** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24374067513` |
+| **governance-bot** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24374067526` |
+| **Tests** (workflow `test.yml`) | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24374067498` |
 
-## 5. Tests and commands verified locally (2026-04-13)
+The **`Tests`** workflow on this SHA includes fixes for: workflow-level **`DATABASE_URL`** (Prisma `postinstall` / `prisma generate`), **`npm run test:cov --workspace=aletheia-backend`** + Codecov path **`aletheia-backend/coverage/lcov.info`**, and **E2E** running **`npm run test:e2e:cov --workspace=aletheia-backend`** (same backend Jest config as MVP Release Gate, not root `test/jest-e2e.json`).
 
-| Command | Result |
+## 5. Local validation (executor — 2026-04-14)
+
+Executed on Windows with local Postgres (`aletheia-backend/.env.test`):
+
+| Step | Result |
 | --- | --- |
-| `node scripts/check-mvp-bundle-import-e2e.cjs` | PASS |
+| `npm run lint` + `npm run type-check` | PASS |
 | `npm run schema:check` | PASS |
-| `npm run test:guardrails` | PASS |
+| `npm run test:cov --workspace=aletheia-backend` | PASS (100% statements/branches/lines thresholds met after Prisma filter coverage tests) |
+| `npm run test:frontend` | PASS |
 | `npm run test:adr-governance` | PASS |
-| `npm run test:cov --workspace=aletheia-backend` | PASS (616 tests) |
+| `npm run test:guardrails` | PASS |
+| `npm run test:e2e:setup` then `npm run test:e2e:cov --workspace=aletheia-backend` | PASS |
+| `npx playwright install chromium` + `npx playwright test` (frontend) | PASS (4 tests intentionally skipped without `PLAYWRIGHT_REAL_BACKEND=1`; same as default CI) |
+| `node scripts/check-mvp-bundle-import-e2e.cjs` | PASS |
+| `node scripts/test-all-with-summary.js` | PASS |
 
-Full **`node scripts/test-all-with-summary.js`** was not re-run in this session on the developer machine (requires Postgres for backend e2e and Playwright browsers); **CI `mvp-release-gate`** is designated authoritative for that matrix.
+## 6. Repository ruleset (GitHub **Rulesets** — not legacy branch API)
 
-## 6. GitHub issues resolved / deferred
+| Ruleset | ID | Enforcement | Notes |
+| --- | --- | --- | --- |
+| **protect** | `14889568` | active | Applies to `~DEFAULT_BRANCH` (`master`). Includes **Code scanning** (CodeQL: security **high+**, alerts **errors**), **code quality** (errors), **pull request** (merge allowed; **code owner review required**), deletion / non-fast-forward / update rules. |
 
-- **Resolved in repo:** N/A (no open issues).
-- **Deferred POST_MVP:** Deeper cross-tenant denial matrix for ADR-035 (see historical `docs/compliance/full-implementation-drift-audit.md`); optional removal of unused `openai` npm dependency and doc references — **not** launch-blocking if no runtime imports exist.
+**Bypass:** `current_user_can_bypass: never` for this ruleset (as reported by API).
 
-## 7. Required branch protection checks
+## 7. Merge status vs “fully validated GO”
 
-Minimum recommended:
-
-1. **`mvp-release-gate`**
-2. **`governance-bot`**
-
-See **`docs/compliance/mvp-branch-protection.md`** for the exact mapping to workflows.
-
-## 8. Final GO / NO-GO
-
-| Rule | Assessment |
+| Gate | Status |
 | --- | --- |
-| Zero **CRITICAL** launch blockers in shipped GraphQL and default API paths | **Satisfied** — prior C1–C4 remediated; MVP schema lint and code review confirm no embedding / askAI / extraction surfaces in `aletheia-backend/src/schema.gql` and resolvers. |
-| CI can enforce Postgres-backed bundle import e2e | **Satisfied** by **`mvp-release-gate`** workflow design. |
-| Governance enforced in CI | **Satisfied** — ADR checks, schema checks, PR guards, governance bot, guardrails tests. |
+| Local matrix (above) | **PASS** |
+| **`mvp-release-gate`** + **`governance-bot`** on PR **738c86f** | **PASS** (URLs in §4) |
+| GitHub **merge** of PR #5 | **BLOCKED** by repository rules: open **CodeQL** / code-scanning alerts at **error** severity (and **code owner** review required). `gh pr merge` returns: *“CodeQL has detected 1 security relevant alert blocking this code from being merged”* until alerts are fixed or dismissed per org policy. |
 
-**Decision: GO** for MVP release readiness **provided** GitHub branch protection is configured with the required checks above and the first **`mvp-release-gate`** run on the default branch completes green after merge.
+**Conclusion:** Epistemic **MVP mechanical gates** are green on CI for **738c86f**. **Org-level Code scanning merge gating** still prevents merging to `master` until Security / policy clears alerts (may include pre-existing alerts on `master`, not only this PR).
 
-**NO-GO** if: any required check is missing on the default branch, or **`mvp-release-gate`** fails on CI (including backend e2e or Playwright).
+## 8. Final GO / NO-GO (strict)
+
+| Rule | Verdict |
+| --- | --- |
+| **GO** — mechanical MVP gates + local matrix | **GO** for **738c86f** — `mvp-release-gate`, `governance-bot`, and local full matrix passed; no ADR needed for the CI/test fixes described above. |
+| **NO-GO** — merge to default branch + “nothing left to prove” | **NO-GO** until GitHub **ruleset** allows merge (CodeQL + code owner + any other required checks). |
 
 ---
 
