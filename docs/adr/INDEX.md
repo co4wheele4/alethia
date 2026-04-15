@@ -1,12 +1,14 @@
 # ADR Implementation Index (Navigational)
 
+**Canonical repository context:** Before changing schema, resolvers, UI, ADRs, CI, ingestion, search, or graph behavior, consult [`docs/context/aletheia-core-context.md`](../context/aletheia-core-context.md) (always-on Cursor rule: [`.cursor/rules/aletheia-core-context.mdc`](../../.cursor/rules/aletheia-core-context.mdc)).
+
 | ADR | Implementation entrypoints (non-exhaustive) | Tests / guards (non-exhaustive) |
 | --- | --- | --- |
 | `ADR-001` | _No direct code references found_ | _No direct test references found_ |
 | `ADR-002` | _No direct code references found_ | _No direct test references found_ |
 | `ADR-003` | _No direct code references found_ | _No direct test references found_ |
 | `ADR-004` | `aletheia-frontend/src/graphql/fragments/documentCoreFields.fragment.ts`<br/>`aletheia-frontend/src/graphql/fragments/documentEvidenceView.fragment.ts`<br/>`aletheia-frontend/src/graphql/fragments/ClaimComparison.fragment.ts`<br/>`.cursor/rules/system.md` | `aletheia-frontend/src/graphql/__tests__/graphql-contracts.test.ts` |
-| `ADR-005` | `src/schema.gql`<br/>`.cursor/rules/aletheia-frontend-authoritative.mdc`<br/>`scripts/check-schema-snapshots.cjs`<br/>`aletheia-frontend/src/test/msw/handlers/guards.handlers.ts`<br/>`aletheia-frontend/app/services/apollo-client.ts` | `aletheia-frontend/src/graphql/__tests__/adr-005-truth-surface-fragments.contract.test.ts`<br/>`aletheia-frontend/app/services/__tests__/apollo-client-contract-no-confidence.test.ts`<br/>`aletheia-frontend/src/test/msw/handlers/guards.handlers.test.ts` |
+| `ADR-005` | `src/schema.gql`<br/>`docs/context/aletheia-core-context.md`<br/>`.cursor/rules/aletheia-frontend-authoritative.mdc`<br/>`.cursor/rules/aletheia-core-context.mdc`<br/>`scripts/check-schema-snapshots.cjs`<br/>`aletheia-frontend/src/test/msw/handlers/guards.handlers.ts`<br/>`aletheia-frontend/app/services/apollo-client.ts` | `aletheia-frontend/src/graphql/__tests__/adr-005-truth-surface-fragments.contract.test.ts`<br/>`aletheia-frontend/app/services/__tests__/apollo-client-contract-no-confidence.test.ts`<br/>`aletheia-frontend/src/test/msw/handlers/guards.handlers.test.ts` |
 | `ADR-006` | `aletheia-frontend/app/services/apollo-client.ts` (no-confidence link)<br/>`aletheia-frontend/src/test/msw/assertNoConfidence.ts` | `aletheia-frontend/app/services/__tests__/apollo-client-contract-no-confidence.test.ts` |
 | `ADR-007` | `.cursor/rules/system.md` | `aletheia-frontend/src/graphql/__tests__/graphql-contracts.test.ts` |
 | `ADR-008` | `src/schema.gql` (`ClaimStatus`, `ClaimLifecycleState`)<br/>`aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.ts`<br/>`aletheia-frontend/app/features/claimReview/hooks/useClaimReview.ts` | `aletheia-frontend/e2e/claim-review.spec.ts`<br/>`aletheia-backend/src/graphql/resolvers/claim-adjudication.resolver.spec.ts` |

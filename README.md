@@ -225,6 +225,8 @@ See [PROJECT_REVIEW.md](./PROJECT_REVIEW.md) for detailed project analysis.
 
 ## Contributing
 
+**Repository context:** Aletheia uses a non-inferential, governed model. All contributors and agents must follow [`docs/context/aletheia-core-context.md`](docs/context/aletheia-core-context.md). Changes that conflict with that model require ADR review. See [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/governance/developer-rules.md`](docs/governance/developer-rules.md).
+
 1. Make changes in the appropriate workspace
 2. Run tests: `npm run test`
 3. Run linting: `npm run lint`

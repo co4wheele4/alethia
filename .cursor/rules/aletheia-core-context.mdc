@@ -1,0 +1,11 @@
+---
+description: Canonical Aletheia repository context — binding for all work
+alwaysApply: true
+---
+
+# Aletheia Core Context (Binding)
+
+- **Always** reason from Aletheia’s governed, non-inferential model first. Do not invent product behavior or weaken epistemic constraints.
+- **`docs/context/aletheia-core-context.md`** is the canonical statement of project meaning for this repository (schema fidelity, evidence/provenance, confidence prohibition, ADR-025 agent role). Treat it as **binding** for all work: application code, tests, GraphQL schema and resolvers, UI, docs, CI, migrations, scripts, workflows, prompts, and automation.
+- Before schema, resolver, UI, ADR, CI, ingestion, search, or graph changes, read that file and align with it.
+- If requested work **conflicts** with the model in that document (or with binding ADRs), **stop** and say **`REQUIRES ADR`** — do not silently adapt or “approximate” the change.

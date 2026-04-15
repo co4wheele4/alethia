@@ -10,12 +10,31 @@
  */
 
 const { execSync } = require('child_process');
-const { writeFileSync, unlinkSync, existsSync, mkdirSync, rmSync } = require('fs');
+const { writeFileSync, unlinkSync, existsSync, mkdirSync, rmSync, readFileSync } = require('fs');
 const { join } = require('path');
 
 const ROOT = join(__dirname, '..');
 
 describe('Guardrails', function () {
+  describe('Canonical Aletheia context (docs + Cursor rule)', function () {
+    it('has docs/context/aletheia-core-context.md with expected anchor', function () {
+      const p = join(ROOT, 'docs', 'context', 'aletheia-core-context.md');
+      expect(existsSync(p)).toBe(true);
+      const text = readFileSync(p, 'utf8');
+      expect(text).toContain('Aletheia Frontend Contract (Authoritative)');
+      expect(text).toContain('src/schema.gql');
+    });
+
+    it('has always-on Cursor rule that references the canonical context file', function () {
+      const rulePath = join(ROOT, '.cursor', 'rules', 'aletheia-core-context.mdc');
+      expect(existsSync(rulePath)).toBe(true);
+      const rule = readFileSync(rulePath, 'utf8');
+      expect(rule).toContain('alwaysApply: true');
+      expect(rule).toContain('docs/context/aletheia-core-context.md');
+      expect(rule).toContain('REQUIRES ADR');
+    });
+  });
+
   describe('GraphQL lint: noSemanticQueries', function () {
     it('rejects query containing orderBy', function () {
       const tempDir = join(ROOT, 'tests', '_guardrail-fixtures');
