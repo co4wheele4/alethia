@@ -58,7 +58,8 @@ export function ClaimDetailDrawer(props: { open: boolean; claim: Claim | null; o
               {claim ? <ClaimStatusBadge status={claim.status} /> : null}
             </Stack>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-              Claims are assertions grounded in explicit evidence. No confidence is shown.
+              Claims are statements in the system, not automatic facts. Linked evidence is shown when available. No
+              confidence or relevance scoring is shown (ADR-038).
             </Typography>
           </Box>
           <IconButton aria-label="Close claim drawer" onClick={onClose}>

@@ -148,7 +148,8 @@ export function ClaimReviewView(props: { claimId: string }) {
             {claim ? <ClaimStatusBadge status={claim.status} testId="claim-state" /> : null}
           </Stack>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-            Claims are assertions grounded in explicit evidence. No confidence is shown.
+            Claims are statements in the system, not automatic facts. Linked evidence is shown when available. No
+            confidence or relevance scoring is shown (ADR-038).
           </Typography>
 
           {claimsLoading ? (

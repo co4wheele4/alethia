@@ -46,6 +46,10 @@ export default function EvidenceDetailPage() {
       <Stack spacing={2}>
         <Link href="/evidence">Back to evidence list</Link>
         <Typography variant="h5">Evidence</Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          Evidence is stored and rendered as recorded. Aletheia does not assess correctness, strength, or relevance
+          (ADR-038).
+        </Typography>
         {loading ? <Typography>Loading…</Typography> : null}
         {error ? <Alert severity="error">Failed to load evidence.</Alert> : null}
         {!loading && !ev ? <Alert severity="warning">Evidence not found.</Alert> : null}

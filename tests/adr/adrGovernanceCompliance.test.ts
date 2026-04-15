@@ -3,7 +3,7 @@
  * - Normalized status on every ADR markdown file
  * - ACCEPTED ADRs must not reference any SUPERSEDED ADR
  * - SUPERSEDED ADRs must declare SupersededBy pointing to a non-SUPERSEDED ADR
- * - docs/adr/index.json must list ADR-001..ADR-037
+ * - docs/adr/index.json must list ADR-001..ADR-038
  */
 
 import * as fs from 'fs';
@@ -124,12 +124,12 @@ describe('ADR governance compliance', () => {
     expect(acceptedRefsSuperseded).toEqual([]);
   });
 
-  it('includes ADR-001..ADR-037 in docs/adr/index.json', () => {
+  it('includes ADR-001..ADR-038 in docs/adr/index.json', () => {
     expect(fs.existsSync(INDEX_PATH)).toBe(true);
     const raw = fs.readFileSync(INDEX_PATH, 'utf8');
     const data = JSON.parse(raw) as { adrs?: Record<string, unknown> };
     expect(data.adrs).toBeDefined();
-    for (let n = 1; n <= 37; n += 1) {
+    for (let n = 1; n <= 38; n += 1) {
       const id = `ADR-${String(n).padStart(3, '0')}`;
       expect(data.adrs).toHaveProperty(id);
     }

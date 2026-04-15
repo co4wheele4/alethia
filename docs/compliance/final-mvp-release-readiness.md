@@ -4,10 +4,11 @@
 
 | Field | Value |
 | --- | --- |
-| **Date** | 2026-04-14 |
+| **Date** | 2026-04-15 (post-MVP execution update; CI not re-run from this workspace) |
 | **Repository** | `https://github.com/co4wheele4/alethia` |
 | **Default branch** | `master` |
-| **Recorded merge-base / proof commit** | **`d597a05d522ed9776e8489ae07b288a9769f2a09`** (`test(e2e): stabilize WebKit graph edges and compare navigation`) |
+| **Local workspace tip (executor)** | **`38914c20298d1dce05911495b76d303ba5a8d79d`** |
+| **Recorded merge-base / proof commit (historical green)** | **`d597a05d522ed9776e8489ae07b288a9769f2a09`** (`test(e2e): stabilize WebKit graph edges and compare navigation`) |
 
 ## 2. Proof — CI on default branch (`master`)
 
@@ -61,6 +62,16 @@ If merge is still blocked in the UI, remaining blockers are **outside** these tw
 - **Push:** `git push` to `master` may be blocked or require bypass when rulesets / Code scanning are pending; resolve via GitHub UI / policy, not by disabling checks.
 - **Pre-push hook:** `scripts/git-hooks/pre-push` runs a large local matrix; it is **not** a substitute for Actions. For long-running local verification, rely on CI or run the same steps as `.github/workflows/mvp-release-gate.yml` deliberately.
 - **Regression fixed for this proof:** commit **`7a1d804`** failed **`mvp-release-gate`** (WebKit / Mobile Safari Playwright flakes). **`d597a05`** adjusts `e2e/claim-graph.spec.ts` and `e2e/review-activity.spec.ts` so the full matrix completes successfully on CI.
+
+---
+
+## 7. Post-MVP execution note (2026-04-15)
+
+**Launch status (this document):** The **operational GO** definition in §4 is unchanged: shipping decisions follow **green** `mvp-release-gate` and `governance-bot` on the **exact commit** you release, via GitHub Actions.
+
+**This executor session did not** push commits or query GitHub Actions API for workflow runs. Treat CI verification as **incomplete** until an operator confirms the latest required jobs on the shipping SHA.
+
+**Authoritative next step:** After merging post-MVP documentation and test changes, open the Actions tab and confirm **`mvp-release-gate`** and **`governance-bot`** both **SUCCESS** on the merge commit; record URLs here if you need a renewed paper trail.
 
 ---
 

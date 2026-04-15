@@ -40,4 +40,5 @@
 | `ADR-035` | `docs/adr/ADR-035-workspace-isolation-rbac.md` | _RBAC policy doc; tests vary by surface_ |
 | `ADR-036` | `aletheia-backend/src/integrity/integrity.service.ts`<br/>`aletheia-backend/src/graphql/resolvers/integrity.resolver.ts` | `aletheia-backend/src/integrity/integrity.service.spec.ts` |
 | `ADR-037` | `docs/adr/ADR-037-external-interface-constraints.md`<br/>`schemas/aletheiaBundle.schema.json` (external bundle rules) | `aletheia-backend/src/bundle/aletheia-bundle.service.spec.ts` |
+| `ADR-038` | `docs/adr/ADR-038-user-guidance-blocked-state-semantics.md`<br/>`docs/product/user-mental-model.md` | `aletheia-frontend/e2e/adr-038-user-guidance.spec.ts` |
 

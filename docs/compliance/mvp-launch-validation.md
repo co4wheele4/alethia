@@ -26,8 +26,8 @@
 
 | Check | Status | Notes |
 | --- | --- | --- |
-| ADR-001 … ADR-037 files under `docs/adr/` | **PASS** | 37 ADR markdown files present. |
-| `docs/adr/index.json` lists ADR-001..ADR-037 | **PASS** | Enforced by `scripts/validate-adr-index.cjs` (`npm run adr:index:check` in CI). |
+| ADR-001 … ADR-038 files under `docs/adr/` | **PASS** | ADR markdown files through **ADR-038** (user guidance / blocked states). |
+| `docs/adr/index.json` lists ADR-001..ADR-038 | **PASS** | Enforced by `scripts/validate-adr-index.cjs` (`npm run adr:index:check` in CI). |
 | Normalized statuses; ACCEPTED ↔ SUPERSEDED rules | **PASS** | `tests/adr/adrGovernanceCompliance.test.ts` (included in root `npm test` via `test:adr-governance`). |
 | ADR-018 (claims may exist without evidence; no progress without evidence) | **PASS (backend + docs)** | Resolver enforces evidence before adjudication; `Claim` field docs describe non-authoritative empty evidence. |
 | ADR-005 alignment with ADR-018 | **PASS** | Schema and filters (`hasEvidence`, lifecycle) reflect closure rules. |

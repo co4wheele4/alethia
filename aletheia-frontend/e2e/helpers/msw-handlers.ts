@@ -1711,22 +1711,35 @@ export async function setupGraphQLMocks(route: Route) {
         const eid = varString(parsedBody.variables, 'id') ?? '';
         const createdAt = new Date('2026-03-01T12:00:00.000Z').toISOString();
         const html = '<html><body>Exact mock bytes</body></html>';
+        const evidenceById =
+          eid === 'cev-1'
+            ? {
+                __typename: 'Evidence' as const,
+                id: 'cev-1',
+                createdAt,
+                sourceType: 'DOCUMENT',
+                sourceUrl: null,
+                snippet: 'Test Entity',
+                contentSha256: '0000000000000000000000000000000000000000000000000000000000000000',
+                rawBodyBase64: null,
+              }
+            : eid === 'html-ev-1'
+              ? {
+                  __typename: 'Evidence' as const,
+                  id: 'html-ev-1',
+                  createdAt,
+                  sourceType: 'URL',
+                  sourceUrl: 'https://example.com/seed',
+                  snippet: html,
+                  contentSha256: '0000000000000000000000000000000000000000000000000000000000000000',
+                  rawBodyBase64: null,
+                }
+              : null;
         response = {
           status: 200,
           body: {
             data: {
-              evidenceById:
-                eid === 'html-ev-1'
-                  ? {
-                      __typename: 'Evidence',
-                      id: 'html-ev-1',
-                      createdAt,
-                      sourceType: 'URL',
-                      sourceUrl: 'https://example.com/seed',
-                      snippet: html,
-                      contentSha256: '0000000000000000000000000000000000000000000000000000000000000000',
-                    }
-                  : null,
+              evidenceById,
               evidenceReproChecks: [],
             },
           },

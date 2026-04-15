@@ -40,8 +40,8 @@ export function ClaimsView(props: { userId: string | null; userRole?: string | n
           Claims
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Read-only assertions grounded in explicit evidence. Claims without evidence must never render. Inspect passages
-          per document under{' '}
+          Read-only claim statements with linked evidence when available. No ranking or confidence is shown (ADR-038).
+          Claims without evidence must never render. Inspect passages per document under{' '}
           <Link href="/evidence">Evidence</Link>.
         </Typography>
 

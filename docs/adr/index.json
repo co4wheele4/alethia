@@ -553,6 +553,24 @@
       "enforcement": [
         "schemas/aletheiaBundle.schema.json"
       ]
+    },
+    "ADR-038": {
+      "title": "User Guidance and Blocked State Semantics",
+      "status": "ACCEPTED",
+      "implementation": [
+        "docs/adr/ADR-038-user-guidance-blocked-state-semantics.md",
+        "docs/product/user-mental-model.md",
+        "docs/product/onboarding-principles.md",
+        "docs/product/blocked-state-patterns.md"
+      ],
+      "tests": [
+        "aletheia-frontend/e2e/adr-038-user-guidance.spec.ts",
+        "tests/adr/adrGovernanceCompliance.test.ts"
+      ],
+      "enforcement": [
+        "tools/pr-checks/epistemicGuard.cjs",
+        "scripts/check-adr-governance.cjs"
+      ]
     }
   }
 }

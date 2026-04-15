@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /**
  * Validates docs/adr/index.json:
- * - Contains ADR-001 .. ADR-037
+ * - Contains ADR-001 .. ADR-038
  * - Required keys per entry
  * - ACCEPTED ADRs have non-empty enforcement
  * - Referenced files exist (repo-relative)
@@ -52,7 +52,7 @@ function main() {
 
   const allowedStatus = new Set(['ACCEPTED', 'REJECTED', 'SUPERSEDED', 'PROPOSED']);
 
-  for (let n = 1; n <= 37; n += 1) {
+  for (let n = 1; n <= 38; n += 1) {
     const id = `ADR-${String(n).padStart(3, '0')}`;
     const entry = adrs[id];
     if (!entry) {

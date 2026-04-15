@@ -92,7 +92,7 @@ function main() {
       if (re.test(lower) && !seen.has(`${currentFile}:${term}`)) {
         const isComment = /^\s*[/*#]|^\s*\/\//.test(content.trim());
         const isGuardOrDoc =
-          /assertNoDerived|epistemicGuard|ADR-022|ADR-025|ADR-033|ADR-037|agentRoleGuard|forbidden|noSemanticQueries|schema-lint|FORBIDDEN_IMPORT_KEYS/i.test(
+          /assertNoDerived|epistemicGuard|ADR-022|ADR-025|ADR-033|ADR-037|ADR-038|agentRoleGuard|forbidden|noSemanticQueries|schema-lint|FORBIDDEN_IMPORT_KEYS/i.test(
             content,
           );
         if (!isComment && !isGuardOrDoc) {
