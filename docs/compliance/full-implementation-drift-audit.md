@@ -49,7 +49,7 @@ Statuses are taken from `docs/adr/index.json` (authoritative for automation). Ea
 | ADR-004 | ACCEPTED | Schema snapshot + GraphQL contract tests |
 | ADR-005 | ACCEPTED | `schema.gql` snapshot, ADR governance test, frontend contract tests |
 | ADR-006 | ACCEPTED | No-confidence client + MSW guards |
-| ADR-007 | PROPOSED | Documented only |
+| ADR-007 | ACCEPTED | Schema + resolvers + UI separation; see `docs/adr/index.json` |
 | ADR-008 | ACCEPTED | Adjudication resolver + DB constraints + e2e |
 | ADR-009 | REJECTED | Historical; guards ensure no conflict semantics in API |
 | ADR-010 | ACCEPTED | Comparison UI tests + epistemic PR guard |
@@ -95,14 +95,14 @@ None verified for **claim lifecycle**, **evidence immutability**, **non-semantic
 | Item | Detail |
 | --- | --- |
 | **GraphQL `Embedding` surface** *(superseded at 2026-04-13)* | **Historical:** older schema exposed embedding CRUD. **Current MVP:** types and mutations **removed**; `schema-lint-mvp.cjs` fails the build if they reappear. |
-| **ADR-035 workspace isolation** | Scoping exists (e.g. search visibility via document/user linkage). Full cross-tenant denial matrix is not exhaustively proven in this pass; index maps partial tests. |
+| **ADR-035 workspace isolation** | *(Partially superseded 2026-04-19.)* JWT-scoped denial for search + `evidenceById` is covered by `workspace-isolation-adr035.e2e-spec.ts` and resolver tests; ADMIN bundle import/export remains a separate deployment concern. |
 
 ### MEDIUM
 
 | Item | Detail |
 | --- | --- |
 | **`askAI` mutation** | Persists OpenAI embedding API output into `AiQuery` / `AiQueryResult`. This is **not** claim/evidence truth, but it is stored semantic-ish text. Treat as coordination/audit surface; do not promote to adjudication. |
-| **Developer docs** | `aletheia-frontend/UI_COMPONENT_MAPPING.md` describes hypothetical “semantic search” and confidence-style components that **do not match** the authoritative contract. **Documentation drift only** — not runtime behavior. |
+| **Developer docs** | *(Resolved 2026-04-19.)* `aletheia-frontend/UI_COMPONENT_MAPPING.md` now maps **shipped** routes and components only. |
 
 ### LOW
 
@@ -139,8 +139,8 @@ None verified for **claim lifecycle**, **evidence immutability**, **non-semantic
 ## 7. Remaining gaps (tracked)
 
 1. **Embedding API:** *(Addressed in MVP remediation — embedding GraphQL surface removed; see `aletheia-backend/scripts/schema-lint-mvp.cjs`)*. Further policy is **POST_MVP** if reintroduced via ADR.
-2. **ADR-035:** Strengthen integration tests for cross-workspace denial on all mutable and export/import paths if not already covered end-to-end.
-3. **Documentation:** Align or archive `UI_COMPONENT_MAPPING.md` so it cannot be mistaken for the shipped epistemic contract.
+2. **ADR-035:** JWT-scoped isolation (document ownership) is covered by unit tests and `test/e2e/cross-cutting/workspace-isolation-adr035.e2e-spec.ts`. **ADMIN** bundle import/export remains global; gate at deployment if multi-tenant **Workspace** rows are added later.
+3. **Documentation:** `UI_COMPONENT_MAPPING.md` aligned with shipped UI (2026-04-19).
 
 ---
 

@@ -18,7 +18,7 @@
 
 | # | Scenario | Expected behavior | Existing coverage (examples) | Gaps / next tests |
 | --- | --- | --- | --- | --- |
-| S1 | Claim with **no** evidence | Empty evidence list; workflows that require evidence stay blocked; copy stays structural | `claim.resolver.spec.ts` (ADR-018), `ClaimReviewView` non-authoritative label | Playwright: claim with zero evidence mock (extend MSW) |
+| S1 | Claim with **no** evidence | Empty evidence list; workflows that require evidence stay blocked; copy stays structural | `claim.resolver.spec.ts` (ADR-018), `ClaimReviewView` non-authoritative label | Playwright: claim with zero evidence mock (extend MSW); **ADR-035:** `workspace-isolation-adr035.e2e-spec.ts` (cross-user search/evidence denial) |
 | S2 | **Conflicting** claims, evidence on both sides | Side-by-side display only; no “winner,” no conflict verdict | `ClaimComparisonView` tests, ADR-010 | E2E: two claims same topic, assert no conflict/agreement language |
 | S3 | Many claims on same topic **without** ranking | Deterministic ordering only; no “top” result | `search.resolver.spec.ts`, `adr-033-search.spec.ts` | Stress: large list pagination UI |
 | S4 | Misleading or bad evidence | Rendered as stored; no warning that implies automated quality judgment | ADR-020 evidence tests | Copy audit only (no “untrustworthy” auto-flag) |

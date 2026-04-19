@@ -94,15 +94,25 @@
     },
     "ADR-007": {
       "title": "Claim Semantics vs Evidence Semantics",
-      "status": "PROPOSED",
+      "status": "ACCEPTED",
       "implementation": [
-        "docs/adr/ADR-007-claim-semantics-vs-evidence-semantics.md"
+        "docs/adr/ADR-007-claim-semantics-vs-evidence-semantics.md",
+        "aletheia-backend/prisma/schema.prisma",
+        "aletheia-backend/src/graphql/resolvers/claim.resolver.ts",
+        "aletheia-backend/src/graphql/resolvers/evidence.resolver.ts",
+        "aletheia-frontend/app/features/claimComparison/components/ClaimComparisonView.tsx",
+        "aletheia-frontend/app/features/claimReview/components/ClaimReviewView.tsx"
       ],
       "tests": [
-        "aletheia-frontend/src/graphql/__tests__/graphql-contracts.test.ts"
+        "aletheia-frontend/src/graphql/__tests__/graphql-contracts.test.ts",
+        "aletheia-frontend/app/features/claimComparison/__tests__/ClaimComparisonView.test.tsx",
+        "aletheia-frontend/app/features/claimReview/__tests__/ClaimReviewView.test.tsx",
+        "aletheia-backend/src/graphql/resolvers/evidence.resolver.spec.ts"
       ],
       "enforcement": [
-        "scripts/check-adr-governance.cjs"
+        "scripts/check-adr-governance.cjs",
+        "tools/pr-checks/epistemicGuard.cjs",
+        "aletheia-backend/scripts/schema-lint-adr022.cjs"
       ]
     },
     "ADR-008": {
@@ -514,13 +524,21 @@
       "title": "Workspace Isolation + RBAC",
       "status": "ACCEPTED",
       "implementation": [
-        "docs/adr/ADR-035-workspace-isolation-rbac.md"
+        "docs/adr/ADR-035-workspace-isolation-rbac.md",
+        "aletheia-backend/src/graphql/utils/gql-auth-user.ts",
+        "aletheia-backend/src/graphql/resolvers/claim.resolver.ts",
+        "aletheia-backend/src/graphql/resolvers/search.resolver.ts",
+        "aletheia-backend/src/graphql/resolvers/evidence.resolver.ts",
+        "aletheia-backend/src/graphql/resolvers/review-request.resolver.ts"
       ],
       "tests": [
-        "aletheia-backend/src/graphql/resolvers/search.resolver.spec.ts"
+        "aletheia-backend/src/graphql/resolvers/search.resolver.spec.ts",
+        "aletheia-backend/src/graphql/resolvers/claim.resolver.spec.ts",
+        "aletheia-backend/test/e2e/cross-cutting/workspace-isolation-adr035.e2e-spec.ts"
       ],
       "enforcement": [
         "scripts/check-adr-governance.cjs",
+        "aletheia-backend/src/auth/guards/jwt-auth.guard.ts",
         "aletheia-backend/src/graphql/utils/gql-auth-user.ts"
       ]
     },

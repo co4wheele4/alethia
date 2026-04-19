@@ -153,6 +153,43 @@ describe('SearchResolver', () => {
     });
   });
 
+  it('searchClaims requires workspace isolation (evidence → document ownership) in where clause', async () => {
+    await resolver.searchClaims(
+      {
+        queryText: '',
+        matchMode: TextMatchMode.EXACT,
+        caseSensitive: true,
+        orderBy: DeterministicOrderBy.ID_ASC,
+        limit: 10,
+        offset: 0,
+      },
+      ctx,
+    );
+    const where = findManyClaims.mock.calls[0][0].where as {
+      AND: unknown[];
+    };
+    expect(where.AND[0]).toEqual({
+      OR: [
+        {
+          evidenceLinks: {
+            some: {
+              evidence: {
+                sourceDocument: { userId: 'user-1' },
+              },
+            },
+          },
+        },
+        {
+          evidence: {
+            some: {
+              document: { userId: 'user-1' },
+            },
+          },
+        },
+      ],
+    });
+  });
+
   it('searchClaims applies optional filters (lifecycle, dates, evidence source)', async () => {
     const createdAtAfter = new Date('2024-01-01T00:00:00.000Z');
     const createdAtBefore = new Date('2024-12-31T23:59:59.000Z');

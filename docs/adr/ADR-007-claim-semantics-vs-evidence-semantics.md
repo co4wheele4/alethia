@@ -1,7 +1,7 @@
 # ADR-007: Claim Semantics vs Evidence Semantics
 
 ## Status
-Status: PROPOSED
+Status: ACCEPTED
 
 ## Date
 2026-01-22
@@ -172,6 +172,6 @@ These tradeoffs are intentional.
 
 ## Decision Outcome
 
-Adopted as a **semantic guardrail**.
+Adopted as a **semantic guardrail** and recorded as **ACCEPTED** in `docs/adr/index.json` (enforcement via schema, resolvers, UI patterns, and epistemic guardrails — see index entry).
 
 Aletheia discloses *what is claimed* and *what supports or challenges it* — never what should be believed.
