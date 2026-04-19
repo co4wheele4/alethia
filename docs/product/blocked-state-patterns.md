@@ -31,6 +31,11 @@
 
 ---
 
+## Enforcement (drift control)
+
+- **PR diff:** `tools/pr-checks/epistemicGuard.cjs` uses `tools/pr-checks/adr038Lexicon.json` together with ADR-022 patterns; extend the lexicon when adding new banned product language.
+- **UI:** `aletheia-frontend/e2e/adr-038-user-guidance.spec.ts` and `aletheia-frontend/app/lib/adr038ForbiddenUi.ts` (unit tests) guard primary surfaces.
+
 ## Related ADRs
 
 - **ADR-018** — Evidence closure and non-authoritative states.

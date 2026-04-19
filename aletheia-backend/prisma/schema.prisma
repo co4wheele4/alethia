@@ -44,6 +44,11 @@ model User {
 
   htmlCrawlIngestionRuns HtmlCrawlIngestionRun[]
 
+  /**
+   * Claims authored via API while still without evidence anchors (ADR-035 workspace scoping).
+   */
+  claimsCreated Claim[] @relation("ClaimCreatedBy")
+
   @@map("users")
 }
 
@@ -565,6 +570,13 @@ model Claim {
   createdAt DateTime    @default(now()) @map("created_at")
 
   /**
+   * ADR-035: Authenticated user who created this claim via `createClaim` (nullable for legacy/import).
+   * Enables workspace listing for DRAFT claims before evidence is linked.
+   */
+  createdByUserId String? @map("created_by_user_id")
+  createdByUser   User?   @relation("ClaimCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  /**
    * Adjudication metadata (ADR-011).
    * Nullable for backward safety:
    * - existing claims may predate explicit review.
@@ -600,6 +612,7 @@ model Claim {
 
   @@index([status])
   @@index([createdAt])
+  @@index([createdByUserId])
   @@map("claims")
 }
 

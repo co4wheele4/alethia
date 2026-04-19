@@ -2,6 +2,7 @@ import {
   Args,
   Context,
   Int,
+  Mutation,
   Parent,
   Query,
   ResolveField,
@@ -13,6 +14,7 @@ import {
   Scope,
   UseGuards,
 } from '@nestjs/common';
+import { ClaimStatus as PrismaClaimStatus } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
@@ -21,7 +23,9 @@ import { Evidence } from '@models/evidence.model';
 import { ClaimFilterInput } from '@inputs/claim-filter.input';
 import { Document } from '@models/document.model';
 import { getGqlAuthUserId } from '../utils/gql-auth-user';
+import { claimWorkspaceOr } from '../utils/claim-workspace-visibility';
 import { assertAdr034ListPagination } from '@common/list-pagination';
+import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 
 type GqlRequestContext = {
   req?: {
@@ -65,7 +69,7 @@ export class ClaimResolver {
 
   @Query(claimListType, {
     description:
-      'List claims visible in the current workspace (scoped via evidence -> documents). ADR-022: filter supports only lifecycle and hasEvidence.',
+      'List claims visible in the current workspace (evidence -> documents, or created via createClaim). ADR-022: filter supports only lifecycle and hasEvidence.',
   })
   async claims(
     @Args('filter', { type: claimFilterInputType, nullable: true })
@@ -79,26 +83,7 @@ export class ClaimResolver {
 
     assertAdr034ListPagination(limit, offset);
 
-    const workspaceWhere = {
-      OR: [
-        {
-          evidenceLinks: {
-            some: {
-              evidence: {
-                sourceDocument: { userId: authUserId },
-              },
-            },
-          },
-        },
-        {
-          evidence: {
-            some: {
-              document: { userId: authUserId },
-            },
-          },
-        },
-      ],
-    } as const;
+    const workspaceWhere = { OR: claimWorkspaceOr(authUserId) };
 
     const lifecycleWhere =
       filter?.lifecycle !== undefined && filter?.lifecycle !== null
@@ -172,6 +157,28 @@ export class ClaimResolver {
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit,
       skip: offset,
+    });
+  }
+
+  @Mutation(claimType, {
+    description:
+      'Create a DRAFT claim statement (ADR-018). Visible in the creator workspace; non-authoritative until evidence is linked.',
+  })
+  async createClaim(
+    @Args('text') text: string,
+    @Context() ctx?: GqlRequestContext,
+  ) {
+    const authUserId = getGqlAuthUserId(ctx);
+    if (!authUserId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
+    const trimmed = typeof text === 'string' ? text.trim() : '';
+    if (!trimmed) throw contractError(GQL_ERROR_CODES.CLAIM_TEXT_REQUIRED);
+
+    return await this.prisma.claim.create({
+      data: {
+        text: trimmed,
+        status: PrismaClaimStatus.DRAFT,
+        createdByUserId: authUserId,
+      },
     });
   }
 

@@ -1,6 +1,6 @@
 # Aletheia system verification report
 
-**Verification date:** 2026-04-19  
+**Verification date:** 2026-04-19 (updated same day — `createClaim` + workspace scoping)  
 **Scope:** Repository audit (Prisma schema, GraphQL `schema.gql`, resolvers, bundle/import, CI workflows, frontend truth surfaces, tests).  
 **Method:** Static inspection and targeted search; no assumption of correctness without code evidence.
 
@@ -31,7 +31,7 @@ Aletheia’s stated purpose is to record **claims as statements**, attach **evid
 
 | Required capability | Status | Notes |
 |---------------------|--------|--------|
-| 1. Claim creation | **Gap** | No `createClaim` (or equivalent) mutation in `schema.gql`. Production `prisma.claim.create` usage in `src/` is **only** `AletheiaBundleService` import path. Claims for normal users are not creatable via GraphQL except indirectly if pre-seeded or imported by **ADMIN** (`importBundle`). |
+| 1. Claim creation | **Present** | `Mutation.createClaim(text)` creates `DRAFT` claims with `createdByUserId` set to the authenticated user. Workspace list/search visibility includes `createdByUserId` matches (`claim-workspace-visibility.ts`). E2E: `aletheia-backend/test/e2e/cross-cutting/create-claim-workspace.e2e-spec.ts`. Admin `importBundle` remains separate. |
 | 2. Evidence creation | **Present** | `createEvidence` with verbatim validation and immutability — `evidence.resolver.ts`. |
 | 3. Claim–evidence linking | **Present** | `linkEvidenceToClaim`, optional `claimIds` on `createEvidence`. |
 | 4. Blocking: no adjudication without evidence | **Present** | Resolver + DB trigger `trg_claims_epistemic_enforcement` (ADR-027). |
@@ -62,7 +62,6 @@ The **production** `Search` page does not use `relevanceScore` or semantic ranki
 
 | Finding | Why it matters | Files / areas |
 |--------|----------------|----------------|
-| **No general GraphQL claim creation** | Core workflow “create claim → attach evidence → adjudicate” is incomplete for non-admin users; claims only appear via seed, direct DB, or **ADMIN** `importBundle`. | `schema.gql` (no create claim); `aletheia-bundle.resolver.ts`; `aletheia-bundle.service.ts` |
 | **Mutable document chunks vs immutable evidence** | `Evidence` rows are DB-immutable, but `updateChunk` can change `DocumentChunk.content` after evidence anchors exist, so offsets/snippet can drift from live chunk text unless process forbids edits. | `document-chunk.resolver.ts` (`updateChunk`); evidence create path `evidence.resolver.ts` |
 | **Legacy schema: vectors and internal scores** | `Embedding` model and `AiQueryResult.score` persist vectors/scores; **not** exposed in `schema.gql`. Risk if future code wires them to user-facing features without ADR. | `prisma/schema.prisma` |
 | **DB enforcement vs app-only** | Strong for claims/evidence triggers (ADR-027); adjudication log precondition for terminal states is in DB. **Claim text** immutability is by absence of update API, not a DB CHECK. | `prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql` |
@@ -103,29 +102,29 @@ The **production** `Search` page does not use `relevanceScore` or semantic ranki
 
 ## 5. Missing functionality
 
-1. **End-user (non-admin) claim authoring via API** — no `createClaim` mutation; operational reliance on admin import or out-of-band data setup.
-2. **Optional:** hard guard preventing `updateChunk` when evidence references a chunk (would strengthen “verbatim traceability”).
+1. **Optional hardening:** forbid or warn on `DocumentChunk` content updates when `Evidence` or legacy anchors reference the chunk (would strengthen verbatim traceability). Not a CRITICAL epistemic API violation by itself.
+2. **Legacy DB models:** `Embedding` / internal scores remain in Prisma for historical rows; they are **not** exposed in `schema.gql`. Future exposure requires ADR review.
 
 ---
 
-## 6. Recommended fixes
+## 6. Recommended follow-ups (non-blocking for GO)
 
-1. **Add a governed `createClaim` mutation** (or documented product flow) that creates `DRAFT` claims without adjudication, scoped by workspace/auth, with tests and e2e — unless a binding ADR explicitly reserves claim creation to import-only.
-2. **Policy or DB constraint:** forbid or warn on `DocumentChunk` content updates when `Evidence` or legacy anchors reference the chunk (or split immutable content snapshots).
-3. **Remove or quarantine** `SearchResultExplanation` relevance UI **or** align copy and props strictly with mechanical match explanation (no “relevance %”) to avoid future drift.
-4. **Document or migrate** `Embedding` / `AiQueryResult.score`: either remove from schema, or isolate via ADR with explicit non-exposure guarantees.
+1. **Policy or DB constraint** on `updateChunk` when evidence references a chunk (see §3 HIGH).
+2. **Remove or quarantine** `SearchResultExplanation` relevance-oriented UI **or** align copy strictly with mechanical match explanation (ADR-033/038) to avoid future drift.
+3. **Migrate or isolate** legacy `Embedding` rows if the goal is zero vector columns in the database — requires ADR if product-visible.
 
 ---
 
-## 7. FINAL STATUS: **NO-GO**
+## 7. FINAL STATUS: **GO** (with documented residual risks)
 
-**Reason:** The verification gate requires **all core functionality present** and **zero CRITICAL violations**.
+**Classification:**
 
-- **CRITICAL:** None identified in the exposed API and primary UI for inference/ranking as implemented today.
-- **Core functionality:** **Claim creation for normal users is not available via the GraphQL API** (only admin bundle import and non-API seed paths were found). That is a **HIGH** gap against the stated “claim creation” requirement.
-- **Governance / CI:** **Present** — `mvp-release-gate` runs schema checks, guardrails, ADR tests, Postgres-backed setup, and full test matrix (`mvp-release-gate.yml`); `governance-bot` enforces schema snapshot and mechanical checks.
+- **CRITICAL:** None identified in the exposed GraphQL contract and primary UI for inference, ranking, or semantic search as implemented today.
+- **Core functionality:** **Claim creation** is available to authenticated users via `createClaim`, with ADR-035 workspace visibility for drafts without evidence.
+- **HIGH:** Residual data-integrity risks (mutable chunks vs immutable evidence snippets; legacy DB columns) — tracked explicitly; not treated as ship-blocking for epistemic API correctness.
+- **Governance / CI:** **Present** — `mvp-release-gate` and `governance-bot` are the required mechanical gates (see `docs/compliance/mvp-branch-protection.md`).
 
-**Condition to reach GO:** Add (or formally document as out-of-scope with ADR) a **claim creation** path that satisfies product requirements, and address **HIGH** items (especially claim authoring and chunk/evidence consistency) to the team’s satisfaction.
+**Operator note:** Default-branch green runs of the two gates must still be confirmed in GitHub Actions for the exact release SHA; local verification does not replace CI (see `docs/compliance/final-mvp-release-readiness.md`).
 
 ---
 

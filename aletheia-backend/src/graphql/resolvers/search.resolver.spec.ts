@@ -170,6 +170,7 @@ describe('SearchResolver', () => {
     };
     expect(where.AND[0]).toEqual({
       OR: [
+        { createdByUserId: 'user-1' },
         {
           evidenceLinks: {
             some: {

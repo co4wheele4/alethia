@@ -12,7 +12,7 @@ describe('EvidenceResolver', () => {
   let claimEvidenceLinkUpsert: jest.Mock;
   let documentFindUnique: jest.Mock;
   let documentChunkFindUnique: jest.Mock;
-  let claimFindUnique: jest.Mock;
+  let claimFindFirst: jest.Mock;
 
   const ctx = { req: { user: { sub: 'u1' } } };
 
@@ -23,7 +23,7 @@ describe('EvidenceResolver', () => {
     claimEvidenceLinkUpsert = jest.fn();
     documentFindUnique = jest.fn();
     documentChunkFindUnique = jest.fn();
-    claimFindUnique = jest.fn();
+    claimFindFirst = jest.fn();
 
     prisma = {
       evidence: {
@@ -34,7 +34,7 @@ describe('EvidenceResolver', () => {
       claimEvidenceLink: { upsert: claimEvidenceLinkUpsert },
       document: { findUnique: documentFindUnique },
       documentChunk: { findUnique: documentChunkFindUnique },
-      claim: { findUnique: claimFindUnique },
+      claim: { findFirst: claimFindFirst },
       user: { findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'u1' }) },
     } as unknown as PrismaService;
 
@@ -320,7 +320,7 @@ describe('EvidenceResolver', () => {
       ctx as any,
     );
     expect(result.id).toBe('ev1');
-    expect(claimFindUnique).not.toHaveBeenCalled();
+    expect(claimFindFirst).not.toHaveBeenCalled();
     expect(claimEvidenceLinkUpsert).not.toHaveBeenCalled();
   });
 
@@ -330,7 +330,7 @@ describe('EvidenceResolver', () => {
       sourceType: 'DOCUMENT',
       sourceDocument: { userId: 'u1' },
     });
-    claimFindUnique.mockResolvedValue(null);
+    claimFindFirst.mockResolvedValue(null);
     await expect(
       resolver.linkEvidenceToClaim('ev1', 'c_missing', ctx as any),
     ).rejects.toMatchObject({
@@ -589,7 +589,7 @@ describe('EvidenceResolver', () => {
       startOffset: 0,
       endOffset: 5,
     });
-    claimFindUnique
+    claimFindFirst
       .mockResolvedValueOnce({ id: 'c1' })
       .mockResolvedValueOnce(null);
 
@@ -629,7 +629,7 @@ describe('EvidenceResolver', () => {
       startOffset: 0,
       endOffset: 5,
     });
-    claimFindUnique.mockResolvedValue({ id: 'c1' });
+    claimFindFirst.mockResolvedValue({ id: 'c1' });
 
     const result = await resolver.createEvidence(
       {
@@ -743,7 +743,7 @@ describe('EvidenceResolver', () => {
       sourceType: 'DOCUMENT',
       sourceDocument: { userId: 'u1' },
     });
-    claimFindUnique.mockResolvedValue({ id: 'c1' });
+    claimFindFirst.mockResolvedValue({ id: 'c1' });
     claimEvidenceLinkUpsert.mockResolvedValue({});
 
     const result = await resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any);
@@ -763,7 +763,7 @@ describe('EvidenceResolver', () => {
       createdBy: 'u1',
       sourceDocument: null,
     });
-    claimFindUnique.mockResolvedValue({ id: 'c1' });
+    claimFindFirst.mockResolvedValue({ id: 'c1' });
     claimEvidenceLinkUpsert.mockResolvedValue({});
 
     const result = await resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any);

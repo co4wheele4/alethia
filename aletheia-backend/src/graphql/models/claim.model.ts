@@ -40,6 +40,12 @@ export class Claim {
   @Field(() => ID)
   id!: string;
 
+  /**
+   * ADR-035: Set when the claim is created via `createClaim`; structural workspace scope for drafts without evidence.
+   */
+  @Field(() => ID, { nullable: true })
+  createdByUserId?: string | null;
+
   @Field()
   text!: string;
 

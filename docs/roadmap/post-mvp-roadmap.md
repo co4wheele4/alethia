@@ -2,7 +2,7 @@
 
 **Purpose:** Plan safe next steps without semantic drift. This document is **not** a commitment to ship every item; it classifies work by governance risk.
 
-**Last updated:** 2026-04-15
+**Last updated:** 2026-04-19
 
 ---
 

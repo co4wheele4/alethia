@@ -18,7 +18,7 @@ Deployments must isolate one actor’s claims, evidence, and documents from anot
 ## Implementation notes (MVP)
 
 - **Authentication:** `getGqlAuthUserId` (`aletheia-backend/src/graphql/utils/gql-auth-user.ts`) supplies the actor id; guarded resolvers use `JwtAuthGuard`.
-- **List/detail scoping:** Claims and search apply a workspace predicate over evidence → document ownership (see `claim.resolver.ts`, `search.resolver.ts`). Evidence listing and `evidenceById` require document ownership or creator match (`evidence.resolver.ts`).
+- **List/detail scoping:** Claims and search apply a workspace predicate over evidence → document ownership **and** optional `Claim.createdByUserId` for draft claims created via `createClaim` before evidence exists (see `claim-workspace-visibility.ts`, `claim.resolver.ts`, `search.resolver.ts`). Evidence listing and `evidenceById` require document ownership or creator match (`evidence.resolver.ts`).
 - **Bundle import/export:** `exportBundle` / `importBundle` are **ADMIN-only** and operate on the database as a whole for migration/ops; they are not substitutes for end-user workspace APIs and must not be exposed to non-admin clients for cross-tenant data exfiltration in a product deployment (enforce at gateway / RBAC in front of GraphQL).
 
 ## Consequences

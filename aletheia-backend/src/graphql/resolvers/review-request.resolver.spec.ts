@@ -86,6 +86,7 @@ describe('ReviewRequestResolver', () => {
         where: {
           claim: {
             OR: [
+              { createdByUserId: 'u1' },
               {
                 evidenceLinks: {
                   some: {
@@ -139,6 +140,7 @@ describe('ReviewRequestResolver', () => {
         where: {
           id: 'c1',
           OR: [
+            { createdByUserId: 'u1' },
             {
               evidenceLinks: {
                 some: {

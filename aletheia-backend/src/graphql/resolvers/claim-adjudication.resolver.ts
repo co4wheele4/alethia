@@ -10,6 +10,7 @@ import { ReviewQuorumStatus } from '@models/review-quorum-status.model';
 import { OptionalJwtAuthGuard } from '@auth/guards/optional-jwt-auth.guard';
 import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 import { ClaimAdjudicationService } from './claim-adjudication.service';
+import { claimWorkspaceOr } from '../utils/claim-workspace-visibility';
 
 type GqlRequestContext = {
   req?: {
@@ -87,18 +88,7 @@ export class ClaimAdjudicationResolver {
     const existing = await this.prisma.claim.findFirst({
       where: {
         id: claimId,
-        OR: [
-          {
-            evidenceLinks: {
-              some: {
-                evidence: {
-                  sourceDocument: { userId: reviewerId },
-                },
-              },
-            },
-          },
-          { evidence: { some: { document: { userId: reviewerId } } } },
-        ],
+        OR: claimWorkspaceOr(reviewerId),
       },
       select: { id: true },
     });
@@ -144,18 +134,7 @@ export class ClaimAdjudicationResolver {
     const existing = await this.prisma.claim.findFirst({
       where: {
         id: claimId,
-        OR: [
-          {
-            evidenceLinks: {
-              some: {
-                evidence: {
-                  sourceDocument: { userId: reviewerId },
-                },
-              },
-            },
-          },
-          { evidence: { some: { document: { userId: reviewerId } } } },
-        ],
+        OR: claimWorkspaceOr(reviewerId),
       },
       select: { id: true, status: true },
     });

@@ -16,6 +16,7 @@ import {
   ReviewerResponseType,
 } from '@models/reviewer-response.model';
 import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
+import { claimWorkspaceOr } from '../utils/claim-workspace-visibility';
 
 type GqlRequestContext = {
   req?: {
@@ -91,22 +92,7 @@ export class ReviewAssignmentResolver {
       where: {
         id: reviewRequestId,
         claim: {
-          OR: [
-            {
-              evidenceLinks: {
-                some: {
-                  evidence: {
-                    sourceDocument: { userId: assignedByUserId },
-                  },
-                },
-              },
-            },
-            {
-              evidence: {
-                some: { document: { userId: assignedByUserId } },
-              },
-            },
-          ],
+          OR: claimWorkspaceOr(assignedByUserId),
         },
       },
       select: { id: true, claimId: true },
@@ -117,22 +103,7 @@ export class ReviewAssignmentResolver {
     const reviewerHasVisibility = await this.prisma.claim.findFirst({
       where: {
         id: rr.claimId,
-        OR: [
-          {
-            evidenceLinks: {
-              some: {
-                evidence: {
-                  sourceDocument: { userId: reviewerUserId },
-                },
-              },
-            },
-          },
-          {
-            evidence: {
-              some: { document: { userId: reviewerUserId } },
-            },
-          },
-        ],
+        OR: claimWorkspaceOr(reviewerUserId),
       },
       select: { id: true },
     });

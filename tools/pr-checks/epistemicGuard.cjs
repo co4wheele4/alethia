@@ -1,16 +1,22 @@
 #!/usr/bin/env node
 /**
- * ADR-022: PR Diff Epistemic Guard
+ * ADR-022 / ADR-038: PR Diff Epistemic Guard
  *
  * Scans git diff for forbidden terms and patterns.
  * Fails with EPISTEMIC_VIOLATION_DETECTED if violations found.
  *
- * Derived semantics are forbidden (ADR-022)
+ * Derived semantics are forbidden (ADR-022). User-guidance drift is forbidden (ADR-038).
  */
 
 const { execSync } = require('node:child_process');
+const path = require('node:path');
+const fs = require('node:fs');
 
-const FORBIDDEN_TERMS = ['score', 'rank', 'best', 'top', 'strongest', 'weakest'];
+const LEXICON_PATH = path.join(__dirname, 'adr038Lexicon.json');
+const LEXICON = JSON.parse(fs.readFileSync(LEXICON_PATH, 'utf8'));
+const FORBIDDEN_TERMS = LEXICON.singleWordTerms;
+const FORBIDDEN_PHRASES = LEXICON.phrases;
+
 const FORBIDDEN_PATTERNS = ['.sort(', 'Math.max', 'Math.min', 'reduce('];
 
 /**
@@ -66,6 +72,12 @@ function getDiff() {
   }
 }
 
+function isExemptGuardOrDocLine(content) {
+  return /assertNoDerived|assertNoConfidence|epistemicGuard|ADR-006|ADR-010|ADR-019|ADR-020|ADR-022|ADR-025|ADR-033|ADR-037|ADR-038|agentRoleGuard|forbidden|noSemanticQueries|schema-lint|FORBIDDEN_IMPORT_KEYS|GraphQL contract|Unexpected field/i.test(
+    content,
+  );
+}
+
 function main() {
   const diff = getDiff();
   /** @type {string | null} */
@@ -87,26 +99,32 @@ function main() {
     const content = line.slice(1);
     const lower = content.toLowerCase();
 
-    for (const term of FORBIDDEN_TERMS) {
-      const re = new RegExp(`\\b${term}\\b`, 'i');
-      if (re.test(lower) && !seen.has(`${currentFile}:${term}`)) {
-        const isComment = /^\s*[/*#]|^\s*\/\//.test(content.trim());
-        const isGuardOrDoc =
-          /assertNoDerived|epistemicGuard|ADR-022|ADR-025|ADR-033|ADR-037|ADR-038|agentRoleGuard|forbidden|noSemanticQueries|schema-lint|FORBIDDEN_IMPORT_KEYS/i.test(
-            content,
-          );
-        if (!isComment && !isGuardOrDoc) {
+    const isComment = /^\s*[/*#]|^\s*\/\//.test(content.trim());
+    const isGuardOrDoc = isExemptGuardOrDocLine(content);
+
+    if (!isComment && !isGuardOrDoc) {
+      for (const term of FORBIDDEN_TERMS) {
+        const re = new RegExp(`\\b${term}\\b`, 'i');
+        if (re.test(lower) && !seen.has(`${currentFile}:term:${term}`)) {
           violations.push(`Forbidden term "${term}" in ${currentFile}`);
-          seen.add(`${currentFile}:${term}`);
+          seen.add(`${currentFile}:term:${term}`);
+        }
+      }
+
+      for (const phrase of FORBIDDEN_PHRASES) {
+        const p = phrase.toLowerCase();
+        if (lower.includes(p) && !seen.has(`${currentFile}:phrase:${p}`)) {
+          violations.push(`Forbidden phrase "${phrase}" in ${currentFile}`);
+          seen.add(`${currentFile}:phrase:${p}`);
         }
       }
     }
 
     for (const pattern of FORBIDDEN_PATTERNS) {
       if (content.includes(pattern)) {
-        const isComment = /^\s*[/*#]|^\s*\/\//.test(content.trim());
+        const isCommentInner = /^\s*[/*#]|^\s*\/\//.test(content.trim());
         const isNodeModules = content.includes('node_modules');
-        if (!isComment && !isNodeModules) {
+        if (!isCommentInner && !isNodeModules) {
           violations.push(`Forbidden pattern "${pattern}" in ${currentFile}`);
         }
       }
@@ -117,7 +135,7 @@ function main() {
     console.error('EPISTEMIC_VIOLATION_DETECTED');
     console.error('Violations:');
     [...new Set(violations)].forEach((v) => console.error(`  - ${v}`));
-    console.error('\nDerived semantics are forbidden (ADR-022)');
+    console.error('\nDerived semantics are forbidden (ADR-022). User-guidance drift is forbidden (ADR-038).');
     process.exit(1);
   }
   process.exit(0);

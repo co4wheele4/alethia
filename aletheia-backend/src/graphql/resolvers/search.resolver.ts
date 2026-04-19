@@ -11,6 +11,7 @@ import { Evidence } from '@models/evidence.model';
 import { SearchClaimsInput } from '@inputs/search-claims.input';
 import { SearchEvidenceInput } from '@inputs/search-evidence.input';
 import { getGqlAuthUserId } from '../utils/gql-auth-user';
+import { claimWorkspaceOr } from '../utils/claim-workspace-visibility';
 import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 import {
   ADR033_MAX_SEARCH_LIMIT,
@@ -32,26 +33,7 @@ void searchClaimsInputType();
 void searchEvidenceInputType();
 
 function claimWorkspaceWhere(authUserId: string): Prisma.ClaimWhereInput {
-  return {
-    OR: [
-      {
-        evidenceLinks: {
-          some: {
-            evidence: {
-              sourceDocument: { userId: authUserId },
-            },
-          },
-        },
-      },
-      {
-        evidence: {
-          some: {
-            document: { userId: authUserId },
-          },
-        },
-      },
-    ],
-  };
+  return { OR: claimWorkspaceOr(authUserId) };
 }
 
 function validateSearchPagination(limit: number, offset: number) {

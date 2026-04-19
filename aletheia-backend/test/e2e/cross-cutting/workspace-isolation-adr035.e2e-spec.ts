@@ -129,12 +129,9 @@ describe('Workspace isolation (ADR-035) (e2e)', () => {
         }
       }
     `;
-    const evAsPrimary = await graphqlRequest<{ evidenceById?: { id: string } | null }>(
-      context.app,
-      evQuery,
-      { id: evidenceId },
-      { authToken: auth.userToken },
-    );
+    const evAsPrimary = await graphqlRequest<{
+      evidenceById?: { id: string } | null;
+    }>(context.app, evQuery, { id: evidenceId }, { authToken: auth.userToken });
     expect(evAsPrimary.status).toBe(200);
     expect(evAsPrimary.body?.data?.evidenceById).toBeNull();
 
@@ -146,12 +143,9 @@ describe('Workspace isolation (ADR-035) (e2e)', () => {
       claimId,
     );
 
-    const evAsOwner = await graphqlRequest<{ evidenceById?: { id: string } | null }>(
-      context.app,
-      evQuery,
-      { id: evidenceId },
-      { authToken: ownerToken },
-    );
+    const evAsOwner = await graphqlRequest<{
+      evidenceById?: { id: string } | null;
+    }>(context.app, evQuery, { id: evidenceId }, { authToken: ownerToken });
     expect(evAsOwner.body?.data?.evidenceById?.id).toBe(evidenceId);
   });
 });

@@ -1,6 +1,8 @@
 import { ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
+import { ClaimStatus as PrismaClaimStatus } from '@prisma/client';
+import { GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 import { ClaimResolver } from './claim.resolver';
 
 describe('ClaimResolver', () => {
@@ -8,18 +10,20 @@ describe('ClaimResolver', () => {
   let prisma: PrismaService;
   let dataLoaders: jest.Mocked<DataLoaderService>;
   let claimFindMany: jest.Mock;
+  let claimCreate: jest.Mock;
   let claimEvidenceFindMany: jest.Mock;
   let claimEvidenceLinkFindMany: jest.Mock;
   let documentFindUnique: jest.Mock;
 
   beforeEach(() => {
     claimFindMany = jest.fn();
+    claimCreate = jest.fn();
     claimEvidenceFindMany = jest.fn();
     claimEvidenceLinkFindMany = jest.fn();
     documentFindUnique = jest.fn();
 
     prisma = {
-      claim: { findMany: claimFindMany },
+      claim: { findMany: claimFindMany, create: claimCreate },
       claimEvidence: { findMany: claimEvidenceFindMany },
       claimEvidenceLink: { findMany: claimEvidenceLinkFindMany },
       document: { findUnique: documentFindUnique },
@@ -113,6 +117,7 @@ describe('ClaimResolver', () => {
           AND: [
             {
               OR: [
+                { createdByUserId: 'u1' },
                 {
                   evidenceLinks: {
                     some: {
@@ -135,6 +140,55 @@ describe('ClaimResolver', () => {
         skip: 0,
       }),
     );
+  });
+
+  it('createClaim persists DRAFT with createdByUserId', async () => {
+    claimCreate.mockResolvedValue({
+      id: 'new',
+      text: 'Hello',
+      status: 'DRAFT',
+    } as any);
+    const result = await resolver.createClaim('  Hello  ', {
+      req: { user: { sub: 'u1' } },
+    } as any);
+    expect(result.id).toBe('new');
+    expect(claimCreate).toHaveBeenCalledWith({
+      data: {
+        text: 'Hello',
+        status: PrismaClaimStatus.DRAFT,
+        createdByUserId: 'u1',
+      },
+    });
+  });
+
+  it('createClaim rejects empty text', async () => {
+    await expect(
+      resolver.createClaim('   ', { req: { user: { sub: 'u1' } } } as any),
+    ).rejects.toMatchObject({
+      message: 'CLAIM_TEXT_REQUIRED',
+      extensions: { code: 'CLAIM_TEXT_REQUIRED' },
+    });
+  });
+
+  it('createClaim rejects UNAUTHORIZED when unauthenticated', async () => {
+    await expect(
+      resolver.createClaim('hello', { req: { user: {} } } as any),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
+    });
+    expect(claimCreate).not.toHaveBeenCalled();
+  });
+
+  it('createClaim treats non-string text as empty (CLAIM_TEXT_REQUIRED)', async () => {
+    await expect(
+      resolver.createClaim(
+        null as any,
+        { req: { user: { sub: 'u1' } } } as any,
+      ),
+    ).rejects.toMatchObject({
+      extensions: { code: GQL_ERROR_CODES.CLAIM_TEXT_REQUIRED },
+    });
+    expect(claimCreate).not.toHaveBeenCalled();
   });
 
   it('claimsByDocument returns empty list when unauthenticated', async () => {

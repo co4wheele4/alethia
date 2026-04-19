@@ -10,6 +10,15 @@ aletheia/
 └── aletheia-frontend/   # Frontend application
 ```
 
+## Governance and context
+
+Aletheia is a **non-inferential** claim-and-evidence system. Before changing schema, resolvers, UI, or ingestion, read the canonical context and ADRs:
+
+- **[`docs/context/aletheia-core-context.md`](docs/context/aletheia-core-context.md)** — binding contract for this repository.
+- **[`AGENTS.md`](AGENTS.md)** — automation and Cursor rules.
+- **[`docs/compliance/`](docs/compliance/)** — launch readiness, verification, and completion reports.
+- **[`docs/adr/`](docs/adr/)** — Architecture Decision Records.
+
 ## Getting Started
 
 ### Prerequisites

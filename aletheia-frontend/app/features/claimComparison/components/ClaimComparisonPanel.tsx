@@ -23,7 +23,8 @@ export function ClaimComparisonPanel(props: {
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="h6">Claim comparison</Typography>
         <Typography variant="body2" color="text.secondary">
-          Neutral, read-only side-by-side inspection. No conflict, agreement, ranking, or confidence is inferred.
+          Neutral, read-only side-by-side inspection. No conflict, agreement, ranking, or confidence is inferred
+          (ADR-010, ADR-038).
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
           {modeCaption ?? 'Related claims are derived client-side from schema fields only (shared document IDs and evidence-linked entity IDs).'}

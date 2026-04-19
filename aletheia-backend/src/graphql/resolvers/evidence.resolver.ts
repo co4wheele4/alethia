@@ -24,6 +24,7 @@ import { DocumentChunk } from '@models/document-chunk.model';
 import { extractSpan } from '@common/utils/extract-span';
 import { evidenceContentSha256Hex } from '@common/utils/evidence-content-hash';
 import { getGqlAuthUserId } from '../utils/gql-auth-user';
+import { claimWorkspaceOr } from '../utils/claim-workspace-visibility';
 import { assertAdr034ListPagination } from '@common/list-pagination';
 
 type GqlContext = {
@@ -230,8 +231,8 @@ export class EvidenceResolver {
 
     if (claimIds && claimIds.length > 0) {
       for (const claimId of claimIds) {
-        const claim = await this.prisma.claim.findUnique({
-          where: { id: claimId },
+        const claim = await this.prisma.claim.findFirst({
+          where: { id: claimId, OR: claimWorkspaceOr(userId) },
           select: { id: true },
         });
         if (claim) {
@@ -276,8 +277,8 @@ export class EvidenceResolver {
       throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
     }
 
-    const claim = await this.prisma.claim.findUnique({
-      where: { id: claimId },
+    const claim = await this.prisma.claim.findFirst({
+      where: { id: claimId, OR: claimWorkspaceOr(userId) },
     });
     if (!claim) throw contractError(GQL_ERROR_CODES.CLAIM_NOT_FOUND);
 

@@ -1,5 +1,7 @@
 # Monitoring and alerting — Aletheia
 
+**Last updated:** 2026-04-19
+
 **Principle:** Measure **availability, errors, latency, and job health** — not epistemic “quality.” **ADR-029**.
 
 ---

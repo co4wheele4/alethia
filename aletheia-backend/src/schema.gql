@@ -4,6 +4,7 @@
 
 type Claim {
   createdAt: DateTime!
+  createdByUserId: ID
 
   """
   Documents referenced via evidence anchors; empty when the claim has no linked evidence (ADR-018).
@@ -461,6 +462,11 @@ type Mutation {
   """
   assignReviewer(reviewRequestId: ID!, reviewerUserId: ID!): ReviewAssignment!
   createChunk(chunkIndex: Int!, content: String!, documentId: String!): DocumentChunk!
+
+  """
+  Create a DRAFT claim statement (ADR-018). Visible in the creator workspace; non-authoritative until evidence is linked.
+  """
+  createClaim(text: String!): Claim!
   createDocument(title: String!, userId: String!): Document!
   createEntity(data: CreateEntityInput!): Entity!
   createEntityMention(data: CreateEntityMentionInput!): EntityMention!
@@ -509,7 +515,7 @@ type Query {
   chunksByDocument(documentId: String!): [DocumentChunk!]!
 
   """
-  List claims visible in the current workspace (scoped via evidence -> documents). ADR-022: filter supports only lifecycle and hasEvidence.
+  List claims visible in the current workspace (evidence -> documents, or created via createClaim). ADR-022: filter supports only lifecycle and hasEvidence.
   """
   claims(filter: ClaimFilterInput, limit: Int!, offset: Int!): [Claim!]!
 

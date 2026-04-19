@@ -1,0 +1,40 @@
+{
+  "description": "ADR-022/ADR-038: forbidden user-facing semantics in product code diffs. Keep in sync with epistemicGuard.cjs and aletheia-frontend/app/lib/adr038ForbiddenUi.ts.",
+  "singleWordTerms": [
+    "score",
+    "rank",
+    "best",
+    "top",
+    "strongest",
+    "weakest",
+    "confidence",
+    "recommended",
+    "clustering",
+    "similarity",
+    "weighting",
+    "relevant",
+    "relevance"
+  ],
+  "phrases": [
+    "strong evidence",
+    "weak evidence",
+    "most relevant",
+    "likely true",
+    "likely false",
+    "higher quality",
+    "lower quality",
+    "better supported",
+    "more supported",
+    "insufficient support",
+    "weak case",
+    "priority sort",
+    "relevance sort",
+    "support sort",
+    "default top",
+    "best match",
+    "sort by relevance",
+    "order by relevance",
+    "top result",
+    "top results"
+  ]
+}

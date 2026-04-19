@@ -122,6 +122,8 @@
 
 **Post-remediation (see §10):** Codebase and GraphQL contract are **GO** for MVP; **GitHub Actions** should treat **`mvp-release-gate`** as the authoritative full matrix (Postgres-backed backend e2e including bundle import, plus Playwright).
 
+**2026-04-19 follow-up:** `docs/compliance/system-verification-report.md` records **GO** after **`createClaim`** + ADR-035 workspace visibility for draft claims; see **`docs/compliance/final-completion-report.md`**.
+
 **Historical verdict: NO-GO** (unchanged as a record of the original audit date).
 
 ---

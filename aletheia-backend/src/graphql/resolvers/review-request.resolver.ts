@@ -19,6 +19,7 @@ import {
 import { ReviewAssignment } from '@models/review-assignment.model';
 import { User } from '@models/user.model';
 import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
+import { claimWorkspaceOr } from '../utils/claim-workspace-visibility';
 
 type GqlRequestContext = {
   req?: {
@@ -91,22 +92,7 @@ export class ReviewRequestResolver {
     return await this.prisma.reviewRequest.findMany({
       where: {
         claim: {
-          OR: [
-            {
-              evidenceLinks: {
-                some: {
-                  evidence: {
-                    sourceDocument: { userId },
-                  },
-                },
-              },
-            },
-            {
-              evidence: {
-                some: { document: { userId } },
-              },
-            },
-          ],
+          OR: claimWorkspaceOr(userId),
         },
       },
       orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
@@ -128,16 +114,7 @@ export class ReviewRequestResolver {
     const existingClaim = await this.prisma.claim.findFirst({
       where: {
         id: claimId,
-        OR: [
-          {
-            evidenceLinks: {
-              some: {
-                evidence: { sourceDocument: { userId } },
-              },
-            },
-          },
-          { evidence: { some: { document: { userId } } } },
-        ],
+        OR: claimWorkspaceOr(userId),
       },
       select: { id: true },
     });
@@ -191,16 +168,7 @@ export class ReviewRequestResolver {
     const existingClaim = await this.prisma.claim.findFirst({
       where: {
         id: claimId,
-        OR: [
-          {
-            evidenceLinks: {
-              some: {
-                evidence: { sourceDocument: { userId } },
-              },
-            },
-          },
-          { evidence: { some: { document: { userId } } } },
-        ],
+        OR: claimWorkspaceOr(userId),
       },
       select: { id: true },
     });

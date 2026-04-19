@@ -4,10 +4,10 @@
 
 | Field | Value |
 | --- | --- |
-| **Date** | 2026-04-15 (post-MVP execution update; CI not re-run from this workspace) |
+| **Date** | 2026-04-19 (final completion pass; re-confirm CI on GitHub for the shipping SHA) |
 | **Repository** | `https://github.com/co4wheele4/alethia` |
 | **Default branch** | `master` |
-| **Local workspace tip (executor)** | **`38914c20298d1dce05911495b76d303ba5a8d79d`** |
+| **Local workspace tip (executor)** | Record at verification time; **`git rev-parse HEAD`** on the branch under test |
 | **Recorded merge-base / proof commit (historical green)** | **`d597a05d522ed9776e8489ae07b288a9769f2a09`** (`test(e2e): stabilize WebKit graph edges and compare navigation`) |
 
 ## 2. Proof — CI on default branch (`master`)
@@ -65,13 +65,13 @@ If merge is still blocked in the UI, remaining blockers are **outside** these tw
 
 ---
 
-## 7. Post-MVP execution note (2026-04-15)
+## 7. Post-MVP execution note (2026-04-19)
 
 **Launch status (this document):** The **operational GO** definition in §4 is unchanged: shipping decisions follow **green** `mvp-release-gate` and `governance-bot` on the **exact commit** you release, via GitHub Actions.
 
-**This executor session did not** push commits or query GitHub Actions API for workflow runs. Treat CI verification as **incomplete** until an operator confirms the latest required jobs on the shipping SHA.
+**This document cannot prove CI by itself.** Any local “final completion” pass must still be matched to **Actions** on the default branch or PR head you intend to ship.
 
-**Authoritative next step:** After merging post-MVP documentation and test changes, open the Actions tab and confirm **`mvp-release-gate`** and **`governance-bot`** both **SUCCESS** on the merge commit; record URLs here if you need a renewed paper trail.
+**Authoritative next step:** After merging, open the Actions tab and confirm **`mvp-release-gate`** and **`governance-bot`** both **SUCCESS** on the merge commit; paste run URLs into §2 if you need a renewed paper trail.
 
 ---
 

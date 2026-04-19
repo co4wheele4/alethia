@@ -579,14 +579,18 @@
         "docs/adr/ADR-038-user-guidance-blocked-state-semantics.md",
         "docs/product/user-mental-model.md",
         "docs/product/onboarding-principles.md",
-        "docs/product/blocked-state-patterns.md"
+        "docs/product/blocked-state-patterns.md",
+        "tools/pr-checks/adr038Lexicon.json",
+        "aletheia-frontend/app/lib/adr038ForbiddenUi.ts"
       ],
       "tests": [
         "aletheia-frontend/e2e/adr-038-user-guidance.spec.ts",
+        "aletheia-frontend/app/lib/__tests__/adr038ForbiddenUi.test.ts",
         "tests/adr/adrGovernanceCompliance.test.ts"
       ],
       "enforcement": [
         "tools/pr-checks/epistemicGuard.cjs",
+        "tools/pr-checks/adr038Lexicon.json",
         "scripts/check-adr-governance.cjs"
       ]
     }

@@ -14,6 +14,8 @@ export const GQL_ERROR_CODES = {
   NOT_ASSIGNED_REVIEWER: 'NOT_ASSIGNED_REVIEWER',
 
   // Claims
+  /** createClaim: trimmed claim text must be non-empty. */
+  CLAIM_TEXT_REQUIRED: 'CLAIM_TEXT_REQUIRED',
   CLAIM_NOT_FOUND: 'CLAIM_NOT_FOUND',
   CLAIM_NOT_EVIDENCE_CLOSED: 'CLAIM_NOT_EVIDENCE_CLOSED',
   /** ADR-023: adjudicateClaim only — claim lacks evidence anchors required for adjudication. */

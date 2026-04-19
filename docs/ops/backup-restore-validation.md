@@ -8,6 +8,7 @@
 
 - GraphQL: `exportBundle` (see schema and `aletheia-bundle.service.ts`).
 - Bundle must conform to `schemas/aletheiaBundle.schema.json`.
+- Claim rows include optional `created_by_user_id` when set by `createClaim` (ADR-035); restore ordering remains evidence → draft claims → links → logs (ADR-027).
 - **Testable locally / CI:** `aletheia-backend/src/bundle/aletheia-bundle.service.spec.ts` — round-trip and forbidden-key rejection.
 
 ---
