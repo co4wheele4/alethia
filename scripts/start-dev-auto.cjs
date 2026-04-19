@@ -5,48 +5,35 @@
  * This avoids killing existing processes; instead we probe for free ports starting at:
  * - backend: 3000
  * - frontend: 3030
+ *
+ * Port selection uses the shared module under `C:\\dev\\port-utils` (override with `DEV_PORT_UTILS_ROOT`).
  */
 
-const net = require('node:net');
+const fs = require('node:fs');
+const path = require('node:path');
 const { spawn } = require('node:child_process');
 
-function canBind(port, host) {
-  return new Promise((resolve) => {
-    const server = net.createServer();
-    server.unref();
-    server.once('error', (err) => resolve({ ok: false, err }));
-    server.listen({ port, host }, () => {
-      server.close(() => resolve({ ok: true, err: null }));
-    });
-  });
+const repoRoot = path.join(__dirname, '..');
+const stackPortsFile = path.join(repoRoot, '.dev-stack-ports.json');
+
+function writeStackPorts(backendPort, frontendPort) {
+  fs.writeFileSync(
+    stackPortsFile,
+    JSON.stringify({ backendPort, frontendPort, updatedAt: Date.now() }, null, 0),
+    'utf8',
+  );
 }
 
-async function isPortFree(port) {
-  // Be conservative: treat the port as "in use" if it is bound on either IPv4 or IPv6.
-  // This avoids false-positives on Windows where IPv6 can be bound while IPv4 appears free.
-  const v4 = await canBind(port, '0.0.0.0');
-  if (!v4.ok && v4.err && v4.err.code === 'EADDRINUSE') return false;
-
-  const v6 = await canBind(port, '::');
-  if (!v6.ok && v6.err && v6.err.code === 'EADDRINUSE') return false;
-
-  // If IPv6 isn't supported, ignore and rely on IPv4 result.
-  if (!v6.ok && v6.err && (v6.err.code === 'EAFNOSUPPORT' || v6.err.code === 'EINVAL')) {
-    return v4.ok;
+function removeStackPortsFile() {
+  try {
+    fs.unlinkSync(stackPortsFile);
+  } catch {
+    // ignore
   }
-
-  return v4.ok && v6.ok;
 }
 
-async function firstFreePort(startPort, opts = {}) {
-  const { maxTries = 50 } = opts;
-  for (let p = startPort, i = 0; i < maxTries; i += 1, p += 1) {
-    // eslint-disable-next-line no-await-in-loop
-    const free = await isPortFree(p);
-    if (free) return p;
-  }
-  throw new Error(`No free port found in range [${startPort}, ${startPort + maxTries - 1}]`);
-}
+const portUtilsRoot = process.env.DEV_PORT_UTILS_ROOT || path.normalize('C:/dev/port-utils');
+const { firstFreePort } = require(path.join(portUtilsRoot, 'index.cjs'));
 
 function prefixStream(child, label) {
   const tag = `[${label}] `;
@@ -100,6 +87,8 @@ async function main() {
   console.log(`Frontend: http://127.0.0.1:${frontendPort}`);
   console.log(`Backend GraphQL: http://127.0.0.1:${backendPort}/graphql`);
 
+  writeStackPorts(backendPort, frontendPort);
+
   const isWin = process.platform === 'win32';
   const comspec = process.env.ComSpec || 'cmd.exe';
 
@@ -125,6 +114,7 @@ async function main() {
   prefixStream(frontend, 'frontend');
 
   const killAll = () => {
+    removeStackPortsFile();
     try {
       backend.kill();
     } catch {}

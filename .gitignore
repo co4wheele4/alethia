@@ -58,6 +58,9 @@ Thumbs.db
 .temp/
 .tmp/
 
+# Local dev stack (ports written by scripts/start-dev-auto.cjs for demo tooling)
+.dev-stack-ports.json
+
 # Archives (includes generated ADR export bundles under docs/adr/)
 *.zip
 

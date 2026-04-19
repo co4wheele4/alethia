@@ -3,23 +3,59 @@
  * Headed Playwright walkthrough against a locally started dev stack (see e2e/full-demo-walkthrough.spec.ts).
  * Invoked from `npm run demo -- --headed --seed` or `npm run demo:headed`.
  */
+const fs = require('node:fs');
 const { spawn, spawnSync } = require('node:child_process');
 const path = require('node:path');
 const { root, getChildEnvAfterSeed } = require('./demo-env.cjs');
+
+const stackPortsFile = path.join(root, '.dev-stack-ports.json');
+
+/**
+ * Written by `start-dev-auto.cjs` so we wait on the spawned stack’s ports (not another process on 3000).
+ * @param {number} timeoutMs
+ * @returns {Promise<{ backendPort: number, frontendPort: number } | null>}
+ */
+async function readStackPorts(timeoutMs) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      if (fs.existsSync(stackPortsFile)) {
+        const j = JSON.parse(fs.readFileSync(stackPortsFile, 'utf8'));
+        if (
+          typeof j.backendPort === 'number' &&
+          typeof j.frontendPort === 'number' &&
+          Number.isFinite(j.backendPort) &&
+          Number.isFinite(j.frontendPort)
+        ) {
+          return { backendPort: j.backendPort, frontendPort: j.frontendPort };
+        }
+      }
+    } catch {
+      // keep polling
+    }
+    await sleep(100);
+  }
+  return null;
+}
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
 /**
- * Dev stack may bind 3030+ if busy.
+ * Dev stack may bind 3030+ if busy. Prefer `.dev-stack-ports.json` from `start-dev-auto.cjs`.
+ * @param {number | null} preferredPort
  * @param {number} timeoutMs
  * @returns {Promise<{ baseUrl: string, port: number }>}
  */
-async function waitForFrontendReady(timeoutMs) {
+async function waitForFrontendReady(preferredPort, timeoutMs) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    for (let port = 3030; port <= 3048; port += 1) {
+    const portsToTry =
+      preferredPort != null
+        ? [preferredPort]
+        : Array.from({ length: 19 }, (_, i) => 3030 + i);
+    for (const port of portsToTry) {
       const baseUrl = `http://127.0.0.1:${port}`;
       try {
         const res = await fetch(`${baseUrl}/`, { method: 'GET' });
@@ -30,19 +66,28 @@ async function waitForFrontendReady(timeoutMs) {
     }
     await sleep(400);
   }
-  throw new Error('Frontend not reachable on 127.0.0.1:3030–3048 within timeout');
+  throw new Error(
+    preferredPort != null
+      ? `Frontend not reachable on 127.0.0.1:${preferredPort} within timeout`
+      : 'Frontend not reachable on 127.0.0.1:3030–3048 within timeout',
+  );
 }
 
 /**
  * Next.js can serve before Nest finishes compiling — login needs the API.
- * Waits for the Nest root route (same ports as start-dev-auto: from 3000).
+ * Waits for the Nest root route on the port chosen by `start-dev-auto` (see `.dev-stack-ports.json`).
+ * @param {number | null} preferredPort
  * @param {number} timeoutMs
  * @returns {Promise<number>} port
  */
-async function waitForBackendReady(timeoutMs) {
+async function waitForBackendReady(preferredPort, timeoutMs) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    for (let port = 3000; port <= 3015; port += 1) {
+    const portsToTry =
+      preferredPort != null
+        ? [preferredPort]
+        : Array.from({ length: 16 }, (_, i) => 3000 + i);
+    for (const port of portsToTry) {
       try {
         const res = await fetch(`http://127.0.0.1:${port}/`, { method: 'GET' });
         if (res.ok) {
@@ -55,7 +100,11 @@ async function waitForBackendReady(timeoutMs) {
     }
     await sleep(500);
   }
-  throw new Error('Backend not reachable on 127.0.0.1:3000–3015 within timeout');
+  throw new Error(
+    preferredPort != null
+      ? `Backend not reachable on 127.0.0.1:${preferredPort} within timeout`
+      : 'Backend not reachable on 127.0.0.1:3000–3015 within timeout',
+  );
 }
 
 function killProcessTree(pid) {
@@ -120,10 +169,19 @@ async function runHeadedDemo(opts) {
 
   let baseUrl = 'http://127.0.0.1:3030';
   try {
-    const ready = await waitForFrontendReady(120_000);
+    const stackPorts = await readStackPorts(30_000);
+    if (!stackPorts) {
+      console.warn(
+        '[demo] No .dev-stack-ports.json yet; falling back to scanning ports (prefer a clean 3000/3030 or fix start-dev-auto).',
+      );
+    }
+    const preferredFe = stackPorts?.frontendPort ?? null;
+    const preferredBe = stackPorts?.backendPort ?? null;
+
+    const ready = await waitForFrontendReady(preferredFe, 120_000);
     baseUrl = ready.baseUrl;
     console.log(`[demo] Frontend ready at ${baseUrl}`);
-    await waitForBackendReady(180_000);
+    await waitForBackendReady(preferredBe, 180_000);
   } catch (e) {
     console.error(String(e?.message || e));
     killProcessTree(child.pid);
