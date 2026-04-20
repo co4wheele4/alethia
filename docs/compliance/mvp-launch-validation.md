@@ -124,7 +124,7 @@
 
 **2026-04-19 follow-up:** `docs/compliance/system-verification-report.md` records **GO** after **`createClaim`** + ADR-035 workspace visibility for draft claims; see **`docs/compliance/final-completion-report.md`**.
 
-**2026-04-20 publisher:** GitHub Actions **SUCCESS** for **`governance-bot`** and **`mvp-release-gate`** on default-branch tip **`c802b51`** (publisher compliance docs; lockfile fix on ancestor **`0f9433f`**); evidence and ruleset gap in **`docs/compliance/final-mvp-release-readiness.md`**. Overall documentation status remains **PROVISIONAL GO** until the default-branch ruleset **requires `mvp-release-gate`** by name.
+**2026-04-20 publisher:** GitHub Actions **SUCCESS** for **`governance-bot`** and **`mvp-release-gate`** on verified snapshot **`b3d01df`** (includes compliance doc alignment; earlier **`c802b51`** publisher pass and **`0f9433f`** lockfile fix are ancestors); evidence and ruleset gap in **`docs/compliance/final-mvp-release-readiness.md`**. Overall documentation status remains **PROVISIONAL GO** until the default-branch ruleset **requires `mvp-release-gate`** by name.
 
 **Historical verdict: NO-GO** (unchanged as a record of the original audit date).
 
