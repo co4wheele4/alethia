@@ -6,8 +6,9 @@
 
 ## 2. Branch / commit
 
-- **Mechanical CI proof (default branch):** **`0f9433fc8faf1d8789490e7ff9107504771e61ad`** — see [`docs/compliance/final-mvp-release-readiness.md`](final-mvp-release-readiness.md) §2.1 for **`governance-bot`** and **`mvp-release-gate`** SUCCESS URLs.
-- **Prior feature commit (createClaim / compliance):** **`878a80f`** (ancestor of `0f9433f`).
+- **Mechanical CI proof (default branch tip):** **`c802b51c4551a8d04ee5433a306190c31d04fe91`** — see [`docs/compliance/final-mvp-release-readiness.md`](final-mvp-release-readiness.md) §2.1 for **`governance-bot`** and **`mvp-release-gate`** SUCCESS URLs.
+- **Lockfile CI fix (ancestor):** **`0f9433f`** (`npm ci` / root `package-lock.json` sync).
+- **Prior feature commit (createClaim / compliance):** **`878a80f`** (ancestor of the above).
 
 ## 3. What remained at start
 
@@ -45,7 +46,7 @@
 
 ## 7. What remains manual or CI-authoritative
 
-- **GitHub Actions:** Recorded for **`0f9433f`** in `final-mvp-release-readiness.md` §2.1 (2026-04-20 publisher pass).
+- **GitHub Actions:** Recorded for **`c802b51`** in `final-mvp-release-readiness.md` §2.1 (2026-04-20 publisher pass).
 - **Ruleset:** Add **`mvp-release-gate`** to the default-branch ruleset required checks if merge policy must match both gates by name (see `final-mvp-release-readiness.md` §3.1).
 - **Production deployment:** Postgres migrations, secrets, and gateway rate limits are environment-specific.
 
@@ -53,7 +54,7 @@
 
 - **HIGH (non-CRITICAL):** `DocumentChunk` content may still be mutated via `updateChunk` while evidence references chunk offsets — traceability risk, not an inference API.
 - **MEDIUM:** Legacy search UI components may still contain “relevance”-oriented **library** code; production search page remains deterministic (see system verification report).
-- **Governance (2026-04-20):** GitHub ruleset **`master-protection`** does not yet list **`mvp-release-gate`** as a required context; both workflows are nevertheless **green** on the documented shipping SHA.
+- **Governance (2026-04-20):** GitHub ruleset **`master-protection`** does not yet list **`mvp-release-gate`** as a required context; both workflows are nevertheless **green** on **`c802b51`** (see readiness §2.1).
 
 ## 9. Recommended next action
 
@@ -64,7 +65,7 @@
 
 **PROVISIONAL GO**
 
-**Rationale:** On **`0f9433f`**, **`governance-bot`** and **`mvp-release-gate`** are **SUCCESS** in GitHub Actions (evidence: `final-mvp-release-readiness.md` §2.1). **Full GO** under the strict publisher rule is **not** claimed until the default-branch ruleset **requires `mvp-release-gate`** by name (currently missing — §3.1 there).
+**Rationale:** On **`c802b51`**, **`governance-bot`** and **`mvp-release-gate`** are **SUCCESS** in GitHub Actions (evidence: `final-mvp-release-readiness.md` §2.1). **Full GO** under the strict publisher rule is **not** claimed until the default-branch ruleset **requires `mvp-release-gate`** by name (currently missing — §3.1 there).
 
 **What Aletheia can safely do next**
 

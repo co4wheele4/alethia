@@ -7,7 +7,7 @@
 | **Last publisher pass** | **2026-04-20** (GitHub Actions verified via `gh`; docs updated same day) |
 | **Repository** | `https://github.com/co4wheele4/alethia` |
 | **Default branch** | `master` |
-| **Shipping commit (mechanical CI proof below)** | **`0f9433fc8faf1d8789490e7ff9107504771e61ad`** |
+| **Shipping commit (mechanical CI proof below)** | **`c802b51c4551a8d04ee5433a306190c31d04fe91`** |
 
 ---
 
@@ -15,9 +15,18 @@
 
 Authoritative jobs (project policy): **`mvp-release-gate`**, **`governance-bot`** (see `.github/workflows/mvp-release-gate.yml`, `.github/workflows/governance-bot.yml`).
 
-### 2.1 Current proof — `0f9433f` (`chore(ci): sync root package-lock.json for npm ci in Actions`)
+### 2.1 Current proof — `c802b51` (`docs(compliance): publisher evidence for 0f9433f and ruleset gap`)
 
-This commit restores **`npm ci`** compatibility for GitHub Actions after **`b9fab3c`** left the root lockfile out of sync (prior push runs failed at **Install dependencies** with `npm error code EUSAGE`).
+Publisher pass: compliance docs record Actions evidence, ruleset **`master-protection`** facts, and **PROVISIONAL GO** (ruleset does not yet require **`mvp-release-gate`** by name — §3.1).
+
+| Check (job name) | Result | Workflow run URL |
+| --- | --- | --- |
+| **governance-bot** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24685201842` |
+| **mvp-release-gate** | **SUCCESS** | `https://github.com/co4wheele4/alethia/actions/runs/24685201894` |
+
+### 2.2 Prior proof — `0f9433f` (`chore(ci): sync root package-lock.json for npm ci in Actions`)
+
+This commit restores **`npm ci`** compatibility for GitHub Actions after **`b9fab3c`** left the root lockfile out of sync (prior push runs failed at **Install dependencies** with `npm error code EUSAGE`). Ancestor of **`c802b51`**.
 
 | Check (job name) | Result | Workflow run URL |
 | --- | --- | --- |
@@ -26,7 +35,7 @@ This commit restores **`npm ci`** compatibility for GitHub Actions after **`b9fa
 
 **Optional overlap:** root **Tests** workflow on the same push — `https://github.com/co4wheele4/alethia/actions/runs/24684093546` (SUCCESS).
 
-### 2.2 Historical proof (archived — do not treat as current)
+### 2.3 Historical proof (archived — do not treat as current)
 
 Earlier recorded green runs (e.g. on `d597a05`) remain listed for audit history only; **shipping decisions use the latest table in §2.1** for the commit you deploy.
 
@@ -58,7 +67,7 @@ The ruleset’s **`required_status_checks`** contexts (integration GitHub Action
 - `Epistemic Guardrails`
 - **`governance-bot`**
 
-**Gap (explicit):** **`mvp-release-gate` is not listed** in the ruleset’s required-status-check payload. The workflow **did run and passed** on `0f9433f` (§2.1), but **merge gating via the ruleset alone does not currently require that job by name**. Operators should add **`mvp-release-gate`** to the ruleset’s required checks if policy must match §2.
+**Gap (explicit):** **`mvp-release-gate` is not listed** in the ruleset’s required-status-check payload. The workflow **did run and passed** on **`c802b51`** (§2.1), but **merge gating via the ruleset alone does not currently require that job by name**. Operators should add **`mvp-release-gate`** to the ruleset’s required checks if policy must match §2.
 
 Other settings from API: **`non_fast_forward`** enabled; **pull request** rule present (with bypass as above); **`strict_required_status_checks_policy`:** **false** on this ruleset.
 
@@ -68,7 +77,7 @@ Other settings from API: **`non_fast_forward`** enabled; **pull request** rule p
 
 **Done** for a release candidate **SHA** means:
 
-1. **`mvp-release-gate`** and **`governance-bot`** are **SUCCESS** on that SHA in GitHub Actions (URLs in §2.1 for `0f9433f`).
+1. **`mvp-release-gate`** and **`governance-bot`** are **SUCCESS** on that SHA in GitHub Actions (URLs in §2.1 for **`c802b51`**).
 2. **Documentation** records the SHA and URLs (this file).
 3. **Ruleset alignment (stricter bar):** For **full governance closure**, the default-branch ruleset should **require both** job names; see §3.1 gap.
 
@@ -87,7 +96,7 @@ Other settings from API: **`non_fast_forward`** enabled; **pull request** rule p
 
 | Criterion | Status |
 | --- | --- |
-| Shipping SHA identified | **Yes** — `0f9433fc8faf1d8789490e7ff9107504771e61ad` |
+| Shipping SHA identified | **Yes** — `c802b51c4551a8d04ee5433a306190c31d04fe91` |
 | **`governance-bot`** green on that SHA | **Yes** (URL §2.1) |
 | **`mvp-release-gate`** green on that SHA | **Yes** (URL §2.1) |
 | Ruleset lists **`mvp-release-gate`** as required | **No** (§3.1 — policy gap) |
