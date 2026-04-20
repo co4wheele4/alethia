@@ -2,12 +2,12 @@
 
 ## 1. Date
 
-**2026-04-19**
+**2026-04-19** (implementation). **2026-04-20** (publisher verification update).
 
 ## 2. Branch / commit
 
-- **Commit:** Record `git rev-parse HEAD` **after** you commit; this completion pass was applied as **uncommitted** workspace changes at execution time.
-- **Branch:** Any topic branch — **not** validated as default-branch green in GitHub from this environment.
+- **Mechanical CI proof (default branch):** **`0f9433fc8faf1d8789490e7ff9107504771e61ad`** — see [`docs/compliance/final-mvp-release-readiness.md`](final-mvp-release-readiness.md) §2.1 for **`governance-bot`** and **`mvp-release-gate`** SUCCESS URLs.
+- **Prior feature commit (createClaim / compliance):** **`878a80f`** (ancestor of `0f9433f`).
 
 ## 3. What remained at start
 
@@ -45,28 +45,26 @@
 
 ## 7. What remains manual or CI-authoritative
 
-- **GitHub Actions:** Confirm **`mvp-release-gate`** and **`governance-bot`** **SUCCESS** on the **exact commit** you release; record URLs in `docs/compliance/final-mvp-release-readiness.md` §2.
-- **Branch / ruleset:** Confirm required checks and bypass policy in GitHub (see `docs/compliance/mvp-branch-protection.md`).
+- **GitHub Actions:** Recorded for **`0f9433f`** in `final-mvp-release-readiness.md` §2.1 (2026-04-20 publisher pass).
+- **Ruleset:** Add **`mvp-release-gate`** to the default-branch ruleset required checks if merge policy must match both gates by name (see `final-mvp-release-readiness.md` §3.1).
 - **Production deployment:** Postgres migrations, secrets, and gateway rate limits are environment-specific.
 
 ## 8. Remaining gaps (honest)
 
 - **HIGH (non-CRITICAL):** `DocumentChunk` content may still be mutated via `updateChunk` while evidence references chunk offsets — traceability risk, not an inference API.
 - **MEDIUM:** Legacy search UI components may still contain “relevance”-oriented **library** code; production search page remains deterministic (see system verification report).
-- **CI:** This session did not push or poll GitHub for default-branch workflow status.
+- **Governance (2026-04-20):** GitHub ruleset **`master-protection`** does not yet list **`mvp-release-gate`** as a required context; both workflows are nevertheless **green** on the documented shipping SHA.
 
 ## 9. Recommended next action
 
-1. Commit and push these changes.  
-2. Open a PR and verify **`mvp-release-gate`** + **`governance-bot`** green.  
-3. Paste run URLs into `docs/compliance/final-mvp-release-readiness.md` §2 if you need audit evidence.  
-4. Run `npm run test` (or CI) after merge on `master`.
+1. Add **`mvp-release-gate`** to ruleset **required status checks** if policy must match both gates at merge time.  
+2. Keep **`npm ci`** clean: after any dependency edit, run **`npm install`** at the repo root and commit **`package-lock.json`** before merging to `master`.
 
 ## 10. Final status
 
 **PROVISIONAL GO**
 
-**Rationale:** Code and documentation align with the non-inferential model; **CRITICAL** gaps are cleared in the verification report for the current API surface. **CI and branch protection** are not proven from this workspace — shipping still requires GitHub-green gates on the release SHA.
+**Rationale:** On **`0f9433f`**, **`governance-bot`** and **`mvp-release-gate`** are **SUCCESS** in GitHub Actions (evidence: `final-mvp-release-readiness.md` §2.1). **Full GO** under the strict publisher rule is **not** claimed until the default-branch ruleset **requires `mvp-release-gate`** by name (currently missing — §3.1 there).
 
 **What Aletheia can safely do next**
 

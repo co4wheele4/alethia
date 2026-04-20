@@ -2,7 +2,7 @@
 
 Configure the **default branch** (`master` in this repository; some forks use `main`) so merges cannot bypass mechanical epistemic gates.
 
-This repository uses a **GitHub ruleset** on the default branch in addition to (or instead of) classic branch protection. See **`docs/compliance/final-mvp-release-readiness.md`** §3 for the recorded ruleset URL and required check names. Repository automation cannot set protection from this repo; apply rules in **Settings → Rules → Rulesets** (or **Branches → Branch protection rules** on older setups).
+This repository uses a **GitHub ruleset** on the default branch in addition to (or instead of) classic branch protection. **Recorded ruleset (2026-04-20):** **`master-protection`** — `https://github.com/co4wheele4/alethia/rules/15268776`. See **`docs/compliance/final-mvp-release-readiness.md`** §3 for the API-recorded required contexts and the explicit gap (**`mvp-release-gate`** must be added to the ruleset if merge gating should require it). Repository automation cannot set protection from this repo; apply rules in **Settings → Rules → Rulesets** (or **Branches → Branch protection rules** on older setups).
 
 ## Required status checks (recommended minimum)
 
