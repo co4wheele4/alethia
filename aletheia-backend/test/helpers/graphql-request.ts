@@ -32,8 +32,13 @@ export const graphqlRequest = async <T = Record<string, any>>(
     req.set('Authorization', `Bearer ${token}`);
   }
 
-  return await req.send({
+  const res = await req.send({
     query,
     variables,
   });
+  // Superagent response: keep an explicit shape for GraphQL assertions (status + parsed JSON body).
+  return {
+    status: res.status,
+    body: res.body,
+  } as GraphQLResponse<T>;
 };

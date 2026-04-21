@@ -30,7 +30,8 @@ describe('HtmlCrawlIngestionResolver (e2e)', () => {
   });
 
   afterEach(() => {
-    fetchSpy.mockRestore();
+    // If beforeEach failed before assigning fetchSpy, restore is a no-op (Jest still runs afterEach).
+    fetchSpy?.mockRestore();
   });
 
   it('createHtmlCrawlIngestionRun persists run, join rows, and immutable evidence bytes', async () => {
