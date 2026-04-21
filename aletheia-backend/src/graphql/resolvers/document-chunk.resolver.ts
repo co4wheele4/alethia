@@ -83,8 +83,7 @@ export class DocumentChunkResolver {
     if (!current) {
       throw new NotFoundException(`Document chunk not found: ${id}`);
     }
-    const contentChanges =
-      content !== undefined && content !== current.content;
+    const contentChanges = content !== undefined && content !== current.content;
     if (contentChanges) {
       await this.assertChunkTextNotAnchored(id);
     }
