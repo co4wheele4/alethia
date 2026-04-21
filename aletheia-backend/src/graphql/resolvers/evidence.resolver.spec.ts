@@ -48,7 +48,7 @@ describe('EvidenceResolver', () => {
       createdBy: 'u1',
       sourceDocument: { userId: 'u1' },
     } as any);
-    const result = await resolver.evidenceById('e1', ctx as any);
+    const result = await resolver.evidenceById('e1', ctx);
     expect(result).toMatchObject({ id: 'e1' });
     expect(evidenceFindUnique).toHaveBeenCalledWith({
       where: { id: 'e1' },
@@ -58,13 +58,13 @@ describe('EvidenceResolver', () => {
 
   it('evidenceById returns null when not found', async () => {
     evidenceFindUnique.mockResolvedValue(null);
-    const result = await resolver.evidenceById('e_missing', ctx as any);
+    const result = await resolver.evidenceById('e_missing', ctx);
     expect(result).toBeNull();
   });
 
   it('evidenceById returns null when unauthenticated', async () => {
     evidenceFindUnique.mockResolvedValue({ id: 'e1' } as any);
-    const result = await resolver.evidenceById('e1', {} as any);
+    const result = await resolver.evidenceById('e1', {});
     expect(result).toBeNull();
     expect(evidenceFindUnique).not.toHaveBeenCalled();
   });
@@ -76,7 +76,7 @@ describe('EvidenceResolver', () => {
       createdBy: 'u1',
       sourceDocument: null,
     } as any);
-    const result = await resolver.evidenceById('e1', ctx as any);
+    const result = await resolver.evidenceById('e1', ctx);
     expect(result).toBeNull();
   });
 
@@ -87,7 +87,7 @@ describe('EvidenceResolver', () => {
       createdBy: 'other',
       sourceDocument: null,
     } as any);
-    const result = await resolver.evidenceById('e1', ctx as any);
+    const result = await resolver.evidenceById('e1', ctx);
     expect(result).toBeNull();
   });
 
@@ -98,7 +98,7 @@ describe('EvidenceResolver', () => {
       createdBy: 'u1',
       sourceDocument: null,
     } as any);
-    const result = await resolver.evidenceById('e1', ctx as any);
+    const result = await resolver.evidenceById('e1', ctx);
     expect(result).toMatchObject({ id: 'e1', sourceType: 'URL' });
   });
 
@@ -109,7 +109,7 @@ describe('EvidenceResolver', () => {
       createdBy: 'u1',
       sourceDocument: null,
     } as any);
-    const result = await resolver.evidenceById('e1', ctx as any);
+    const result = await resolver.evidenceById('e1', ctx);
     expect(result).toBeNull();
   });
 
@@ -120,7 +120,7 @@ describe('EvidenceResolver', () => {
       createdBy: 'u1',
       sourceDocument: null,
     } as any);
-    const result = await resolver.evidenceById('e1', ctx as any);
+    const result = await resolver.evidenceById('e1', ctx);
     expect(result).toBeNull();
   });
 
@@ -131,7 +131,7 @@ describe('EvidenceResolver', () => {
       createdBy: 'u1',
       sourceDocument: { userId: 'other' },
     } as any);
-    const result = await resolver.evidenceById('e1', ctx as any);
+    const result = await resolver.evidenceById('e1', ctx);
     expect(result).toBeNull();
   });
 
@@ -268,8 +268,8 @@ describe('EvidenceResolver', () => {
         startOffset: 0,
         endOffset: 5,
         snippet: 'hello',
-      } as any,
-      ctx as any,
+      },
+      ctx,
     );
     expect(result.id).toBe('ev1');
   });
@@ -297,8 +297,8 @@ describe('EvidenceResolver', () => {
         startOffset: 2,
         endOffset: 5,
         snippet: 'cde',
-      } as any,
-      ctx as any,
+      },
+      ctx,
     );
     expect(result.id).toBe('ev1');
   });
@@ -327,8 +327,8 @@ describe('EvidenceResolver', () => {
         endOffset: 1,
         snippet: 'x',
         claimIds: [],
-      } as any,
-      ctx as any,
+      },
+      ctx,
     );
     expect(result.id).toBe('ev1');
     expect(claimFindFirst).not.toHaveBeenCalled();
@@ -376,14 +376,14 @@ describe('EvidenceResolver', () => {
   });
 
   it('evidence returns empty when unauthenticated', async () => {
-    const result = await resolver.evidence(100, 0, {} as any);
+    const result = await resolver.evidence(100, 0, {});
     expect(result).toEqual([]);
     expect(evidenceFindMany).not.toHaveBeenCalled();
   });
 
   it('evidence queries by sourceDocument.userId when authenticated', async () => {
     evidenceFindMany.mockResolvedValue([{ id: 'e1' }] as any);
-    const result = await resolver.evidence(100, 0, ctx as any);
+    const result = await resolver.evidence(100, 0, ctx);
     expect(result).toEqual([{ id: 'e1' }]);
     expect(evidenceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -613,8 +613,8 @@ describe('EvidenceResolver', () => {
         endOffset: 5,
         snippet: 'hello',
         claimIds: ['c1', 'c_missing'],
-      } as any,
-      ctx as any,
+      },
+      ctx,
     );
 
     expect(result.id).toBe('ev1');
@@ -651,8 +651,8 @@ describe('EvidenceResolver', () => {
         endOffset: 5,
         snippet: 'hello',
         claimIds: ['c1'],
-      } as any,
-      ctx as any,
+      },
+      ctx,
     );
 
     expect(result.id).toBe('ev1');
@@ -757,7 +757,7 @@ describe('EvidenceResolver', () => {
     claimFindFirst.mockResolvedValue({ id: 'c1' });
     claimEvidenceLinkUpsert.mockResolvedValue({});
 
-    const result = await resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any);
+    const result = await resolver.linkEvidenceToClaim('ev1', 'c1', ctx);
     expect(result.id).toBe('ev1');
     expect(claimEvidenceLinkUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -777,7 +777,7 @@ describe('EvidenceResolver', () => {
     claimFindFirst.mockResolvedValue({ id: 'c1' });
     claimEvidenceLinkUpsert.mockResolvedValue({});
 
-    const result = await resolver.linkEvidenceToClaim('ev1', 'c1', ctx as any);
+    const result = await resolver.linkEvidenceToClaim('ev1', 'c1', ctx);
     expect(result.id).toBe('ev1');
     expect(claimEvidenceLinkUpsert).toHaveBeenCalled();
   });

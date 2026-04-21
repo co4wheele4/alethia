@@ -179,7 +179,7 @@ describe('AuthService', () => {
       const userWithoutRole = { ...mockUser, role: null as unknown as string };
       jest.spyOn(jwtService, 'sign').mockReturnValue(mockToken);
 
-      const result = service.login(userWithoutRole as unknown as User);
+      const result = service.login(userWithoutRole);
 
       expect(result).toEqual({
         access_token: mockToken,
@@ -200,7 +200,7 @@ describe('AuthService', () => {
       };
       jest.spyOn(jwtService, 'sign').mockReturnValue(mockToken);
 
-      const result = service.login(userWithoutRole as unknown as User);
+      const result = service.login(userWithoutRole);
 
       expect(result).toEqual({
         access_token: mockToken,

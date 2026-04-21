@@ -98,7 +98,7 @@ describe('ClaimAdjudicationResolver', () => {
       'c1',
       ClaimLifecycleState.REVIEW,
       undefined,
-      { req: { user: { sub: 'u1' } } } as any,
+      { req: { user: { sub: 'u1' } } },
     );
 
     expect(result).toEqual({ id: 'c1', status: ClaimStatus.REVIEWED });
@@ -129,7 +129,7 @@ describe('ClaimAdjudicationResolver', () => {
       'c1',
       ClaimLifecycleState.ACCEPTED,
       'ok',
-      { req: { user: { id: 'u1' } } } as any,
+      { req: { user: { id: 'u1' } } },
     );
 
     expect(result).toEqual({ id: 'c1', status: ClaimStatus.ACCEPTED });
@@ -157,7 +157,7 @@ describe('ClaimAdjudicationResolver', () => {
       'c1',
       ClaimLifecycleState.REJECTED,
       'bad evidence',
-      { req: { user: { sub: 'u1' } } } as any,
+      { req: { user: { sub: 'u1' } } },
     );
 
     expect(result).toEqual({ id: 'c1', status: ClaimStatus.REJECTED });
@@ -223,7 +223,7 @@ describe('ClaimAdjudicationResolver', () => {
 
     const q = await resolver.reviewQuorumStatus('c1', {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
 
     expect(q.requiredCount).toBe(2);
     process.env.REVIEW_QUORUM_ENABLED = prevE;
@@ -241,7 +241,7 @@ describe('ClaimAdjudicationResolver', () => {
 
     const q = await resolver.reviewQuorumStatus('c1', {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
 
     expect(q).toEqual({
       enabled: true,
@@ -326,7 +326,7 @@ describe('ClaimAdjudicationResolver', () => {
         'c1',
         ClaimLifecycleState.ACCEPTED,
         undefined,
-        { req: { user: { sub: 'u1' } } } as any,
+        { req: { user: { sub: 'u1' } } },
       );
 
       expect(result.status).toBe(ClaimStatus.ACCEPTED);

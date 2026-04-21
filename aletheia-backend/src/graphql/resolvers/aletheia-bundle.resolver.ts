@@ -8,7 +8,6 @@ import { AletheiaBundleService } from '../../bundle/aletheia-bundle.service';
 import { ExportBundleInput } from '@inputs/export-bundle.input';
 import { ImportBundleInput } from '@inputs/import-bundle.input';
 import { ImportResult } from '@models/import-result.model';
-import { ClaimStatus } from '@prisma/client';
 
 const exportBundleReturnType = () => GraphQLJSON;
 const importBundleReturnType = () => ImportResult;
@@ -28,7 +27,7 @@ export class AletheiaBundleResolver {
   async exportBundle(@Args('input') input: ExportBundleInput) {
     return this.bundles.exportBundle({
       claimIds: input.claimIds,
-      lifecycle: input.lifecycle as ClaimStatus | undefined,
+      lifecycle: input.lifecycle,
       createdAfter: input.createdAfter,
       createdBefore: input.createdBefore,
       includeEpistemicEvents: input.includeEpistemicEvents,

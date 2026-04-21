@@ -100,7 +100,7 @@ describe('useDocumentChunks hooks', () => {
   });
 
   describe('useDocumentDetails', () => {
-    it('fetches both (deprecated)', async () => {
+    it('fetches document and chunks together', async () => {
       const { result } = renderHook(() => useDocumentDetails('d1'), {
         wrapper: ({ children }) => (
           <MockedProvider mocks={[...mocks, ...mocks]}>

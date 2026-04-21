@@ -96,9 +96,7 @@ describe('DocumentResolver', () => {
     it('should return an array of documents', async () => {
       const mockDocuments = [mockDocument];
       const findManyMock = prismaService.document.findMany as jest.Mock;
-      findManyMock.mockResolvedValue(
-        mockDocuments as unknown as typeof mockDocuments,
-      );
+      findManyMock.mockResolvedValue(mockDocuments);
 
       const result = await resolver.documents(100, 0);
 
@@ -124,9 +122,7 @@ describe('DocumentResolver', () => {
   describe('document', () => {
     it('should return a document by id', async () => {
       const findUniqueMock = prismaService.document.findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(
-        mockDocument as unknown as typeof mockDocument,
-      );
+      findUniqueMock.mockResolvedValue(mockDocument);
 
       const result = await resolver.document('doc-1');
 
@@ -150,9 +146,7 @@ describe('DocumentResolver', () => {
     it('should return documents for a specific user', async () => {
       const mockDocuments = [mockDocument];
       const findManyMock = prismaService.document.findMany as jest.Mock;
-      findManyMock.mockResolvedValue(
-        mockDocuments as unknown as typeof mockDocuments,
-      );
+      findManyMock.mockResolvedValue(mockDocuments);
 
       const result = await resolver.documentsByUser('user-1');
 
@@ -187,9 +181,7 @@ describe('DocumentResolver', () => {
     it('should create a new document', async () => {
       const newDocument = { ...mockDocument, title: 'New Document' };
       const createMock = prismaService.document.create as jest.Mock;
-      createMock.mockResolvedValue(
-        newDocument as unknown as typeof newDocument,
-      );
+      createMock.mockResolvedValue(newDocument);
 
       const result = await resolver.createDocument('New Document', 'user-1');
 
@@ -212,9 +204,7 @@ describe('DocumentResolver', () => {
     it('should update document title', async () => {
       const updatedDocument = { ...mockDocument, title: 'Updated Title' };
       const updateMock = prismaService.document.update as jest.Mock;
-      updateMock.mockResolvedValue(
-        updatedDocument as unknown as typeof updatedDocument,
-      );
+      updateMock.mockResolvedValue(updatedDocument);
 
       const result = await resolver.updateDocument('doc-1', 'Updated Title');
 
@@ -227,9 +217,7 @@ describe('DocumentResolver', () => {
 
     it('should handle undefined title', async () => {
       const updateMock = prismaService.document.update as jest.Mock;
-      updateMock.mockResolvedValue(
-        mockDocument as unknown as typeof mockDocument,
-      );
+      updateMock.mockResolvedValue(mockDocument);
 
       const result = await resolver.updateDocument('doc-1', undefined);
 
@@ -244,9 +232,7 @@ describe('DocumentResolver', () => {
   describe('deleteDocument', () => {
     it('should delete a document', async () => {
       const deleteMock = prismaService.document.delete as jest.Mock;
-      deleteMock.mockResolvedValue(
-        mockDocument as unknown as typeof mockDocument,
-      );
+      deleteMock.mockResolvedValue(mockDocument);
 
       const result = await resolver.deleteDocument('doc-1');
 

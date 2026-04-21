@@ -32,8 +32,8 @@ export const graphqlRequest = async <T = Record<string, any>>(
     req.set('Authorization', `Bearer ${token}`);
   }
 
-  return (await req.send({
+  return await req.send({
     query,
     variables,
-  })) as unknown as GraphQLResponse<T>;
+  });
 };

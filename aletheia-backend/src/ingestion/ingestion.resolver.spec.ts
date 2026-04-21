@@ -76,7 +76,7 @@ describe('IngestionResolver', () => {
       const mockDoc = { id: 'doc-1', title: 'Test Doc' };
       service.ingest.mockResolvedValue(mockDoc as any);
 
-      const result = await resolver.ingestDocument(input as any, {
+      const result = await resolver.ingestDocument(input, {
         req: { user: { sub: 'user-1' } },
       });
 
@@ -88,7 +88,7 @@ describe('IngestionResolver', () => {
       const mockDoc = { id: 'doc-1', title: 'Test Doc' };
       service.ingest.mockResolvedValue(mockDoc as any);
 
-      const result = await resolver.ingestDocument(input as any, {
+      const result = await resolver.ingestDocument(input, {
         req: { user: { sub: 'user-1' } },
       });
 
@@ -107,7 +107,7 @@ describe('IngestionResolver', () => {
       const mockDoc = { id: 'doc-1', title: 'Test Doc' };
       service.ingest.mockResolvedValue(mockDoc as any);
 
-      const result = await resolver.ingestDocument(input as any, {});
+      const result = await resolver.ingestDocument(input, {});
 
       expect(result).toEqual(mockDoc);
     });

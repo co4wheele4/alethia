@@ -53,9 +53,7 @@ describe('AppResolver', () => {
     it('should return an array of lessons', async () => {
       const mockLessons = [mockLesson];
       const findManyMock = prismaService.lesson.findMany as jest.Mock;
-      findManyMock.mockResolvedValue(
-        mockLessons as unknown as typeof mockLessons,
-      );
+      findManyMock.mockResolvedValue(mockLessons);
 
       const result = await resolver.lessons();
 

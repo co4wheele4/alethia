@@ -245,7 +245,7 @@ describe('AletheiaBundleService', () => {
         {
           version: '1',
           exportedAt: '',
-          claims: [{ id: 'c1', confidence: 0.9 } as unknown as { id: string }],
+          claims: [{ id: 'c1', confidence: 0.9 }],
           evidence: [],
           claimEvidenceLinks: [],
           adjudicationLogs: [],
@@ -272,7 +272,7 @@ describe('AletheiaBundleService', () => {
             {
               id: 'c1',
               meta: [{ score: 1 }],
-            } as unknown as { id: string },
+            },
           ],
           evidence: [],
           claimEvidenceLinks: [],
@@ -311,7 +311,7 @@ describe('AletheiaBundleService', () => {
         },
         evidenceReproCheck: { deleteMany: jest.fn(), createMany: jest.fn() },
         epistemicEvent: { createMany: jest.fn() },
-      } as any),
+      }),
     );
 
     await service.importBundle(
@@ -323,7 +323,7 @@ describe('AletheiaBundleService', () => {
             id: 'c1',
             note: null,
             extra: undefined,
-          } as unknown as { id: string },
+          },
         ],
         evidence: [],
         claimEvidenceLinks: [],
@@ -359,7 +359,7 @@ describe('AletheiaBundleService', () => {
         },
         evidenceReproCheck: { deleteMany: jest.fn(), createMany: jest.fn() },
         epistemicEvent: { createMany: jest.fn() },
-      } as any),
+      }),
     );
 
     const r = await service.importBundle(
@@ -400,7 +400,7 @@ describe('AletheiaBundleService', () => {
         claim: { deleteMany: del, createMany, update: jest.fn() },
         evidence: { deleteMany: del, createMany },
         epistemicEvent: { createMany },
-      } as any),
+      }),
     );
 
     await service.importBundle(
@@ -439,7 +439,7 @@ describe('AletheiaBundleService', () => {
         claim: { deleteMany: del, createMany: jest.fn(), update: jest.fn() },
         evidence: { deleteMany: del, createMany: jest.fn() },
         epistemicEvent: { createMany: jest.fn() },
-      } as any),
+      }),
     );
 
     await service.importBundle(
@@ -478,7 +478,7 @@ describe('AletheiaBundleService', () => {
         reviewerResponse: { createMany: cm, deleteMany: jest.fn() },
         evidenceReproCheck: { createMany: cm, deleteMany: jest.fn() },
         epistemicEvent: { createMany: cm },
-      } as any),
+      }),
     );
 
     await service.importBundle(
@@ -522,7 +522,7 @@ describe('AletheiaBundleService', () => {
         reviewerResponse: { createMany: jest.fn(), deleteMany: jest.fn() },
         evidenceReproCheck: { createMany: jest.fn(), deleteMany: jest.fn() },
         epistemicEvent: { createMany: jest.fn() },
-      } as any),
+      }),
     );
 
     await service.importBundle(
@@ -583,7 +583,7 @@ describe('AletheiaBundleService', () => {
         reviewerResponse: { createMany: jest.fn(), deleteMany: jest.fn() },
         evidenceReproCheck: { createMany: jest.fn(), deleteMany: jest.fn() },
         epistemicEvent: { createMany: jest.fn() },
-      } as any),
+      }),
     );
 
     await service.importBundle(

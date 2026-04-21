@@ -5,8 +5,19 @@ export const dynamic = 'force-dynamic';
 
 function readWalkthrough(): string {
   const candidates = [
-    join(process.cwd(), '..', 'docs', 'demo', 'feature-walkthrough.md'),
-    join(process.cwd(), 'docs', 'demo', 'feature-walkthrough.md'),
+    join(
+      /* turbopackIgnore: true */ process.cwd(),
+      '..',
+      'docs',
+      'demo',
+      'feature-walkthrough.md',
+    ),
+    join(
+      /* turbopackIgnore: true */ process.cwd(),
+      'docs',
+      'demo',
+      'feature-walkthrough.md',
+    ),
   ];
   for (const p of candidates) {
     if (existsSync(p)) {

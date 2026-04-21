@@ -31,7 +31,7 @@ describe('EvidenceReproResolver', () => {
 
     const rows = await resolver.evidenceReproChecks('e1', {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(rows).toHaveLength(1);
   });
 
@@ -41,7 +41,7 @@ describe('EvidenceReproResolver', () => {
 
     await resolver.evidenceReproChecks('e1', {
       req: { user: { id: 'u1' } },
-    } as any);
+    });
 
     expect(evidenceFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({

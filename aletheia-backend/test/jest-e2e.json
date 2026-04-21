@@ -4,7 +4,6 @@
   "testEnvironment": "node",
   "testRegex": "(.*\\.e2e-spec\\.ts$|e2e/.*\\.e2e-spec\\.ts$)",
   "maxWorkers": 1,
-  "runInBand": true,
   "preset": "ts-jest/presets/default-esm",
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", {

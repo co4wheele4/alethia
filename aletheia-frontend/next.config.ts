@@ -15,10 +15,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     // When running `next build` from within the workspace, `process.cwd()` is `aletheia-frontend/`.
     // We want the monorepo root so Turbopack can resolve hoisted deps from the root `node_modules/`.
-    root: path.resolve(process.cwd(), ".."),
+    // turbopackIgnore: avoid tracing the whole repo as an NFT dependency (Next.js 16+).
+    root: path.resolve(/* turbopackIgnore: true */ process.cwd(), ".."),
   },
-  // Enable React strict mode for better development experience
-  // Note: swcMinify is deprecated in Next.js 16+ (SWC is always enabled)
   reactStrictMode: true,
 };
 

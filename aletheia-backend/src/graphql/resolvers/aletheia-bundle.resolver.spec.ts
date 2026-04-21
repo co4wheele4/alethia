@@ -30,7 +30,7 @@ describe('AletheiaBundleResolver', () => {
     const r = await resolver.importBundle({
       bundle: { version: '1' },
       allowOverwrite: false,
-    } as any);
+    });
     expect(r.importedClaims).toBe(1);
   });
 });

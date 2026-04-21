@@ -98,10 +98,7 @@ describe('GraphQLThrottlerGuard', () => {
       const originalMethod = parentPrototype.getRequestResponse;
       const superGetRequestResponse = jest
         .spyOn(parentPrototype, 'getRequestResponse')
-        .mockReturnValue({ req: mockRequest, res: mockResponse } as {
-          req: Request;
-          res: Response;
-        });
+        .mockReturnValue({ req: mockRequest, res: mockResponse });
 
       const result = guard.getRequestResponse(mockContext as ExecutionContext);
 
@@ -146,10 +143,7 @@ describe('GraphQLThrottlerGuard', () => {
       const originalMethod = parentPrototype.getRequestResponse;
       const superGetRequestResponse = jest
         .spyOn(parentPrototype, 'getRequestResponse')
-        .mockReturnValue({ req: mockRequest, res: mockResponse } as {
-          req: Request;
-          res: Response;
-        });
+        .mockReturnValue({ req: mockRequest, res: mockResponse });
 
       const result = guard.getRequestResponse(mockContext as ExecutionContext);
 
@@ -191,10 +185,7 @@ describe('GraphQLThrottlerGuard', () => {
       const originalMethod = parentPrototype.getRequestResponse;
       const superGetRequestResponse = jest
         .spyOn(parentPrototype, 'getRequestResponse')
-        .mockReturnValue({ req: mockRequest, res: mockResponse } as {
-          req: Request;
-          res: Response;
-        });
+        .mockReturnValue({ req: mockRequest, res: mockResponse });
 
       const result = guard.getRequestResponse(mockContext as ExecutionContext);
 

@@ -45,7 +45,7 @@ export class IngestionService {
         data: {
           title: input.title,
           userId: input.userId,
-          sourceType: input.source.kind as DocumentSourceKind,
+          sourceType: input.source.kind,
           sourceLabel:
             input.source.filename || input.source.requestedUrl || input.title,
         },
@@ -55,7 +55,7 @@ export class IngestionService {
       await tx.documentSource.create({
         data: {
           documentId: document.id,
-          kind: input.source.kind as DocumentSourceKind,
+          kind: input.source.kind,
           ingestedAt: new Date(),
           contentSha256,
           filename: input.source.filename,

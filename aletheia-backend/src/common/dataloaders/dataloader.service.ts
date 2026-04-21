@@ -206,7 +206,7 @@ export class DataLoaderService {
         }
         for (const chunk of chunks) {
           const docChunks = chunksByDocument.get(chunk.documentId) ?? [];
-          docChunks.push(chunk as unknown as DocumentChunk);
+          docChunks.push(chunk);
           chunksByDocument.set(chunk.documentId, docChunks);
         }
         return documentIds.map(

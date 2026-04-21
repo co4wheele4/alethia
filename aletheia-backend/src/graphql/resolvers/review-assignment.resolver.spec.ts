@@ -99,7 +99,7 @@ describe('ReviewAssignmentResolver', () => {
 
     const result = await resolver.assignReviewer('rr1', 'u2', {
       req: { user: { sub: 'admin1', role: 'ADMIN' } },
-    } as any);
+    });
 
     expect(result).toMatchObject({ id: 'ra1' });
     expect(reviewAssignmentCreate).toHaveBeenCalledWith(
@@ -242,7 +242,7 @@ describe('ReviewAssignmentResolver', () => {
       'ra1',
       ReviewerResponseType.DECLINED,
       undefined,
-      { req: { user: { sub: 'u1' } } } as any,
+      { req: { user: { sub: 'u1' } } },
     );
 
     expect(result).toEqual({ id: 'resp1' });

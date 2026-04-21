@@ -58,7 +58,7 @@ describe('ReviewRequestResolver', () => {
     reviewRequestFindMany.mockResolvedValue([{ id: 'rr1' }] as any);
     const result = await resolver.myReviewRequests({
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(result).toEqual([{ id: 'rr1' }]);
     expect(reviewRequestFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -79,7 +79,7 @@ describe('ReviewRequestResolver', () => {
     reviewRequestFindMany.mockResolvedValue([{ id: 'rr1' }] as any);
     const result = await resolver.reviewQueue({
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(result).toEqual([{ id: 'rr1' }]);
     expect(reviewRequestFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -132,7 +132,7 @@ describe('ReviewRequestResolver', () => {
 
     const result = await resolver.reviewRequestsByClaim('c1', {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
 
     expect(result).toEqual([{ id: 'rr1' }]);
     expect(claimFindFirst).toHaveBeenCalledWith(
@@ -210,7 +210,7 @@ describe('ReviewRequestResolver', () => {
       'c1',
       ReviewRequestSource.CLAIM_VIEW,
       undefined,
-      { req: { user: { sub: 'u1' } } } as any,
+      { req: { user: { sub: 'u1' } } },
     );
 
     expect(result).toEqual({ id: 'rr1', claimId: 'c1' });

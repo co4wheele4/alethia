@@ -77,7 +77,7 @@ describe('JwtStrategy', () => {
 
       jest
         .spyOn(prismaService.user, 'findUnique')
-        .mockResolvedValue(userWithoutRole as User);
+        .mockResolvedValue(userWithoutRole);
 
       const result = await strategy.validate(payload);
 
@@ -109,7 +109,7 @@ describe('JwtStrategy', () => {
 
       jest
         .spyOn(prismaService.user, 'findUnique')
-        .mockResolvedValue(userWithoutRole as User);
+        .mockResolvedValue(userWithoutRole);
 
       const result = await strategy.validate(payload);
 
@@ -128,7 +128,7 @@ describe('JwtStrategy', () => {
 
       jest
         .spyOn(prismaService.user, 'findUnique')
-        .mockResolvedValue(userWithoutRole as User);
+        .mockResolvedValue(userWithoutRole);
 
       const result = await strategy.validate(payload);
 

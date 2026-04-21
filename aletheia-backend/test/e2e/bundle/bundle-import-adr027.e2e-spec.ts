@@ -3,7 +3,7 @@
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { ClaimStatus, EvidenceSourceKind, Prisma } from '@prisma/client';
+import { ClaimStatus, EvidenceSourceKind } from '@prisma/client';
 import { AppModule } from '../../../src/app/app.module';
 import { PrismaService } from '../../../src/prisma/prisma.service';
 import { AletheiaBundleService } from '../../../src/bundle/aletheia-bundle.service';
@@ -57,7 +57,7 @@ describe('Bundle import vs ADR-027 triggers (e2e)', () => {
             reviewedAt: null,
             reviewedBy: null,
             reviewerNote: null,
-          } as unknown as Prisma.ClaimCreateManyInput,
+          },
         ],
         evidence: [],
         claimEvidenceLinks: [],
@@ -95,7 +95,7 @@ describe('Bundle import vs ADR-027 triggers (e2e)', () => {
             reviewedAt: new Date(),
             reviewedBy: user.id,
             reviewerNote: null,
-          } as unknown as Prisma.ClaimCreateManyInput,
+          },
         ],
         evidence: [
           {
@@ -111,14 +111,14 @@ describe('Bundle import vs ADR-027 triggers (e2e)', () => {
             contentSha256: hash,
             sourceUrl: null,
             rawBody: null,
-          } as unknown as Prisma.EvidenceCreateManyInput,
+          },
         ],
         claimEvidenceLinks: [
           {
             claimId,
             evidenceId,
             linkedAt: new Date(),
-          } as unknown as Prisma.ClaimEvidenceLinkCreateManyInput,
+          },
         ],
         adjudicationLogs: [],
         reviewRequests: [],
@@ -155,7 +155,7 @@ describe('Bundle import vs ADR-027 triggers (e2e)', () => {
             reviewedAt: new Date(),
             reviewedBy: user.id,
             reviewerNote: 'ok',
-          } as unknown as Prisma.ClaimCreateManyInput,
+          },
         ],
         evidence: [
           {
@@ -171,14 +171,14 @@ describe('Bundle import vs ADR-027 triggers (e2e)', () => {
             contentSha256: hash,
             sourceUrl: null,
             rawBody: null,
-          } as unknown as Prisma.EvidenceCreateManyInput,
+          },
         ],
         claimEvidenceLinks: [
           {
             claimId,
             evidenceId,
             linkedAt: new Date(),
-          } as unknown as Prisma.ClaimEvidenceLinkCreateManyInput,
+          },
         ],
         adjudicationLogs: [
           {
@@ -192,7 +192,7 @@ describe('Bundle import vs ADR-027 triggers (e2e)', () => {
             createdAt: new Date(),
             prevHash: null,
             entryHash: '00'.repeat(32),
-          } as unknown as Prisma.AdjudicationLogCreateManyInput,
+          },
         ],
         reviewRequests: [],
         reviewAssignments: [],
@@ -229,7 +229,7 @@ describe('Bundle import vs ADR-027 triggers (e2e)', () => {
               reviewedAt: null,
               reviewedBy: null,
               reviewerNote: null,
-            } as unknown as Prisma.ClaimCreateManyInput,
+            },
           ],
           evidence: [],
           claimEvidenceLinks: [],

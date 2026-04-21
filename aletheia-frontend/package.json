@@ -20,6 +20,7 @@
     "test:cov": "npm run lint && npm run type-check && npm run test:unit:cov",
     "test:all": "npm run test:e2e",
     "test:complete": "npm run lint && npm run type-check && node ../scripts/test-all-with-summary.js",
+    "playwright:install": "playwright install",
     "test:e2e": "npm run test && playwright test",
     "test:e2e:all-browsers": "npm run test && node scripts/playwright-all-browsers.cjs",
     "test:e2e:ui": "npm run test:unit && playwright test --ui",

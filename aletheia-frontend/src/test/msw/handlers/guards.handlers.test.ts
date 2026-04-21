@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { setupMSW } from '@/app/lib/test-utils/setup-msw';
-
-setupMSW();
+// MSW server is started in setupTests.ts; do not call setupMSW() here (double listen fails on MSW 2.13+).
 
 describe('MSW guard handlers', () => {
   it('fails reviewer-coordination lifecycle field requests even when operationName is omitted', async () => {

@@ -39,7 +39,7 @@ describe('ClaimResolver', () => {
   it('claims returns empty list when unauthenticated', async () => {
     const result = await resolver.claims(undefined, 100, 0, {
       req: { user: {} },
-    } as any);
+    });
     expect(result).toEqual([]);
     expect(claimFindMany).not.toHaveBeenCalled();
   });
@@ -48,7 +48,7 @@ describe('ClaimResolver', () => {
     claimFindMany.mockResolvedValue([] as any);
     await resolver.claims({ lifecycle: 'ACCEPTED' as any }, 100, 0, {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -66,7 +66,7 @@ describe('ClaimResolver', () => {
     claimFindMany.mockResolvedValue([] as any);
     await resolver.claims({ hasEvidence: true }, 100, 0, {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -86,7 +86,7 @@ describe('ClaimResolver', () => {
     claimFindMany.mockResolvedValue([] as any);
     await resolver.claims({ hasEvidence: false }, 100, 0, {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -109,7 +109,7 @@ describe('ClaimResolver', () => {
     claimFindMany.mockResolvedValue([{ id: 'c1' }] as any);
     const result = await resolver.claims(undefined, 100, 0, {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(result).toEqual([{ id: 'c1' }]);
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -150,7 +150,7 @@ describe('ClaimResolver', () => {
     } as any);
     const result = await resolver.createClaim('  Hello  ', {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(result.id).toBe('new');
     expect(claimCreate).toHaveBeenCalledWith({
       data: {
@@ -194,7 +194,7 @@ describe('ClaimResolver', () => {
   it('claimsByDocument returns empty list when unauthenticated', async () => {
     const result = await resolver.claimsByDocument('doc_1', 100, 0, {
       req: { user: {} },
-    } as any);
+    });
     expect(result).toEqual([]);
     expect(documentFindUnique).not.toHaveBeenCalled();
   });
@@ -203,7 +203,7 @@ describe('ClaimResolver', () => {
     documentFindUnique.mockResolvedValue(null as any);
     const result = await resolver.claimsByDocument('doc_1', 100, 0, {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(result).toEqual([]);
   });
 
@@ -227,7 +227,7 @@ describe('ClaimResolver', () => {
     claimFindMany.mockResolvedValue([{ id: 'c1' }] as any);
     const result = await resolver.claimsByDocument('doc_1', 100, 0, {
       req: { user: { sub: 'u1' } },
-    } as any);
+    });
     expect(result).toEqual([{ id: 'c1' }]);
     expect(claimFindMany).toHaveBeenCalledWith(
       expect.objectContaining({

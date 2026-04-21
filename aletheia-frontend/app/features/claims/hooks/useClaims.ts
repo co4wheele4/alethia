@@ -21,9 +21,6 @@ export type Evidence = {
   snippet?: string | null;
 };
 
-/** @deprecated Use Evidence. Kept for compatibility during migration. */
-export type ClaimEvidence = Evidence;
-
 export type ClaimDocument = {
   __typename?: 'Document';
   id: string;

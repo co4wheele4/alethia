@@ -102,9 +102,7 @@ describe('DocumentChunkResolver', () => {
     it('should return an array of document chunks', async () => {
       const mockChunks = [mockChunk];
       const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
-      findManyMock.mockResolvedValue(
-        mockChunks as unknown as typeof mockChunks,
-      );
+      findManyMock.mockResolvedValue(mockChunks);
 
       const result = await resolver.documentChunks();
 
@@ -126,9 +124,7 @@ describe('DocumentChunkResolver', () => {
     it('should return a document chunk by id', async () => {
       const findUniqueMock = prismaService.documentChunk
         .findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(
-        mockChunk as unknown as typeof mockChunk,
-      );
+      findUniqueMock.mockResolvedValue(mockChunk);
 
       const result = await resolver.documentChunk('chunk-1');
 
@@ -153,9 +149,7 @@ describe('DocumentChunkResolver', () => {
     it('should return chunks for a specific document', async () => {
       const mockChunks = [mockChunk];
       const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
-      findManyMock.mockResolvedValue(
-        mockChunks as unknown as typeof mockChunks,
-      );
+      findManyMock.mockResolvedValue(mockChunks);
 
       const result = await resolver.chunksByDocument('doc-1');
 
@@ -181,7 +175,7 @@ describe('DocumentChunkResolver', () => {
   describe('chunk0ByDocument', () => {
     it('should return chunkIndex=0 for a document', async () => {
       const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
-      findFirstMock.mockResolvedValue(mockChunk as unknown as typeof mockChunk);
+      findFirstMock.mockResolvedValue(mockChunk);
 
       const result = await resolver.chunk0ByDocument('doc-1');
 
@@ -204,7 +198,7 @@ describe('DocumentChunkResolver', () => {
   describe('createChunk', () => {
     it('should create a new document chunk', async () => {
       const createMock = prismaService.documentChunk.create as jest.Mock;
-      createMock.mockResolvedValue(mockChunk as unknown as typeof mockChunk);
+      createMock.mockResolvedValue(mockChunk);
 
       const result = await resolver.createChunk('doc-1', 0, 'Test content');
 
@@ -219,9 +213,7 @@ describe('DocumentChunkResolver', () => {
     beforeEach(() => {
       const findUniqueMock = prismaService.documentChunk
         .findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(
-        mockChunk as unknown as typeof mockChunk,
-      );
+      findUniqueMock.mockResolvedValue(mockChunk);
       (prismaService.evidence.count as jest.Mock).mockResolvedValue(0);
       (prismaService.entityMention.count as jest.Mock).mockResolvedValue(0);
       (
@@ -233,9 +225,7 @@ describe('DocumentChunkResolver', () => {
     it('should update chunk content when no anchors reference the chunk', async () => {
       const updatedChunk = { ...mockChunk, content: 'Updated content' };
       const updateMock = prismaService.documentChunk.update as jest.Mock;
-      updateMock.mockResolvedValue(
-        updatedChunk as unknown as typeof updatedChunk,
-      );
+      updateMock.mockResolvedValue(updatedChunk);
 
       const result = await resolver.updateChunk('chunk-1', 'Updated content');
 
@@ -268,7 +258,7 @@ describe('DocumentChunkResolver', () => {
 
     it('should handle undefined content', async () => {
       const updateMock = prismaService.documentChunk.update as jest.Mock;
-      updateMock.mockResolvedValue(mockChunk as unknown as typeof mockChunk);
+      updateMock.mockResolvedValue(mockChunk);
 
       const result = await resolver.updateChunk('chunk-1', undefined);
 
@@ -292,7 +282,7 @@ describe('DocumentChunkResolver', () => {
 
     it('should delete a document chunk when no anchors reference it', async () => {
       const deleteMock = prismaService.documentChunk.delete as jest.Mock;
-      deleteMock.mockResolvedValue(mockChunk as unknown as typeof mockChunk);
+      deleteMock.mockResolvedValue(mockChunk);
 
       const result = await resolver.deleteChunk('chunk-1');
 

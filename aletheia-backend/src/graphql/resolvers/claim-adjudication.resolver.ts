@@ -1,9 +1,6 @@
 import { Args, Context, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
-import {
-  ClaimStatus as PrismaClaimStatus,
-  ReviewerResponseType,
-} from '@prisma/client';
+import { ReviewerResponseType } from '@prisma/client';
 import { PrismaService } from '@prisma/prisma.service';
 import { Claim, ClaimLifecycleState, ClaimStatus } from '@models/claim.model';
 import { ReviewQuorumStatus } from '@models/review-quorum-status.model';
@@ -214,7 +211,7 @@ export class ClaimAdjudicationResolver {
       decision,
       reviewerNote: reviewerNote ?? null,
       previousStatus: existing.status,
-      nextStatus: nextStatus as PrismaClaimStatus,
+      nextStatus: nextStatus,
     });
   }
 }

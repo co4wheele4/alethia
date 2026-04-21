@@ -47,6 +47,7 @@
     "db:seed:test": "npm run db:seed:test --workspace=aletheia-backend",
     "db:reset:test": "npm run db:reset:test --workspace=aletheia-backend",
     "kill": "node scripts/kill.js",
+    "playwright:install": "npm run playwright:install --workspace=aletheia-frontend",
     "schema:snapshots:check": "node scripts/check-schema-snapshots.cjs",
     "schema:generate": "npm run schema:generate --workspace=aletheia-backend",
     "test:schema-snapshot": "npm run schema:snapshots:check",
@@ -69,6 +70,12 @@
     "jest": "^30.2.0",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.4.6"
+  },
+  "overrides": {
+    "@prisma/dev": {
+      "@hono/node-server": "1.19.14"
+    },
+    "@hono/node-server": "1.19.14"
   },
   "engines": {
     "node": ">=18.0.0",

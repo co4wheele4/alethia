@@ -148,14 +148,14 @@ export class AletheiaBundleService {
     return {
       version: BUNDLE_VERSION,
       exportedAt: new Date().toISOString(),
-      claims: claims as unknown[],
-      evidence: evidence as unknown[],
-      claimEvidenceLinks: links as unknown[],
-      adjudicationLogs: adjudicationLogs as unknown[],
-      reviewRequests: reviewRequests as unknown[],
-      reviewAssignments: reviewAssignments as unknown[],
-      reviewerResponses: reviewerResponses as unknown[],
-      evidenceReproChecks: evidenceReproChecks as unknown[],
+      claims: claims,
+      evidence: evidence,
+      claimEvidenceLinks: links,
+      adjudicationLogs: adjudicationLogs,
+      reviewRequests: reviewRequests,
+      reviewAssignments: reviewAssignments,
+      reviewerResponses: reviewerResponses,
+      evidenceReproChecks: evidenceReproChecks,
       epistemicEvents,
     };
   }
