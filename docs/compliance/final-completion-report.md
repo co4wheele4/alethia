@@ -2,7 +2,7 @@
 
 ## 1. Date
 
-**2026-04-19** (implementation). **2026-04-20** (publisher verification update).
+**2026-04-19** (implementation). **2026-04-20** (publisher verification update). **2026-04-21** (ruleset **`master-protection`** updated to require **`mvp-release-gate`**; readiness **GO**).
 
 ## 2. Branch / commit
 
@@ -48,25 +48,25 @@
 ## 7. What remains manual or CI-authoritative
 
 - **GitHub Actions:** Recorded for **`903aa08`** in `final-mvp-release-readiness.md` §2.1 (2026-04-20 publisher pass).
-- **Ruleset:** Add **`mvp-release-gate`** to the default-branch ruleset required checks if merge policy must match both gates by name (see `final-mvp-release-readiness.md` §3.1).
+- **Ruleset:** **`master-protection`** now **requires** **`mvp-release-gate`** and **`governance-bot`** by name (see `final-mvp-release-readiness.md` §3.1; confirmed **2026-04-21**).
 - **Production deployment:** Postgres migrations, secrets, and gateway rate limits are environment-specific.
 
 ## 8. Remaining gaps (honest)
 
 - **HIGH (non-CRITICAL):** `DocumentChunk` content may still be mutated via `updateChunk` while evidence references chunk offsets — traceability risk, not an inference API.
 - **MEDIUM:** Legacy search UI components may still contain “relevance”-oriented **library** code; production search page remains deterministic (see system verification report).
-- **Governance (2026-04-20):** GitHub ruleset **`master-protection`** does not yet list **`mvp-release-gate`** as a required context; both workflows are nevertheless **green** on **`903aa08`** (see readiness §2.1).
+- **Governance (2026-04-21):** GitHub ruleset **`master-protection`** lists **`mvp-release-gate`** and **`governance-bot`** as required contexts; both were **green** on **`903aa08`** (see readiness §2.1).
 
 ## 9. Recommended next action
 
-1. Add **`mvp-release-gate`** to ruleset **required status checks** if policy must match both gates at merge time.  
-2. Keep **`npm ci`** clean: after any dependency edit, run **`npm install`** at the repo root and commit **`package-lock.json`** before merging to `master`.
+1. Keep **`npm ci`** clean: after any dependency edit, run **`npm install`** at the repo root and commit **`package-lock.json`** before merging to `master`.
+2. Periodically re-fetch ruleset **15268776** and confirm required contexts still include both mechanical gates after workflow renames.
 
 ## 10. Final status
 
-**PROVISIONAL GO**
+**GO**
 
-**Rationale:** On **`903aa08`**, **`governance-bot`** and **`mvp-release-gate`** are **SUCCESS** in GitHub Actions (evidence: `final-mvp-release-readiness.md` §2.1). **Full GO** under the strict publisher rule is **not** claimed until the default-branch ruleset **requires `mvp-release-gate`** by name (currently missing — §3.1 there).
+**Rationale:** On **`903aa08`**, **`governance-bot`** and **`mvp-release-gate`** are **SUCCESS** in GitHub Actions (evidence: `final-mvp-release-readiness.md` §2.1). The default-branch ruleset **`master-protection`** **requires both** by name (**2026-04-21** — `final-mvp-release-readiness.md` §3.1). Strict publisher criteria are met.
 
 **What Aletheia can safely do next**
 

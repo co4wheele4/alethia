@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| **Last publisher pass** | **2026-04-20** (GitHub Actions verified via `gh`; docs updated same day) |
+| **Last publisher pass** | **2026-04-21** (ruleset `master-protection` verified via `gh api`; readiness doc updated same day) |
 | **Repository** | `https://github.com/co4wheele4/alethia` |
 | **Default branch** | `master` |
 | **Shipping commit (mechanical CI proof below)** | **`903aa08e8707db2473a0bd4bad9b169257a8b137`** |
@@ -34,7 +34,7 @@ Compliance markdown updated; **full matrix re-run** on this commit. **Authoritat
 
 ### 2.3 Prior proof — `c802b51` (`docs(compliance): publisher evidence for 0f9433f and ruleset gap`)
 
-Publisher pass: compliance docs record Actions evidence, ruleset **`master-protection`** facts, and **PROVISIONAL GO** (ruleset does not yet require **`mvp-release-gate`** by name — §3.1).
+Publisher pass: compliance docs record Actions evidence and ruleset **`master-protection`** facts (historical — before **`mvp-release-gate`** was required on the ruleset; see §3.1 current list).
 
 | Check (job name) | Result | Workflow run URL |
 | --- | --- | --- |
@@ -63,7 +63,7 @@ Earlier recorded green runs (e.g. on `d597a05`) remain listed for audit history 
 
 ---
 
-## 3. Policy — default branch ruleset (GitHub API — 2026-04-20)
+## 3. Policy — default branch ruleset (GitHub API — 2026-04-21)
 
 Classic **branch protection** may be off; enforcement uses a **repository ruleset**.
 
@@ -83,8 +83,9 @@ The ruleset’s **`required_status_checks`** contexts (integration GitHub Action
 - `CodeQL`
 - `Epistemic Guardrails`
 - **`governance-bot`**
+- **`mvp-release-gate`**
 
-**Gap (explicit):** **`mvp-release-gate` is not listed** in the ruleset’s required-status-check payload. The workflow **did run and passed** on **`903aa08`** (§2.1), but **merge gating via the ruleset alone does not currently require that job by name**. Operators should add **`mvp-release-gate`** to the ruleset’s required checks if policy must match §2.
+**Ruleset alignment:** Both authoritative jobs (**`governance-bot`**, **`mvp-release-gate`**) are **required** on the default branch via **`master-protection`** (ruleset id **15268776**), last confirmed **2026-04-21** via `GET /repos/co4wheele4/alethia/rulesets/15268776`.
 
 Other settings from API: **`non_fast_forward`** enabled; **pull request** rule present (with bypass as above); **`strict_required_status_checks_policy`:** **false** on this ruleset.
 
@@ -96,7 +97,7 @@ Other settings from API: **`non_fast_forward`** enabled; **pull request** rule p
 
 1. **`mvp-release-gate`** and **`governance-bot`** are **SUCCESS** on that SHA in GitHub Actions (URLs in §2.1 for **`903aa08`**).
 2. **Documentation** records the SHA and URLs (this file).
-3. **Ruleset alignment (stricter bar):** For **full governance closure**, the default-branch ruleset should **require both** job names; see §3.1 gap.
+3. **Ruleset alignment (stricter bar):** The default-branch ruleset **requires both** job names — see §3.1.
 
 **Not done:** claiming GO without Actions evidence, or treating optional workflows as substitutes for **`mvp-release-gate`** + **`governance-bot`**.
 
@@ -116,11 +117,11 @@ Other settings from API: **`non_fast_forward`** enabled; **pull request** rule p
 | Shipping SHA identified | **Yes** — `903aa08e8707db2473a0bd4bad9b169257a8b137` |
 | **`governance-bot`** green on that SHA | **Yes** (URL §2.1) |
 | **`mvp-release-gate`** green on that SHA | **Yes** (URL §2.1) |
-| Ruleset lists **`mvp-release-gate`** as required | **No** (§3.1 — policy gap) |
+| Ruleset lists **`mvp-release-gate`** as required | **Yes** (§3.1) |
 
-**Overall release documentation status:** **PROVISIONAL GO**
+**Overall release documentation status:** **GO**
 
-**Rationale:** Mechanical CI is **green** on the documented shipping SHA for **both** authoritative workflows. **Full GO** under the strict rule (“branch protection requires the intended checks”) is **not** claimed because the active ruleset’s required-check list does not yet include **`mvp-release-gate`** by name. Close the gap in **Settings → Rules → Rulesets → `master-protection` → Required status checks** by adding **`mvp-release-gate`**, then re-record here.
+**Rationale:** On **`903aa08`**, **`governance-bot`** and **`mvp-release-gate`** are **SUCCESS** in GitHub Actions (§2.1). The **`master-protection`** ruleset **requires both** checks by name (§3.1). Under the strict publisher rule, **full GO** is therefore recorded. **Residual governance:** repository-role **bypass** remains **`always`** for configured bypass actors (§3); merges can still be forced by admins with bypass — that is policy, not a missing check name.
 
 **Residual (non-blocking for code correctness):** Dependabot / npm audit advisories on the repo; track via GitHub **Security** tab.
 
