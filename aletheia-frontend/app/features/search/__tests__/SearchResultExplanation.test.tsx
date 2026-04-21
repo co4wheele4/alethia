@@ -16,9 +16,11 @@ describe('SearchResultExplanation', () => {
     expect(screen.getByText(/why matched:.*this result matched/i)).toBeInTheDocument();
   });
 
-  it('should render with relevance score', () => {
-    render(<SearchResultExplanation relevanceScore={85} />);
-    expect(screen.getByText(/relevance: 85%/i)).toBeInTheDocument();
+  it('should render with match coverage percent', () => {
+    render(<SearchResultExplanation matchCoveragePercent={85} />);
+    expect(
+      screen.getByText(/match coverage \(deterministic\): 85%/i),
+    ).toBeInTheDocument();
   });
 
   it('should render with matched terms', () => {
@@ -32,26 +34,28 @@ describe('SearchResultExplanation', () => {
     render(
       <SearchResultExplanation
         explanation="Full explanation"
-        relevanceScore={90}
+        matchCoveragePercent={90}
         matchedTerms={['term1', 'term2', 'term3']}
       />
     );
     
     expect(screen.getByText(/why matched:.*full explanation/i)).toBeInTheDocument();
-    expect(screen.getByText(/relevance: 90%/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/match coverage \(deterministic\): 90%/i),
+    ).toBeInTheDocument();
     expect(screen.getByText('term1')).toBeInTheDocument();
     expect(screen.getByText('term2')).toBeInTheDocument();
     expect(screen.getByText('term3')).toBeInTheDocument();
   });
 
   it('should not render explanation when not provided', () => {
-    render(<SearchResultExplanation relevanceScore={50} />);
+    render(<SearchResultExplanation matchCoveragePercent={50} />);
     expect(screen.queryByText(/why matched:/i)).not.toBeInTheDocument();
   });
 
-  it('should not render relevance when not provided', () => {
+  it('should not render match coverage when not provided', () => {
     render(<SearchResultExplanation explanation="Explanation" />);
-    expect(screen.queryByText(/relevance:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/match coverage/i)).not.toBeInTheDocument();
   });
 
   it('should not render matched terms when empty array', () => {

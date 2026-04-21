@@ -7,7 +7,13 @@ import {
   Parent,
   Int,
 } from '@nestjs/graphql';
-import { UseGuards, Scope, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  Scope,
+  UseGuards,
+} from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { DocumentChunk } from '@models/document-chunk.model';
 import { Document } from '@models/document.model';
@@ -71,6 +77,17 @@ export class DocumentChunkResolver {
     @Args('id') id: string,
     @Args('content', { nullable: true }) content?: string,
   ) {
+    const current = await this.prisma.documentChunk.findUnique({
+      where: { id },
+    });
+    if (!current) {
+      throw new NotFoundException(`Document chunk not found: ${id}`);
+    }
+    const contentChanges =
+      content !== undefined && content !== current.content;
+    if (contentChanges) {
+      await this.assertChunkTextNotAnchored(id);
+    }
     return await this.prisma.documentChunk.update({
       where: { id },
       data: { content },
@@ -79,7 +96,42 @@ export class DocumentChunkResolver {
 
   @Mutation(() => DocumentChunk)
   async deleteChunk(@Args('id') id: string) {
+    await this.assertChunkDeletable(id);
     return await this.prisma.documentChunk.delete({ where: { id } });
+  }
+
+  /**
+   * Chunk text must not change while evidence spans, entity mentions, relationship-evidence
+   * anchors, or embeddings reference the chunk (ADR-019 traceability; offsets/snippets).
+   */
+  private async assertChunkTextNotAnchored(chunkId: string): Promise<void> {
+    const [evidenceN, mentionN, relEvN, embeddingN] = await Promise.all([
+      this.prisma.evidence.count({ where: { chunkId } }),
+      this.prisma.entityMention.count({ where: { chunkId } }),
+      this.prisma.entityRelationshipEvidence.count({ where: { chunkId } }),
+      this.prisma.embedding.count({ where: { chunkId } }),
+    ]);
+    const blocked = evidenceN + mentionN + relEvN + embeddingN;
+    if (blocked > 0) {
+      throw new BadRequestException(
+        `Cannot change chunk text: ${evidenceN} evidence row(s), ${mentionN} entity mention(s), ${relEvN} relationship-evidence anchor(s), ${embeddingN} embedding row(s) reference this chunk. Remove or re-anchor dependents first.`,
+      );
+    }
+  }
+
+  private async assertChunkDeletable(chunkId: string): Promise<void> {
+    const [evidenceN, mentionN, relEvN, embeddingN] = await Promise.all([
+      this.prisma.evidence.count({ where: { chunkId } }),
+      this.prisma.entityMention.count({ where: { chunkId } }),
+      this.prisma.entityRelationshipEvidence.count({ where: { chunkId } }),
+      this.prisma.embedding.count({ where: { chunkId } }),
+    ]);
+    const blocked = evidenceN + mentionN + relEvN + embeddingN;
+    if (blocked > 0) {
+      throw new BadRequestException(
+        `Cannot delete chunk: ${evidenceN} evidence row(s), ${mentionN} entity mention(s), ${relEvN} relationship-evidence anchor(s), ${embeddingN} embedding row(s) reference this chunk.`,
+      );
+    }
   }
 
   @ResolveField(() => Document)

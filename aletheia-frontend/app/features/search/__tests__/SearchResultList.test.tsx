@@ -61,15 +61,15 @@ describe('SearchResultList', () => {
     }).not.toThrow();
   });
 
-  it('should render results with relevance score', () => {
+  it('should render results with match coverage percent', () => {
     const results = [
-      { id: '1', title: 'Result 1', relevanceScore: 85 },
+      { id: '1', title: 'Result 1', matchCoveragePercent: 85 },
     ];
 
     render(<SearchResultList results={results} />);
     
     expect(screen.getByText('Result 1')).toBeInTheDocument();
-    // Relevance score is shown in SearchResultExplanation component
+    // Match coverage is shown in SearchResultExplanation component
   });
 
   it('should render results with matched terms', () => {

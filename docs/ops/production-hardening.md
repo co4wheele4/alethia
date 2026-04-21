@@ -56,6 +56,7 @@
 
 - Require **Postgres migrations** before app rollout; `mvp-release-gate` exercises migrate + backend e2e against Postgres 15.
 - Environment: set `DATABASE_URL` and application secrets via platform secrets manager; never log connection strings.
+- First-time production rollout: see [`go-live-checklist.md`](go-live-checklist.md).
 
 ---
 

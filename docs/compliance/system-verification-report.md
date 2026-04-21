@@ -62,7 +62,7 @@ The **production** `Search` page does not use `relevanceScore` or semantic ranki
 
 | Finding | Why it matters | Files / areas |
 |--------|----------------|----------------|
-| **Mutable document chunks vs immutable evidence** | `Evidence` rows are DB-immutable, but `updateChunk` can change `DocumentChunk.content` after evidence anchors exist, so offsets/snippet can drift from live chunk text unless process forbids edits. | `document-chunk.resolver.ts` (`updateChunk`); evidence create path `evidence.resolver.ts` |
+| **Mutable document chunks vs immutable evidence** | **Mitigated (API):** `updateChunk` / `deleteChunk` reject when evidence, entity mentions, relationship-evidence anchors, or embeddings reference the chunk (`document-chunk.resolver.ts`). Operators must re-anchor or remove dependents before mutating chunk text. | `document-chunk.resolver.ts`; evidence create path `evidence.resolver.ts` |
 | **Legacy schema: vectors and internal scores** | `Embedding` model and `AiQueryResult.score` persist vectors/scores; **not** exposed in `schema.gql`. Risk if future code wires them to user-facing features without ADR. | `prisma/schema.prisma` |
 | **DB enforcement vs app-only** | Strong for claims/evidence triggers (ADR-027); adjudication log precondition for terminal states is in DB. **Claim text** immutability is by absence of update API, not a DB CHECK. | `prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql` |
 
@@ -72,7 +72,7 @@ The **production** `Search` page does not use `relevanceScore` or semantic ranki
 
 | Finding | Notes |
 |--------|--------|
-| **Search UI components (`SearchResultExplanation`, `SearchResultList`)** | Comment text “semantic relevance” and optional `relevanceScore` UI **exist in the component library** and tests; they are **not** used by `app/search/page.tsx`. Risk if wired to backend later without review. |
+| **Search UI components (`SearchResultExplanation`, `SearchResultList`)** | **Updated:** optional **`matchCoveragePercent`** with copy **“Match coverage (deterministic)”** — not used by production `app/search/page.tsx`. Risk if a future page wires semantic scores without ADR. |
 | **Entity mention `confidence` column** | Present in DB with `@ignore` in Prisma; not in GraphQL. |
 | **Whitespace normalization in some excerpt fallbacks** | e.g. `EvidenceList.tsx` excerpt fallback — not claim-evidence “verdict” semantics but mild transformation. |
 

@@ -1,6 +1,5 @@
 /**
- * SearchResultList Component
- * Highlight semantic relevance in search results
+ * SearchResultList — deterministic listing; optional match coverage is not semantic ranking.
  */
 
 'use client';
@@ -13,7 +12,8 @@ export interface SearchResult {
   title: string;
   snippet?: string;
   explanation?: string;
-  relevanceScore?: number;
+  /** Optional; deterministic substring/filter coverage only — not semantic ranking. */
+  matchCoveragePercent?: number;
   matchedTerms?: string[];
 }
 
@@ -46,7 +46,7 @@ export function SearchResultList(props: SearchResultListProps) {
                 {result.snippet && <Typography variant="body2">{result.snippet}</Typography>}
                 <SearchResultExplanation
                   explanation={result.explanation}
-                  relevanceScore={result.relevanceScore}
+                  matchCoveragePercent={result.matchCoveragePercent}
                   matchedTerms={result.matchedTerms}
                 />
               </>

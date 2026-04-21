@@ -49,12 +49,12 @@
 
 - **GitHub Actions:** Recorded for **`903aa08`** in `final-mvp-release-readiness.md` §2.1 (2026-04-20 publisher pass).
 - **Ruleset:** **`master-protection`** now **requires** **`mvp-release-gate`** and **`governance-bot`** by name (see `final-mvp-release-readiness.md` §3.1; confirmed **2026-04-21**).
-- **Production deployment:** Postgres migrations, secrets, and gateway rate limits are environment-specific.
+- **Production deployment:** Postgres migrations, secrets, and gateway rate limits are environment-specific — see [`docs/ops/go-live-checklist.md`](../ops/go-live-checklist.md).
 
 ## 8. Remaining gaps (honest)
 
-- **HIGH (non-CRITICAL):** `DocumentChunk` content may still be mutated via `updateChunk` while evidence references chunk offsets — traceability risk, not an inference API.
-- **MEDIUM:** Legacy search UI components may still contain “relevance”-oriented **library** code; production search page remains deterministic (see system verification report).
+- **HIGH (non-CRITICAL):** Addressed in API — `updateChunk` / `deleteChunk` block when evidence, mentions, relationship-evidence, or embeddings reference the chunk; see `system-verification-report.md` §3 HIGH.
+- **MEDIUM:** Search list components use **deterministic** “match coverage” labeling; production search page remains non-semantic (see system verification report).
 - **Governance (2026-04-21):** GitHub ruleset **`master-protection`** lists **`mvp-release-gate`** and **`governance-bot`** as required contexts; both were **green** on **`903aa08`** (see readiness §2.1).
 
 ## 9. Recommended next action

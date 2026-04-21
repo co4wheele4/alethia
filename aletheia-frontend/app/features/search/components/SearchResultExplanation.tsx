@@ -1,6 +1,7 @@
 /**
- * SearchResultExplanation Component
- * Results include "why matched" - highlight semantic relevance
+ * Optional UI for explaining why a row appeared in a list.
+ * Epistemic: no semantic ranking — `matchCoveragePercent` is only for deterministic
+ * substring / filter coverage when a parent passes it (production search uses explicit order only).
  */
 
 'use client';
@@ -8,14 +9,14 @@
 import { Box, Typography, Chip } from '@mui/material';
 
 export interface SearchResultExplanationProps {
-  // TODO: Define props
   explanation?: string;
-  relevanceScore?: number;
+  /** 0–100: deterministic match coverage when a caller supplies it; not semantic relevance. */
+  matchCoveragePercent?: number;
   matchedTerms?: string[];
 }
 
 export function SearchResultExplanation(props: SearchResultExplanationProps) {
-  const { explanation, relevanceScore, matchedTerms = [] } = props;
+  const { explanation, matchCoveragePercent, matchedTerms = [] } = props;
 
   return (
     <Box sx={{ mt: 1 }}>
@@ -24,9 +25,9 @@ export function SearchResultExplanation(props: SearchResultExplanationProps) {
           Why matched: {explanation}
         </Typography>
       )}
-      {relevanceScore !== undefined && (
+      {matchCoveragePercent !== undefined && (
         <Typography variant="caption" color="text.secondary">
-          Relevance: {relevanceScore}%
+          Match coverage (deterministic): {matchCoveragePercent}%
         </Typography>
       )}
       {matchedTerms.length > 0 && (

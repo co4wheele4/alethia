@@ -13,24 +13,32 @@ describe('SearchResultExplanation Edge Cases', () => {
     expect(screen.queryByText(/why matched:/i)).not.toBeInTheDocument();
   });
 
-  it('should handle relevance score of 0', () => {
-    render(<SearchResultExplanation relevanceScore={0} />);
-    expect(screen.getByText(/relevance: 0%/i)).toBeInTheDocument();
+  it('should handle match coverage of 0', () => {
+    render(<SearchResultExplanation matchCoveragePercent={0} />);
+    expect(
+      screen.getByText(/match coverage \(deterministic\): 0%/i),
+    ).toBeInTheDocument();
   });
 
-  it('should handle relevance score of 100', () => {
-    render(<SearchResultExplanation relevanceScore={100} />);
-    expect(screen.getByText(/relevance: 100%/i)).toBeInTheDocument();
+  it('should handle match coverage of 100', () => {
+    render(<SearchResultExplanation matchCoveragePercent={100} />);
+    expect(
+      screen.getByText(/match coverage \(deterministic\): 100%/i),
+    ).toBeInTheDocument();
   });
 
-  it('should handle relevance score outside 0-100 range', () => {
-    render(<SearchResultExplanation relevanceScore={150} />);
-    expect(screen.getByText(/relevance: 150%/i)).toBeInTheDocument();
+  it('should handle match coverage outside 0-100 range', () => {
+    render(<SearchResultExplanation matchCoveragePercent={150} />);
+    expect(
+      screen.getByText(/match coverage \(deterministic\): 150%/i),
+    ).toBeInTheDocument();
   });
 
-  it('should handle negative relevance score', () => {
-    render(<SearchResultExplanation relevanceScore={-10} />);
-    expect(screen.getByText(/relevance: -10%/i)).toBeInTheDocument();
+  it('should handle negative match coverage value', () => {
+    render(<SearchResultExplanation matchCoveragePercent={-10} />);
+    expect(
+      screen.getByText(/match coverage \(deterministic\): -10%/i),
+    ).toBeInTheDocument();
   });
 
   it('should handle empty matched terms array', () => {
@@ -62,19 +70,21 @@ describe('SearchResultExplanation Edge Cases', () => {
     render(
       <SearchResultExplanation
         explanation="Full explanation"
-        relevanceScore={95}
+        matchCoveragePercent={95}
         matchedTerms={['term1', 'term2']}
       />
     );
     
     expect(screen.getByText(/why matched:.*full explanation/i)).toBeInTheDocument();
-    expect(screen.getByText(/relevance: 95%/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/match coverage \(deterministic\): 95%/i),
+    ).toBeInTheDocument();
     expect(screen.getByText('term1')).toBeInTheDocument();
     expect(screen.getByText('term2')).toBeInTheDocument();
   });
 
-  it('should handle undefined relevance score', () => {
+  it('should handle undefined match coverage', () => {
     render(<SearchResultExplanation explanation="Test" />);
-    expect(screen.queryByText(/relevance:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/match coverage/i)).not.toBeInTheDocument();
   });
 });

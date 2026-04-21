@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { DocumentChunkResolver } from './document-chunk.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 import { DocumentChunk } from '@models/document-chunk.model';
@@ -43,6 +44,16 @@ describe('DocumentChunkResolver', () => {
       },
       entityMention: {
         findMany: jest.fn(),
+        count: jest.fn(),
+      },
+      evidence: {
+        count: jest.fn(),
+      },
+      entityRelationshipEvidence: {
+        count: jest.fn(),
+      },
+      embedding: {
+        count: jest.fn(),
       },
     };
 
@@ -205,7 +216,21 @@ describe('DocumentChunkResolver', () => {
   });
 
   describe('updateChunk', () => {
-    it('should update chunk content', async () => {
+    beforeEach(() => {
+      const findUniqueMock = prismaService.documentChunk
+        .findUnique as jest.Mock;
+      findUniqueMock.mockResolvedValue(
+        mockChunk as unknown as typeof mockChunk,
+      );
+      (prismaService.evidence.count as jest.Mock).mockResolvedValue(0);
+      (prismaService.entityMention.count as jest.Mock).mockResolvedValue(0);
+      (
+        prismaService.entityRelationshipEvidence.count as jest.Mock
+      ).mockResolvedValue(0);
+      (prismaService.embedding.count as jest.Mock).mockResolvedValue(0);
+    });
+
+    it('should update chunk content when no anchors reference the chunk', async () => {
       const updatedChunk = { ...mockChunk, content: 'Updated content' };
       const updateMock = prismaService.documentChunk.update as jest.Mock;
       updateMock.mockResolvedValue(
@@ -219,6 +244,15 @@ describe('DocumentChunkResolver', () => {
         where: { id: 'chunk-1' },
         data: { content: 'Updated content' },
       });
+    });
+
+    it('should reject content change when evidence anchors the chunk', async () => {
+      (prismaService.evidence.count as jest.Mock).mockResolvedValue(1);
+
+      await expect(
+        resolver.updateChunk('chunk-1', 'Updated content'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prismaService.documentChunk.update).not.toHaveBeenCalled();
     });
 
     it('should handle undefined content', async () => {
@@ -236,7 +270,16 @@ describe('DocumentChunkResolver', () => {
   });
 
   describe('deleteChunk', () => {
-    it('should delete a document chunk', async () => {
+    beforeEach(() => {
+      (prismaService.evidence.count as jest.Mock).mockResolvedValue(0);
+      (prismaService.entityMention.count as jest.Mock).mockResolvedValue(0);
+      (
+        prismaService.entityRelationshipEvidence.count as jest.Mock
+      ).mockResolvedValue(0);
+      (prismaService.embedding.count as jest.Mock).mockResolvedValue(0);
+    });
+
+    it('should delete a document chunk when no anchors reference it', async () => {
       const deleteMock = prismaService.documentChunk.delete as jest.Mock;
       deleteMock.mockResolvedValue(mockChunk as unknown as typeof mockChunk);
 
@@ -246,6 +289,15 @@ describe('DocumentChunkResolver', () => {
       expect(deleteMock).toHaveBeenCalledWith({
         where: { id: 'chunk-1' },
       });
+    });
+
+    it('should reject delete when evidence references the chunk', async () => {
+      (prismaService.evidence.count as jest.Mock).mockResolvedValue(1);
+
+      await expect(resolver.deleteChunk('chunk-1')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(prismaService.documentChunk.delete).not.toHaveBeenCalled();
     });
   });
 
