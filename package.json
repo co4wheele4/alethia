@@ -3,16 +3,10 @@
   "version": "1.0.0",
   "description": "Aletheia full-stack application monorepo",
   "private": true,
-  "workspaces": {
-    "packages": [
-      "aletheia-backend",
-      "aletheia-frontend"
-    ],
-    "nohoist": [
-      "aletheia-frontend/react",
-      "aletheia-frontend/react-dom"
-    ]
-  },
+  "workspaces": [
+    "aletheia-backend",
+    "aletheia-frontend"
+  ],
   "scripts": {
     "build": "npm run build --workspaces",
     "build:backend": "npm run build --workspace=aletheia-backend",
@@ -47,7 +41,7 @@
     "format": "npm run format --workspaces --if-present",
     "format:backend": "npm run format --workspace=aletheia-backend",
     "format:frontend": "npm run format --workspace=aletheia-frontend --if-present",
-    "clean": "npm run clean --workspaces --if-present && rimraf node_modules",
+    "clean": "rimraf node_modules",
     "clean:all": "rimraf node_modules && rimraf aletheia-backend/node_modules && rimraf aletheia-frontend/node_modules && rimraf aletheia-backend/dist && rimraf aletheia-frontend/.next",
     "seed": "npm run seed --workspace=aletheia-backend",
     "db:seed:test": "npm run db:seed:test --workspace=aletheia-backend",
@@ -71,27 +65,10 @@
     "test:adr-governance": "jest --config test/jest-adr.json"
   },
   "devDependencies": {
-    "@nestjs/common": "^11.1.19",
-    "@nestjs/core": "^11.1.19",
-    "@nestjs/testing": "^11.1.11",
-    "@types/bcrypt": "^6.0.0",
     "@types/jest": "^30.0.0",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "@types/supertest": "^6.0.3",
-    "@vitejs/plugin-react": "^5.1.2",
-    "@vitest/coverage-v8": "^4.0.17",
-    "bcrypt": "^6.0.0",
-    "concurrently": "^9.1.0",
     "jest": "^30.2.0",
-    "jsdom": "^27.4.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
     "rimraf": "^5.0.5",
-    "supertest": "^7.2.2",
-    "ts-jest": "^29.4.6",
-    "vite-tsconfig-paths": "^6.0.4",
-    "vitest": "^4.0.17"
+    "ts-jest": "^29.4.6"
   },
   "engines": {
     "node": ">=18.0.0",

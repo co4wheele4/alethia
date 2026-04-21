@@ -17,12 +17,10 @@ The root `package.json` defines the workspaces:
 
 ```json
 {
-  "workspaces": {
-    "packages": [
-      "aletheia-backend",
-      "aletheia-frontend"
-    ]
-  }
+  "workspaces": [
+    "aletheia-backend",
+    "aletheia-frontend"
+  ]
 }
 ```
 
