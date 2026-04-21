@@ -91,6 +91,17 @@ describe('EvidenceResolver', () => {
     expect(result).toBeNull();
   });
 
+  it('evidenceById returns URL evidence when created by current user', async () => {
+    evidenceFindUnique.mockResolvedValue({
+      id: 'e1',
+      sourceType: 'URL',
+      createdBy: 'u1',
+      sourceDocument: null,
+    } as any);
+    const result = await resolver.evidenceById('e1', ctx as any);
+    expect(result).toMatchObject({ id: 'e1', sourceType: 'URL' });
+  });
+
   it('evidenceById returns null for unknown source kinds', async () => {
     evidenceFindUnique.mockResolvedValue({
       id: 'e1',

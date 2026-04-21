@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { DocumentChunkResolver } from './document-chunk.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 import { DocumentChunk } from '@models/document-chunk.model';
@@ -244,6 +244,17 @@ describe('DocumentChunkResolver', () => {
         where: { id: 'chunk-1' },
         data: { content: 'Updated content' },
       });
+    });
+
+    it('should throw NotFoundException when chunk id does not exist', async () => {
+      const findUniqueMock = prismaService.documentChunk
+        .findUnique as jest.Mock;
+      findUniqueMock.mockResolvedValue(null);
+
+      await expect(resolver.updateChunk('missing', 'x')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(prismaService.documentChunk.update).not.toHaveBeenCalled();
     });
 
     it('should reject content change when evidence anchors the chunk', async () => {
