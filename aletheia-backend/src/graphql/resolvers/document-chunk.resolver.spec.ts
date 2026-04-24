@@ -1,5 +1,9 @@
 import { Test } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { DocumentChunkResolver } from './document-chunk.resolver';
 import { PrismaService } from '@prisma/prisma.service';
 import { DocumentChunk } from '@models/document-chunk.model';
@@ -27,6 +31,10 @@ describe('DocumentChunkResolver', () => {
     documentId: 'doc-1',
     chunkIndex: 0,
     content: 'Test content',
+  };
+
+  const authCtx = {
+    req: { user: { sub: 'user-1' } },
   };
 
   beforeEach(async () => {
@@ -104,44 +112,58 @@ describe('DocumentChunkResolver', () => {
       const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
       findManyMock.mockResolvedValue(mockChunks);
 
-      const result = await resolver.documentChunks();
+      const result = await resolver.documentChunks(authCtx);
 
       expect(result).toEqual(mockChunks);
-      expect(findManyMock).toHaveBeenCalled();
+      expect(findManyMock).toHaveBeenCalledWith({
+        where: { document: { userId: 'user-1' } },
+      });
     });
 
     it('should return empty array when no chunks exist', async () => {
       const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
       findManyMock.mockResolvedValue([]);
 
-      const result = await resolver.documentChunks();
+      const result = await resolver.documentChunks(authCtx);
 
       expect(result).toEqual([]);
+    });
+
+    it('should return empty list when not authenticated', async () => {
+      const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
+      const result = await resolver.documentChunks(undefined);
+      expect(result).toEqual([]);
+      expect(findManyMock).not.toHaveBeenCalled();
     });
   });
 
   describe('documentChunk', () => {
     it('should return a document chunk by id', async () => {
-      const findUniqueMock = prismaService.documentChunk
-        .findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(mockChunk);
+      const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
+      findFirstMock.mockResolvedValue(mockChunk);
 
-      const result = await resolver.documentChunk('chunk-1');
+      const result = await resolver.documentChunk('chunk-1', authCtx);
 
       expect(result).toEqual(mockChunk);
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: 'chunk-1' },
+      expect(findFirstMock).toHaveBeenCalledWith({
+        where: { id: 'chunk-1', document: { userId: 'user-1' } },
       });
     });
 
     it('should return null when chunk not found', async () => {
-      const findUniqueMock = prismaService.documentChunk
-        .findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(null);
+      const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
+      findFirstMock.mockResolvedValue(null);
 
-      const result = await resolver.documentChunk('non-existent');
+      const result = await resolver.documentChunk('non-existent', authCtx);
 
       expect(result).toBeNull();
+    });
+
+    it('should return null when not authenticated', async () => {
+      const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
+      const result = await resolver.documentChunk('chunk-1', undefined);
+      expect(result).toBeNull();
+      expect(findFirstMock).not.toHaveBeenCalled();
     });
   });
 
@@ -151,11 +173,11 @@ describe('DocumentChunkResolver', () => {
       const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
       findManyMock.mockResolvedValue(mockChunks);
 
-      const result = await resolver.chunksByDocument('doc-1');
+      const result = await resolver.chunksByDocument('doc-1', authCtx);
 
       expect(result).toEqual(mockChunks);
       expect(findManyMock).toHaveBeenCalledWith({
-        where: { documentId: 'doc-1' },
+        where: { documentId: 'doc-1', document: { userId: 'user-1' } },
       });
     });
 
@@ -163,12 +185,19 @@ describe('DocumentChunkResolver', () => {
       const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
       findManyMock.mockResolvedValue([]);
 
-      const result = await resolver.chunksByDocument('doc-2');
+      const result = await resolver.chunksByDocument('doc-2', authCtx);
 
       expect(result).toEqual([]);
       expect(findManyMock).toHaveBeenCalledWith({
-        where: { documentId: 'doc-2' },
+        where: { documentId: 'doc-2', document: { userId: 'user-1' } },
       });
+    });
+
+    it('should return empty list when not authenticated', async () => {
+      const findManyMock = prismaService.documentChunk.findMany as jest.Mock;
+      const result = await resolver.chunksByDocument('doc-1', undefined);
+      expect(result).toEqual([]);
+      expect(findManyMock).not.toHaveBeenCalled();
     });
   });
 
@@ -177,11 +206,15 @@ describe('DocumentChunkResolver', () => {
       const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
       findFirstMock.mockResolvedValue(mockChunk);
 
-      const result = await resolver.chunk0ByDocument('doc-1');
+      const result = await resolver.chunk0ByDocument('doc-1', authCtx);
 
       expect(result).toEqual(mockChunk);
       expect(findFirstMock).toHaveBeenCalledWith({
-        where: { documentId: 'doc-1', chunkIndex: 0 },
+        where: {
+          documentId: 'doc-1',
+          chunkIndex: 0,
+          document: { userId: 'user-1' },
+        },
       });
     });
 
@@ -189,31 +222,65 @@ describe('DocumentChunkResolver', () => {
       const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
       findFirstMock.mockResolvedValue(null);
 
-      const result = await resolver.chunk0ByDocument('doc-1');
+      const result = await resolver.chunk0ByDocument('doc-1', authCtx);
 
       expect(result).toBeNull();
+    });
+
+    it('should return null when not authenticated', async () => {
+      const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
+      const result = await resolver.chunk0ByDocument('doc-1', undefined);
+      expect(result).toBeNull();
+      expect(findFirstMock).not.toHaveBeenCalled();
     });
   });
 
   describe('createChunk', () => {
     it('should create a new document chunk', async () => {
+      (prismaService.document.findUnique as jest.Mock).mockResolvedValue({
+        id: 'doc-1',
+        userId: 'user-1',
+      });
       const createMock = prismaService.documentChunk.create as jest.Mock;
       createMock.mockResolvedValue(mockChunk);
 
-      const result = await resolver.createChunk('doc-1', 0, 'Test content');
+      const result = await resolver.createChunk(
+        'doc-1',
+        0,
+        'Test content',
+        authCtx,
+      );
 
       expect(result).toEqual(mockChunk);
       expect(createMock).toHaveBeenCalledWith({
         data: { documentId: 'doc-1', chunkIndex: 0, content: 'Test content' },
       });
     });
+
+    it('should forbid creating a chunk for another user document', async () => {
+      (prismaService.document.findUnique as jest.Mock).mockResolvedValue({
+        id: 'doc-1',
+        userId: 'user-2',
+      });
+
+      await expect(
+        resolver.createChunk('doc-1', 0, 'Test content', authCtx),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(prismaService.documentChunk.create).not.toHaveBeenCalled();
+    });
+
+    it('should reject create when the request is not authenticated', async () => {
+      await expect(
+        resolver.createChunk('doc-1', 0, 'c', undefined),
+      ).rejects.toMatchObject({ message: 'Authentication required' });
+      expect(prismaService.documentChunk.create).not.toHaveBeenCalled();
+    });
   });
 
   describe('updateChunk', () => {
     beforeEach(() => {
-      const findUniqueMock = prismaService.documentChunk
-        .findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(mockChunk);
+      const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
+      findFirstMock.mockResolvedValue(mockChunk);
       (prismaService.evidence.count as jest.Mock).mockResolvedValue(0);
       (prismaService.entityMention.count as jest.Mock).mockResolvedValue(0);
       (
@@ -227,7 +294,11 @@ describe('DocumentChunkResolver', () => {
       const updateMock = prismaService.documentChunk.update as jest.Mock;
       updateMock.mockResolvedValue(updatedChunk);
 
-      const result = await resolver.updateChunk('chunk-1', 'Updated content');
+      const result = await resolver.updateChunk(
+        'chunk-1',
+        'Updated content',
+        authCtx,
+      );
 
       expect(result).toEqual(updatedChunk);
       expect(updateMock).toHaveBeenCalledWith({
@@ -237,13 +308,12 @@ describe('DocumentChunkResolver', () => {
     });
 
     it('should throw NotFoundException when chunk id does not exist', async () => {
-      const findUniqueMock = prismaService.documentChunk
-        .findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(null);
+      const findFirstMock = prismaService.documentChunk.findFirst as jest.Mock;
+      findFirstMock.mockResolvedValue(null);
 
-      await expect(resolver.updateChunk('missing', 'x')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        resolver.updateChunk('missing', 'x', authCtx),
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(prismaService.documentChunk.update).not.toHaveBeenCalled();
     });
 
@@ -251,7 +321,7 @@ describe('DocumentChunkResolver', () => {
       (prismaService.evidence.count as jest.Mock).mockResolvedValue(1);
 
       await expect(
-        resolver.updateChunk('chunk-1', 'Updated content'),
+        resolver.updateChunk('chunk-1', 'Updated content', authCtx),
       ).rejects.toBeInstanceOf(BadRequestException);
       expect(prismaService.documentChunk.update).not.toHaveBeenCalled();
     });
@@ -260,7 +330,7 @@ describe('DocumentChunkResolver', () => {
       const updateMock = prismaService.documentChunk.update as jest.Mock;
       updateMock.mockResolvedValue(mockChunk);
 
-      const result = await resolver.updateChunk('chunk-1', undefined);
+      const result = await resolver.updateChunk('chunk-1', undefined, authCtx);
 
       expect(result).toEqual(mockChunk);
       expect(updateMock).toHaveBeenCalledWith({
@@ -268,10 +338,20 @@ describe('DocumentChunkResolver', () => {
         data: { content: undefined },
       });
     });
+
+    it('should reject update when the request is not authenticated', async () => {
+      await expect(
+        resolver.updateChunk('chunk-1', 'x', undefined),
+      ).rejects.toMatchObject({ message: 'Authentication required' });
+      expect(prismaService.documentChunk.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('deleteChunk', () => {
     beforeEach(() => {
+      (prismaService.documentChunk.findFirst as jest.Mock).mockResolvedValue(
+        mockChunk,
+      );
       (prismaService.evidence.count as jest.Mock).mockResolvedValue(0);
       (prismaService.entityMention.count as jest.Mock).mockResolvedValue(0);
       (
@@ -284,7 +364,7 @@ describe('DocumentChunkResolver', () => {
       const deleteMock = prismaService.documentChunk.delete as jest.Mock;
       deleteMock.mockResolvedValue(mockChunk);
 
-      const result = await resolver.deleteChunk('chunk-1');
+      const result = await resolver.deleteChunk('chunk-1', authCtx);
 
       expect(result).toEqual(mockChunk);
       expect(deleteMock).toHaveBeenCalledWith({
@@ -295,9 +375,27 @@ describe('DocumentChunkResolver', () => {
     it('should reject delete when evidence references the chunk', async () => {
       (prismaService.evidence.count as jest.Mock).mockResolvedValue(1);
 
-      await expect(resolver.deleteChunk('chunk-1')).rejects.toBeInstanceOf(
-        BadRequestException,
+      await expect(
+        resolver.deleteChunk('chunk-1', authCtx),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prismaService.documentChunk.delete).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when chunk belongs to another user', async () => {
+      (prismaService.documentChunk.findFirst as jest.Mock).mockResolvedValue(
+        null,
       );
+
+      await expect(
+        resolver.deleteChunk('chunk-1', authCtx),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(prismaService.documentChunk.delete).not.toHaveBeenCalled();
+    });
+
+    it('should reject delete when the request is not authenticated', async () => {
+      await expect(
+        resolver.deleteChunk('chunk-1', undefined),
+      ).rejects.toMatchObject({ message: 'Authentication required' });
       expect(prismaService.documentChunk.delete).not.toHaveBeenCalled();
     });
   });

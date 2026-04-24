@@ -49,9 +49,14 @@ export class DocumentResolver {
   async documents(
     @Args('limit', { type: intArgType }) limit: number,
     @Args('offset', { type: intArgType }) offset: number,
+    @Context() ctx?: GqlRequestContext,
   ) {
+    const authUserId = getGqlAuthUserId(ctx);
+    if (!authUserId) return [];
+
     assertAdr034ListPagination(limit, offset);
     return await this.prisma.document.findMany({
+      where: { userId: authUserId },
       take: limit,
       skip: offset,
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
@@ -59,8 +64,13 @@ export class DocumentResolver {
   }
 
   @Query(() => Document, { nullable: true })
-  async document(@Args('id') id: string) {
-    return await this.prisma.document.findUnique({ where: { id } });
+  async document(@Args('id') id: string, @Context() ctx?: GqlRequestContext) {
+    const authUserId = getGqlAuthUserId(ctx);
+    if (!authUserId) return null;
+
+    return await this.prisma.document.findFirst({
+      where: { id, userId: authUserId },
+    });
   }
 
   @Query(() => [Document])
@@ -92,7 +102,21 @@ export class DocumentResolver {
   async updateDocument(
     @Args('id') id: string,
     @Args('title', { nullable: true }) title?: string,
+    @Context() ctx?: GqlRequestContext,
   ) {
+    const authUserId = getGqlAuthUserId(ctx);
+    if (!authUserId) {
+      throw new ForbiddenException('Authentication required');
+    }
+
+    const existing = await this.prisma.document.findUnique({
+      where: { id },
+      select: { id: true, userId: true },
+    });
+    if (existing && existing.userId !== authUserId) {
+      throw new ForbiddenException('Cannot update documents for another user');
+    }
+
     return await this.prisma.document.update({
       where: { id },
       data: { title },

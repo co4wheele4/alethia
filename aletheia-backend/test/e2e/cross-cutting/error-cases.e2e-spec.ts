@@ -174,6 +174,8 @@ describe('Error Cases (e2e)', () => {
 
     it('should handle duplicate chunk (documentId + chunkIndex) constraint violation', async () => {
       const chunkIndex = 9999;
+      // Seeded document is owned by the normal user, not the admin (default e2e bearer).
+      const auth = { authToken: context.auth.userToken };
 
       // Create first chunk
       const create1Res = await graphqlRequest(
@@ -191,6 +193,7 @@ describe('Error Cases (e2e)', () => {
           chunkIndex,
           content: 'First chunk',
         },
+        auth,
       );
 
       expect(create1Res.status).toBe(200);
@@ -214,6 +217,7 @@ describe('Error Cases (e2e)', () => {
           chunkIndex,
           content: 'Second chunk',
         },
+        auth,
       );
 
       expect(create2Res.status).toBe(200);

@@ -33,11 +33,16 @@ describe('DocumentResolver', () => {
     chunks: [],
   };
 
+  const authCtx = {
+    req: { user: { sub: 'user-1' } },
+  };
+
   beforeEach(async () => {
     const mockPrismaService = {
       document: {
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        findFirst: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
@@ -98,11 +103,12 @@ describe('DocumentResolver', () => {
       const findManyMock = prismaService.document.findMany as jest.Mock;
       findManyMock.mockResolvedValue(mockDocuments);
 
-      const result = await resolver.documents(100, 0);
+      const result = await resolver.documents(100, 0, authCtx);
 
       expect(result).toEqual(mockDocuments);
       expect(findManyMock).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: { userId: 'user-1' },
           take: 100,
           skip: 0,
         }),
@@ -113,32 +119,46 @@ describe('DocumentResolver', () => {
       const findManyMock = prismaService.document.findMany as jest.Mock;
       findManyMock.mockResolvedValue([]);
 
-      const result = await resolver.documents(100, 0);
+      const result = await resolver.documents(100, 0, authCtx);
 
       expect(result).toEqual([]);
+    });
+
+    it('should return empty list when not authenticated', async () => {
+      const findManyMock = prismaService.document.findMany as jest.Mock;
+      const result = await resolver.documents(100, 0, undefined);
+      expect(result).toEqual([]);
+      expect(findManyMock).not.toHaveBeenCalled();
     });
   });
 
   describe('document', () => {
     it('should return a document by id', async () => {
-      const findUniqueMock = prismaService.document.findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(mockDocument);
+      const findFirstMock = prismaService.document.findFirst as jest.Mock;
+      findFirstMock.mockResolvedValue(mockDocument);
 
-      const result = await resolver.document('doc-1');
+      const result = await resolver.document('doc-1', authCtx);
 
       expect(result).toEqual(mockDocument);
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: { id: 'doc-1' },
+      expect(findFirstMock).toHaveBeenCalledWith({
+        where: { id: 'doc-1', userId: 'user-1' },
       });
     });
 
     it('should return null when document not found', async () => {
-      const findUniqueMock = prismaService.document.findUnique as jest.Mock;
-      findUniqueMock.mockResolvedValue(null);
+      const findFirstMock = prismaService.document.findFirst as jest.Mock;
+      findFirstMock.mockResolvedValue(null);
 
-      const result = await resolver.document('non-existent');
+      const result = await resolver.document('non-existent', authCtx);
 
       expect(result).toBeNull();
+    });
+
+    it('should return null when not authenticated', async () => {
+      const findFirstMock = prismaService.document.findFirst as jest.Mock;
+      const result = await resolver.document('doc-1', undefined);
+      expect(result).toBeNull();
+      expect(findFirstMock).not.toHaveBeenCalled();
     });
   });
 
@@ -183,7 +203,11 @@ describe('DocumentResolver', () => {
       const createMock = prismaService.document.create as jest.Mock;
       createMock.mockResolvedValue(newDocument);
 
-      const result = await resolver.createDocument('New Document', 'user-1');
+      const result = await resolver.createDocument(
+        'New Document',
+        'user-1',
+        authCtx,
+      );
 
       expect(result).toEqual(newDocument);
       expect(createMock).toHaveBeenCalledWith({
@@ -203,10 +227,16 @@ describe('DocumentResolver', () => {
   describe('updateDocument', () => {
     it('should update document title', async () => {
       const updatedDocument = { ...mockDocument, title: 'Updated Title' };
+      const findUniqueMock = prismaService.document.findUnique as jest.Mock;
+      findUniqueMock.mockResolvedValue({ id: 'doc-1', userId: 'user-1' });
       const updateMock = prismaService.document.update as jest.Mock;
       updateMock.mockResolvedValue(updatedDocument);
 
-      const result = await resolver.updateDocument('doc-1', 'Updated Title');
+      const result = await resolver.updateDocument(
+        'doc-1',
+        'Updated Title',
+        authCtx,
+      );
 
       expect(result).toEqual(updatedDocument);
       expect(updateMock).toHaveBeenCalledWith({
@@ -216,16 +246,35 @@ describe('DocumentResolver', () => {
     });
 
     it('should handle undefined title', async () => {
+      const findUniqueMock = prismaService.document.findUnique as jest.Mock;
+      findUniqueMock.mockResolvedValue({ id: 'doc-1', userId: 'user-1' });
       const updateMock = prismaService.document.update as jest.Mock;
       updateMock.mockResolvedValue(mockDocument);
 
-      const result = await resolver.updateDocument('doc-1', undefined);
+      const result = await resolver.updateDocument('doc-1', undefined, authCtx);
 
       expect(result).toEqual(mockDocument);
       expect(updateMock).toHaveBeenCalledWith({
         where: { id: 'doc-1' },
         data: { title: undefined },
       });
+    });
+
+    it('should forbid updating a document belonging to another user', async () => {
+      const findUniqueMock = prismaService.document.findUnique as jest.Mock;
+      findUniqueMock.mockResolvedValue({ id: 'doc-1', userId: 'user-2' });
+
+      await expect(
+        resolver.updateDocument('doc-1', 'Updated Title', authCtx),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(prismaService.document.update).not.toHaveBeenCalled();
+    });
+
+    it('should reject update when the request is not authenticated', async () => {
+      await expect(
+        resolver.updateDocument('doc-1', 'x', undefined),
+      ).rejects.toMatchObject({ message: 'Authentication required' });
+      expect(prismaService.document.update).not.toHaveBeenCalled();
     });
   });
 
@@ -234,7 +283,7 @@ describe('DocumentResolver', () => {
       const deleteMock = prismaService.document.delete as jest.Mock;
       deleteMock.mockResolvedValue(mockDocument);
 
-      const result = await resolver.deleteDocument('doc-1');
+      const result = await resolver.deleteDocument('doc-1', authCtx);
 
       expect(result).toEqual(mockDocument);
       expect(deleteMock).toHaveBeenCalledWith({

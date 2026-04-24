@@ -1,13 +1,15 @@
+/**
+ * Vitest + Vite defaults for `npx vitest` and IDE test runners.
+ * Keep the **test include/exclude, coverage, resolve.alias, and esbuild.jsx** block aligned with
+ * `scripts/run-vitest-inline.mjs` (used by `npm run test:unit*`), which duplicates them so
+ * `startVitest` can set Windows-oriented pool options without relying on the config file path.
+ */
 import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import path from 'path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'url'
-import { createRequire } from 'module'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const require = createRequire(import.meta.url)
 
 // Coverage reliability (Windows): ensure the target directory exists before the v8 provider writes shards.
 try {
@@ -16,22 +18,21 @@ try {
   // Best-effort: if this fails, the test run will surface it explicitly.
 }
 
-// Resolve React from root node_modules or local node_modules
-let reactPath, reactDomPath
-try {
-  reactPath = path.dirname(require.resolve('react', { paths: [path.join(__dirname, 'node_modules')] }))
-} catch {
-  reactPath = path.dirname(require.resolve('react', { paths: [path.join(__dirname, '..', 'node_modules')] }))
+function resolveModuleDir(moduleName: string) {
+  const local = path.join(__dirname, 'node_modules', moduleName)
+  if (fs.existsSync(local)) return local
+  return path.join(__dirname, '..', 'node_modules', moduleName)
 }
 
-try {
-  reactDomPath = path.dirname(require.resolve('react-dom', { paths: [path.join(__dirname, 'node_modules')] }))
-} catch {
-  reactDomPath = path.dirname(require.resolve('react-dom', { paths: [path.join(__dirname, '..', 'node_modules')] }))
-}
+const reactPath = resolveModuleDir('react')
+const reactDomPath = resolveModuleDir('react-dom')
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  // If Vitest logs oxc+esbuild "duplicate" JSX options, oxc wins; both target automatic JSX+React and are equivalent for our tests.
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'react',
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -82,6 +83,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@': __dirname,
       'react': reactPath,
       'react-dom': reactDomPath,
       'react-dom/client': path.join(reactDomPath, 'client.js'),

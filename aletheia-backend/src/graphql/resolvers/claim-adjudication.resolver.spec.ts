@@ -1,3 +1,7 @@
+import { Test } from '@nestjs/testing';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { GraphQLModule, GraphQLSchemaHost } from '@nestjs/graphql';
+import { printSchema } from 'graphql';
 import { PrismaService } from '@prisma/prisma.service';
 import { ClaimAdjudicationResolver } from './claim-adjudication.resolver';
 import { ClaimAdjudicationService } from './claim-adjudication.service';
@@ -331,5 +335,43 @@ describe('ClaimAdjudicationResolver', () => {
 
       expect(result.status).toBe(ClaimStatus.ACCEPTED);
     });
+  });
+
+  it('builds the GraphQL schema with ClaimAdjudicationResolver return types', async () => {
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
+      imports: [
+        GraphQLModule.forRoot<ApolloDriverConfig>({
+          autoSchemaFile: true,
+          driver: ApolloDriver,
+        }),
+      ],
+      providers: [
+        ClaimAdjudicationResolver,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
+        {
+          provide: ClaimAdjudicationService,
+          useValue: adjudication,
+        },
+      ],
+    }).compile();
+
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    const schema = printSchema(app.get(GraphQLSchemaHost).schema);
+    expect(schema).toContain('type ReviewQuorumStatus');
+    expect(schema).toContain(
+      'adjudicateClaim(claimId: ID!, decision: ClaimLifecycleState!, reviewerNote: String): Claim!',
+    );
+    expect(schema).toContain(
+      'reviewQuorumStatus(claimId: ID!): ReviewQuorumStatus!',
+    );
+
+    await app.close();
   });
 });

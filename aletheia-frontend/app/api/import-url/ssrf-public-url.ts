@@ -75,14 +75,26 @@ function assertUrlShape(u: URL): void {
   }
 }
 
+export type ResolvedPublicHttpFetchTarget = {
+  url: URL;
+  address: string;
+  family: 4 | 6;
+};
+
+function asResolvedTarget(url: URL, address: string, family: 4 | 6): ResolvedPublicHttpFetchTarget {
+  return { url, address, family };
+}
+
 /**
  * Ensures the URL uses http(s), has no credentials, and resolves only to
  * addresses not blocked by {@link ssrfBlocklist} (every resolved address must pass).
  */
-export async function assertPublicHttpUrlForServerFetch(urlString: string): Promise<URL> {
+export async function resolvePublicHttpFetchTarget(
+  urlOrString: string | URL,
+): Promise<ResolvedPublicHttpFetchTarget> {
   let u: URL;
   try {
-    u = new URL(urlString);
+    u = urlOrString instanceof URL ? new URL(urlOrString.toString()) : new URL(urlOrString);
   } catch {
     throw new Error('Invalid URL');
   }
@@ -94,7 +106,7 @@ export async function assertPublicHttpUrlForServerFetch(urlString: string): Prom
     if (isBlockedIpString(host)) {
       throw new Error('This host is not allowed');
     }
-    return u;
+    return asResolvedTarget(u, host, ipVer);
   }
 
   let records: LookupAddress[];
@@ -111,5 +123,10 @@ export async function assertPublicHttpUrlForServerFetch(urlString: string): Prom
       throw new Error('This host is not allowed');
     }
   }
-  return u;
+  const preferred = records.find((record) => record.family === 4) ?? records[0];
+  return asResolvedTarget(u, preferred.address, preferred.family as 4 | 6);
+}
+
+export async function assertPublicHttpUrlForServerFetch(urlString: string): Promise<URL> {
+  return (await resolvePublicHttpFetchTarget(urlString)).url;
 }

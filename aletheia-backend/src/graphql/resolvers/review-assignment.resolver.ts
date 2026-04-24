@@ -36,10 +36,6 @@ function getAuthUserRole(ctx?: GqlRequestContext): string | undefined {
   return ctx?.req?.user?.role;
 }
 
-// Coverage discipline:
-// Nest GraphQL stores return-type thunks for later schema construction; in unit tests we
-// instantiate resolvers directly (no schema build), so these thunks may remain uncalled.
-// Calling them once here is side-effect free and keeps global coverage guarantees intact.
 const reviewAssignmentType = () => ReviewAssignment;
 const idType = () => ID;
 const reviewerResponseType = () => ReviewerResponse;

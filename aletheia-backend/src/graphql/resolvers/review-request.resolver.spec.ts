@@ -1,5 +1,9 @@
+import { Test } from '@nestjs/testing';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { GraphQLModule, GraphQLSchemaHost } from '@nestjs/graphql';
 import { PrismaService } from '@prisma/prisma.service';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
+import { printSchema } from 'graphql';
 import { ReviewRequestResolver } from './review-request.resolver';
 import { ReviewRequestSource } from '@models/review-request.model';
 import { GQL_ERROR_CODES } from '../errors/graphql-error-codes';
@@ -309,5 +313,39 @@ describe('ReviewRequestResolver', () => {
         orderBy: [{ assignedAt: 'desc' }, { id: 'desc' }],
       }),
     );
+  });
+
+  it('builds the GraphQL schema with ReviewRequestResolver return types', async () => {
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
+      imports: [
+        GraphQLModule.forRoot<ApolloDriverConfig>({
+          autoSchemaFile: true,
+          driver: ApolloDriver,
+        }),
+      ],
+      providers: [
+        ReviewRequestResolver,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaders,
+        },
+      ],
+    }).compile();
+
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    const schema = printSchema(app.get(GraphQLSchemaHost).schema);
+    expect(schema).toContain('type ReviewRequest');
+    expect(schema).toContain('enum ReviewRequestSource');
+    expect(schema).toContain('reviewQueue: [ReviewRequest!]!');
+
+    await app.close();
   });
 });

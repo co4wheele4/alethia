@@ -40,5 +40,5 @@ export const graphqlRequest = async <T = Record<string, any>>(
   return {
     status: res.status,
     body: res.body,
-  } as GraphQLResponse<T>;
+  };
 };

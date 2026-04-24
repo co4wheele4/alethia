@@ -1,111 +1,206 @@
-/**
- * Unit tests for useAuth hook
- */
+import type { ReactNode } from 'react'
 
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { ApolloProvider } from '@apollo/client/react';
-import { ApolloClient, InMemoryCache } from '@apollo/client';
-import { useAuth } from '../hooks/useAuth';
-import * as authUtils from '../utils/auth';
+import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client'
+import { ApolloProvider } from '@apollo/client/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { Observable } from 'rxjs'
 
-// Mock the auth utils
+import { useAuth } from '../hooks/useAuth'
+import * as authUtils from '../utils/auth'
+
 vi.mock('../utils/auth', () => ({
-  setAuthToken: vi.fn(),
-  removeAuthToken: vi.fn(),
   getAuthToken: vi.fn(() => null),
-}));
+  removeAuthToken: vi.fn(),
+  setAuthToken: vi.fn(),
+}))
 
-// Mock Apollo Client
-const mockClient = new ApolloClient({
-  
-  link: { request: vi.fn() } as any,
-  cache: new InMemoryCache(),
-});
+type MockOperationResult =
+  | { data: Record<string, unknown> }
+  | { error: unknown }
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <ApolloProvider client={mockClient}>{children}</ApolloProvider>
-);
+function createMockClient(
+  resolveOperation: (operationName: string) => MockOperationResult,
+) {
+  return new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        const result = resolveOperation(
+          String(operation.operationName ?? ''),
+        )
+        if ('error' in result) {
+          observer.error(result.error)
+          return
+        }
+        observer.next({ data: result.data } as any)
+        observer.complete()
+      })
+    }),
+  })
+}
+
+function createWrapper(client: ApolloClient) {
+  const Wrapper = ({ children }: { children: ReactNode }) => (
+    <ApolloProvider client={client}>{children}</ApolloProvider>
+  )
+  Wrapper.displayName = 'UseAuthTestWrapper'
+  return Wrapper
+}
 
 describe('useAuth', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    (authUtils.getAuthToken as any).mockReturnValue(null);
-    localStorage.clear();
-  });
+    vi.clearAllMocks()
+    vi.useRealTimers()
+    ;(authUtils.getAuthToken as ReturnType<typeof vi.fn>).mockReturnValue(null)
+    localStorage.clear()
+  })
 
-  it('should initialize with no token', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
-    
-    expect(result.current.token).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
-  });
+  it('hydrates an existing auth token from storage on mount', async () => {
+    ;(authUtils.getAuthToken as ReturnType<typeof vi.fn>).mockReturnValue(
+      'stored-token',
+    )
+    const client = createMockClient(() => ({ data: {} }))
 
-  it('should initialize with token from localStorage', async () => {
-    const mockToken = 'mock-token';
-    (authUtils.getAuthToken as any).mockReturnValue(mockToken);
-    
-    const { result } = renderHook(() => useAuth(), { wrapper });
-    
-    // Wait for requestAnimationFrame to complete and state to update
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: createWrapper(client),
+    })
+
     await waitFor(() => {
-      expect(result.current.isInitialized).toBe(true);
-    });
-    
-    expect(result.current.token).toBe(mockToken);
-    expect(result.current.isAuthenticated).toBe(true);
-  });
+      expect(result.current.isInitialized).toBe(true)
+    })
 
-  it('should call logout and clear token', () => {
-    const mockToken = 'mock-token';
-    (authUtils.getAuthToken as any).mockReturnValue(mockToken);
-    
-    const { result } = renderHook(() => useAuth(), { wrapper });
-    
+    expect(result.current.token).toBe('stored-token')
+    expect(result.current.isAuthenticated).toBe(true)
+  })
+
+  it('preserves a successful login token when initialization completes afterwards', async () => {
+    const client = createMockClient((operationName) => {
+      if (operationName === 'Login') {
+        return { data: { login: 'login-token' } }
+      }
+      return { data: {} }
+    })
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: createWrapper(client),
+    })
+
+    await act(async () => {
+      await expect(
+        result.current.login('test@example.com', 'Password123!'),
+      ).resolves.toBe('login-token')
+    })
+
+    expect(authUtils.setAuthToken).toHaveBeenCalledWith('login-token')
+    expect(result.current.token).toBe('login-token')
+    expect(result.current.isAuthenticated).toBe(true)
+
+    // isInitialized is set in requestAnimationFrame (see useAuth), not timers
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true)
+    })
+  })
+
+  it('stores the JWT returned by registration and authenticates the user', async () => {
+    const client = createMockClient((operationName) => {
+      if (operationName === 'Register') {
+        return { data: { register: 'register-token' } }
+      }
+      return { data: {} }
+    })
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: createWrapper(client),
+    })
+
+    await act(async () => {
+      await expect(
+        result.current.register('new@example.com', 'ValidPass123!', 'New User'),
+      ).resolves.toBe('register-token')
+    })
+
+    expect(authUtils.setAuthToken).toHaveBeenCalledWith('register-token')
+    expect(result.current.token).toBe('register-token')
+    expect(result.current.isAuthenticated).toBe(true)
+  })
+
+  it('returns success from changePassword without disturbing the current auth token', async () => {
+    ;(authUtils.getAuthToken as ReturnType<typeof vi.fn>).mockReturnValue(
+      'existing-token',
+    )
+    const client = createMockClient((operationName) => {
+      if (operationName === 'ChangePassword') {
+        return { data: { changePassword: true } }
+      }
+      return { data: {} }
+    })
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: createWrapper(client),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true)
+    })
+
+    await act(async () => {
+      await expect(
+        result.current.changePassword('OldPass123!', 'NewPass123!'),
+      ).resolves.toBe(true)
+    })
+
+    expect(result.current.token).toBe('existing-token')
+    expect(result.current.isAuthenticated).toBe(true)
+    expect(authUtils.setAuthToken).not.toHaveBeenCalled()
+  })
+
+  it('returns success from forgotPassword without authenticating a logged-out user', async () => {
+    const client = createMockClient((operationName) => {
+      if (operationName === 'ForgotPassword') {
+        return { data: { forgotPassword: true } }
+      }
+      return { data: {} }
+    })
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: createWrapper(client),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true)
+    })
+
+    await act(async () => {
+      await expect(
+        result.current.forgotPassword('test@example.com'),
+      ).resolves.toBe(true)
+    })
+
+    expect(result.current.token).toBeNull()
+    expect(result.current.isAuthenticated).toBe(false)
+    expect(authUtils.setAuthToken).not.toHaveBeenCalled()
+  })
+
+  it('clears the in-memory session and persisted token on logout', async () => {
+    ;(authUtils.getAuthToken as ReturnType<typeof vi.fn>).mockReturnValue(
+      'stored-token',
+    )
+    const client = createMockClient(() => ({ data: {} }))
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: createWrapper(client),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true)
+    })
+
     act(() => {
-      result.current.logout();
-    });
-    
-    expect(authUtils.removeAuthToken).toHaveBeenCalled();
-    expect(result.current.token).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
-  });
+      result.current.logout()
+    })
 
-  it('should handle login mutation', async () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
-    
-    // Note: This is a basic test structure
-    // Full integration would require mocking the Apollo mutation
-    expect(result.current.login).toBeDefined();
-    expect(typeof result.current.login).toBe('function');
-  });
-
-  it('should handle register mutation', async () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
-    
-    // Note: This is a basic test structure
-    // Full integration would require mocking the Apollo mutation
-    expect(result.current.register).toBeDefined();
-    expect(typeof result.current.register).toBe('function');
-  });
-
-  it('should handle changePassword function', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
-    
-    expect(result.current.changePassword).toBeDefined();
-    expect(typeof result.current.changePassword).toBe('function');
-  });
-
-  it('should handle forgotPassword function', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
-    
-    expect(result.current.forgotPassword).toBeDefined();
-    expect(typeof result.current.forgotPassword).toBe('function');
-  });
-
-  it('should return isInitialized state', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
-    
-    expect(result.current).toHaveProperty('isInitialized');
-    expect(typeof result.current.isInitialized).toBe('boolean');
-  });
-});
+    expect(authUtils.removeAuthToken).toHaveBeenCalledTimes(1)
+    expect(result.current.token).toBeNull()
+    expect(result.current.isAuthenticated).toBe(false)
+  })
+})

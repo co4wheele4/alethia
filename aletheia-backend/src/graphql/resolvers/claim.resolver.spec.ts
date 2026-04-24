@@ -1,7 +1,11 @@
+import { Test } from '@nestjs/testing';
 import { ForbiddenException } from '@nestjs/common';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { GraphQLModule, GraphQLSchemaHost } from '@nestjs/graphql';
 import { PrismaService } from '@prisma/prisma.service';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
 import { ClaimStatus as PrismaClaimStatus } from '@prisma/client';
+import { printSchema } from 'graphql';
 import { GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 import { ClaimResolver } from './claim.resolver';
 
@@ -370,5 +374,42 @@ describe('ClaimResolver', () => {
     expect(load).toHaveBeenCalledTimes(2);
     expect(load).toHaveBeenNthCalledWith(1, 'doc_1');
     expect(load).toHaveBeenNthCalledWith(2, 'doc_2');
+  });
+
+  it('builds the GraphQL schema with ClaimResolver return types and inputs', async () => {
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
+      imports: [
+        GraphQLModule.forRoot<ApolloDriverConfig>({
+          autoSchemaFile: true,
+          driver: ApolloDriver,
+        }),
+      ],
+      providers: [
+        ClaimResolver,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
+        {
+          provide: DataLoaderService,
+          useValue: dataLoaders,
+        },
+      ],
+    }).compile();
+
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    const schemaHost = app.get(GraphQLSchemaHost);
+    const schema = printSchema(schemaHost.schema);
+    expect(schema).toContain('type Claim');
+    expect(schema).toContain('input ClaimFilterInput');
+    expect(schema).toContain(
+      'claims(filter: ClaimFilterInput, limit: Int!, offset: Int!): [Claim!]!',
+    );
+
+    await app.close();
   });
 });

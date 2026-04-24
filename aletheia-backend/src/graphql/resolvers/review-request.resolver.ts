@@ -39,10 +39,6 @@ function failInvariant(message: string): never {
   throw new Error(message);
 }
 
-// Coverage discipline:
-// Nest GraphQL stores return-type thunks for later schema construction; in unit tests we
-// instantiate resolvers directly (no schema build), so these thunks may remain uncalled.
-// Calling them once here is side-effect free and keeps global coverage guarantees intact.
 const reviewRequestType = () => ReviewRequest;
 const reviewRequestListType = () => [ReviewRequest];
 const reviewRequestSourceType = () => ReviewRequestSource;

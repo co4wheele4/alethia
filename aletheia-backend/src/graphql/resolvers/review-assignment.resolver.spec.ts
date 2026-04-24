@@ -1,7 +1,28 @@
+import { Test } from '@nestjs/testing';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import {
+  GraphQLModule,
+  GraphQLSchemaHost,
+  Query,
+  Resolver,
+} from '@nestjs/graphql';
+import { graphql, printSchema } from 'graphql';
 import { PrismaService } from '@prisma/prisma.service';
 import { ReviewAssignmentResolver } from './review-assignment.resolver';
 import { GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 import { ReviewerResponseType } from '@models/reviewer-response.model';
+
+/**
+ * GraphQL requires a Query type; this resolver is mutation-only, so tests that build
+ * a minimal schema need a no-op query for printSchema to succeed.
+ */
+@Resolver()
+class ReviewAssignmentGraphqlSchemaTestQueryStub {
+  @Query(() => String, { name: '_reviewAssignmentSchemaTestQuery' })
+  _reviewAssignmentSchemaTestQuery(): string {
+    return '';
+  }
+}
 
 describe('ReviewAssignmentResolver', () => {
   let resolver: ReviewAssignmentResolver;
@@ -348,5 +369,46 @@ describe('ReviewAssignmentResolver', () => {
     ).rejects.toMatchObject({
       extensions: { code: GQL_ERROR_CODES.UNAUTHORIZED },
     });
+  });
+
+  it('builds the GraphQL schema with ReviewAssignmentResolver return types', async () => {
+    const moduleRef: Awaited<
+      ReturnType<ReturnType<typeof Test.createTestingModule>['compile']>
+    > = await Test.createTestingModule({
+      imports: [
+        GraphQLModule.forRoot<ApolloDriverConfig>({
+          autoSchemaFile: true,
+          driver: ApolloDriver,
+        }),
+      ],
+      providers: [
+        ReviewAssignmentGraphqlSchemaTestQueryStub,
+        ReviewAssignmentResolver,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
+      ],
+    }).compile();
+
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    const gqlSchema = app.get(GraphQLSchemaHost).schema;
+    const executed = await graphql({
+      schema: gqlSchema,
+      source: '{ _reviewAssignmentSchemaTestQuery }',
+    });
+    expect(executed.errors).toBeUndefined();
+    expect(executed.data?._reviewAssignmentSchemaTestQuery).toBe('');
+
+    const schema = printSchema(gqlSchema);
+    expect(schema).toContain('type ReviewAssignment');
+    expect(schema).toContain('enum ReviewerResponseType');
+    expect(schema).toContain(
+      'assignReviewer(reviewRequestId: ID!, reviewerUserId: ID!): ReviewAssignment!',
+    );
+
+    await app.close();
   });
 });

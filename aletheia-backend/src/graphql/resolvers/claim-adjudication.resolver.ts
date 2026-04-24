@@ -49,10 +49,6 @@ function isAllowedTransition(
   return false;
 }
 
-// Coverage discipline:
-// Nest GraphQL stores return-type thunks for later schema construction; in unit tests we
-// instantiate resolvers directly (no schema build), so these thunks may remain uncalled.
-// Calling them once here is side-effect free and keeps global coverage guarantees intact.
 const claimType = () => Claim;
 const claimLifecycleStateType = () => ClaimLifecycleState;
 const idType = () => ID;

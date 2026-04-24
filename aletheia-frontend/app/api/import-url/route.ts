@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import http, { type IncomingHttpHeaders } from 'node:http';
+import https from 'node:https';
+import { isIP } from 'node:net';
 
-import { assertPublicHttpUrlForServerFetch } from './ssrf-public-url';
+import {
+  assertPublicHttpUrlForServerFetch,
+  type ResolvedPublicHttpFetchTarget,
+  resolvePublicHttpFetchTarget,
+} from './ssrf-public-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,37 +62,128 @@ const FETCH_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
 } as const;
 
+type LookupCallback = (
+  err: NodeJS.ErrnoException | null,
+  address: string,
+  family: number,
+) => void;
+
+type UpstreamResponse = {
+  status: number;
+  headers: IncomingHttpHeaders;
+  body: Buffer;
+  fetchedUrl: string;
+};
+
+function headerValue(
+  headers: IncomingHttpHeaders,
+  name: string,
+): string | null {
+  const raw = headers[name];
+  if (Array.isArray(raw)) return raw[0] ?? null;
+  return raw ?? null;
+}
+
+function boundLookup(address: string, family: 4 | 6) {
+  return (
+    _hostname: string,
+    _options: unknown,
+    callback: LookupCallback,
+  ) => {
+    callback(null, address, family);
+  };
+}
+
+function requestOnceBoundToResolvedTarget(
+  target: ResolvedPublicHttpFetchTarget,
+  signal: AbortSignal,
+): Promise<UpstreamResponse> {
+  return new Promise((resolve, reject) => {
+    const isHttps = target.url.protocol === 'https:';
+    const port = target.url.port ? Number(target.url.port) : isHttps ? 443 : 80;
+    const requestFn = isHttps ? https.request : http.request;
+    const hostHeader = target.url.host;
+    const servername =
+      isHttps && isIP(target.url.hostname) === 0 ? target.url.hostname : undefined;
+
+    const req = requestFn(
+      {
+        protocol: target.url.protocol,
+        hostname: target.address,
+        port,
+        method: 'GET',
+        path: `${target.url.pathname}${target.url.search}`,
+        headers: {
+          ...FETCH_HEADERS,
+          Host: hostHeader,
+        },
+        family: target.family,
+        lookup: boundLookup(target.address, target.family),
+        servername,
+        signal,
+      },
+      (res) => {
+        const declaredLength = Number(headerValue(res.headers, 'content-length'));
+        if (Number.isFinite(declaredLength) && declaredLength > MAX_BYTES) {
+          res.resume();
+          reject(new Error('Response too large'));
+          return;
+        }
+
+        const chunks: Buffer[] = [];
+        let total = 0;
+
+        res.on('data', (chunk: Buffer | string) => {
+          const part = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+          total += part.byteLength;
+          if (total > MAX_BYTES) {
+            res.destroy(new Error('Response too large'));
+            return;
+          }
+          chunks.push(part);
+        });
+        res.on('error', reject);
+        res.on('end', () => {
+          resolve({
+            status: res.statusCode ?? 0,
+            headers: res.headers,
+            body: Buffer.concat(chunks),
+            fetchedUrl: target.url.toString(),
+          });
+        });
+      },
+    );
+
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 /**
- * Fetch with `redirect: manual` and re-validate each redirect target with
- * {@link assertPublicHttpUrlForServerFetch} so redirects cannot bypass SSRF checks.
+ * Request with the connection pinned to a vetted IP address, then re-validate each
+ * redirect target before the next hop. This avoids DNS rebinding between validation
+ * and connect while still applying SSRF checks to every redirect.
  *
- * Each outbound `fetch` uses `safe.href` where `safe` is the URL object returned by
- * `assertPublicHttpUrlForServerFetch` in the same iteration (DNS + blocklist checks).
+ * Each outbound request uses a `lookup` override bound to the address returned by
+ * `resolvePublicHttpFetchTarget` in the same iteration (DNS + blocklist checks).
  */
-async function fetchUrlWithSsrfGuards(
+async function requestUrlWithSsrfGuards(
   validatedFirst: URL,
   signal: AbortSignal,
-): Promise<Response> {
+): Promise<UpstreamResponse> {
   let current: URL = validatedFirst;
   for (let hop = 0; hop < MAX_REDIRECTS; hop++) {
-    const safe = await assertPublicHttpUrlForServerFetch(current.href);
-    // codeql[js/request-forgery]: Each hop is vetted by assertPublicHttpUrlForServerFetch (DNS + BlockList); redirects re-checked every hop.
-    const upstream = await fetch(safe.href, {
-      method: 'GET',
-      redirect: 'manual',
-      signal,
-      headers: { ...FETCH_HEADERS },
-    });
+    const safe = await resolvePublicHttpFetchTarget(current);
+    const upstream = await requestOnceBoundToResolvedTarget(safe, signal);
 
     if (REDIRECT_STATUSES.has(upstream.status)) {
-      const loc = upstream.headers.get('location');
-      await upstream.body?.cancel();
+      const loc = headerValue(upstream.headers, 'location');
       if (!loc) {
         return upstream;
       }
       let next: URL;
       try {
-        next = new URL(loc, safe);
+        next = new URL(loc, safe.url);
       } catch {
         throw new Error('Invalid redirect URL');
       }
@@ -116,9 +214,9 @@ export async function GET(request: NextRequest) {
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const upstream = await fetchUrlWithSsrfGuards(target, controller.signal);
+    const upstream = await requestUrlWithSsrfGuards(target, controller.signal);
 
-    if (!upstream.ok) {
+    if (upstream.status < 200 || upstream.status >= 300) {
       if (allowExampleComDemoFallback() && isExampleComRootUrl(target)) {
         console.warn(
           `[import-url] Upstream ${upstream.status} for example.com; using demo fallback (set URL_IMPORT_DEMO_FALLBACK=0 to disable).`
@@ -128,19 +226,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: `Upstream returned ${upstream.status}` }, { status: 502 });
     }
 
-    const len = upstream.headers.get('content-length');
-    if (len && Number(len) > MAX_BYTES) {
+    if (upstream.body.byteLength > MAX_BYTES) {
       return NextResponse.json({ error: 'Response too large' }, { status: 413 });
     }
 
-    const buf = await upstream.arrayBuffer();
-    if (buf.byteLength > MAX_BYTES) {
-      return NextResponse.json({ error: 'Response too large' }, { status: 413 });
-    }
-
-    const raw = new TextDecoder('utf-8', { fatal: false }).decode(buf);
-    const contentType = upstream.headers.get('content-type');
-    const fetchedUrl = upstream.url || target.toString();
+    const raw = new TextDecoder('utf-8', { fatal: false }).decode(upstream.body);
+    const contentType = headerValue(upstream.headers, 'content-type');
+    const fetchedUrl = upstream.fetchedUrl || target.toString();
 
     return NextResponse.json({ raw, contentType, fetchedUrl });
   } catch (e) {
@@ -174,6 +266,9 @@ export async function GET(request: NextRequest) {
     ) {
       message =
         'TLS certificate verification failed (common behind corporate proxies). Set NODE_EXTRA_CA_CERTS to your root CA bundle, or ask IT for the proxy certificate.';
+    }
+    if (/response too large/i.test(message)) {
+      return NextResponse.json({ error: 'Response too large' }, { status: 413 });
     }
 
     return NextResponse.json({ error: message }, { status: 502 });
