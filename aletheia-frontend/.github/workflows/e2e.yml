@@ -33,6 +33,10 @@ jobs:
       - name: Lint, type-check, unit tests
         working-directory: aletheia-frontend
         run: npm test
+
+      - name: Build Next.js app (for Playwright webServer)
+        working-directory: aletheia-frontend
+        run: npm run build
       
       - name: Run E2E tests
         working-directory: aletheia-frontend

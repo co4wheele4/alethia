@@ -196,7 +196,7 @@ export default defineConfig({
           },
           {
             // Frontend (production server for stability)
-            command: 'npm run build && npm run start',
+            command: 'node scripts/playwright-ensure-build.cjs && npm run start',
             env: {
               ...process.env,
               PORT: String(frontendTarget.port),
@@ -206,13 +206,13 @@ export default defineConfig({
             },
             url: frontendTarget.baseURL,
             reuseExistingServer,
-            // Windows can be very slow for cold `next build` + boot; keep below Playwright's default max.
-            timeout: 45 * 60 * 1000,
+            // Starting Next should be fast once `.next` exists; builds belong in CI/hooks (see `playwright-ensure-build.cjs`).
+            timeout: 20 * 60 * 1000,
           },
         ]
       : {
           // Frontend only (GraphQL requests are intercepted per-test via Playwright routing).
-          command: 'npm run build && npm run start',
+          command: 'node scripts/playwright-ensure-build.cjs && npm run start',
           env: {
             ...process.env,
             PORT: String(frontendTarget.port),
@@ -222,8 +222,7 @@ export default defineConfig({
           },
           url: frontendTarget.baseURL,
           reuseExistingServer,
-          // `npm run build && npm run start` can exceed 3m on cold Windows machines.
-          // Keep below Playwright's default max, but high enough for slow laptops/AV + cold caches.
-          timeout: 45 * 60 * 1000,
+          // `next start` should be quick; long `next build` should run outside Playwright (CI/hooks) to avoid webServer hangs.
+          timeout: 20 * 60 * 1000,
         },
 });

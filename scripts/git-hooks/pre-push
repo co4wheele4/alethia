@@ -16,6 +16,9 @@ npm --workspace=aletheia-backend run test:e2e
 echo "pre-push: running frontend unit tests..."
 npm --workspace=aletheia-frontend run test:unit
 
+echo "pre-push: building frontend (Next.js) for Playwright..."
+npm --workspace=aletheia-frontend run build
+
 echo "pre-push: running frontend e2e tests..."
 npm --workspace=aletheia-frontend run test:e2e
 
