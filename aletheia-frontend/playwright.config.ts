@@ -9,8 +9,21 @@ import { defineConfig, devices } from '@playwright/test';
 const useFullBrowserMatrix =
   process.env.CI === 'true' || process.env.PLAYWRIGHT_ALL_BROWSERS === '1';
 
-/** In CI always start fresh servers; locally reuse if 3040/3050 is already taken (e.g. `npm run dev`). */
-const reuseExistingServer = process.env.CI !== 'true';
+/**
+ * In CI always start fresh servers.
+ *
+ * Locally, reusing an existing server is convenient, but it can also cause Playwright to "think"
+ * the webServer is healthy while something else is bound to the expected port (especially on Windows),
+ * leading to long waits until `webServer.timeout`.
+ *
+ * Default: reuse on POSIX only; on Windows, always start fresh unless explicitly overridden.
+ */
+const reuseExistingServer =
+  process.env.CI === 'true'
+    ? false
+    : process.platform === 'win32'
+      ? process.env.PLAYWRIGHT_REUSE_SERVER === '1'
+      : true;
 
 /**
  * Playwright E2E test configuration
