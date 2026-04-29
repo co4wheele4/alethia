@@ -79,22 +79,15 @@ const alreadyPrepared =
   Boolean(e2eGlobal.__ALETHEIA_E2E_DB_PREPARED__);
 
 if (!alreadyPrepared) {
-  execSync(
-    'npx dotenv-cli -e .env.test -- npx prisma migrate reset --force',
-    {
-      stdio: 'inherit',
-      env: process.env,
-    },
-  );
-  execSync('npx dotenv-cli -e .env.test -- npx tsx scripts/seed/testSeed.ts', {
-    stdio: 'inherit',
-    env: process.env,
-  });
   execSync('npx prisma generate', {
     stdio: 'inherit',
     env: process.env,
   });
   execSync('npx prisma migrate deploy', {
+    stdio: 'inherit',
+    env: process.env,
+  });
+  execSync('npx dotenv-cli -e .env.test -- npx tsx scripts/seed/testSeed.ts', {
     stdio: 'inherit',
     env: process.env,
   });
