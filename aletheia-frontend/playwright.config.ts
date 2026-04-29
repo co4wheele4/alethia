@@ -1,4 +1,79 @@
 import { defineConfig, devices } from '@playwright/test';
+import net from 'node:net';
+
+function parsePort(value: string | undefined, fallback: number) {
+  const n = Number(value);
+  if (Number.isInteger(n) && n > 0 && n < 65_536) return n;
+  return fallback;
+}
+
+function canBind(port: number, host: string) {
+  return new Promise<{ ok: boolean; err: NodeJS.ErrnoException | null }>((resolve) => {
+    const server = net.createServer();
+    server.unref();
+    server.once('error', (err: NodeJS.ErrnoException) => resolve({ ok: false, err }));
+    server.listen({ port, host }, () => {
+      server.close(() => resolve({ ok: true, err: null }));
+    });
+  });
+}
+
+async function isPortFree(port: number) {
+  const v4 = await canBind(port, '0.0.0.0');
+  if (!v4.ok && v4.err && v4.err.code === 'EADDRINUSE') return false;
+
+  const v6 = await canBind(port, '::');
+  if (!v6.ok && v6.err && v6.err.code === 'EADDRINUSE') return false;
+
+  if (!v6.ok && v6.err && (v6.err.code === 'EAFNOSUPPORT' || v6.err.code === 'EINVAL')) {
+    return v4.ok;
+  }
+
+  return v4.ok && v6.ok;
+}
+
+async function firstFreePort(startPort: number, maxTries = 50) {
+  for (let p = startPort, i = 0; i < maxTries; i += 1, p += 1) {
+    const free = await isPortFree(p);
+    if (free) return p;
+  }
+  throw new Error(
+    `[playwright] No free port found in range [${startPort}, ${startPort + maxTries - 1}] (needed for Next + Playwright webServer health checks).`,
+  );
+}
+
+async function resolveFrontendTarget() {
+  if (process.env.PLAYWRIGHT_TEST_BASE_URL) {
+    const u = new URL(process.env.PLAYWRIGHT_TEST_BASE_URL);
+    const port = parsePort(u.port, u.protocol === 'https:' ? 443 : 80);
+    const free = await isPortFree(port);
+    if (!free) {
+      throw new Error(
+        `[playwright] PLAYWRIGHT_TEST_BASE_URL uses port ${port}, but that port is not free. ` +
+          `Free the port or point PLAYWRIGHT_TEST_BASE_URL at a free port (or unset it to auto-pick).`,
+      );
+    }
+    u.port = String(port);
+    return {
+      baseURL: u.toString().replace(/\/$/, ''),
+      port,
+      // Keep GraphQL on the same origin the app is served from for these tests.
+      graphqlUrl: new URL('/graphql', u).toString(),
+    };
+  }
+
+  const fromEnv = process.env.PLAYWRIGHT_TEST_PORT
+    ? parseInt(process.env.PLAYWRIGHT_TEST_PORT, 10)
+    : NaN;
+  const startPort = Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 3040;
+  const port = await firstFreePort(startPort);
+  const base = new URL(`http://127.0.0.1:${port}`);
+  return {
+    baseURL: base.toString().replace(/\/$/, ''),
+    port,
+    graphqlUrl: new URL('/graphql', base).toString(),
+  };
+}
 
 /**
  * Full matrix (Chromium, Firefox, WebKit, mobile) runs in CI or when
@@ -42,7 +117,9 @@ const reuseExistingServer =
  * - Use page object models for complex flows
  */
 
-export default defineConfig({
+export default (async () => {
+  const frontendTarget = await resolveFrontendTarget();
+  return defineConfig({
   // Support both legacy `e2e/` and newer `tests/e2e/` specs.
   testDir: '.',
   testMatch: ['e2e/**/*.spec.ts', 'tests/e2e/**/*.spec.ts'],
@@ -77,8 +154,8 @@ export default defineConfig({
   
   // Shared settings for all projects
   use: {
-    // Base URL for tests (port 3040 to avoid conflict with dev server on 3030)
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3040',
+    // Base URL for tests (port chosen to avoid conflict; see `webServer` below)
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || frontendTarget.baseURL,
     
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -148,7 +225,7 @@ export default defineConfig({
               // Browser origin for Playwright webServer (see backend main.ts CORS).
               ALLOWED_ORIGINS:
                 process.env.ALLOWED_ORIGINS ??
-                'http://127.0.0.1:3040,http://localhost:3040',
+                `http://127.0.0.1:${frontendTarget.port},http://localhost:${frontendTarget.port}`,
             },
             url: 'http://127.0.0.1:3050/graphql',
             reuseExistingServer,
@@ -160,14 +237,12 @@ export default defineConfig({
             command: 'npm run build && npm run start',
             env: {
               ...process.env,
-              PORT: '3040',
-              // Avoid silently hopping ports (breaks Playwright's fixed `url` health check).
-              NEXT_PORT_STRICT: '1',
+              PORT: String(frontendTarget.port),
               NEXT_PUBLIC_MSW: 'disabled',
               NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
               NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3050/graphql',
             },
-            url: 'http://127.0.0.1:3040',
+            url: frontendTarget.baseURL,
             reuseExistingServer,
             // Windows can be very slow for cold `next build` + boot; keep below Playwright's default max.
             timeout: 45 * 60 * 1000,
@@ -178,17 +253,16 @@ export default defineConfig({
           command: 'npm run build && npm run start',
           env: {
             ...process.env,
-            PORT: '3040',
-            // Avoid silently hopping ports (breaks Playwright's fixed `url` health check).
-            NEXT_PORT_STRICT: '1',
+            PORT: String(frontendTarget.port),
             NEXT_PUBLIC_MSW: 'disabled',
             NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
-            NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3040/graphql',
+            NEXT_PUBLIC_GRAPHQL_URL: frontendTarget.graphqlUrl,
           },
-          url: 'http://127.0.0.1:3040',
+          url: frontendTarget.baseURL,
           reuseExistingServer,
           // `npm run build && npm run start` can exceed 3m on cold Windows machines.
           // Keep below Playwright's default max, but high enough for slow laptops/AV + cold caches.
           timeout: 45 * 60 * 1000,
         },
-});
+  });
+})();
