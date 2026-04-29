@@ -3,6 +3,12 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 import { execSync } from 'node:child_process';
 
+type E2EGlobal = typeof globalThis & {
+  __ALETHEIA_E2E_DB_PREPARED__?: boolean;
+};
+
+const e2eGlobal = globalThis as E2EGlobal;
+
 // Load .env.test if it exists, otherwise load .env but override with test database
 const envTestPath = resolve(process.cwd(), '.env.test');
 try {
@@ -70,13 +76,16 @@ if (process.env.NODE_ENV !== 'production') {
 // We do this once per jest process to keep pre-push/CI stable.
 const alreadyPrepared =
   process.env.ALETHEIA_E2E_DB_PREPARED === '1' ||
-  Boolean(globalThis.__ALETHEIA_E2E_DB_PREPARED__);
+  Boolean(e2eGlobal.__ALETHEIA_E2E_DB_PREPARED__);
 
 if (!alreadyPrepared) {
-  execSync('npx dotenv-cli -e .env.test -- npx prisma migrate reset --force --skip-seed', {
-    stdio: 'inherit',
-    env: process.env,
-  });
+  execSync(
+    'npx dotenv-cli -e .env.test -- npx prisma migrate reset --force --skip-seed',
+    {
+      stdio: 'inherit',
+      env: process.env,
+    },
+  );
   execSync('npx dotenv-cli -e .env.test -- npx tsx scripts/seed/testSeed.ts', {
     stdio: 'inherit',
     env: process.env,
@@ -91,5 +100,5 @@ if (!alreadyPrepared) {
   });
 
   process.env.ALETHEIA_E2E_DB_PREPARED = '1';
-  globalThis.__ALETHEIA_E2E_DB_PREPARED__ = true;
+  e2eGlobal.__ALETHEIA_E2E_DB_PREPARED__ = true;
 }
