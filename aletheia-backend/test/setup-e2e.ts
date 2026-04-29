@@ -1,13 +1,6 @@
 // test/setup-e2e.ts
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { execSync } from 'node:child_process';
-
-type E2EGlobal = typeof globalThis & {
-  __ALETHEIA_E2E_DB_PREPARED__?: boolean;
-};
-
-const e2eGlobal = globalThis as E2EGlobal;
 
 // Load .env.test if it exists, otherwise load .env but override with test database
 const envTestPath = resolve(process.cwd(), '.env.test');
@@ -66,32 +59,4 @@ if (process.env.NODE_ENV !== 'production') {
   const dbMatch = dbUrl.match(/\/([^/?]+)(\?|$)/);
   const dbName = dbMatch ? dbMatch[1] : 'unknown';
   console.log(`[E2E Test Setup] Using database: ${dbName}`);
-}
-
-// Ensure the test DB schema is up-to-date for e2e runs (CI runs `npm run test:e2e`
-// without an explicit migrate step).
-// Also ensure e2e runs are isolated from leftover DB state. Unique/FK constraints
-// will legitimately fail if prior data remains in `aletheia_test`.
-//
-// We do this once per jest process to keep pre-push/CI stable.
-const alreadyPrepared =
-  process.env.ALETHEIA_E2E_DB_PREPARED === '1' ||
-  Boolean(e2eGlobal.__ALETHEIA_E2E_DB_PREPARED__);
-
-if (!alreadyPrepared) {
-  execSync('npx prisma generate', {
-    stdio: 'inherit',
-    env: process.env,
-  });
-  execSync('npx prisma migrate deploy', {
-    stdio: 'inherit',
-    env: process.env,
-  });
-  execSync('npx dotenv-cli -e .env.test -- npx tsx scripts/seed/testSeed.ts', {
-    stdio: 'inherit',
-    env: process.env,
-  });
-
-  process.env.ALETHEIA_E2E_DB_PREPARED = '1';
-  e2eGlobal.__ALETHEIA_E2E_DB_PREPARED__ = true;
 }
