@@ -161,13 +161,16 @@ export default defineConfig({
             env: {
               ...process.env,
               PORT: '3040',
+              // Avoid silently hopping ports (breaks Playwright's fixed `url` health check).
+              NEXT_PORT_STRICT: '1',
               NEXT_PUBLIC_MSW: 'disabled',
               NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
               NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3050/graphql',
             },
             url: 'http://127.0.0.1:3040',
             reuseExistingServer,
-            timeout: 360 * 1000,
+            // Windows can be very slow for cold `next build` + boot; keep below Playwright's default max.
+            timeout: 45 * 60 * 1000,
           },
         ]
       : {
@@ -176,6 +179,8 @@ export default defineConfig({
           env: {
             ...process.env,
             PORT: '3040',
+            // Avoid silently hopping ports (breaks Playwright's fixed `url` health check).
+            NEXT_PORT_STRICT: '1',
             NEXT_PUBLIC_MSW: 'disabled',
             NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
             NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3040/graphql',
@@ -183,6 +188,7 @@ export default defineConfig({
           url: 'http://127.0.0.1:3040',
           reuseExistingServer,
           // `npm run build && npm run start` can exceed 3m on cold Windows machines.
-          timeout: 600 * 1000,
+          // Keep below Playwright's default max, but high enough for slow laptops/AV + cold caches.
+          timeout: 45 * 60 * 1000,
         },
 });

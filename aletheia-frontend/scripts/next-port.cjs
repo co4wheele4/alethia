@@ -51,8 +51,21 @@ function main() {
   const desiredPort = parsePort(process.env.PORT, 3030);
 
   void (async () => {
-    const port = await firstFreePort(desiredPort);
-    if (port !== desiredPort) {
+    const strictPort =
+      process.env.NEXT_PORT_STRICT === '1' || String(process.env.NEXT_PORT_STRICT).toLowerCase() === 'true';
+    if (strictPort) {
+      const free = await isPortFree(desiredPort);
+      if (!free) {
+        console.error(
+          `[next-port] Port ${desiredPort} is in use, but NEXT_PORT_STRICT is set. ` +
+            `Free the port (or unset NEXT_PORT_STRICT) so Playwright/Next agree on a single port.`,
+        );
+        process.exit(1);
+      }
+    }
+
+    const port = strictPort ? desiredPort : await firstFreePort(desiredPort);
+    if (!strictPort && port !== desiredPort) {
       console.log(`[next-port] Port ${desiredPort} is in use; using ${port} instead.`);
     }
 
