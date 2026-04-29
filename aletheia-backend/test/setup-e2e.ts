@@ -1,6 +1,9 @@
 // test/setup-e2e.ts
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import { PrismaClient } from '@prisma/client';
+
+import { cleanDatabase } from './helpers/test-db';
 
 // Load .env.test if it exists, otherwise load .env but override with test database
 const envTestPath = resolve(process.cwd(), '.env.test');
@@ -60,3 +63,15 @@ if (process.env.NODE_ENV !== 'production') {
   const dbName = dbMatch ? dbMatch[1] : 'unknown';
   console.log(`[E2E Test Setup] Using database: ${dbName}`);
 }
+
+// Ensure each e2e test starts from a clean slate.
+// Some e2e suites seed data per-test without always calling `cleanDatabase()` first.
+const prisma = new PrismaClient();
+
+beforeEach(async () => {
+  await cleanDatabase(prisma);
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
+});
