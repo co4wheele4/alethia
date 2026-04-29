@@ -169,6 +169,7 @@ export default defineConfig({
           },
           url: 'http://127.0.0.1:3040',
           reuseExistingServer,
-          timeout: 180 * 1000,
+          // `npm run build && npm run start` can exceed 3m on cold Windows machines.
+          timeout: 600 * 1000,
         },
 });
