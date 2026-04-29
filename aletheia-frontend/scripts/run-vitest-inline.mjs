@@ -52,7 +52,7 @@ const options = {
     '**/app/__tests__/mocks/**',
     '**/app/lib/test-utils/**',
   ],
-  pool: 'threads',
+  pool: 'forks',
   maxWorkers: 1,
   fileParallelism: false,
   coverage: {
