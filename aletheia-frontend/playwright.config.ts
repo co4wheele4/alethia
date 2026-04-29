@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
-import net from 'node:net';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
 
 function parsePort(value: string | undefined, fallback: number) {
   const n = Number(value);
@@ -7,52 +8,10 @@ function parsePort(value: string | undefined, fallback: number) {
   return fallback;
 }
 
-function canBind(port: number, host: string) {
-  return new Promise<{ ok: boolean; err: NodeJS.ErrnoException | null }>((resolve) => {
-    const server = net.createServer();
-    server.unref();
-    server.once('error', (err: NodeJS.ErrnoException) => resolve({ ok: false, err }));
-    server.listen({ port, host }, () => {
-      server.close(() => resolve({ ok: true, err: null }));
-    });
-  });
-}
-
-async function isPortFree(port: number) {
-  const v4 = await canBind(port, '0.0.0.0');
-  if (!v4.ok && v4.err && v4.err.code === 'EADDRINUSE') return false;
-
-  const v6 = await canBind(port, '::');
-  if (!v6.ok && v6.err && v6.err.code === 'EADDRINUSE') return false;
-
-  if (!v6.ok && v6.err && (v6.err.code === 'EAFNOSUPPORT' || v6.err.code === 'EINVAL')) {
-    return v4.ok;
-  }
-
-  return v4.ok && v6.ok;
-}
-
-async function firstFreePort(startPort: number, maxTries = 50) {
-  for (let p = startPort, i = 0; i < maxTries; i += 1, p += 1) {
-    const free = await isPortFree(p);
-    if (free) return p;
-  }
-  throw new Error(
-    `[playwright] No free port found in range [${startPort}, ${startPort + maxTries - 1}] (needed for Next + Playwright webServer health checks).`,
-  );
-}
-
-async function resolveFrontendTarget() {
+function pickFrontendTargetSync() {
   if (process.env.PLAYWRIGHT_TEST_BASE_URL) {
     const u = new URL(process.env.PLAYWRIGHT_TEST_BASE_URL);
     const port = parsePort(u.port, u.protocol === 'https:' ? 443 : 80);
-    const free = await isPortFree(port);
-    if (!free) {
-      throw new Error(
-        `[playwright] PLAYWRIGHT_TEST_BASE_URL uses port ${port}, but that port is not free. ` +
-          `Free the port or point PLAYWRIGHT_TEST_BASE_URL at a free port (or unset it to auto-pick).`,
-      );
-    }
     u.port = String(port);
     return {
       baseURL: u.toString().replace(/\/$/, ''),
@@ -62,11 +21,14 @@ async function resolveFrontendTarget() {
     };
   }
 
-  const fromEnv = process.env.PLAYWRIGHT_TEST_PORT
-    ? parseInt(process.env.PLAYWRIGHT_TEST_PORT, 10)
-    : NaN;
-  const startPort = Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 3040;
-  const port = await firstFreePort(startPort);
+  // Important: do async bind probes in a child process so we don't need async Playwright config.
+  // `import.meta` / top-level await in this file can break Playwright's config loader on Windows.
+  const script = path.join(process.cwd(), 'scripts', 'playwright-pick-frontend-port.cjs');
+  const out = execFileSync(process.execPath, [script], { encoding: 'utf8' }).trim();
+  const port = Number.parseInt(out, 10);
+  if (!Number.isFinite(port) || port <= 0) {
+    throw new Error(`[playwright] Invalid picked port from ${script}: ${out || '(empty)'}`);
+  }
   const base = new URL(`http://127.0.0.1:${port}`);
   return {
     baseURL: base.toString().replace(/\/$/, ''),
@@ -117,9 +79,9 @@ const reuseExistingServer =
  * - Use page object models for complex flows
  */
 
-export default (async () => {
-  const frontendTarget = await resolveFrontendTarget();
-  return defineConfig({
+const frontendTarget = pickFrontendTargetSync();
+
+export default defineConfig({
   // Support both legacy `e2e/` and newer `tests/e2e/` specs.
   testDir: '.',
   testMatch: ['e2e/**/*.spec.ts', 'tests/e2e/**/*.spec.ts'],
@@ -264,5 +226,4 @@ export default (async () => {
           // Keep below Playwright's default max, but high enough for slow laptops/AV + cold caches.
           timeout: 45 * 60 * 1000,
         },
-  });
-})();
+});
