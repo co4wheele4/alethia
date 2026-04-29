@@ -41,9 +41,9 @@
    - And many more across 10 categories
 
 4. **Testing** ✅
-   - 1195 unit tests across 190 test files (Vitest + React Testing Library)
-   - 65 E2E tests (Playwright, cross-browser + mobile)
-   - Coverage enabled (latest run: 96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines)
+   - **1177** unit tests across **193** test files (Vitest + React Testing Library; verified 2026-04-28)
+   - **50** E2E tests across **22** Playwright spec files (Chromium default; full browser matrix in CI when enabled)
+   - Coverage enabled (re-run `npm run test:cov` for current %)
    - MSW handlers for GraphQL mocking
 
 ## 📊 Code Quality
@@ -51,7 +51,7 @@
 - **TypeScript**: ✅ No compilation errors (strict mode)
 - **ESLint**: ✅ No linting errors
 - **Dependencies**: ✅ All up-to-date, 0 vulnerabilities
-- **Testing (latest run)**: ✅ 1195 unit tests + 65 E2E tests; coverage enabled (see above)
+- **Testing (verified 2026-04-28)**: ✅ 1177 Vitest tests + 50 Playwright tests (default project); coverage — run `npm run test:cov`
 - **Build**: ✅ Compiles successfully
 
 ## 🔍 Available Backend Capabilities (Not Yet Used)

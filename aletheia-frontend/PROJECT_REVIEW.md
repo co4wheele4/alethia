@@ -36,7 +36,7 @@ The Aletheia Frontend is a Next.js 16 application with React 19 that provides a 
 - **GraphQL Queries**: 5 operations (Hello query, Login, Register, ChangePassword, ForgotPassword mutations)
 - **Pages**: 2 pages (Home page with Login/Register, Dashboard page)
 - **Feature Coverage**: Authentication fully implemented ✅
-- **Testing (latest run)**: **1195 unit tests** across **190** test files (Vitest) + **65 E2E tests** (Playwright, all browser+mobile projects)
+- **Testing (verified 2026-04-28)**: **1177** unit tests across **193** test files (Vitest) + **50** Playwright tests across **22** spec files (Chromium default; `npx playwright test --list`)
 - **TypeScript Files**: 200+ source files
 - **Total Files**: 300+ TypeScript/React files
 
@@ -462,10 +462,16 @@ The project demonstrates strong engineering practices with comprehensive testing
 
 ## 🔄 Changelog
 
+### April 28, 2026
+- ✅ **Test counts & contract alignment**
+  - Vitest: **1177** tests, **193** files (full `npm run test:unit` run)
+  - Playwright: **50** tests, **22** spec files (default Chromium project; see root `playwright.config.ts` for CI matrix)
+  - Fixed `ClaimComparisonView` MSW mock: `requestReview` result now includes `reviewAssignments: []` per `REVIEW_REQUEST_FIELDS` (Apollo cache write)
+
 ### January 12, 2026
 - ✅ **Comprehensive Testing Infrastructure**
-  - Vitest: 1195 unit tests across 190 test files (React Testing Library)
-  - Playwright: 65 E2E tests across cross-browser + mobile projects
+  - Vitest: 1195 unit tests across 190 test files (React Testing Library) *(superseded by counts above)*
+  - Playwright: 65 E2E tests across cross-browser + mobile projects *(superseded — use `playwright test --list` for current total)*
   - Coverage enabled (latest run: 96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines)
   - Configured MSW (Mock Service Worker) for GraphQL API mocking
   - Comprehensive component, hook, and integration test coverage

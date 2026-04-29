@@ -2,7 +2,18 @@
 
 **Purpose:** Plan safe next steps without semantic drift. This document is **not** a commitment to ship every item; it classifies work by governance risk.
 
-**Last updated:** 2026-04-19
+**Last updated:** 2026-04-28
+
+---
+
+## 1.1 Tracked governance milestone (ADR-035)
+
+**Multi-tenant / deployment:** JWT-scoped data access is enforced for normal users; **ADMIN** bundle import/export can still be **global** relative to workspace rows. Before multi-tenant production, either:
+
+- **Product track:** Workspace-scoped bundle import/export with explicit ADR/governance updates, or  
+- **Ops track:** Treat global ADMIN bundle operations as **deployment-only** (network-level or break-glass access), documented in runbooks.
+
+This does not change current ADR acceptance; it records a **known follow-up** from compliance review.
 
 ---
 

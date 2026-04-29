@@ -15,6 +15,7 @@ aletheia/
 Aletheia is a **non-inferential** claim-and-evidence system. Before changing schema, resolvers, UI, or ingestion, read the canonical context and ADRs:
 
 - **[`docs/context/aletheia-core-context.md`](docs/context/aletheia-core-context.md)** — binding contract for this repository.
+- **[`docs/architecture/START-HERE-ARCHITECTS.md`](docs/architecture/START-HERE-ARCHITECTS.md)** — single entry for architects (API surfaces, ADR index, roadmap pointers).
 - **[`AGENTS.md`](AGENTS.md)** — automation and Cursor rules.
 - **[`docs/compliance/`](docs/compliance/)** — launch readiness, verification, and completion reports.
 - **[`docs/adr/`](docs/adr/)** — Architecture Decision Records.
@@ -23,7 +24,7 @@ Aletheia is a **non-inferential** claim-and-evidence system. Before changing sch
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js **20 LTS** or newer (see `.nvmrc`; CI uses Node 20)
 - npm (v9 or higher)
 - PostgreSQL database (for backend)
 
@@ -196,13 +197,13 @@ aletheia/
 
 ### Workspaces
 
-- **Backend** (`aletheia-backend`): NestJS GraphQL API with PostgreSQL + Prisma. Jest enforces **100% global coverage thresholds** in config.
-- **Frontend** (`aletheia-frontend`): Next.js 16 + React 19 + Apollo Client 4 + MUI v7. Latest run: **1195 unit tests** (Vitest) + **65 E2E tests** (Playwright); coverage enabled (96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines).
+- **Backend** (`aletheia-backend`): NestJS GraphQL API with PostgreSQL + Prisma; optional **OpenAPI/Swagger** at `/api` for the small REST surface and GraphQL pointers. Jest enforces **100% global coverage** in config (**655** unit tests in latest counted run; run `npm run test` for the live total).
+- **Frontend** (`aletheia-frontend`): Next.js 16 + React 19 + Apollo Client 4 + MUI v7. **Verified 2026-04-28:** **1177** unit tests (Vitest, **193** test files) + **50** Playwright tests (**22** spec files, Chromium default project; see `playwright.config.ts` for full-browser matrix in CI).
 
 ## Project Status
 
 - ✅ **Backend**: Production ready (Jest global coverage thresholds set to 100%)
-- ✅ **Frontend**: Production ready (1195 unit tests; 65 E2E tests; coverage enabled — see `aletheia-frontend/PROJECT_REVIEW.md`)
+- ✅ **Frontend**: Production ready (1177 Vitest tests; 50 Playwright tests in default project; coverage — see `aletheia-frontend/PROJECT_REVIEW.md`)
 - ✅ **Features**: Authentication fully functional (Login, Register, ChangePassword, ForgotPassword)
 - ✅ **Components**: 80+ UI components across 10 categories
 - ✅ **Monorepo**: Fully converted to true monorepo structure with npm workspaces
@@ -219,7 +220,7 @@ aletheia/
 - ✅ **Registration Feature**: Added user registration to both backend and frontend
   - Backend: New `register` mutation with comprehensive tests (6 unit + 5 e2e tests)
   - Frontend: Register form with Login/Register toggle, auto-login after registration
-- ✅ **Test Coverage**: Maintained 100% coverage with new tests (395 unit, 56 e2e)
+- ✅ **Test Coverage**: Backend Jest suite at **655** unit tests (latest counted run; see `docs/reviews/aletheia-expert-review-2026-04-27.md`); run full pipelines for current numbers
 - ✅ **Backend Configuration**: Set TypeScript project type to `commonjs`
 - ✅ **Code Quality**: All TypeScript errors resolved, ESLint warnings acceptable (hydration patterns)
 

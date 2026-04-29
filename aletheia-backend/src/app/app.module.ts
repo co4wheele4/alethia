@@ -14,6 +14,7 @@ import { Request, Response } from 'express';
 import { validate } from '../config/env.validation';
 import { PrismaService } from '@prisma/prisma.service';
 import { AppController } from './app.controller';
+import { HealthController } from './health.controller';
 import { AppService } from './app.service';
 
 import { AppResolver } from '../graphql/resolvers/app.resolver';
@@ -88,7 +89,7 @@ import {
       resolvers: { JSON: GraphQLJSON },
     }),
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [
     AppService,
     PrismaService,

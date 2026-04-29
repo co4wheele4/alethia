@@ -2,20 +2,20 @@
 
 **Date**: January 14, 2026  
 **Status**: ✅ **EXCELLENT** - Production Ready with Comprehensive Testing  
-**Last Updated**: January 14, 2026
+**Last Updated**: 2026-04-28 (metrics refresh; see `docs/reviews/aletheia-expert-review-2026-04-27.md`)
 
 ## Executive Summary
 
-The Aletheia project is a full-stack monorepo application for truth discovery using AI. The backend is production-ready with strict test/coverage enforcement (Jest global coverage thresholds are set to 100%) and a comprehensive GraphQL API. The frontend is a modern Next.js + React application focused on evidence-first UX, with extensive unit coverage and a cross-browser Playwright E2E suite.
+The Aletheia project is a full-stack monorepo for **traceable** claims and evidence: human-readable provenance, explicit human adjudication, and audit trails—**not** automated “truth” scoring or model verdicts. The backend is production-ready with strict test/coverage enforcement (Jest global coverage thresholds are set to 100%) and a comprehensive GraphQL API. The frontend is a modern Next.js + React application focused on evidence-first UX, with extensive unit coverage and a cross-browser Playwright E2E suite.
 
 ---
 
 ## 📊 Overall Metrics
 
 ### Backend
-- **Test Coverage**: **100%** (Statements, Branches, Functions, Lines)
-- **Unit Tests**: 395 tests across 30 test suites ✅
-- **E2E Tests**: 56 tests across 12 test suites ✅
+- **Test Coverage**: **100%** (Statements, Branches, Functions, Lines) — Jest config thresholds
+- **Unit Tests**: **655** tests, **65** suites (2026-04-28; run `npm run test` in `aletheia-backend` to verify) ✅
+- **E2E Tests**: **67** test cases in Jest e2e config; use clean `aletheia_test` DB for a full green run (CI authoritative) ✅
 - **TypeScript**: Strict mode, 0 compilation errors ✅
 - **Linting**: 0 errors, warnings acceptable (Prisma-related) ✅
 - **Security**: JWT auth, RBAC, rate limiting, CORS ✅
@@ -27,7 +27,7 @@ The Aletheia project is a full-stack monorepo application for truth discovery us
 - **Dependencies**: 0 vulnerabilities ✅
 - **Features**: Login, Register, ChangePassword, ForgotPassword, GraphQL integration ✅
 - **Components**: 80+ UI components across 10 categories ✅
-- **Testing (latest run)**: 1195 unit tests (190 test files) + 65 E2E tests (Playwright) ✅
+- **Testing (verified 2026-04-28)**: **1177** unit tests (**193** Vitest files) + **50** Playwright tests (**22** spec files, Chromium default; full matrix in CI) ✅
 - **Coverage (latest run)**: 96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines ✅
 - **SSR**: Hydration-safe authentication patterns ✅
 - **Status**: ✅ **Production Ready with Comprehensive Testing**
@@ -40,6 +40,7 @@ The Aletheia project is a full-stack monorepo application for truth discovery us
 
 **Backend**:
 - NestJS 11 with GraphQL (Apollo Server)
+- OpenAPI 3 / Swagger for REST catalog (`/api`, `/health`); primary API is GraphQL `POST /graphql`
 - PostgreSQL with Prisma ORM
 - JWT Authentication with Passport
 - TypeScript (strict mode)
@@ -58,8 +59,8 @@ The Aletheia project is a full-stack monorepo application for truth discovery us
 aletheia/
 ├── aletheia-backend/     # NestJS GraphQL API
 │   ├── 100% test coverage
-│   ├── 395 unit tests
-│   ├── 56 e2e tests
+│   ├── 655+ unit tests (Jest; 2026-04-28 count)
+│   ├── 67 e2e cases in Jest config (clean DB for full green)
 │   └── Production ready
 ├── aletheia-frontend/    # Next.js application
 │   ├── 0 TypeScript errors
@@ -75,8 +76,8 @@ aletheia/
 
 ### Frontend Enhancements
 1. **Comprehensive Testing Infrastructure** ✅
-   - Vitest: 1195 unit tests across 190 test files (all passing)
-   - Playwright: 65 E2E tests across cross-browser + mobile projects (all passing)
+   - Vitest: **1177** unit tests across **193** test files (all passing, 2026-04-28)
+   - Playwright: **50** tests across **22** spec files in default Chromium project (`npx playwright test --list`); CI can run additional browser projects per `playwright.config.ts`
    - Coverage enabled (see “Overall Metrics” for latest summary)
    - Configured MSW (Mock Service Worker) for API mocking
    - Comprehensive test coverage for components, hooks, and services
@@ -110,7 +111,7 @@ aletheia/
    - Added 6 new unit tests for register functionality
    - Added 5 new e2e tests for auth resolver
    - Maintained 100% coverage across all metrics
-   - Total: 395 unit tests, 56 e2e tests
+   - Totals have since grown (see “Overall Metrics” / `npm run test` in `aletheia-backend`)
 
 3. **Code Quality** ✅
    - Removed unused imports
@@ -168,16 +169,16 @@ aletheia/
 ## 🧪 Testing Status
 
 ### Backend ✅ **EXCELLENT**
-- **100% Test Coverage** across all metrics
-- 395 unit tests (all passing)
-- 56 e2e tests (all passing)
+- **100% Test Coverage** across all metrics (Jest thresholds)
+- **655** unit tests in latest counted run (all passing in CI for that commit)
+- E2E: **67** cases in Jest e2e config; run against clean `aletheia_test` (see backend `test/`)
 - Comprehensive error case coverage
 - Edge case testing (pagination, validation, relationships)
 - Test infrastructure: Jest, Supertest, Test database
 
 ### Frontend ✅ **EXCELLENT**
-- **1195 unit tests** across **190** test files (all passing)
-- **65 E2E tests** using Playwright (all passing)
+- **1177 unit tests** across **193** test files (Vitest; all passing, 2026-04-28)
+- **50 E2E tests** in **22** Playwright spec files (Chromium default; list via `npx playwright test --list`)
 - **Coverage (latest run)**: 96.52% statements / 91.46% branches / 95.9% functions / 97.42% lines
 - Comprehensive component, hook, and integration tests
 - MSW (Mock Service Worker) configured for API mocking

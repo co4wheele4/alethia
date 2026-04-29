@@ -24,28 +24,25 @@
 
 ## Description
 
-**Aletheia Backend** - A GraphQL API backend built with NestJS for truth discovery using AI. This application provides a comprehensive API for managing users, lessons, documents, entities, and AI-powered queries.
+**Aletheia Backend** — A NestJS service that exposes a **GraphQL** API for **traceable** claims, evidence, documents, and human adjudication. The system does **not** expose confidence scores or model “verdicts” as product truth; see repository `docs/context/aletheia-core-context.md` and ADRs.
 
 ### Tech Stack
 - **Framework**: NestJS 11
-- **API**: GraphQL (Apollo Server)
+- **API**: GraphQL (Apollo Server) — **primary** application interface
+- **REST / OpenAPI**: Minimal HTTP surface (`GET /`, `GET /health`) with **Swagger UI** at `/api` for discoverability; see below
 - **Database**: PostgreSQL with Prisma ORM
 - **Language**: TypeScript (strict mode)
-- **AI Integration**: OpenAI API
 
 ### Features
-- GraphQL API with comprehensive CRUD operations
-- Entity relationship management
-- Document chunking and embedding support
-- AI query processing with OpenAI integration
-- **100% test coverage** (unit tests: 395 tests, e2e tests: 56 tests)
+- GraphQL API (domain: claims, evidence, documents, review, integrity, search per ADRs)
+- Optional **OpenAPI** catalog for the small REST layer and pointers to GraphQL
+- **100% test coverage** (unit + e2e; see `package.json` / CI for current counts)
 - Type-safe database queries with Prisma
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js **20 LTS** or newer (monorepo `.nvmrc`)
 - PostgreSQL database
-- OpenAI API key (for AI features)
 - npm or pnpm
 
 ## Project Setup
@@ -70,7 +67,7 @@ cp .env.example .env
 
 Edit `.env` and configure:
 - `DATABASE_URL`: PostgreSQL connection string
-- `OPENAI_API_KEY`: Your OpenAI API key
+- Optional: `OPENAI_API_KEY` — only if you enable future, ADR-governed integrations (MVP does not require the `openai` npm package; env key may still exist for optional config)
 
 4. **Set up the database**
 ```bash
@@ -100,6 +97,13 @@ npm run start:debug
 The GraphQL API will be available at:
 - **GraphQL Playground**: http://localhost:3000/graphql
 - **GraphQL Endpoint**: http://localhost:3000/graphql
+
+**OpenAPI (Swagger):** In development, or in production if `ENABLE_SWAGGER=true` or `1`:
+
+- **Swagger UI**: http://localhost:3000/api  
+- **OpenAPI JSON**: http://localhost:3000/api/json  
+
+The document describes the **REST** routes and links to GraphQL; the **authoritative** API for the product is still **GraphQL** (`POST /graphql`).
 
 ### Database Management
 

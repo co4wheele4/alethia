@@ -2,6 +2,7 @@ import 'tsconfig-paths/register'; // enable path aliases
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app/app.module';
+import { configureOpenApi } from './app/openapi.setup';
 import { PrismaExceptionFilter, HttpExceptionFilter } from './common/filters';
 import helmet from 'helmet';
 
@@ -105,10 +106,21 @@ async function bootstrap() {
   // Global exception filters
   app.useGlobalFilters(new PrismaExceptionFilter(), new HttpExceptionFilter());
 
+  const enableSwagger =
+    process.env.ENABLE_SWAGGER === 'true' ||
+    process.env.ENABLE_SWAGGER === '1' ||
+    !isProduction;
+  if (enableSwagger) {
+    configureOpenApi(app);
+  }
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`NestJS app running on http://localhost:${port}`);
   console.log(`GraphQL Playground: http://localhost:${port}/graphql`);
+  if (enableSwagger) {
+    console.log(`OpenAPI / Swagger UI: http://localhost:${port}/api`);
+  }
 }
 
 void bootstrap();

@@ -213,6 +213,7 @@ describe('ClaimComparisonView', () => {
               source: 'COMPARISON',
               note: null,
               requestedBy: { __typename: 'User', id: 'u1', email: 'u1@example.com', name: null },
+              reviewAssignments: [],
             },
           },
         },

@@ -1,5 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
+import { configureOpenApi } from './app/openapi.setup';
+
+jest.mock('./app/openapi.setup', () => ({
+  configureOpenApi: jest.fn(),
+}));
 
 // Mock NestFactory before importing main
 jest.mock('@nestjs/core', () => ({
@@ -31,18 +36,22 @@ interface MockApp {
   useGlobalFilters: jest.Mock;
 }
 
+function createMockApp(): MockApp {
+  return {
+    listen: jest.fn().mockResolvedValue(undefined),
+    use: jest.fn().mockReturnThis(),
+    enableCors: jest.fn().mockReturnThis(),
+    useGlobalPipes: jest.fn().mockReturnThis(),
+    useGlobalFilters: jest.fn().mockReturnThis(),
+  };
+}
+
 describe('main.ts', () => {
   jest.setTimeout(15000);
   let mockApp: MockApp;
 
   beforeEach(() => {
-    mockApp = {
-      listen: jest.fn().mockResolvedValue(undefined),
-      use: jest.fn().mockReturnThis(),
-      enableCors: jest.fn().mockReturnThis(),
-      useGlobalPipes: jest.fn().mockReturnThis(),
-      useGlobalFilters: jest.fn().mockReturnThis(),
-    };
+    mockApp = createMockApp();
     (NestFactory.create as jest.Mock).mockResolvedValue(mockApp);
 
     // Ensure PORT is not set (use default)
@@ -70,6 +79,7 @@ describe('main.ts', () => {
     expect(mockApp.enableCors).toHaveBeenCalled();
     expect(mockApp.useGlobalPipes).toHaveBeenCalled();
     expect(mockApp.useGlobalFilters).toHaveBeenCalled();
+    expect(configureOpenApi).toHaveBeenCalledWith(mockApp);
     expect(mockApp.listen).toHaveBeenCalledWith(3000); // default port
     expect(consoleLogSpy).toHaveBeenCalledWith(
       expect.stringContaining('NestJS app running on http://localhost:3000'),
@@ -79,6 +89,11 @@ describe('main.ts', () => {
         'GraphQL Playground: http://localhost:3000/graphql',
       ),
     );
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'OpenAPI / Swagger UI: http://localhost:3000/api',
+      ),
+    );
   });
 
   it('should use ALLOWED_ORIGINS from environment when set', async () => {
@@ -86,13 +101,7 @@ describe('main.ts', () => {
     process.env.ALLOWED_ORIGINS = 'http://example.com,http://test.com';
 
     // Create a new mock app for this test
-    const testMockApp: MockApp = {
-      listen: jest.fn().mockResolvedValue(undefined),
-      use: jest.fn().mockReturnThis(),
-      enableCors: jest.fn().mockReturnThis(),
-      useGlobalPipes: jest.fn().mockReturnThis(),
-      useGlobalFilters: jest.fn().mockReturnThis(),
-    };
+    const testMockApp: MockApp = createMockApp();
     (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
 
     // Clear module cache to re-import
@@ -137,13 +146,7 @@ describe('main.ts', () => {
     process.env.PORT = '4000';
 
     // Create a new mock app for this test
-    const testMockApp: MockApp = {
-      listen: jest.fn().mockResolvedValue(undefined),
-      use: jest.fn().mockReturnThis(),
-      enableCors: jest.fn().mockReturnThis(),
-      useGlobalPipes: jest.fn().mockReturnThis(),
-      useGlobalFilters: jest.fn().mockReturnThis(),
-    };
+    const testMockApp: MockApp = createMockApp();
     (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
 
     // Clear module cache to re-import
@@ -184,13 +187,7 @@ describe('main.ts', () => {
     process.env.DATABASE_URL =
       'postgresql://user:pass@localhost:5432/mydb?schema=public';
 
-    const testMockApp: MockApp = {
-      listen: jest.fn().mockResolvedValue(undefined),
-      use: jest.fn().mockReturnThis(),
-      enableCors: jest.fn().mockReturnThis(),
-      useGlobalPipes: jest.fn().mockReturnThis(),
-      useGlobalFilters: jest.fn().mockReturnThis(),
-    };
+    const testMockApp: MockApp = createMockApp();
     (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
 
     jest.resetModules();
@@ -209,13 +206,7 @@ describe('main.ts', () => {
     const originalDbUrl = process.env.DATABASE_URL;
     process.env.DATABASE_URL = 'invalid-url';
 
-    const testMockApp: MockApp = {
-      listen: jest.fn().mockResolvedValue(undefined),
-      use: jest.fn().mockReturnThis(),
-      enableCors: jest.fn().mockReturnThis(),
-      useGlobalPipes: jest.fn().mockReturnThis(),
-      useGlobalFilters: jest.fn().mockReturnThis(),
-    };
+    const testMockApp: MockApp = createMockApp();
     (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
 
     jest.resetModules();
@@ -235,13 +226,7 @@ describe('main.ts', () => {
     // Explicitly set to empty string to test the || '' fallback
     process.env.DATABASE_URL = '';
 
-    const testMockApp: MockApp = {
-      listen: jest.fn().mockResolvedValue(undefined),
-      use: jest.fn().mockReturnThis(),
-      enableCors: jest.fn().mockReturnThis(),
-      useGlobalPipes: jest.fn().mockReturnThis(),
-      useGlobalFilters: jest.fn().mockReturnThis(),
-    };
+    const testMockApp: MockApp = createMockApp();
     (NestFactory.create as jest.Mock).mockResolvedValue(testMockApp);
 
     jest.resetModules();
@@ -273,13 +258,7 @@ describe('main.ts', () => {
       return (_req: unknown, _res: unknown, next: () => void) => next();
     });
 
-    const prodMockApp: MockApp = {
-      listen: jest.fn().mockResolvedValue(undefined),
-      use: jest.fn().mockReturnThis(),
-      enableCors: jest.fn().mockReturnThis(),
-      useGlobalPipes: jest.fn().mockReturnThis(),
-      useGlobalFilters: jest.fn().mockReturnThis(),
-    };
+    const prodMockApp: MockApp = createMockApp();
     (NestFactory.create as jest.Mock).mockResolvedValue(prodMockApp);
 
     // Reset and re-mock before importing

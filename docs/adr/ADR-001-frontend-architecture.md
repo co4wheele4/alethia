@@ -176,6 +176,12 @@ app/
 
 ---
 
+## Binding note (post–ADR-025)
+
+The **“Future Considerations”** and **“AI-assisted”** language above describe *optional* directions. They are **not** permission to ship agent **recommendations**, **verdicts**, or **comparative strength** in the UI. Any automation must remain **mechanical** (validation, policy, audits). See **ADR-025** and [`docs/context/aletheia-core-context.md`](../context/aletheia-core-context.md).
+
+---
+
 ## Conclusion
 
 This frontend architecture supports Aletheia’s core mission: **truth through transparency**. By aligning tightly with the GraphQL backend and emphasizing evidence, provenance, and clarity, the frontend becomes a first-class participant in knowledge discovery rather than a passive display layer.

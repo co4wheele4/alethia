@@ -4,9 +4,9 @@
 
 | ADR | Implementation entrypoints (non-exhaustive) | Tests / guards (non-exhaustive) |
 | --- | --- | --- |
-| `ADR-001` | _No direct code references found_ | _No direct test references found_ |
-| `ADR-002` | _No direct code references found_ | _No direct test references found_ |
-| `ADR-003` | _No direct code references found_ | _No direct test references found_ |
+| `ADR-001` | `aletheia-frontend/next.config.ts`<br/>`docs/adr/ADR-001-frontend-architecture.md` | `aletheia-frontend/package.json` (scripts) |
+| `ADR-002` | `aletheia-frontend/package.json` (build/test scripts)<br/>`docs/adr/ADR-002-frontend-build-test-tooling.md` | `aletheia-frontend/vitest.config.ts` |
+| `ADR-003` | `aletheia-frontend/package.json` (test scripts)<br/>`docs/adr/ADR-003-frontend-testing-strategy.md` | `aletheia-frontend/vitest.config.ts`<br/>`aletheia-frontend/e2e/` (Playwright) |
 | `ADR-004` | `aletheia-frontend/src/graphql/fragments/documentCoreFields.fragment.ts`<br/>`aletheia-frontend/src/graphql/fragments/documentEvidenceView.fragment.ts`<br/>`aletheia-frontend/src/graphql/fragments/ClaimComparison.fragment.ts`<br/>`.cursor/rules/system.md` | `aletheia-frontend/src/graphql/__tests__/graphql-contracts.test.ts` |
 | `ADR-005` | `src/schema.gql`<br/>`docs/context/aletheia-core-context.md`<br/>`.cursor/rules/aletheia-frontend-authoritative.mdc`<br/>`.cursor/rules/aletheia-core-context.mdc`<br/>`scripts/check-schema-snapshots.cjs`<br/>`aletheia-frontend/src/test/msw/handlers/guards.handlers.ts`<br/>`aletheia-frontend/app/services/apollo-client.ts` | `aletheia-frontend/src/graphql/__tests__/adr-005-truth-surface-fragments.contract.test.ts`<br/>`aletheia-frontend/app/services/__tests__/apollo-client-contract-no-confidence.test.ts`<br/>`aletheia-frontend/src/test/msw/handlers/guards.handlers.test.ts` |
 | `ADR-006` | `aletheia-frontend/app/services/apollo-client.ts` (no-confidence link)<br/>`aletheia-frontend/src/test/msw/assertNoConfidence.ts` | `aletheia-frontend/app/services/__tests__/apollo-client-contract-no-confidence.test.ts` |

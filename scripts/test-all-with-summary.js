@@ -9,6 +9,7 @@
 
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 // ANSI color codes for terminal output
 const colors = {
@@ -33,6 +34,69 @@ const results = {
   'Backend Unit Tests': { status: 'pending', output: '', duration: 0, coverage: null },
   'Backend E2E Tests': { status: 'pending', output: '', duration: 0, coverage: null },
 };
+
+/**
+ * Count lines of code in a directory (best-effort).
+ * Intended as context in the overall test summary, not a compliance metric.
+ */
+function countLocInDir(dir, exts) {
+  const includeExts =
+    exts ??
+    new Set(['.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs', '.gql', '.graphql', '.prisma', '.sql', '.css']);
+  const ignoreDirNames = new Set([
+    'node_modules',
+    '.next',
+    'dist',
+    'build',
+    'coverage',
+    '.turbo',
+    '.git',
+    '.cache',
+    '.vite',
+    'out',
+  ]);
+
+  let fileCount = 0;
+  let lineCount = 0;
+
+  function walk(current) {
+    let entries;
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const ent of entries) {
+      const full = path.join(current, ent.name);
+
+      if (ent.isDirectory()) {
+        if (ignoreDirNames.has(ent.name)) continue;
+        walk(full);
+        continue;
+      }
+
+      if (!ent.isFile()) continue;
+
+      const ext = path.extname(ent.name).toLowerCase();
+      if (!includeExts.has(ext)) continue;
+
+      let text;
+      try {
+        text = fs.readFileSync(full, 'utf8');
+      } catch {
+        continue;
+      }
+
+      fileCount += 1;
+      const nl = (text.match(/\n/g) || []).length;
+      lineCount += nl + (text.length > 0 && !text.endsWith('\n') ? 1 : 0);
+    }
+  }
+
+  walk(dir);
+  return { files: fileCount, lines: lineCount };
+}
 
 /**
  * Run a test command and capture output
@@ -250,6 +314,10 @@ function displaySummary() {
   console.log(`${colors.bright}${colors.cyan}TEST SUMMARY${colors.reset}`);
   console.log(`${colors.cyan}${'='.repeat(80)}${colors.reset}\n`);
 
+  const rootDir = process.cwd();
+  const frontendDir = path.join(rootDir, 'aletheia-frontend');
+  const backendDir = path.join(rootDir, 'aletheia-backend');
+
   let totalPassed = 0;
   let totalFailed = 0;
   let totalSkipped = 0;
@@ -329,6 +397,11 @@ function displaySummary() {
       console.log(`   Total Suite Tests: ${colors.bright}${totalSuiteTests}${colors.reset}`);
     }
   }
+
+  const backendLoc = countLocInDir(backendDir, new Set(['.ts', '.js', '.cjs', '.mjs', '.gql', '.graphql', '.prisma', '.sql']));
+  const frontendLoc = countLocInDir(frontendDir, new Set(['.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs', '.gql', '.graphql', '.css']));
+  const totalLoc = backendLoc.lines + frontendLoc.lines;
+  console.log(`   Lines of Code (LOC): ${colors.bright}${totalLoc.toLocaleString()}${colors.reset} total (${colors.gray}${backendLoc.lines.toLocaleString()} backend${colors.reset}, ${colors.gray}${frontendLoc.lines.toLocaleString()} frontend${colors.reset})`);
   
   const allPassed = Object.values(results).every(r => r.status === 'passed');
   const passRate = totalPassed + totalFailed + totalSkipped > 0 
