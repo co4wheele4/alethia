@@ -2,6 +2,8 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
 import { cleanDatabase } from './helpers/test-db';
 
@@ -66,7 +68,14 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Ensure each e2e test starts from a clean slate.
 // Some e2e suites seed data per-test without always calling `cleanDatabase()` first.
-const prisma = new PrismaClient();
+const datasourceUrl = process.env.DATABASE_URL;
+if (!datasourceUrl || datasourceUrl.trim().length === 0) {
+  throw new Error('DATABASE_URL is required for e2e database cleanup.');
+}
+
+const pool = new Pool({ connectionString: datasourceUrl });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 beforeEach(async () => {
   await cleanDatabase(prisma);
@@ -74,4 +83,5 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await prisma.$disconnect();
+  await pool.end();
 });
