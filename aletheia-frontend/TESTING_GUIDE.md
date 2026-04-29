@@ -208,6 +208,9 @@ npm run test:cov
 # Run E2E tests
 npm run test:e2e
 
+# Full gate (lint + type-check + unit tests, then Playwright)
+npm run test:e2e:gate
+
 # Run E2E tests in UI mode
 npm run test:e2e:ui
 ```

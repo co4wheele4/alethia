@@ -172,6 +172,7 @@ Tests are located in `app/__tests__/` and follow the `*.test.tsx` or `*.test.ts`
 ### E2E Tests
 
 - `npm run test:e2e` - Run Playwright E2E tests
+- `npm run test:e2e:gate` - Run `npm test` (lint + type-check + unit tests) and then Playwright
 
 E2E tests are located in the `e2e/` directory.
 

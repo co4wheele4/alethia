@@ -29,6 +29,10 @@ jobs:
       - name: Install Playwright browsers
         working-directory: aletheia-frontend
         run: npx playwright install --with-deps
+
+      - name: Lint, type-check, unit tests
+        working-directory: aletheia-frontend
+        run: npm test
       
       - name: Run E2E tests
         working-directory: aletheia-frontend
