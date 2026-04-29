@@ -64,8 +64,23 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Ensure the test DB schema is up-to-date for e2e runs (CI runs `npm run test:e2e`
 // without an explicit migrate step).
-if (!globalThis.__ALETHEIA_E2E_MIGRATED__) {
-  // Ensure generated client matches current schema (Prisma 7 runtime requires this).
+// Also ensure e2e runs are isolated from leftover DB state. Unique/FK constraints
+// will legitimately fail if prior data remains in `aletheia_test`.
+//
+// We do this once per jest process to keep pre-push/CI stable.
+const alreadyPrepared =
+  process.env.ALETHEIA_E2E_DB_PREPARED === '1' ||
+  Boolean(globalThis.__ALETHEIA_E2E_DB_PREPARED__);
+
+if (!alreadyPrepared) {
+  execSync('npx dotenv-cli -e .env.test -- npx prisma migrate reset --force --skip-seed', {
+    stdio: 'inherit',
+    env: process.env,
+  });
+  execSync('npx dotenv-cli -e .env.test -- npx tsx scripts/seed/testSeed.ts', {
+    stdio: 'inherit',
+    env: process.env,
+  });
   execSync('npx prisma generate', {
     stdio: 'inherit',
     env: process.env,
@@ -74,5 +89,7 @@ if (!globalThis.__ALETHEIA_E2E_MIGRATED__) {
     stdio: 'inherit',
     env: process.env,
   });
-  globalThis.__ALETHEIA_E2E_MIGRATED__ = true;
+
+  process.env.ALETHEIA_E2E_DB_PREPARED = '1';
+  globalThis.__ALETHEIA_E2E_DB_PREPARED__ = true;
 }
