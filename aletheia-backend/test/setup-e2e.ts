@@ -80,7 +80,7 @@ const alreadyPrepared =
 
 if (!alreadyPrepared) {
   execSync(
-    'npx dotenv-cli -e .env.test -- npx prisma migrate reset --force --skip-seed',
+    'npx dotenv-cli -e .env.test -- npx prisma migrate reset --force',
     {
       stdio: 'inherit',
       env: process.env,
