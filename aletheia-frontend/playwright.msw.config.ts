@@ -18,7 +18,7 @@ export default defineConfig({
   },
   reporter: [['list'], ['html']],
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3040',
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3104',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -30,16 +30,17 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // Use production server for stability (same as main config), but on a different port to
-    // avoid clashing with a dev server the developer might already be running.
-    command: 'npm run build && npx next start -p 3040',
+    // Aligned with playwright.config.ts: build once, then start (next-port + strict port).
+    command: 'npm run build && npm run start',
     env: {
       ...process.env,
+      PORT: '3104',
+      NEXT_PORT_STRICT: '1',
       NEXT_PUBLIC_MSW: 'enabled',
     },
-    url: 'http://127.0.0.1:3040',
+    url: 'http://127.0.0.1:3104',
     reuseExistingServer: false,
-    timeout: 120 * 1000,
+    timeout: 300 * 1000,
   },
 });
 

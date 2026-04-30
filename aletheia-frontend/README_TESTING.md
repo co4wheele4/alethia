@@ -42,9 +42,6 @@ npm run test:cov
 # E2E tests
 npm run test:e2e
 
-# Full gate (lint + type-check + unit tests, then Playwright)
-npm run test:e2e:gate
-
 # E2E UI mode (interactive)
 npm run test:e2e:ui
 ```

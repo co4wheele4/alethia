@@ -43,7 +43,6 @@ export async function cleanDatabase(prisma: PrismaClient) {
 
 export async function seedTestData(prisma: PrismaClient) {
   verifyTestDatabase();
-  await cleanDatabase(prisma);
   const passwordHash = await bcrypt.hash('password', 12);
   const admin = await prisma.user.create({
     data: {

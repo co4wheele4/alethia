@@ -26,7 +26,7 @@ Concise procedures for local development, test data, and release checks. For pro
 - **Monorepo:** `npm test` at root runs workspace lint/typecheck and the aggregated unit test script.
 - **Schema:** `npm run schema:check`.
 - **Guardrails:** `npm run test:guardrails` where applicable for PRs touching GraphQL or agent surfaces.
-- **Frontend E2E:** `npm run test:e2e --workspace=aletheia-frontend` when UI routes change (requires Playwright browsers as documented in that package). If you want the full lint/type/unit gate first, use `npm run test:e2e:gate --workspace=aletheia-frontend`.
+- **Frontend E2E:** `npm run test:e2e --workspace=aletheia-frontend` when UI routes change (requires Playwright browsers as documented in that package).
 
 ## Deploy notes
 

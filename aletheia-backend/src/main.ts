@@ -78,6 +78,9 @@ async function bootstrap() {
     'http://localhost:3030',
     'http://127.0.0.1:3040',
     'http://localhost:3040',
+    // Playwright E2E default (see aletheia-frontend/playwright.config.ts PLAYWRIGHT_FRONTEND_PORT)
+    'http://127.0.0.1:3104',
+    'http://localhost:3104',
     ...loopbackFrontendOrigins,
   ];
   const fromEnv = process.env.ALLOWED_ORIGINS?.split(',')

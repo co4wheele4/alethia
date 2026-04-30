@@ -456,7 +456,9 @@ async function main() {
     },
     {
       name: 'Frontend E2E Tests',
-      command: 'npx playwright test',
+      // `next build` is separate from Playwright’s webServer so the server can be health-checked on PORT only.
+      // Playwright config starts `npm run start` with NEXT_PORT_STRICT=1.
+      command: 'npm run build && npx playwright test',
       cwd: frontendDir,
     },
     {

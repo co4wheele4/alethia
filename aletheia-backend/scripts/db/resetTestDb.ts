@@ -9,7 +9,7 @@ const backendRoot = resolve(__dirname, '..', '..');
 process.chdir(backendRoot);
 
 execSync(
-  'npx dotenv-cli -e .env.test -- npx prisma migrate reset --force',
+  'npx dotenv-cli -e .env.test -- npx prisma migrate reset --force --skip-seed',
   {
     stdio: 'inherit',
     env: process.env,

@@ -21,7 +21,6 @@
     "^@resolvers$": "<rootDir>/../src/graphql/resolvers/index",
     "^@resolvers/(.*)$": "<rootDir>/../src/graphql/resolvers/$1"
   },
-  "globalSetup": "<rootDir>/global-setup-e2e.ts",
   "setupFilesAfterEnv": ["<rootDir>/setup-e2e.ts"],
   "extensionsToTreatAsEsm": [".ts"],
   "collectCoverageFrom": [

@@ -1,41 +1,4 @@
 import { defineConfig, devices } from '@playwright/test';
-import { execFileSync } from 'node:child_process';
-import path from 'node:path';
-
-function parsePort(value: string | undefined, fallback: number) {
-  const n = Number(value);
-  if (Number.isInteger(n) && n > 0 && n < 65_536) return n;
-  return fallback;
-}
-
-function pickFrontendTargetSync() {
-  if (process.env.PLAYWRIGHT_TEST_BASE_URL) {
-    const u = new URL(process.env.PLAYWRIGHT_TEST_BASE_URL);
-    const port = parsePort(u.port, u.protocol === 'https:' ? 443 : 80);
-    u.port = String(port);
-    return {
-      baseURL: u.toString().replace(/\/$/, ''),
-      port,
-      // Keep GraphQL on the same origin the app is served from for these tests.
-      graphqlUrl: new URL('/graphql', u).toString(),
-    };
-  }
-
-  // Important: do async bind probes in a child process so we don't need async Playwright config.
-  // `import.meta` / top-level await in this file can break Playwright's config loader on Windows.
-  const script = path.join(process.cwd(), 'scripts', 'playwright-pick-frontend-port.cjs');
-  const out = execFileSync(process.execPath, [script], { encoding: 'utf8' }).trim();
-  const port = Number.parseInt(out, 10);
-  if (!Number.isFinite(port) || port <= 0) {
-    throw new Error(`[playwright] Invalid picked port from ${script}: ${out || '(empty)'}`);
-  }
-  const base = new URL(`http://127.0.0.1:${port}`);
-  return {
-    baseURL: base.toString().replace(/\/$/, ''),
-    port,
-    graphqlUrl: new URL('/graphql', base).toString(),
-  };
-}
 
 /**
  * Full matrix (Chromium, Firefox, WebKit, mobile) runs in CI or when
@@ -47,20 +10,14 @@ const useFullBrowserMatrix =
   process.env.CI === 'true' || process.env.PLAYWRIGHT_ALL_BROWSERS === '1';
 
 /**
- * In CI always start fresh servers.
- *
- * Locally, reusing an existing server is convenient, but it can also cause Playwright to "think"
- * the webServer is healthy while something else is bound to the expected port (especially on Windows),
- * leading to long waits until `webServer.timeout`.
- *
- * Default: reuse on POSIX only; on Windows, always start fresh unless explicitly overridden.
+ * Default port for the Next.js server Playwright starts (separate from dev on 3030+).
+ * Use 3104+ to avoid clashing with other local processes that often bind 3040.
  */
-const reuseExistingServer =
-  process.env.CI === 'true'
-    ? false
-    : process.platform === 'win32'
-      ? process.env.PLAYWRIGHT_REUSE_SERVER === '1'
-      : true;
+const PLAYWRIGHT_FRONTEND_PORT = process.env.PLAYWRIGHT_FRONTEND_PORT || '3104';
+const playwrightFrontendOrigin = `http://127.0.0.1:${PLAYWRIGHT_FRONTEND_PORT}`;
+
+/** In CI always start fresh servers; locally reuse if the test port / 3050 is already taken. */
+const reuseExistingServer = process.env.CI !== 'true';
 
 /**
  * Playwright E2E test configuration
@@ -78,8 +35,6 @@ const reuseExistingServer =
  * - Keep tests independent and isolated
  * - Use page object models for complex flows
  */
-
-const frontendTarget = pickFrontendTargetSync();
 
 export default defineConfig({
   // Support both legacy `e2e/` and newer `tests/e2e/` specs.
@@ -116,8 +71,8 @@ export default defineConfig({
   
   // Shared settings for all projects
   use: {
-    // Base URL for tests (port chosen to avoid conflict; see `webServer` below)
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || frontendTarget.baseURL,
+    // Base URL for tests (see PLAYWRIGHT_FRONTEND_PORT; avoids common 3040 collisions)
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || playwrightFrontendOrigin,
     
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -165,6 +120,12 @@ export default defineConfig({
    * Default: frontend only. Our E2E suite routes GraphQL requests in the browser and provides deterministic fixtures,
    * so a real backend is not required for most tests.
    *
+   * The production server is started here **without** `next build` — the test runner must run `npm run build`
+   * in `aletheia-frontend` first (see root `scripts/test-all-with-summary.js` and `npm run test:e2e`).
+   *
+   * `NEXT_PORT_STRICT=1` ensures `next-port.cjs` never auto-increments PORT when the test port is taken
+   * (which would break the Playwright `url` health check).
+   *
    * Set `PLAYWRIGHT_REAL_BACKEND=1` to run against a real backend + seeded DB.
    */
   webServer:
@@ -187,7 +148,7 @@ export default defineConfig({
               // Browser origin for Playwright webServer (see backend main.ts CORS).
               ALLOWED_ORIGINS:
                 process.env.ALLOWED_ORIGINS ??
-                `http://127.0.0.1:${frontendTarget.port},http://localhost:${frontendTarget.port}`,
+                'http://127.0.0.1:3104,http://localhost:3104,http://127.0.0.1:3040,http://localhost:3040',
             },
             url: 'http://127.0.0.1:3050/graphql',
             reuseExistingServer,
@@ -195,34 +156,34 @@ export default defineConfig({
             timeout: 420 * 1000,
           },
           {
-            // Frontend (production server for stability)
-            command: 'node scripts/playwright-ensure-build.cjs && npm run start',
+            // Frontend (production server). Run `npm run build` in this workspace before Playwright.
+            command: 'npm run start',
             env: {
               ...process.env,
-              PORT: String(frontendTarget.port),
+              PORT: PLAYWRIGHT_FRONTEND_PORT,
+              NEXT_PORT_STRICT: '1',
               NEXT_PUBLIC_MSW: 'disabled',
               NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
-              NEXT_PUBLIC_GRAPHQL_URL: 'http://127.0.0.1:3050/graphql',
+              NEXT_PUBLIC_GRAPHQL_URL: `http://127.0.0.1:3050/graphql`,
             },
-            url: frontendTarget.baseURL,
+            url: `${playwrightFrontendOrigin}`,
             reuseExistingServer,
-            // Starting Next should be fast once `.next` exists; builds belong in CI/hooks (see `playwright-ensure-build.cjs`).
-            timeout: 20 * 60 * 1000,
+            timeout: 120 * 1000,
           },
         ]
       : {
           // Frontend only (GraphQL requests are intercepted per-test via Playwright routing).
-          command: 'node scripts/playwright-ensure-build.cjs && npm run start',
+          command: 'npm run start',
           env: {
             ...process.env,
-            PORT: String(frontendTarget.port),
+            PORT: PLAYWRIGHT_FRONTEND_PORT,
+            NEXT_PORT_STRICT: '1',
             NEXT_PUBLIC_MSW: 'disabled',
             NEXT_PUBLIC_E2E_FIXTURES: 'disabled',
-            NEXT_PUBLIC_GRAPHQL_URL: frontendTarget.graphqlUrl,
+            NEXT_PUBLIC_GRAPHQL_URL: `${playwrightFrontendOrigin}/graphql`,
           },
-          url: frontendTarget.baseURL,
+          url: `${playwrightFrontendOrigin}`,
           reuseExistingServer,
-          // `next start` should be quick; long `next build` should run outside Playwright (CI/hooks) to avoid webServer hangs.
-          timeout: 20 * 60 * 1000,
+          timeout: 120 * 1000,
         },
 });

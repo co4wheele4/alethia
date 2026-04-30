@@ -1,6 +1,7 @@
 // test/setup-e2e.ts
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import { execSync } from 'node:child_process';
 
 // Load .env.test if it exists, otherwise load .env but override with test database
 const envTestPath = resolve(process.cwd(), '.env.test');
@@ -59,4 +60,19 @@ if (process.env.NODE_ENV !== 'production') {
   const dbMatch = dbUrl.match(/\/([^/?]+)(\?|$)/);
   const dbName = dbMatch ? dbMatch[1] : 'unknown';
   console.log(`[E2E Test Setup] Using database: ${dbName}`);
+}
+
+// Ensure the test DB schema is up-to-date for e2e runs (CI runs `npm run test:e2e`
+// without an explicit migrate step).
+if (!globalThis.__ALETHEIA_E2E_MIGRATED__) {
+  // Ensure generated client matches current schema (Prisma 7 runtime requires this).
+  execSync('npx prisma generate', {
+    stdio: 'inherit',
+    env: process.env,
+  });
+  execSync('npx prisma migrate deploy', {
+    stdio: 'inherit',
+    env: process.env,
+  });
+  globalThis.__ALETHEIA_E2E_MIGRATED__ = true;
 }
