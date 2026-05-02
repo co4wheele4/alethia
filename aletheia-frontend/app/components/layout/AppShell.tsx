@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Box,
+  Button,
+  CircularProgress,
   ClickAwayListener,
   Container,
   Divider,
@@ -17,7 +19,6 @@ import {
 } from '@mui/material';
 
 import { useAuth } from '../../features/auth/hooks/useAuth';
-import { SkeletonLoader } from '../primitives/SkeletonLoader';
 import { ThemeToggle } from '../primitives/ThemeToggle';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { type PrimaryNavItem } from './primary-nav/PrimaryNav';
@@ -42,30 +43,40 @@ function useClientReady() {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    let raf2: number | null = null;
-    // Use globalThis to avoid ReferenceError in non-browser runtimes/tests.
-    const raf =
-      (globalThis as unknown as { requestAnimationFrame?: typeof requestAnimationFrame })
-        .requestAnimationFrame ?? ((cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 0));
-    const caf =
-      (globalThis as unknown as { cancelAnimationFrame?: typeof cancelAnimationFrame })
-        .cancelAnimationFrame ?? ((id: number) => window.clearTimeout(id));
-
-    const raf1 = raf(() => {
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      if (cancelled) return;
       setMounted(true);
-      raf2 = raf(() => {
-        // Double RAF to reduce hydration/style injection mismatch risk.
-        raf(() => setIsHydrated(true));
-      });
-    });
-
+      setIsHydrated(true);
+    }, 0);
     return () => {
-      caf(raf1);
-      if (raf2 !== null) caf(raf2);
+      cancelled = true;
+      window.clearTimeout(t);
     };
   }, []);
 
   return { mounted, isHydrated };
+}
+
+function CenteredDevGate(props: { message: string }) {
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 2,
+        p: 3,
+      }}
+    >
+      <CircularProgress size={28} aria-label="Loading" />
+      <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ maxWidth: 420 }}>
+        {props.message}
+      </Typography>
+    </Box>
+  );
 }
 
 export function AppShell(props: AppShellProps) {
@@ -109,13 +120,43 @@ export function AppShell(props: AppShellProps) {
 
   useEffect(() => {
     if (!requireAuth) return;
-    if (mounted && isInitialized && !isAuthenticated) {
+    if (mounted && isHydrated && isInitialized && !isAuthenticated) {
       router.replace('/');
     }
-  }, [mounted, isInitialized, isAuthenticated, requireAuth, router]);
+  }, [mounted, isHydrated, isInitialized, isAuthenticated, requireAuth, router]);
 
-  if (!mounted || !isHydrated || (requireAuth && (!isInitialized || !isAuthenticated))) {
-    return <SkeletonLoader />;
+  if (!mounted || !isHydrated) {
+    return <CenteredDevGate message="Preparing the app…" />;
+  }
+
+  if (requireAuth && !isInitialized) {
+    return <CenteredDevGate message="Checking sign-in…" />;
+  }
+
+  if (requireAuth && isInitialized && !isAuthenticated) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 2,
+          p: 3,
+        }}
+      >
+        <Typography variant="h6" textAlign="center">
+          Sign in required
+        </Typography>
+        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ maxWidth: 480 }}>
+          This page needs an authenticated session. You are being redirected to the sign-in screen.
+        </Typography>
+        <Button component={Link} href="/" variant="contained">
+          Go to sign in
+        </Button>
+      </Box>
+    );
   }
 
   return (

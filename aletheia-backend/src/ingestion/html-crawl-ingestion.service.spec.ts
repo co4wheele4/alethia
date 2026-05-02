@@ -8,6 +8,7 @@ jest.mock('./htmlCrawlRunner', () => ({
 
 describe('HtmlCrawlIngestionService', () => {
   let prisma: {
+    user: { findUnique: jest.Mock };
     htmlCrawlIngestionRun: {
       findUniqueOrThrow: jest.Mock;
       findFirst: jest.Mock;
@@ -29,6 +30,9 @@ describe('HtmlCrawlIngestionService', () => {
 
   beforeEach(() => {
     prisma = {
+      user: {
+        findUnique: jest.fn().mockResolvedValue({ role: 'USER' }),
+      },
       htmlCrawlIngestionRun: {
         findUniqueOrThrow: jest.fn().mockResolvedValue({
           id: 'run-1',
@@ -81,16 +85,56 @@ describe('HtmlCrawlIngestionService', () => {
       id: 'r1',
       fetchedEvidence: [],
     });
+    expect(prisma.htmlCrawlIngestionRun.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'r1', createdByUserId: 'u1' } }),
+    );
 
     prisma.htmlCrawlIngestionRun.findFirst.mockResolvedValueOnce(null);
     await expect(svc.getRunForUser('r1', 'u1')).resolves.toBeNull();
   });
 
-  it('listRunsForUser maps rows', async () => {
+  it('getRunForUser forAdmin omits createdByUserId filter', async () => {
+    prisma.htmlCrawlIngestionRun.findFirst.mockResolvedValueOnce({
+      id: 'r1',
+      evidenceRows: [],
+    });
+    await svc.getRunForUser('r1', 'u1', { forAdmin: true });
+    expect(prisma.htmlCrawlIngestionRun.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'r1' } }),
+    );
+  });
+
+  it('listAllRuns returns all runs without evidence join', async () => {
     prisma.htmlCrawlIngestionRun.findMany.mockResolvedValueOnce([
-      { id: 'a', evidenceRows: [] },
+      { id: 'x' },
+      { id: 'y' },
     ]);
+    const rows = await svc.listAllRuns();
+    expect(rows).toEqual([
+      { id: 'x', fetchedEvidence: [] },
+      { id: 'y', fetchedEvidence: [] },
+    ]);
+    expect(prisma.htmlCrawlIngestionRun.findMany.mock.calls[0][0]).toEqual({
+      orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+    });
+  });
+
+  it('listRunsForUser maps rows without evidence joins', async () => {
+    prisma.htmlCrawlIngestionRun.findMany.mockResolvedValueOnce([{ id: 'a' }]);
     const rows = await svc.listRunsForUser('u1');
     expect(rows).toEqual([{ id: 'a', fetchedEvidence: [] }]);
+    expect(prisma.htmlCrawlIngestionRun.findMany.mock.calls[0][0]).toEqual({
+      where: { createdByUserId: 'u1' },
+      orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+    });
+  });
+
+  it('isAdminUser reads role from database', async () => {
+    prisma.user.findUnique.mockResolvedValueOnce({ role: 'ADMIN' });
+    await expect(svc.isAdminUser('u1')).resolves.toBe(true);
+    prisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
+    await expect(svc.isAdminUser('u1')).resolves.toBe(false);
+    prisma.user.findUnique.mockResolvedValueOnce(null);
+    await expect(svc.isAdminUser('u1')).resolves.toBe(false);
   });
 });

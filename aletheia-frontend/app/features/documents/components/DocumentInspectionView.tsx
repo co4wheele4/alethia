@@ -8,7 +8,7 @@
  */
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Divider, Typography } from '@mui/material';
 
@@ -56,10 +56,11 @@ export function DocumentInspectionView(props: {
   }, [initialChunkIndex, sorted]);
 
   const [selectedChunkIndex, setSelectedChunkIndex] = useState<number | null>(initial);
-
-  useEffect(() => {
+  const [prevInitial, setPrevInitial] = useState(initial);
+  if (initial !== prevInitial) {
+    setPrevInitial(initial);
     setSelectedChunkIndex(initial);
-  }, [initial]);
+  }
 
   const selectedChunk = useMemo(() => {
     if (selectedChunkIndex === null) return null;

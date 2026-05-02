@@ -74,7 +74,11 @@ export const errorLinkHandler = (error: unknown) => {
         );
         
         // Handle authentication errors
-        if (message.includes('Unauthorized') || message.includes('Invalid token')) {
+        if (
+          message.includes('Unauthorized') ||
+          message.includes('Invalid token') ||
+          message === 'UNAUTHORIZED'
+        ) {
           // Clear token and redirect to login if needed
           if (typeof window !== 'undefined') {
             localStorage.removeItem('aletheia_auth_token');

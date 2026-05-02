@@ -7,6 +7,7 @@ import {
 import {
   extractAnchorHrefsInDocumentOrder,
   hostnameInAllowedList,
+  looksLikeBrokenClientTemplateUrl,
   normalizeCrawlUrl,
   runHtmlCrawlIngestion,
   stableLexicographicSort,
@@ -41,6 +42,22 @@ describe('htmlCrawlRunner helpers', () => {
     expect(hostnameInAllowedList('example.com', ['example.com'])).toBe(true);
     expect(hostnameInAllowedList('evil.com', ['example.com'])).toBe(false);
   });
+
+  it('looksLikeBrokenClientTemplateUrl flags template fragments', () => {
+    expect(
+      looksLikeBrokenClientTemplateUrl(
+        "https://www.cnn.com/'+n.escapeExpression(",
+      ),
+    ).toBe(true);
+    expect(looksLikeBrokenClientTemplateUrl('https://www.cnn.com/&quot;https://x/&quot;')).toBe(
+      true,
+    );
+    expect(
+      looksLikeBrokenClientTemplateUrl(
+        'https://www.cnn.com/2026/04/30/politics/example-story',
+      ),
+    ).toBe(false);
+  });
 });
 
 describe('runHtmlCrawlIngestion', () => {
@@ -62,8 +79,13 @@ describe('runHtmlCrawlIngestion', () => {
     const runRows: Record<string, unknown> = {};
     const evidenceRows: unknown[] = [];
     const linkRows: unknown[] = [];
+    const documents: unknown[] = [];
+    const documentSources: unknown[] = [];
+    const documentChunks: unknown[] = [];
 
-    const prisma = {
+    const prisma: any = {};
+    prisma.$transaction = jest.fn(async (fn: (tx: any) => Promise<unknown>) => fn(prisma));
+    Object.assign(prisma, {
       htmlCrawlIngestionRun: {
         create: jest.fn(async ({ data }: { data: { id?: string } & Record<string, unknown> }) => {
           const id = data.id ?? 'run-1';
@@ -89,9 +111,43 @@ describe('runHtmlCrawlIngestion', () => {
           evidenceRows.push(row);
           return row;
         }),
+        findFirst: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
+          const match = evidenceRows.find((r) => {
+            const row = r as Record<string, unknown>;
+            return Object.entries(where).every(([k, v]) => row[k] === v);
+          });
+          if (!match) return null;
+          return { id: (match as Record<string, unknown>).id };
+        }),
+        findUniqueOrThrow: jest.fn(async ({ where }: { where: { id: string } }) => {
+          const match = evidenceRows.find((r) => (r as { id: string }).id === where.id);
+          if (!match) throw new Error('not found');
+          return match;
+        }),
       },
-    };
-    return { prisma, runRows, evidenceRows, linkRows };
+      document: {
+        create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+          const id = `doc-${documents.length + 1}`;
+          const row = { ...data, id };
+          documents.push(row);
+          return { id };
+        }),
+      },
+      documentSource: {
+        findFirst: jest.fn(async () => null),
+        create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+          documentSources.push(data);
+          return data;
+        }),
+      },
+      documentChunk: {
+        createMany: jest.fn(async ({ data }: { data: unknown[] }) => {
+          documentChunks.push(...data);
+          return { count: data.length };
+        }),
+      },
+    });
+    return { prisma, runRows, evidenceRows, linkRows, documents, documentSources, documentChunks };
   }
 
   it('respects maxPages', async () => {

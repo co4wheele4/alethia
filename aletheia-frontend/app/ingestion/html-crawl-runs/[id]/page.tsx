@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 
 import { AppShell } from '../../../components/layout';
+import { apolloErrorText } from '../../../lib/apollo-error-text';
 import { HTML_CRAWL_RUN_DETAIL_QUERY } from '@/src/graphql/queries/htmlCrawlRuns.query';
 
 type Fetched = {
@@ -62,7 +63,14 @@ export default function HtmlCrawlRunDetailPage() {
         <Link href="/ingestion/html-crawl-runs">Back to crawl runs</Link>
         <Typography variant="h5">Crawl run</Typography>
         {loading ? <Typography>Loading…</Typography> : null}
-        {error ? <Alert severity="error">Unable to load run.</Alert> : null}
+        {error ? (
+          <Alert severity="error">
+            Unable to load run.
+            <Typography component="div" variant="body2" sx={{ mt: 1, whiteSpace: 'pre-wrap', opacity: 0.95 }}>
+              {apolloErrorText(error)}
+            </Typography>
+          </Alert>
+        ) : null}
         {!loading && !run ? <Alert severity="warning">Run not found.</Alert> : null}
         {run ? (
           <>

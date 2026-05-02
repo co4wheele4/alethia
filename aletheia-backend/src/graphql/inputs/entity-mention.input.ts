@@ -1,5 +1,12 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
-import { IsNotEmpty, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 @InputType()
 export class CreateEntityMentionInput {
@@ -13,15 +20,15 @@ export class CreateEntityMentionInput {
   @IsNotEmpty()
   chunkId!: string;
 
-  @Field(() => Int, { nullable: true })
-  @IsOptional()
+  @Field(() => Int)
+  @IsInt()
   @Min(0)
-  startOffset?: number;
+  startOffset!: number;
 
-  @Field(() => Int, { nullable: true })
-  @IsOptional()
+  @Field(() => Int)
+  @IsInt()
   @Min(0)
-  endOffset?: number;
+  endOffset!: number;
 
   @Field({ nullable: true })
   @IsOptional()

@@ -20,18 +20,14 @@ export class EntityMention {
   chunkId!: string;
 
   @Field(() => Int, {
-    nullable: true,
-    description:
-      '0-based inclusive start offset into chunk content. Nullable for legacy mentions created without spans.',
+    description: '0-based inclusive start offset into chunk content.',
   })
-  startOffset?: number | null;
+  startOffset!: number;
 
   @Field(() => Int, {
-    nullable: true,
-    description:
-      '0-based exclusive end offset into chunk content. Nullable for legacy mentions created without spans.',
+    description: '0-based exclusive end offset into chunk content.',
   })
-  endOffset?: number | null;
+  endOffset!: number;
 
   @Field(() => String, {
     nullable: true,

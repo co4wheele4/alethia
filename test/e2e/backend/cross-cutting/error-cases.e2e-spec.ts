@@ -356,6 +356,8 @@ describe('Error Cases (e2e)', () => {
           data: {
             entityId: 'non-existent-entity-id',
             chunkId: context.testData.chunk.id,
+            startOffset: 0,
+            endOffset: 1,
           },
         },
       );

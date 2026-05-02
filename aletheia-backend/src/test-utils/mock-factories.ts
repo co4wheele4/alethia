@@ -68,16 +68,23 @@ export const createMockEntityMention = (
   const entityId = overrides?.entityId ?? entity.id;
   const chunkId = overrides?.chunkId ?? chunk.id;
 
-  return {
+  const merged = {
     id: 'mention-1',
     entityId,
     chunkId,
-    startOffset: null,
-    endOffset: null,
-    excerpt: null,
+    startOffset: 0,
+    endOffset: 1,
+    excerpt: null as string | null,
     entity,
     chunk,
     ...overrides,
+  };
+
+  return {
+    ...merged,
+    // Offsets are required in DB + GraphQL; coerce after spread so tests cannot leave null.
+    startOffset: merged.startOffset ?? 0,
+    endOffset: merged.endOffset ?? 1,
   };
 };
 

@@ -51,8 +51,8 @@ export type EntityMention = {
   id: string;
   entityId: string;
   chunkId: string;
-  startOffset?: number | null;
-  endOffset?: number | null;
+  startOffset: number;
+  endOffset: number;
   excerpt?: string | null;
   chunk: {
     __typename?: 'DocumentChunk';

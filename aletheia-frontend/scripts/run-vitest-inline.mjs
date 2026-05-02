@@ -2,7 +2,7 @@
  * Programmatic Vitest entry used by `npm run test:unit*`.
  * **Keep in sync** with `vitest.config.ts` (include/exclude, coverage rules, `resolve.alias`, `esbuild.jsx`)
  * so CI and ad-hoc `npx vitest` behave the same. Only pool/worker flags are unique here
- * (threads + maxWorkers:1 for Windows coverage stability).
+ * (`forks` avoids thread-pool stalls on Windows; parallel files + workers match `npx vitest run` throughput.)
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -52,9 +52,7 @@ const options = {
     '**/app/__tests__/mocks/**',
     '**/app/lib/test-utils/**',
   ],
-  pool: 'threads',
-  maxWorkers: 1,
-  fileParallelism: false,
+  pool: 'forks',
   coverage: {
     enabled: coverageEnabled,
     provider: 'v8',

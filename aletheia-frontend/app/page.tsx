@@ -16,11 +16,9 @@ export default function Home() {
 
   // Prevent hydration mismatch by only rendering auth-dependent UI after client-side mount
   useEffect(() => {
-    // Defer state update to avoid synchronous setState in effect
-    const rafId = requestAnimationFrame(() => {
-      setMounted(true);
-    });
-    return () => cancelAnimationFrame(rafId);
+    // Avoid relying on RAF (can be throttled indefinitely in some environments).
+    const t = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(t);
   }, []); // Empty deps: only run on mount to prevent hydration mismatch
 
   // Redirect authenticated users to dashboard (only after auth state is initialized)

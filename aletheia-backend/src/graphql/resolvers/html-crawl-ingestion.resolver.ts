@@ -8,8 +8,12 @@ import { getGqlAuthUserId } from '../utils/gql-auth-user';
 import { contractError, GQL_ERROR_CODES } from '../errors/graphql-error-codes';
 
 type GqlContext = {
-  req?: { user?: { sub?: string; id?: string } };
+  req?: { user?: { sub?: string; id?: string; role?: string } };
 };
+
+function gqlRequestIsAdmin(ctx?: GqlContext): boolean {
+  return ctx?.req?.user?.role === 'ADMIN';
+}
 
 const runType = () => HtmlCrawlIngestionRun;
 void runType();
@@ -37,13 +41,20 @@ export class HtmlCrawlIngestionResolver {
   ) {
     const userId = getGqlAuthUserId(ctx);
     if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
-    return this.svc.getRunForUser(id, userId);
+    const forAdmin =
+      gqlRequestIsAdmin(ctx) || (await this.svc.isAdminUser(userId));
+    return this.svc.getRunForUser(id, userId, { forAdmin });
   }
 
   @Query(() => [HtmlCrawlIngestionRun])
   async htmlCrawlIngestionRuns(@Context() ctx?: GqlContext) {
     const userId = getGqlAuthUserId(ctx);
     if (!userId) throw contractError(GQL_ERROR_CODES.UNAUTHORIZED);
+    const isAdmin =
+      gqlRequestIsAdmin(ctx) || (await this.svc.isAdminUser(userId));
+    if (isAdmin) {
+      return this.svc.listAllRuns();
+    }
     return this.svc.listRunsForUser(userId);
   }
 }

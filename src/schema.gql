@@ -75,10 +75,10 @@ input CreateEntityInput {
 
 input CreateEntityMentionInput {
   chunkId: String!
-  endOffset: Int
+  endOffset: Int!
   entityId: String!
   excerpt: String
-  startOffset: Int
+  startOffset: Int!
 }
 
 input CreateEntityRelationshipInput {
@@ -220,10 +220,8 @@ type EntityMention {
   """
   chunkId: ID!
 
-  """
-  0-based exclusive end offset into chunk content. Nullable for legacy mentions created without spans.
-  """
-  endOffset: Int
+  """0-based exclusive end offset into chunk content."""
+  endOffset: Int!
   entity: Entity!
 
   """
@@ -237,10 +235,8 @@ type EntityMention {
   excerpt: String
   id: ID!
 
-  """
-  0-based inclusive start offset into chunk content. Nullable for legacy mentions created without spans.
-  """
-  startOffset: Int
+  """0-based inclusive start offset into chunk content."""
+  startOffset: Int!
 }
 
 type EntityRelationship {

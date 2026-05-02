@@ -39,9 +39,9 @@ describe('EntityMentionResolver', () => {
     id: 'mention-1',
     entityId: mockEntity.id,
     chunkId: mockChunk.id,
-    startOffset: null,
-    endOffset: null,
-    excerpt: null,
+    startOffset: 0,
+    endOffset: 1,
+    excerpt: 'T',
     entity: mockEntity,
     chunk: mockChunk,
   };
@@ -236,7 +236,12 @@ describe('EntityMentionResolver', () => {
       const input: CreateEntityMentionInput = {
         entityId: 'entity-1',
         chunkId: 'chunk-1',
+        startOffset: 0,
+        endOffset: 5,
       };
+      (prismaService.documentChunk.findUnique as jest.Mock).mockResolvedValue({
+        content: 'hello world',
+      });
       (prismaService.entityMention.create as jest.Mock).mockResolvedValue(
         mockEntityMention as any,
       );
@@ -245,38 +250,14 @@ describe('EntityMentionResolver', () => {
 
       expect(result).toEqual(mockEntityMention);
       expect(prismaService.entityMention.create).toHaveBeenCalledWith({
-        data: input,
+        data: {
+          entityId: 'entity-1',
+          chunkId: 'chunk-1',
+          startOffset: 0,
+          endOffset: 5,
+          excerpt: 'hello',
+        },
       });
-    });
-
-    it('should require startOffset and endOffset together', async () => {
-      const input: CreateEntityMentionInput = {
-        entityId: 'entity-1',
-        chunkId: 'chunk-1',
-        startOffset: 0,
-      };
-
-      await expect(resolver.createEntityMention(input)).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
-      await expect(resolver.createEntityMention(input)).rejects.toThrow(
-        'startOffset and endOffset must be provided together',
-      );
-    });
-
-    it('should forbid excerpt without offsets', async () => {
-      const input: CreateEntityMentionInput = {
-        entityId: 'entity-1',
-        chunkId: 'chunk-1',
-        excerpt: 'hello',
-      };
-
-      await expect(resolver.createEntityMention(input)).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
-      await expect(resolver.createEntityMention(input)).rejects.toThrow(
-        'excerpt requires startOffset/endOffset',
-      );
     });
 
     it('should require endOffset > startOffset', async () => {

@@ -294,6 +294,12 @@ npm run test:all            # Run all tests
 npm run seed                # Seed the database
 npx prisma studio           # Open Prisma Studio
 
+# HTML crawl ingestion (creates `HtmlCrawlIngestionRun` + `Evidence` per URL; default seed is CNN)
+# Requires Postgres + migrations and at least one user (e.g. `npm run db:seed:test` against `aletheia_test`).
+npx dotenv-cli -e .env.test -- npm run html-crawl:run
+# Optional: `npx dotenv-cli -e .env.test -- npm run html-crawl:run -- https://edition.cnn.com/`
+# Optional env: `HTML_CRAWL_USER_ID`, `CRAWL_DEPTH`, `MAX_PAGES`
+
 # Code Quality
 npm run lint                # Run ESLint
 npm run format              # Format code with Prettier

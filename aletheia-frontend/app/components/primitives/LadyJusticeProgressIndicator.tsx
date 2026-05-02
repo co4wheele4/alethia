@@ -29,7 +29,7 @@ export type LadyJusticeProgressIndicatorProps = {
 
 export function LadyJusticeProgressIndicator(props: LadyJusticeProgressIndicatorProps) {
   const { size = 18, sx, 'aria-label': ariaLabel = 'Loading', ...rest } = props;
-  const scaledSize = size * 1.5;
+  const scaledSize = size;
   const theme = useTheme();
   const inkColor = theme.palette.text.primary;
   const shadow =

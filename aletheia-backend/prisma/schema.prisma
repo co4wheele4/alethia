@@ -220,10 +220,10 @@ model EntityMention {
 
   /**
    * Exact span offsets into `DocumentChunk.content`.
-   * 0-based, end-exclusive. Nullable for legacy mentions created before spans existed.
+   * 0-based, end-exclusive. Required for every persisted mention.
    */
-  startOffset Int? @map("start_offset")
-  endOffset   Int? @map("end_offset")
+  startOffset Int @map("start_offset")
+  endOffset   Int @map("end_offset")
 
   /**
    * Optional captured span text at extraction time (best-effort).
@@ -253,6 +253,7 @@ model EntityMention {
 
   @@index([entityId])
   @@index([chunkId])
+  @@unique([entityId, chunkId, startOffset, endOffset], map: "entity_mentions_entity_chunk_span_key")
   @@map("entity_mentions")
 }
 

@@ -15,6 +15,15 @@ function mapRunWithFetchedEvidence<T extends { evidenceRows: unknown[] }>(
 export class HtmlCrawlIngestionService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Source-of-truth for admin (GraphQL `req.user.role` can be missing on some requests). */
+  async isAdminUser(userId: string): Promise<boolean> {
+    const row = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    return row?.role === 'ADMIN';
+  }
+
   async createRun(
     input: CreateHtmlCrawlIngestionRunInput,
     createdByUserId: string,
@@ -49,9 +58,9 @@ export class HtmlCrawlIngestionService {
     return mapRunWithFetchedEvidence(row);
   }
 
-  async getRunForUser(id: string, userId: string) {
+  async getRunForUser(id: string, userId: string, options?: { forAdmin?: boolean }) {
     const run = await this.prisma.htmlCrawlIngestionRun.findFirst({
-      where: { id, createdByUserId: userId },
+      where: options?.forAdmin ? { id } : { id, createdByUserId: userId },
       include: {
         evidenceRows: {
           orderBy: [{ depth: 'asc' }, { url: 'asc' }, { id: 'asc' }],
@@ -66,13 +75,16 @@ export class HtmlCrawlIngestionService {
     const rows = await this.prisma.htmlCrawlIngestionRun.findMany({
       where: { createdByUserId: userId },
       orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
-      include: {
-        evidenceRows: {
-          orderBy: [{ depth: 'asc' }, { url: 'asc' }, { id: 'asc' }],
-          include: { evidence: true },
-        },
-      },
     });
-    return rows.map(mapRunWithFetchedEvidence);
+    // List UI only needs run metadata; avoid joining every crawl evidence row (and HTML bytes) per run.
+    return rows.map((r) => ({ ...r, fetchedEvidence: [] }));
+  }
+
+  /** Audit listing across users (ADMIN only at resolver). */
+  async listAllRuns() {
+    const rows = await this.prisma.htmlCrawlIngestionRun.findMany({
+      orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+    });
+    return rows.map((r) => ({ ...r, fetchedEvidence: [] }));
   }
 }

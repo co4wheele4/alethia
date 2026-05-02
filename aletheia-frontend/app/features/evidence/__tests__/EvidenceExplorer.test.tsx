@@ -63,8 +63,8 @@ function makeEntityDetail(overrides?: Partial<EntityDetail>): EntityDetail {
         id: 'm2',
         entityId: 'e1',
         chunkId: 'c1',
-        startOffset: null,
-        endOffset: null,
+        startOffset: 0,
+        endOffset: 10,
         chunk: {
           __typename: 'DocumentChunk',
           id: 'c1',
@@ -79,8 +79,8 @@ function makeEntityDetail(overrides?: Partial<EntityDetail>): EntityDetail {
         id: 'm3',
         entityId: 'e1',
         chunkId: 'c2',
-        startOffset: null,
-        endOffset: null,
+        startOffset: 0,
+        endOffset: 10,
         chunk: {
           __typename: 'DocumentChunk',
           id: 'c2',
@@ -526,8 +526,8 @@ describe('EvidenceExplorer', () => {
       id: `m-${i}`,
       entityId: 'e1',
       chunkId: 'c0',
-      startOffset: null,
-      endOffset: null,
+      startOffset: 0,
+      endOffset: 1,
       chunk: {
         __typename: 'DocumentChunk' as const,
         id: 'c0',
@@ -543,8 +543,8 @@ describe('EvidenceExplorer', () => {
       id: 'm-nullish-content',
       entityId: 'e1',
       chunkId: 'c-null',
-      startOffset: null,
-      endOffset: null,
+      startOffset: 0,
+      endOffset: 1,
       chunk: {
         __typename: 'DocumentChunk' as const,
         id: 'c-null',

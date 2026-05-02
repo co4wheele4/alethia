@@ -12,6 +12,7 @@ import { EntityMention } from '@models/entity-mention.model';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { DataLoaderService } from '@common/dataloaders/dataloader.service';
+import { createMockEntityMention } from '../../test-utils/mock-factories';
 
 describe('DocumentChunkResolver', () => {
   let resolver: DocumentChunkResolver;
@@ -439,16 +440,13 @@ describe('DocumentChunkResolver', () => {
   describe('mentions', () => {
     it('should resolve mentions field', async () => {
       const mockMentions: EntityMention[] = [
-        {
-          id: 'mention-1',
+        createMockEntityMention({
           entityId: 'entity-1',
           chunkId: mockChunk.id,
-          startOffset: null,
-          endOffset: null,
+          chunk: mockChunk,
           excerpt: null,
           entity: {} as unknown as EntityMention['entity'],
-          chunk: mockChunk,
-        },
+        }),
       ];
       const loadMock = jest.fn().mockResolvedValue(mockMentions);
       (dataLoaderService.getMentionsByChunkLoader as jest.Mock).mockReturnValue(

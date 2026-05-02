@@ -138,8 +138,8 @@ describe('EntityResolver', () => {
           id: 'mention-1',
           entityId: mockEntity.id,
           chunkId: 'chunk-1',
-          startOffset: null,
-          endOffset: null,
+          startOffset: 0,
+          endOffset: 1,
           excerpt: null,
           entity: mockEntity,
           chunk:

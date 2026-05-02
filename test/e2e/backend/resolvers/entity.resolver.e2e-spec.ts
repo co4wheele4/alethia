@@ -77,6 +77,8 @@ describe('EntityResolver (e2e)', () => {
           data: {
             entityId: entityId,
             chunkId: context.testData.chunk.id,
+            startOffset: 0,
+            endOffset: 4,
           },
         },
       );

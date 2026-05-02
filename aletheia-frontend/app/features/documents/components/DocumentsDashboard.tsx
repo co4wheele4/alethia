@@ -7,7 +7,7 @@
  */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Alert, Box } from '@mui/material';
 
 import { DocumentsListPane } from './DocumentsListPane';
@@ -34,11 +34,12 @@ export function DocumentsDashboard({
   const [requestedSelectedId, setRequestedSelectedId] = useState<string | null>(initialSelectedId ?? null);
   const [filter, setFilter] = useState('');
   const [ingestOpen, setIngestOpen] = useState(Boolean(initialIngestOpen));
-
+  const [prevInitialIngestOpen, setPrevInitialIngestOpen] = useState(initialIngestOpen);
   // Deep link /documents?ingest=1 must open the dialog after client navigations (useState only uses the initial value on first mount).
-  useEffect(() => {
+  if (initialIngestOpen !== prevInitialIngestOpen) {
+    setPrevInitialIngestOpen(initialIngestOpen);
     setIngestOpen(Boolean(initialIngestOpen));
-  }, [initialIngestOpen]);
+  }
 
   if (!userId) {
     return (

@@ -68,70 +68,46 @@ export class EntityMentionResolver {
   async createEntityMention(@Args('data') data: CreateEntityMentionInput) {
     const { entityId, chunkId, startOffset, endOffset, excerpt } = data;
 
-    const hasStart = typeof startOffset === 'number';
-    const hasEnd = typeof endOffset === 'number';
-    if (hasStart !== hasEnd) {
+    if (endOffset <= startOffset) {
       throw new BadRequestException(
-        'startOffset and endOffset must be provided together (or both omitted).',
+        'endOffset must be greater than startOffset.',
       );
     }
 
     let validatedExcerpt: string | null = excerpt ?? null;
-    if (!hasStart && validatedExcerpt !== null) {
+
+    const chunk = await this.prisma.documentChunk.findUnique({
+      where: { id: chunkId },
+      select: { content: true },
+    });
+    if (!chunk) {
+      throw new BadRequestException('Chunk not found.');
+    }
+
+    const content = chunk.content ?? '';
+    if (startOffset < 0 || endOffset > content.length) {
       throw new BadRequestException(
-        'excerpt requires startOffset/endOffset so it can be validated against chunk content.',
+        `Span offsets are out of bounds for chunk content (length=${content.length}).`,
       );
     }
 
-    if (hasStart && hasEnd) {
-      if (endOffset <= startOffset) {
-        throw new BadRequestException(
-          'endOffset must be greater than startOffset.',
-        );
-      }
-
-      const chunk = await this.prisma.documentChunk.findUnique({
-        where: { id: chunkId },
-        select: { content: true },
-      });
-      if (!chunk) {
-        throw new BadRequestException('Chunk not found.');
-      }
-
-      const content = chunk.content ?? '';
-      if (startOffset < 0 || endOffset > content.length) {
-        throw new BadRequestException(
-          `Span offsets are out of bounds for chunk content (length=${content.length}).`,
-        );
-      }
-
-      const exact = content.slice(startOffset, endOffset);
-      if (validatedExcerpt !== null && validatedExcerpt !== exact) {
-        throw new BadRequestException(
-          'excerpt does not match the chunk content at the provided offsets.',
-        );
-      }
-
-      // Best-effort capture of exact span text for auditability.
-      validatedExcerpt = exact;
+    const exact = content.slice(startOffset, endOffset);
+    if (validatedExcerpt !== null && validatedExcerpt !== exact) {
+      throw new BadRequestException(
+        'excerpt does not match the chunk content at the provided offsets.',
+      );
     }
 
-    const createData: {
-      entityId: string;
-      chunkId: string;
-      startOffset?: number;
-      endOffset?: number;
-      excerpt?: string | null;
-    } = { entityId, chunkId };
-
-    if (hasStart && hasEnd) {
-      createData.startOffset = startOffset!;
-      createData.endOffset = endOffset!;
-      createData.excerpt = validatedExcerpt;
-    }
+    validatedExcerpt = exact;
 
     return await this.prisma.entityMention.create({
-      data: createData,
+      data: {
+        entityId,
+        chunkId,
+        startOffset,
+        endOffset,
+        excerpt: validatedExcerpt,
+      },
     });
   }
 

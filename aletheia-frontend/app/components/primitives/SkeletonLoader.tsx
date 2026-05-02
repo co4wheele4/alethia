@@ -30,7 +30,7 @@ export function SkeletonLoader() {
       }}
       suppressHydrationWarning
     >
-      <LadyJusticeProgressIndicator size={56} suppressHydrationWarning />
+      <LadyJusticeProgressIndicator size={28} suppressHydrationWarning />
       <Skeleton variant="text" width={200} height={32} suppressHydrationWarning />
       <Skeleton variant="text" width={150} height={24} suppressHydrationWarning />
       <Typography 

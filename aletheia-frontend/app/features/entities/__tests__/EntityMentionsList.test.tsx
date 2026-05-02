@@ -11,6 +11,8 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 const mockMentions = [
   {
     id: 'm1',
+    entityId: 'e1',
+    chunkId: 'c1',
     startOffset: 0,
     endOffset: 5,
     chunk: {
@@ -26,8 +28,10 @@ const mockMentions = [
   },
   {
     id: 'm2',
-    startOffset: null, // Legacy mention
-    endOffset: null,
+    entityId: 'e1',
+    chunkId: 'c2',
+    startOffset: 0,
+    endOffset: 7,
     chunk: {
       id: 'c2',
       chunkIndex: 1,
@@ -57,9 +61,6 @@ describe('EntityMentionsList', () => {
     expect(screen.getAllByText('Doc One').length).toBeGreaterThan(0);
     expect(screen.getByText(/Chunk 0/i)).toBeInTheDocument();
     expect(screen.getByText(/Hello world/i)).toBeInTheDocument();
-    
-    // Check legacy warning
-    expect(screen.getByText(/Some mentions have/i)).toBeInTheDocument();
   });
 
   it('filters mentions by text', () => {
@@ -152,6 +153,72 @@ describe('EntityMentionsList', () => {
     const loadMoreBtn = screen.getByRole('button', { name: /Load more mentions/i });
     fireEvent.click(loadMoreBtn);
     expect(screen.getByText(/mention 22/i)).toBeInTheDocument();
+  });
+
+  it('merges multiple DB mention rows that share the same chunk and offsets', () => {
+    const dupMentions = [
+      {
+        id: 'm-dup-a',
+        startOffset: 0,
+        endOffset: 5,
+        chunk: {
+          id: 'c-same',
+          chunkIndex: 0,
+          content: 'Hello world.',
+          document: {
+            id: 'd1',
+            title: 'Same Doc',
+            createdAt: '2023-01-01T12:00:00Z',
+          },
+        },
+      },
+      {
+        id: 'm-dup-b',
+        startOffset: 0,
+        endOffset: 5,
+        chunk: {
+          id: 'c-same',
+          chunkIndex: 0,
+          content: 'Hello world.',
+          document: {
+            id: 'd1',
+            title: 'Same Doc',
+            createdAt: '2023-01-01T12:00:00Z',
+          },
+        },
+      },
+      {
+        id: 'm-dup-c',
+        startOffset: 0,
+        endOffset: 5,
+        chunk: {
+          id: 'c-same',
+          chunkIndex: 0,
+          content: 'Hello world.',
+          document: {
+            id: 'd1',
+            title: 'Same Doc',
+            createdAt: '2023-01-01T12:00:00Z',
+          },
+        },
+      },
+    ];
+
+    render(
+      <TestWrapper>
+        <EntityMentionsList
+          entityId="e1"
+          entityName="Acme"
+          entityType="ORG"
+          mentions={dupMentions as any}
+        />
+      </TestWrapper>
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/3 persisted mention records/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(/1 unique location/i);
+    expect(screen.getByText(/3 duplicate DB rows/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Same Doc')).toHaveLength(1);
   });
 
   it('renders info when no mentions', () => {

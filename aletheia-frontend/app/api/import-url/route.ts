@@ -55,9 +55,9 @@ function jsonFromExampleComFallback(fetchedUrl: string) {
 }
 
 const FETCH_HEADERS = {
-  // Browser-like UA: some CDNs block minimal custom agents; TLS issues are separate (see fallback below).
+  // Browser-like UA: many news sites (e.g. CNN) return 403 for non-browser or “compatible; …” agents.
   'User-Agent':
-    'Mozilla/5.0 (compatible; AletheiaUrlImport/1.0; +https://www.iana.org/domains/example)',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 AletheiaUrlImport/1.0',
   Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.7',
   'Accept-Language': 'en-US,en;q=0.9',
 } as const;

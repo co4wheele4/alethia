@@ -54,17 +54,20 @@ export function useAuth() {
   // Initialize auth state on client-side mount to prevent hydration mismatch
   // Using useEffect to access localStorage only on client side
   useEffect(() => {
-    // Defer state updates to avoid synchronous setState in effect
-    const rafId = requestAnimationFrame(() => {
-      // Initialize auth state from localStorage (client-side only)
-      const authToken = getAuthToken();
-      // Avoid overwriting a token that may have been set by a fast login/register
-      // before this initialization effect runs (race condition in tests and fast UIs).
-      setToken((prev) => prev ?? authToken);
-      setIsAuth((prev) => prev || authToken !== null);
-      setIsInitialized(true);
-    });
-    return () => cancelAnimationFrame(rafId);
+    // Defer state updates so this effect cannot get stuck behind a throttled RAF.
+    // (Background tabs and some devtools throttling can prevent RAF from firing.)
+    const t = window.setTimeout(() => {
+      try {
+        const authToken = getAuthToken();
+        // Avoid overwriting a token that may have been set by a fast login/register
+        // before this initialization effect runs (race condition in tests and fast UIs).
+        setToken((prev) => prev ?? authToken);
+        setIsAuth((prev) => prev || authToken !== null);
+      } finally {
+        setIsInitialized(true);
+      }
+    }, 0);
+    return () => window.clearTimeout(t);
   }, []); // Empty deps: only run on mount to initialize from localStorage
 
   const [loginMutation, { loading: loginLoading, error: loginError }] = useMutation<
