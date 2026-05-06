@@ -19,11 +19,14 @@ async function bootstrap() {
   const isProduction = process.env.NODE_ENV === 'production';
   app.use(
     helmet({
+      // Dev: allow Cursor/VS Code Simple Browser (iframe parent is not same-origin as localhost).
+      ...(isProduction ? {} : { xFrameOptions: false }),
       contentSecurityPolicy: isProduction
         ? undefined
         : {
             directives: {
               defaultSrc: ["'self'"],
+              frameAncestors: ['*'],
               scriptSrc: [
                 "'self'",
                 "'unsafe-inline'",
@@ -118,12 +121,19 @@ async function bootstrap() {
   }
 
   const port = process.env.PORT || 3000;
+  const aletheiaFrontendUrl = (
+    process.env.ALETHEIA_FRONTEND_URL || 'http://localhost:3030'
+  ).trim();
+
   await app.listen(port);
   console.log(`NestJS app running on http://localhost:${port}`);
   console.log(`GraphQL Playground: http://localhost:${port}/graphql`);
   if (enableSwagger) {
     console.log(`OpenAPI / Swagger UI: http://localhost:${port}/api`);
   }
+  console.log(
+    `Aletheia UI (Next.js, not started by Nest): ${aletheiaFrontendUrl}`,
+  );
 }
 
 void bootstrap();

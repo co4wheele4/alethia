@@ -20,9 +20,12 @@ async function waitForFrontendReady(timeoutMs) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     for (let port = 3030; port <= 3048; port += 1) {
-      const baseUrl = `http://127.0.0.1:${port}`;
+      // Probe loopback with 127.0.0.1; drive Playwright with localhost so Next dev
+      // origin matches `next dev` (avoids Turbopack blocking /_next/webpack-hmr).
+      const probeUrl = `http://127.0.0.1:${port}`;
+      const baseUrl = `http://localhost:${port}`;
       try {
-        const res = await fetch(`${baseUrl}/`, { method: 'GET' });
+        const res = await fetch(`${probeUrl}/`, { method: 'GET' });
         if (res.ok) return { baseUrl, port };
       } catch {
         // try next port
@@ -98,6 +101,12 @@ async function runHeadedDemo(opts) {
     if (r.status !== 0) return typeof r.status === 'number' ? r.status : 1;
   }
 
+  if (!seed) {
+    console.log(
+      '[demo] Using existing DB: if login fails with Invalid credentials, run `npm run demo:headed:seed` (aletheia_test + docs/dev/test-seed.md).',
+    );
+  }
+
   if (seed) {
     console.log('[demo] Seeding test database (must target aletheia_test; see docs/dev/test-seed.md)…');
     const r = npmRun('db:seed:test', root);
@@ -118,7 +127,7 @@ async function runHeadedDemo(opts) {
     env: childEnv,
   });
 
-  let baseUrl = 'http://127.0.0.1:3030';
+  let baseUrl = 'http://localhost:3030';
   try {
     const ready = await waitForFrontendReady(120_000);
     baseUrl = ready.baseUrl;

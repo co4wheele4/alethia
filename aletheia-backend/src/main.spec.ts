@@ -94,6 +94,11 @@ describe('main.ts', () => {
         'OpenAPI / Swagger UI: http://localhost:3000/api',
       ),
     );
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Aletheia UI (Next.js, not started by Nest): http://localhost:3030',
+      ),
+    );
   });
 
   it('should use ALLOWED_ORIGINS from environment when set', async () => {
@@ -172,6 +177,11 @@ describe('main.ts', () => {
     expect(testMockApp.listen).toHaveBeenCalledWith('4000');
     expect(consoleLogSpy).toHaveBeenCalledWith(
       expect.stringContaining('NestJS app running on http://localhost:4000'),
+    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Aletheia UI (Next.js, not started by Nest): http://localhost:3030',
+      ),
     );
 
     // Restore

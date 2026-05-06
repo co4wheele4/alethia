@@ -3,8 +3,10 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Playwright / alternate host hits dev server from 127.0.0.1 while Next binds localhost — avoids noisy warnings.
+  // Playwright / alternate hosts; bare hostnames match Next's allowedDevOrigins warning for Turbopack HMR.
   allowedDevOrigins: [
+    "127.0.0.1",
+    "localhost",
     "http://127.0.0.1:3030",
     "http://localhost:3030",
     "http://127.0.0.1",

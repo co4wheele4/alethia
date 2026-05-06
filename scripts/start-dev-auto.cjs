@@ -2,51 +2,17 @@
 /**
  * Start backend + frontend dev servers on the first free ports.
  *
+ * Port selection uses sibling `../port-utils` (dev-port-utils) so behavior matches
+ * `nest-port.cjs` / `next-port.cjs` and avoids false frees on Windows (IPv4/IPv6).
+ *
  * This avoids killing existing processes; instead we probe for free ports starting at:
  * - backend: 3000
  * - frontend: 3030
  */
 
-const net = require('node:net');
 const { spawn } = require('node:child_process');
-
-function canBind(port, host) {
-  return new Promise((resolve) => {
-    const server = net.createServer();
-    server.unref();
-    server.once('error', (err) => resolve({ ok: false, err }));
-    server.listen({ port, host }, () => {
-      server.close(() => resolve({ ok: true, err: null }));
-    });
-  });
-}
-
-async function isPortFree(port) {
-  // Be conservative: treat the port as "in use" if it is bound on either IPv4 or IPv6.
-  // This avoids false-positives on Windows where IPv6 can be bound while IPv4 appears free.
-  const v4 = await canBind(port, '0.0.0.0');
-  if (!v4.ok && v4.err && v4.err.code === 'EADDRINUSE') return false;
-
-  const v6 = await canBind(port, '::');
-  if (!v6.ok && v6.err && v6.err.code === 'EADDRINUSE') return false;
-
-  // If IPv6 isn't supported, ignore and rely on IPv4 result.
-  if (!v6.ok && v6.err && (v6.err.code === 'EAFNOSUPPORT' || v6.err.code === 'EINVAL')) {
-    return v4.ok;
-  }
-
-  return v4.ok && v6.ok;
-}
-
-async function firstFreePort(startPort, opts = {}) {
-  const { maxTries = 50 } = opts;
-  for (let p = startPort, i = 0; i < maxTries; i += 1, p += 1) {
-    // eslint-disable-next-line no-await-in-loop
-    const free = await isPortFree(p);
-    if (free) return p;
-  }
-  throw new Error(`No free port found in range [${startPort}, ${startPort + maxTries - 1}]`);
-}
+const path = require('node:path');
+const { firstFreePort } = require(path.join(__dirname, 'dev-port-utils.cjs'));
 
 function prefixStream(child, label) {
   const tag = `[${label}] `;
@@ -62,6 +28,25 @@ function prefixStream(child, label) {
 
   if (child.stdout) child.stdout.on('data', (c) => write(c, process.stdout));
   if (child.stderr) child.stderr.on('data', (c) => write(c, process.stderr));
+}
+
+function printDevUrls(backendPort, frontendPort) {
+  const b = backendPort;
+  const f = frontendPort;
+  console.log('');
+  console.log('=== Aletheia dev (ports in use) ===');
+  console.log(`Backend (Nest):     http://localhost:${b}/`);
+  console.log(`                    http://127.0.0.1:${b}/`);
+  console.log(`GraphQL:            http://localhost:${b}/graphql`);
+  console.log(`                    http://127.0.0.1:${b}/graphql`);
+  console.log(`OpenAPI / Swagger:  http://localhost:${b}/api`);
+  console.log(`                    http://127.0.0.1:${b}/api`);
+  console.log(`Health:             http://localhost:${b}/health`);
+  console.log(`                    http://127.0.0.1:${b}/health`);
+  console.log(`Frontend (Next.js): http://localhost:${f}/`);
+  console.log(`                    http://127.0.0.1:${f}/`);
+  console.log('===================================');
+  console.log('');
 }
 
 async function main() {
@@ -85,10 +70,13 @@ async function main() {
     `http://127.0.0.1:${frontendPort}`,
   ].join(',');
 
+  const aletheiaFrontendUrl = `http://localhost:${frontendPort}`;
+
   const backendEnv = {
     ...process.env,
     PORT: String(backendPort),
     ALLOWED_ORIGINS: allowedOrigins,
+    ALETHEIA_FRONTEND_URL: aletheiaFrontendUrl,
   };
 
   const frontendEnv = {
@@ -97,8 +85,7 @@ async function main() {
     NEXT_PUBLIC_GRAPHQL_URL: `http://127.0.0.1:${backendPort}/graphql`,
   };
 
-  console.log(`Frontend: http://127.0.0.1:${frontendPort}`);
-  console.log(`Backend GraphQL: http://127.0.0.1:${backendPort}/graphql`);
+  printDevUrls(backendPort, frontendPort);
 
   const isWin = process.platform === 'win32';
   const comspec = process.env.ComSpec || 'cmd.exe';
@@ -157,4 +144,3 @@ main().catch((err) => {
   console.error(String(err?.stack || err));
   process.exit(1);
 });
-
