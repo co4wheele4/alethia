@@ -30,52 +30,34 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
   describe('Database Cleanup', () => {
     it('should clean database completely', async () => {
       // First, create some test data
-      const user = await prisma.user.create({
+      await prisma.user.create({
         data: {
           email: 'cleanup-test@example.com',
           name: 'Cleanup Test User',
         },
       });
 
-      await prisma.lesson.create({
-        data: {
-          title: 'Cleanup Test Lesson',
-          content: 'Test content',
-          userId: user.id,
-        },
-      });
-
       // Verify data exists
       const usersBefore = await prisma.user.findMany();
-      const lessonsBefore = await prisma.lesson.findMany();
       expect(usersBefore.length).toBeGreaterThan(0);
-      expect(lessonsBefore.length).toBeGreaterThan(0);
 
       // Clean database
       await cleanDatabase(prisma);
 
       // Verify all data is removed
       const usersAfter = await prisma.user.findMany();
-      const lessonsAfter = await prisma.lesson.findMany();
       const documentsAfter = await prisma.document.findMany();
       const chunksAfter = await prisma.documentChunk.findMany();
       const entitiesAfter = await prisma.entity.findMany();
-      const embeddingsAfter = await prisma.embedding.findMany();
       const mentionsAfter = await prisma.entityMention.findMany();
       const relationshipsAfter = await prisma.entityRelationship.findMany();
-      const aiQueriesAfter = await prisma.aiQuery.findMany();
-      const aiQueryResultsAfter = await prisma.aiQueryResult.findMany();
 
       expect(usersAfter).toHaveLength(0);
-      expect(lessonsAfter).toHaveLength(0);
       expect(documentsAfter).toHaveLength(0);
       expect(chunksAfter).toHaveLength(0);
       expect(entitiesAfter).toHaveLength(0);
-      expect(embeddingsAfter).toHaveLength(0);
       expect(mentionsAfter).toHaveLength(0);
       expect(relationshipsAfter).toHaveLength(0);
-      expect(aiQueriesAfter).toHaveLength(0);
-      expect(aiQueryResultsAfter).toHaveLength(0);
     });
   });
 
@@ -103,20 +85,6 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
       });
       expect(userInDb).toBeDefined();
       expect(userInDb?.email).toBe('test@example.com');
-
-      // Verify lesson was created
-      expect(testData.lesson).toBeDefined();
-      expect(testData.lesson.id).toBeDefined();
-      expect(testData.lesson.title).toBe('Test Lesson');
-      expect(testData.lesson.content).toBe('Test content');
-
-      // Verify lesson exists in database and is linked to user
-      const lessonInDb = await prisma.lesson.findUnique({
-        where: { id: testData.lesson.id },
-      });
-      expect(lessonInDb).toBeDefined();
-      expect(lessonInDb?.title).toBe('Test Lesson');
-      expect(lessonInDb?.userId).toBe(testData.user.id);
 
       // Verify document was created
       expect(testData.document).toBeDefined();
@@ -163,14 +131,6 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
     it('should create seed data with proper relationships', async () => {
       const testData = await seedTestData(prisma);
 
-      // Verify user-lesson relationship
-      const userWithLessons = await prisma.user.findUnique({
-        where: { id: testData.user.id },
-        include: { lessons: true },
-      });
-      expect(userWithLessons?.lessons).toHaveLength(1);
-      expect(userWithLessons?.lessons[0]?.id).toBe(testData.lesson.id);
-
       // Verify user-document relationship
       const userWithDocuments = await prisma.user.findUnique({
         where: { id: testData.user.id },
@@ -200,7 +160,6 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
 
       // IDs should be different (new records)
       expect(testData1.user.id).not.toBe(testData2.user.id);
-      expect(testData1.lesson.id).not.toBe(testData2.lesson.id);
       expect(testData1.document.id).not.toBe(testData2.document.id);
     });
   });
@@ -221,7 +180,6 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
       // Verify testData is accessible
       expect(testData).toBeDefined();
       expect(testData.user).toBeDefined();
-      expect(testData.lesson).toBeDefined();
       expect(testData.document).toBeDefined();
       expect(testData.chunk).toBeDefined();
       expect(testData.entity).toBeDefined();
@@ -232,11 +190,6 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
       });
       expect(user).toBeDefined();
 
-      const lesson = await prisma.lesson.findUnique({
-        where: { id: testData.lesson.id },
-      });
-      expect(lesson).toBeDefined();
-
       const document = await prisma.document.findUnique({
         where: { id: testData.document.id },
       });
@@ -244,9 +197,7 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
     });
 
     it('should allow tests to use seed data for GraphQL queries', async () => {
-      // This simulates how actual tests use testData
       const userId = testData.user.id;
-      const lessonId = testData.lesson.id;
       const documentId = testData.document.id;
       const chunkId = testData.chunk.id;
       const entityId = testData.entity.id;
@@ -255,16 +206,12 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
       const uuidRegex =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       expect(userId).toMatch(uuidRegex);
-      expect(lessonId).toMatch(uuidRegex);
       expect(documentId).toMatch(uuidRegex);
       expect(chunkId).toMatch(uuidRegex);
       expect(entityId).toMatch(uuidRegex);
 
       // Verify records exist and can be queried
       const user = await prisma.user.findUnique({ where: { id: userId } });
-      const lesson = await prisma.lesson.findUnique({
-        where: { id: lessonId },
-      });
       const document = await prisma.document.findUnique({
         where: { id: documentId },
       });
@@ -276,7 +223,6 @@ describe('Database Setup and Teardown Verification (e2e)', () => {
       });
 
       expect(user).toBeDefined();
-      expect(lesson).toBeDefined();
       expect(document).toBeDefined();
       expect(chunk).toBeDefined();
       expect(entity).toBeDefined();

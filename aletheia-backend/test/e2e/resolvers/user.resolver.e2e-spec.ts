@@ -235,28 +235,5 @@ describe('UserResolver (e2e)', () => {
       expect(data?.user).toBeDefined();
       expect(data?.user?.documents).toBeInstanceOf(Array);
     });
-
-    it('should resolve user lessons', async () => {
-      const query = `
-        query GetUserWithLessons($id: String!) {
-          user(id: $id) {
-            id
-            lessons {
-              id
-              title
-            }
-          }
-        }
-      `;
-      const variables = { id: context.testData.user.id };
-      const res = await graphqlRequest(context.app, query, variables);
-
-      expect(res.status).toBe(200);
-      const data = res.body?.data as {
-        user?: { id?: string; lessons?: unknown[] };
-      };
-      expect(data?.user).toBeDefined();
-      expect(data?.user?.lessons).toBeInstanceOf(Array);
-    });
   });
 });

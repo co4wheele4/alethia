@@ -61,9 +61,6 @@ describe('DocumentChunkResolver', () => {
       entityRelationshipEvidence: {
         count: jest.fn(),
       },
-      embedding: {
-        count: jest.fn(),
-      },
     };
 
     const mockDataLoaderService = {
@@ -287,7 +284,6 @@ describe('DocumentChunkResolver', () => {
       (
         prismaService.entityRelationshipEvidence.count as jest.Mock
       ).mockResolvedValue(0);
-      (prismaService.embedding.count as jest.Mock).mockResolvedValue(0);
     });
 
     it('should update chunk content when no anchors reference the chunk', async () => {
@@ -358,7 +354,6 @@ describe('DocumentChunkResolver', () => {
       (
         prismaService.entityRelationshipEvidence.count as jest.Mock
       ).mockResolvedValue(0);
-      (prismaService.embedding.count as jest.Mock).mockResolvedValue(0);
     });
 
     it('should delete a document chunk when no anchors reference it', async () => {

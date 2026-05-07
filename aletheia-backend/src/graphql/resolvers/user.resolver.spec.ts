@@ -16,7 +16,6 @@ describe('UserResolver', () => {
     email: 'test@example.com',
     name: 'Test User',
     createdAt: new Date(),
-    lessons: [],
     documents: [],
   };
 
@@ -33,9 +32,6 @@ describe('UserResolver', () => {
     };
 
     const mockDataLoaderService = {
-      getLessonsByUserLoader: jest.fn().mockReturnValue({
-        load: jest.fn().mockResolvedValue([]),
-      }),
       getDocumentsByUserLoader: jest.fn().mockReturnValue({
         load: jest.fn().mockResolvedValue([]),
       }),
@@ -376,48 +372,6 @@ describe('UserResolver', () => {
 
       await expect(resolver.deleteUser('999')).rejects.toThrow(
         'User not found',
-      );
-    });
-  });
-
-  describe('lessons', () => {
-    it('should resolve lessons field', async () => {
-      const mockLessons = [
-        { id: 'lesson-1', title: 'Lesson 1', content: 'Content 1' },
-        { id: 'lesson-2', title: 'Lesson 2', content: 'Content 2' },
-      ];
-      const loadMock = jest.fn().mockResolvedValue(mockLessons);
-      (dataLoaderService.getLessonsByUserLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
-
-      const result = await resolver.lessons(mockUser);
-
-      expect(result).toEqual(mockLessons);
-      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
-    });
-
-    it('should return empty array when user has no lessons', async () => {
-      const loadMock = jest.fn().mockResolvedValue([]);
-      (dataLoaderService.getLessonsByUserLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
-
-      const result = await resolver.lessons(mockUser);
-
-      expect(result).toEqual([]);
-      expect(loadMock).toHaveBeenCalledWith(mockUser.id);
-    });
-
-    it('should handle database errors', async () => {
-      const error = new Error('Database error');
-      const loadMock = jest.fn().mockRejectedValue(error);
-      (dataLoaderService.getLessonsByUserLoader as jest.Mock).mockReturnValue({
-        load: loadMock,
-      });
-
-      await expect(resolver.lessons(mockUser)).rejects.toThrow(
-        'Database error',
       );
     });
   });

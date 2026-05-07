@@ -1,5 +1,4 @@
 export { User } from './user.model';
-export { Lesson } from './lesson.model';
 export { Document } from './document.model';
 export { DocumentSource, DocumentSourceKind } from './document-source.model';
 export { DocumentChunk } from './document-chunk.model';

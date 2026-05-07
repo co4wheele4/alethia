@@ -183,16 +183,12 @@ export async function wipeAllTables(prisma: PrismaClient): Promise<void> {
   await prisma.entityRelationshipEvidenceMention.deleteMany();
   await prisma.entityRelationshipEvidence.deleteMany();
   await prisma.aiExtractionSuggestion.deleteMany();
-  await prisma.aiQueryResult.deleteMany();
-  await prisma.aiQuery.deleteMany();
-  await prisma.embedding.deleteMany();
   await prisma.entityMention.deleteMany();
   await prisma.entityRelationship.deleteMany();
   await prisma.entity.deleteMany();
   await prisma.documentSource.deleteMany();
   await prisma.documentChunk.deleteMany();
   await prisma.document.deleteMany();
-  await prisma.lesson.deleteMany();
   await prisma.user.deleteMany();
 }
 
@@ -299,6 +295,34 @@ export async function insertTestSeed(prisma: PrismaClient): Promise<void> {
         createdAt: fixedTime(12),
         sourceType: DocumentSourceKind.MANUAL,
         sourceLabel: 'incidents/2024-07-14-status.txt',
+      },
+    ],
+  });
+
+  // Populate structured provenance for epistemic completeness.
+  // The UI treats Document.source=null as an explicit warning surface.
+  await prisma.documentSource.createMany({
+    data: [
+      {
+        documentId: IDS.documents.d1,
+        kind: DocumentSourceKind.MANUAL,
+        filename: 'policy/ac-2024-03-excerpt.txt',
+        mimeType: 'text/plain',
+        ingestedAt: fixedTime(10),
+      },
+      {
+        documentId: IDS.documents.d2,
+        kind: DocumentSourceKind.MANUAL,
+        filename: 'contracts/appendix-b.txt',
+        mimeType: 'text/plain',
+        ingestedAt: fixedTime(11),
+      },
+      {
+        documentId: IDS.documents.d3,
+        kind: DocumentSourceKind.MANUAL,
+        filename: 'incidents/2024-07-14-status.txt',
+        mimeType: 'text/plain',
+        ingestedAt: fixedTime(12),
       },
     ],
   });

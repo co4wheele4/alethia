@@ -9,31 +9,33 @@ on:
 permissions:
   contents: read
 
+# Backend workspace postinstall runs `prisma generate`, which requires DATABASE_URL (no DB connection).
+env:
+  DATABASE_URL: postgresql://ci_placeholder:ci_placeholder@127.0.0.1:5432/ci_placeholder
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: aletheia-frontend/package-lock.json
-      
-      - name: Install dependencies
-        working-directory: aletheia-frontend
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies (monorepo root)
         run: npm ci
-      
+
       - name: Install Playwright browsers
         working-directory: aletheia-frontend
         run: npx playwright install --with-deps
-      
+
       - name: Run E2E tests
-        working-directory: aletheia-frontend
-        run: npm run test:e2e
-      
+        run: npm run test:e2e --workspace=aletheia-frontend
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4

@@ -28,40 +28,5 @@ describe('AppResolver (e2e)', () => {
       );
     });
 
-    it('should fetch lessons', async () => {
-      const query = `
-        query {
-          lessons {
-            id
-            title
-            content
-          }
-        }
-      `;
-      const res = await graphqlRequest(context.app, query);
-
-      expect(res.status).toBe(200);
-      expect(
-        (res.body?.data as { lessons?: unknown[] })?.lessons,
-      ).toBeInstanceOf(Array);
-    });
-  });
-
-  describe('Mutations', () => {
-    it('should create AI query via askAI', async () => {
-      const mutation = `
-        mutation AskAI($userId: String!, $query: String!) {
-          askAI(userId: $userId, query: $query)
-        }
-      `;
-      const variables = {
-        userId: context.testData.user.id,
-        query: 'What is Aletheia?',
-      };
-      const res = await graphqlRequest(context.app, mutation, variables);
-
-      expect(res.status).toBe(200);
-      expect((res.body?.data as { askAI?: unknown })?.askAI).toBeDefined();
-    });
   });
 });

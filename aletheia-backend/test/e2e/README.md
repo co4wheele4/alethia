@@ -1,40 +1,49 @@
 # E2E Test Organization
 
-**Last Updated**: January 14, 2026  
-**Status**: ✅ Migration complete (no monolithic `graphql.e2e-spec.ts`)
+**Last Updated**: May 6, 2026  
+**Status**: Migration complete (no monolithic `graphql.e2e-spec.ts`)
 
-This directory contains backend E2E tests organized by concern for maintainability.
+This directory contains backend E2E tests organized by concern. Additional suites live alongside it under `test/` (see `jest-e2e.json`).
 
-## Directory Structure
+## Directory structure (core)
 
 ```
 test/e2e/
 ├── resolvers/
-│   ├── app.resolver.e2e-spec.ts              # 3 tests
-│   ├── auth.resolver.e2e-spec.ts             # 5 tests
-│   ├── user.resolver.e2e-spec.ts             # 10 tests
-│   ├── entity.resolver.e2e-spec.ts           # 3 tests
-│   └── ai-query.resolver.e2e-spec.ts         # 4 tests
-└── cross-cutting/
-    ├── error-cases.e2e-spec.ts               # 12 tests
-    ├── validation-edge-cases.e2e-spec.ts     # 5 tests
-    ├── pagination-edge-cases.e2e-spec.ts     # 3 tests
-    ├── partial-updates.e2e-spec.ts           # 2 tests
-    └── relationship-edge-cases.e2e-spec.ts   # 2 tests
+│   ├── app.resolver.e2e-spec.ts
+│   ├── auth.resolver.e2e-spec.ts
+│   ├── user.resolver.e2e-spec.ts
+│   ├── entity.resolver.e2e-spec.ts
+│   ├── html-crawl-ingestion.resolver.e2e-spec.ts
+│   └── review-assignment.resolver.e2e-spec.ts
+├── cross-cutting/
+│   ├── error-cases.e2e-spec.ts
+│   ├── validation-edge-cases.e2e-spec.ts
+│   ├── pagination-edge-cases.e2e-spec.ts
+│   ├── partial-updates.e2e-spec.ts
+│   ├── relationship-edge-cases.e2e-spec.ts
+│   ├── workspace-isolation-adr035.e2e-spec.ts
+│   └── create-claim-workspace.e2e-spec.ts
+├── bundle/
+│   └── bundle-import-adr027.e2e-spec.ts
+└── db/
+    └── adr027-epistemic-constraints.e2e-spec.ts
 ```
 
-Additional Jest E2E suites live in `test/`:
-- `app.e2e-spec.ts` (1 test)
-- `db-setup-verification.e2e-spec.ts` (6 tests)
+**Also under `test/`:** `app.e2e-spec.ts`, `db-setup-verification.e2e-spec.ts`.
 
-**Totals**: 12 test suites, 56 tests ✅
+Legacy **`ai-query.resolver.e2e-spec.ts`** was removed **2026-05-06** with the migration that dropped `ai_queries` / related tables.
 
-## Running Tests
+**Inventory:** run `npx jest --config ./test/jest-e2e.json --listTests` from `aletheia-backend/` (currently **17** spec paths including the files above).
 
-- **All backend e2e**: `npm run test:e2e`
-- **Single file**: `npm run test:e2e -- test/e2e/resolvers/user.resolver.e2e-spec.ts`
-- **Cross-cutting only**: `npm run test:e2e -- test/e2e/cross-cutting/error-cases.e2e-spec.ts`
+## Running tests
+
+```bash
+cd aletheia-backend
+npm run test:e2e
+npm run test:e2e -- test/e2e/resolvers/user.resolver.e2e-spec.ts
+```
 
 ## Notes
 
-- Some Prisma/Nest log errors during runs are **expected**: we intentionally test constraint violations and validation paths.
+- Some Prisma/Nest log errors during runs are **expected**: tests intentionally hit constraint and validation failure paths.

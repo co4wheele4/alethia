@@ -2,7 +2,6 @@ import { Test } from '@nestjs/testing';
 import { DataLoaderService } from './dataloader.service';
 import { PrismaService } from '@prisma/prisma.service';
 import { User } from '@models/user.model';
-import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
 import { DocumentSource } from '@models/document-source.model';
 import { DocumentChunk } from '@models/document-chunk.model';
@@ -18,9 +17,6 @@ describe('DataLoaderService', () => {
 
   const mockPrismaService = {
     user: {
-      findMany: jest.fn(),
-    },
-    lesson: {
       findMany: jest.fn(),
     },
     document: {
@@ -87,7 +83,6 @@ describe('DataLoaderService', () => {
         email: 'test@example.com',
         name: 'Test User',
         createdAt: new Date(),
-        lessons: [],
         documents: [],
       };
       (prismaService.user.findMany as jest.Mock).mockResolvedValue([mockUser]);
@@ -108,7 +103,6 @@ describe('DataLoaderService', () => {
           email: 'test1@example.com',
           name: 'User 1',
           createdAt: new Date(),
-          lessons: [],
           documents: [],
         },
         {
@@ -116,7 +110,6 @@ describe('DataLoaderService', () => {
           email: 'test2@example.com',
           name: 'User 2',
           createdAt: new Date(),
-          lessons: [],
           documents: [],
         },
       ];
@@ -151,7 +144,6 @@ describe('DataLoaderService', () => {
         email: 'test@example.com',
         name: 'Test User',
         createdAt: new Date(),
-        lessons: [],
         documents: [],
       };
       (prismaService.user.findMany as jest.Mock).mockResolvedValue([mockUser]);
@@ -164,144 +156,6 @@ describe('DataLoaderService', () => {
 
       expect(user1).toEqual(mockUser);
       expect(user2).toBeNull();
-    });
-  });
-
-  describe('getLessonLoader', () => {
-    it('should return a DataLoader', () => {
-      const loader = service.getLessonLoader();
-      expect(loader).toBeDefined();
-    });
-
-    it('should load a single lesson', async () => {
-      const mockLesson = {
-        id: 'lesson-1',
-        title: 'Test Lesson',
-        content: 'Content',
-        userId: 'user-1',
-        createdAt: new Date(),
-      };
-      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue([
-        mockLesson,
-      ]);
-
-      const loader = service.getLessonLoader();
-      const result = await loader.load('lesson-1');
-
-      expect(result).toEqual(mockLesson as unknown as Lesson);
-      expect(prismaService.lesson.findMany).toHaveBeenCalledWith({
-        where: { id: { in: ['lesson-1'] } },
-      });
-    });
-
-    it('should return null for non-existent lesson', async () => {
-      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue([]);
-
-      const loader = service.getLessonLoader();
-      const result = await loader.load('non-existent');
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('getLessonsByUserLoader', () => {
-    it('should return a DataLoader', () => {
-      const loader = service.getLessonsByUserLoader();
-      expect(loader).toBeDefined();
-    });
-
-    it('should load lessons for a user', async () => {
-      const mockLessons = [
-        {
-          id: 'lesson-1',
-          title: 'Lesson 1',
-          content: 'Content 1',
-          userId: 'user-1',
-          createdAt: new Date(),
-        },
-        {
-          id: 'lesson-2',
-          title: 'Lesson 2',
-          content: 'Content 2',
-          userId: 'user-1',
-          createdAt: new Date(),
-        },
-      ];
-      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue(
-        mockLessons,
-      );
-
-      const loader = service.getLessonsByUserLoader();
-      const result = await loader.load('user-1');
-
-      expect(result).toEqual(mockLessons as unknown as Lesson[]);
-      expect(prismaService.lesson.findMany).toHaveBeenCalledWith({
-        where: { userId: { in: ['user-1'] } },
-      });
-    });
-
-    it('should return empty array when user has no lessons', async () => {
-      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue([]);
-
-      const loader = service.getLessonsByUserLoader();
-      const result = await loader.load('user-1');
-
-      expect(result).toEqual([]);
-    });
-
-    it('should batch multiple user lesson loads', async () => {
-      const mockLessons = [
-        {
-          id: 'lesson-1',
-          title: 'Lesson 1',
-          content: 'Content 1',
-          userId: 'user-1',
-          createdAt: new Date(),
-        },
-        {
-          id: 'lesson-2',
-          title: 'Lesson 2',
-          content: 'Content 2',
-          userId: 'user-2',
-          createdAt: new Date(),
-        },
-      ];
-      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue(
-        mockLessons,
-      );
-
-      const loader = service.getLessonsByUserLoader();
-      const [lessons1, lessons2] = await Promise.all([
-        loader.load('user-1'),
-        loader.load('user-2'),
-      ]);
-
-      expect(lessons1).toEqual([mockLessons[0] as unknown as Lesson]);
-      expect(lessons2).toEqual([mockLessons[1] as unknown as Lesson]);
-      expect(prismaService.lesson.findMany).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle lessons with unexpected userIds in batch', async () => {
-      // This tests the ?? [] fallback branch when a lesson has a userId
-      // that wasn't in the initial request (edge case)
-      const mockLessons = [
-        {
-          id: 'lesson-1',
-          title: 'Lesson 1',
-          content: 'Content 1',
-          userId: 'user-1',
-          createdAt: new Date(),
-        },
-      ];
-      (prismaService.lesson.findMany as jest.Mock).mockResolvedValue(
-        mockLessons,
-      );
-
-      const loader = service.getLessonsByUserLoader();
-      // Request user-2 which has no lessons
-      const result = await loader.load('user-2');
-
-      expect(result).toEqual([]);
     });
   });
 

@@ -119,59 +119,6 @@ describe('Error Cases (e2e)', () => {
       }
     });
 
-    it('should handle duplicate lesson (title + userId) constraint violation', async () => {
-      const title = `Duplicate Lesson ${Date.now()}`;
-
-      // Create first lesson
-      const create1Res = await graphqlRequest(
-        context.app,
-        `
-        mutation CreateLesson($title: String!, $userId: String!) {
-          createLesson(title: $title, userId: $userId) {
-            id
-            title
-          }
-        }
-      `,
-        {
-          title,
-          userId: context.testData.user.id,
-        },
-      );
-
-      expect(create1Res.status).toBe(200);
-      expect(
-        (create1Res.body?.data as { createLesson?: unknown })?.createLesson,
-      ).toBeDefined();
-
-      // Try to create second lesson with same title and userId
-      const create2Res = await graphqlRequest(
-        context.app,
-        `
-        mutation CreateLesson($title: String!, $userId: String!) {
-          createLesson(title: $title, userId: $userId) {
-            id
-            title
-          }
-        }
-      `,
-        {
-          title,
-          userId: context.testData.user.id,
-        },
-      );
-
-      expect(create2Res.status).toBe(200);
-      // Should have an error
-      expect(
-        create2Res.body?.errors ||
-          (create2Res.body?.data as { createLesson?: unknown })?.createLesson,
-      ).toBeDefined();
-      if (create2Res.body?.errors) {
-        expect(create2Res.body.errors.length).toBeGreaterThan(0);
-      }
-    });
-
     it('should handle duplicate chunk (documentId + chunkIndex) constraint violation', async () => {
       const chunkIndex = 9999;
       // Seeded document is owned by the normal user, not the admin (default e2e bearer).
@@ -233,34 +180,6 @@ describe('Error Cases (e2e)', () => {
   });
 
   describe('Foreign Key Constraint Tests', () => {
-    it('should handle invalid userId in createLesson', async () => {
-      const res = await graphqlRequest(
-        context.app,
-        `
-        mutation CreateLesson($title: String!, $userId: String!) {
-          createLesson(title: $title, userId: $userId) {
-            id
-            title
-          }
-        }
-      `,
-        {
-          title: 'Test Lesson',
-          userId: 'non-existent-user-id',
-        },
-      );
-
-      expect(res.status).toBe(200);
-      // Should have an error due to foreign key constraint
-      expect(
-        res.body?.errors ||
-          (res.body?.data as { createLesson?: unknown })?.createLesson,
-      ).toBeDefined();
-      if (res.body?.errors) {
-        expect(res.body.errors.length).toBeGreaterThan(0);
-      }
-    });
-
     it('should handle invalid userId in createDocument', async () => {
       const res = await graphqlRequest(
         context.app,

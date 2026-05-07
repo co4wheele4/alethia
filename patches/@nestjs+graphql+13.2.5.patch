@@ -1,0 +1,31 @@
+diff --git a/node_modules/@nestjs/graphql/dist/services/gql-subscription.service.js b/node_modules/@nestjs/graphql/dist/services/gql-subscription.service.js
+index d8c81f4..863921f 100644
+--- a/node_modules/@nestjs/graphql/dist/services/gql-subscription.service.js
++++ b/node_modules/@nestjs/graphql/dist/services/gql-subscription.service.js
+@@ -5,7 +5,8 @@ const graphql_1 = require("graphql");
+ const graphql_ws_1 = require("graphql-ws");
+ // @ts-expect-error TS says path is invalid, but it's valid
+ const ws_1 = require("graphql-ws/use/ws");
+-const subscriptions_transport_ws_1 = require("subscriptions-transport-ws");
++/** Same as `subscriptions-transport-ws` `GRAPHQL_WS` (avoid eager `require` of deprecated package). */
++const LEGACY_GRAPHQL_WS_SUBPROTOCOL = "graphql-ws";
+ const ws = require("ws");
+ class GqlSubscriptionService {
+     constructor(options, httpServer) {
+@@ -37,6 +38,7 @@ class GqlSubscriptionService {
+             }, this.wss);
+         }
+         if ('subscriptions-transport-ws' in this.options) {
++            const subscriptions_transport_ws_1 = require("subscriptions-transport-ws");
+             const subscriptionsWsOptions = this.options['subscriptions-transport-ws'] === true
+                 ? {}
+                 : this.options['subscriptions-transport-ws'];
+@@ -54,7 +56,7 @@ class GqlSubscriptionService {
+                 ? protocol
+                 : protocol?.split(',').map((p) => p.trim());
+             protocols = protocols?.filter((protocol) => supportedProtocols.includes(protocol));
+-            const wss = protocols?.includes(subscriptions_transport_ws_1.GRAPHQL_WS) && // subscriptions-transport-ws subprotocol
++            const wss = protocols?.includes(LEGACY_GRAPHQL_WS_SUBPROTOCOL) && // subscriptions-transport-ws subprotocol
+                 !protocols.includes(graphql_ws_1.GRAPHQL_TRANSPORT_WS_PROTOCOL) // graphql-ws subprotocol
+                 ? this.subTransWs
+                 : this.wss;

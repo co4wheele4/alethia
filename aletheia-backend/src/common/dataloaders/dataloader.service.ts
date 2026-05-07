@@ -3,7 +3,6 @@ import DataLoader from 'dataloader';
 import { PrismaService } from '@prisma/prisma.service';
 import {
   User as PrismaUser,
-  Lesson as PrismaLesson,
   Document as PrismaDocument,
   DocumentSource as PrismaDocumentSource,
   DocumentChunk as PrismaDocumentChunk,
@@ -14,7 +13,6 @@ import {
   EntityRelationshipEvidenceMention as PrismaEntityRelationshipEvidenceMention,
 } from '@prisma/client';
 import { User } from '@models/user.model';
-import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
 import { DocumentSource } from '@models/document-source.model';
 import { DocumentChunk } from '@models/document-chunk.model';
@@ -39,8 +37,6 @@ function documentSourceRowToGql(row: PrismaDocumentSource): DocumentSource {
 @Injectable({ scope: Scope.REQUEST })
 export class DataLoaderService {
   private readonly userLoader: DataLoader<string, User | null>;
-  private readonly lessonLoader: DataLoader<string, Lesson | null>;
-  private readonly lessonsByUserLoader: DataLoader<string, Lesson[]>;
   private readonly documentLoader: DataLoader<string, Document | null>;
   private readonly documentsByUserLoader: DataLoader<string, Document[]>;
   private readonly documentSourceByDocumentLoader: DataLoader<
@@ -92,37 +88,6 @@ export class DataLoaderService {
           users.map((user) => [user.id, user as unknown as User]),
         );
         return ids.map((id) => userMap.get(id) ?? null);
-      },
-    );
-
-    // Lesson loaders
-    this.lessonLoader = new DataLoader<string, Lesson | null>(
-      async (ids: readonly string[]) => {
-        const lessons: PrismaLesson[] = await this.prisma.lesson.findMany({
-          where: { id: { in: [...ids] } },
-        });
-        const lessonMap = new Map(
-          lessons.map((lesson) => [lesson.id, lesson as unknown as Lesson]),
-        );
-        return ids.map((id) => lessonMap.get(id) ?? null);
-      },
-    );
-
-    this.lessonsByUserLoader = new DataLoader<string, Lesson[]>(
-      async (userIds: readonly string[]) => {
-        const lessons: PrismaLesson[] = await this.prisma.lesson.findMany({
-          where: { userId: { in: [...userIds] } },
-        });
-        const lessonsByUser = new Map<string, Lesson[]>();
-        for (const userId of userIds) {
-          lessonsByUser.set(userId, []);
-        }
-        for (const lesson of lessons) {
-          const userLessons = lessonsByUser.get(lesson.userId) ?? [];
-          userLessons.push(lesson as unknown as Lesson);
-          lessonsByUser.set(lesson.userId, userLessons);
-        }
-        return userIds.map((userId) => lessonsByUser.get(userId)!);
       },
     );
 
@@ -414,15 +379,6 @@ export class DataLoaderService {
   // User loaders
   getUserLoader(): DataLoader<string, User | null> {
     return this.userLoader;
-  }
-
-  // Lesson loaders
-  getLessonLoader(): DataLoader<string, Lesson | null> {
-    return this.lessonLoader;
-  }
-
-  getLessonsByUserLoader(): DataLoader<string, Lesson[]> {
-    return this.lessonsByUserLoader;
   }
 
   // Document loaders

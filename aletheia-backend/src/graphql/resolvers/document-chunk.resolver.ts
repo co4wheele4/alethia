@@ -195,35 +195,33 @@ export class DocumentChunkResolver {
   }
 
   /**
-   * Chunk text must not change while evidence spans, entity mentions, relationship-evidence
-   * anchors, or embeddings reference the chunk (ADR-019 traceability; offsets/snippets).
+   * Chunk text must not change while evidence spans, entity mentions, or relationship-evidence
+   * anchors reference the chunk (ADR-019 traceability; offsets/snippets).
    */
   private async assertChunkTextNotAnchored(chunkId: string): Promise<void> {
-    const [evidenceN, mentionN, relEvN, embeddingN] = await Promise.all([
+    const [evidenceN, mentionN, relEvN] = await Promise.all([
       this.prisma.evidence.count({ where: { chunkId } }),
       this.prisma.entityMention.count({ where: { chunkId } }),
       this.prisma.entityRelationshipEvidence.count({ where: { chunkId } }),
-      this.prisma.embedding.count({ where: { chunkId } }),
     ]);
-    const blocked = evidenceN + mentionN + relEvN + embeddingN;
+    const blocked = evidenceN + mentionN + relEvN;
     if (blocked > 0) {
       throw new BadRequestException(
-        `Cannot change chunk text: ${evidenceN} evidence row(s), ${mentionN} entity mention(s), ${relEvN} relationship-evidence anchor(s), ${embeddingN} embedding row(s) reference this chunk. Remove or re-anchor dependents first.`,
+        `Cannot change chunk text: ${evidenceN} evidence row(s), ${mentionN} entity mention(s), ${relEvN} relationship-evidence anchor(s) reference this chunk. Remove or re-anchor dependents first.`,
       );
     }
   }
 
   private async assertChunkDeletable(chunkId: string): Promise<void> {
-    const [evidenceN, mentionN, relEvN, embeddingN] = await Promise.all([
+    const [evidenceN, mentionN, relEvN] = await Promise.all([
       this.prisma.evidence.count({ where: { chunkId } }),
       this.prisma.entityMention.count({ where: { chunkId } }),
       this.prisma.entityRelationshipEvidence.count({ where: { chunkId } }),
-      this.prisma.embedding.count({ where: { chunkId } }),
     ]);
-    const blocked = evidenceN + mentionN + relEvN + embeddingN;
+    const blocked = evidenceN + mentionN + relEvN;
     if (blocked > 0) {
       throw new BadRequestException(
-        `Cannot delete chunk: ${evidenceN} evidence row(s), ${mentionN} entity mention(s), ${relEvN} relationship-evidence anchor(s), ${embeddingN} embedding row(s) reference this chunk.`,
+        `Cannot delete chunk: ${evidenceN} evidence row(s), ${mentionN} entity mention(s), ${relEvN} relationship-evidence anchor(s) reference this chunk.`,
       );
     }
   }

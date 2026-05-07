@@ -5,10 +5,6 @@ describe('resolvers/index', () => {
     expect(resolvers.UserResolver).toBeDefined();
   });
 
-  it('should export LessonResolver', () => {
-    expect(resolvers.LessonResolver).toBeDefined();
-  });
-
   it('should export DocumentResolver', () => {
     expect(resolvers.DocumentResolver).toBeDefined();
   });

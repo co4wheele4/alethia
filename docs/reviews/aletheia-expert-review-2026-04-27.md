@@ -27,7 +27,7 @@
 | **ADR-001 “AI-assisted” narrative** | **Addressed** — addendum in [`docs/adr/ADR-001-frontend-architecture.md`](../adr/ADR-001-frontend-architecture.md) defers to ADR-025 and core context. |
 | **OpenAPI / REST** | **New external catalog** — not a second truth API: [`aletheia-backend/src/app/openapi.setup.ts`](../../aletheia-backend/src/app/openapi.setup.ts) documents `GET /`, `GET /health` and **points to GraphQL**; Swagger UI at `/api` (see backend README, `ENABLE_SWAGGER` for production). |
 | **GraphQL schema** | No `askAI` / `Embedding` string tokens in `aletheia-backend/src/schema.gql` (grep). |
-| **Compliance drift audit** | [`docs/compliance/full-implementation-drift-audit.md`](../compliance/full-implementation-drift-audit.md) remains a **time-stamped** artifact; re-read when embedding or admin surfaces change. |
+| **Compliance drift audit** | [`docs/compliance/full-implementation-drift-audit.md`](../compliance/full-implementation-drift-audit.md) remains a **time-stamped** artifact; re-read after major **schema, bundle, or admin** surface changes (legacy embedding/AI-query **DB** tables were removed **2026-05-06**). |
 
 ---
 

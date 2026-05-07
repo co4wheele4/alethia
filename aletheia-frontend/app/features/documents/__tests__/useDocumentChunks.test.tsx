@@ -1,5 +1,5 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { useDocumentHeader, useChunksByDocument, useDocumentDetails } from '../hooks/useDocumentChunks';
+import { useDocumentHeader, useChunksByDocument } from '../hooks/useDocumentChunks';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { DOCUMENT_QUERY, CHUNKS_BY_DOCUMENT_QUERY } from '../graphql';
 
@@ -11,7 +11,14 @@ const mocks = [
     },
     result: {
       data: {
-        document: { id: 'd1', title: 'Test Doc', createdAt: '2023-01-01T00:00:00Z', __typename: 'Document' },
+        document: {
+          id: 'd1',
+          title: 'Test Doc',
+          createdAt: '2023-01-01T00:00:00Z',
+          sourceType: null,
+          sourceLabel: null,
+          __typename: 'Document' as const,
+        },
       },
     },
   },
@@ -99,35 +106,59 @@ describe('useDocumentChunks hooks', () => {
     });
   });
 
-  describe('useDocumentDetails', () => {
-    it('fetches document and chunks together', async () => {
-      const { result } = renderHook(() => useDocumentDetails('d1'), {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={[...mocks, ...mocks]}>
-            {children}
-          </MockedProvider>
-        ),
-      });
+  describe('useDocumentHeader + useChunksByDocument (same view)', () => {
+    it('loads document and chunks together under one MockedProvider', async () => {
+      const { result } = renderHook(
+        () => {
+          const header = useDocumentHeader('d1');
+          const chunks = useChunksByDocument('d1');
+          return {
+            document: header.document,
+            chunks: chunks.chunks,
+            loading: header.loading || chunks.loading,
+            refetch: async () => {
+              await Promise.all([header.refetch(), chunks.refetch()]);
+            },
+          };
+        },
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={[...mocks, ...mocks]}>
+              {children}
+            </MockedProvider>
+          ),
+        },
+      );
 
       await waitFor(() => {
         expect(result.current.document?.title).toBe('Test Doc');
         expect(result.current.chunks).toHaveLength(1);
       });
 
-      // Test refetch
       await act(async () => {
         await result.current.refetch();
       });
     });
 
-    it('handles null documentId', async () => {
-      const { result } = renderHook(() => useDocumentDetails(null), {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={[]}>
-            {children}
-          </MockedProvider>
-        ),
-      });
+    it('skips both queries when documentId is null', async () => {
+      const { result } = renderHook(
+        () => {
+          const header = useDocumentHeader(null);
+          const chunks = useChunksByDocument(null);
+          return {
+            document: header.document,
+            chunks: chunks.chunks,
+            loading: header.loading || chunks.loading,
+          };
+        },
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={[]}>
+              {children}
+            </MockedProvider>
+          ),
+        },
+      );
 
       expect(result.current.loading).toBe(false);
       expect(result.current.document).toBeNull();

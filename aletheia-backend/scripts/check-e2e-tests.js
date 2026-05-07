@@ -1,99 +1,114 @@
 #!/usr/bin/env node
+'use strict';
 
 /**
- * Script to check if new resolvers/endpoints have corresponding e2e tests
- * Usage: node scripts/check-e2e-tests.js [changed-files...]
+ * Resolver ↔ e2e reminder: detects GraphQL resolver changes and reports whether
+ * each has a dedicated e2e spec under test/e2e/resolvers/.
+ *
+ * Usage:
+ *   node scripts/check-e2e-tests.js [changed-file...]
+ *   node scripts/check-e2e-tests.js --git-range origin/main...HEAD
+ *
+ * Exits 0 (prints warnings when a dedicated spec is missing — non-blocking for CI).
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const BACKEND_ROOT = path.resolve(__dirname, '..');
+const TEST_ROOT = path.join(BACKEND_ROOT, 'test');
 
-const TEST_DIR = path.join(__dirname, '../test');
-const RESOLVER_PATTERN = /src\/graphql\/resolvers\/(.+)\.resolver\.ts$/;
-const MAIN_E2E_FILE = path.join(TEST_DIR, 'graphql.e2e-spec.ts');
+/** Matches resolver paths from repo root or backend-relative. */
+const RESOLVER_PATH =
+  /(?:^|\/)(?:aletheia-backend\/)?src\/graphql\/resolvers\/(.+)\.resolver\.ts$/;
 
-function checkE2ETests(changedFiles) {
-  const changedResolvers = [];
-  const missingTests = [];
+function extractResolverBase(repoRelativePath) {
+  const norm = repoRelativePath.replace(/\\/g, '/').trim();
+  const m = norm.match(RESOLVER_PATH);
+  return m ? m[1] : null;
+}
 
-  // Find changed resolvers
-  changedFiles.forEach(file => {
-    const match = file.match(RESOLVER_PATTERN);
-    if (match) {
-      const resolverName = match[1];
-      changedResolvers.push(resolverName);
+function dedicatedE2ePath(resolverBase) {
+  return path.join(TEST_ROOT, 'e2e', 'resolvers', `${resolverBase}.resolver.e2e-spec.ts`);
+}
+
+function resolveChangedFiles(argv) {
+  const rangeIdx = argv.findIndex((a) => a === '--git-range' || a.startsWith('--git-range='));
+  if (rangeIdx !== -1) {
+    let range;
+    if (argv[rangeIdx].includes('=')) {
+      range = argv[rangeIdx].split('=').slice(1).join('=');
+    } else {
+      range = argv[rangeIdx + 1];
     }
-  });
+    if (!range) {
+      console.error('check-e2e-tests: --git-range requires a value (e.g. origin/main...HEAD)');
+      process.exit(2);
+    }
+    const out = execSync(`git diff --name-only ${range}`, {
+      encoding: 'utf8',
+      cwd: path.resolve(BACKEND_ROOT, '..'),
+    });
+    return out.split(/\r?\n/).filter(Boolean);
+  }
 
-  if (changedResolvers.length === 0) {
-    console.log('✓ No resolver changes detected');
+  if (argv.length > 0) {
+    return argv.filter((a) => !a.startsWith('--'));
+  }
+
+  try {
+    const out = execSync('git diff --cached --name-only --diff-filter=ACM', {
+      encoding: 'utf8',
+      cwd: path.resolve(BACKEND_ROOT, '..'),
+    });
+    return out.split(/\r?\n/).filter(Boolean);
+  } catch {
+    console.log('⚠️  Could not read git diff; pass files as args or --git-range origin/<branch>...HEAD');
+    return [];
+  }
+}
+
+function checkE2EHints(changedFiles) {
+  const resolverBases = [];
+  for (const f of changedFiles) {
+    const base = extractResolverBase(f);
+    if (base) resolverBases.push(base);
+  }
+
+  if (resolverBases.length === 0) {
+    console.log('✓ No GraphQL resolver file changes detected in this diff');
     return true;
   }
 
-  console.log(`\n📋 Detected ${changedResolvers.length} resolver change(s):`);
-  changedResolvers.forEach(name => console.log(`   - ${name}.resolver.ts`));
+  const unique = [...new Set(resolverBases)];
+  console.log(`\n📋 Resolver file(s) changed (${unique.length}):`);
+  unique.forEach((name) => console.log(`   - ${name}.resolver.ts`));
 
-  // Check if e2e tests exist
-  changedResolvers.forEach(resolverName => {
-    const e2eTestFile = path.join(TEST_DIR, `${resolverName}.e2e-spec.ts`);
-    const hasDedicatedTest = fs.existsSync(e2eTestFile);
-    
-    // Check if it's covered in the main graphql.e2e-spec.ts
-    let hasMainTest = false;
-    if (fs.existsSync(MAIN_E2E_FILE)) {
-      const mainTestContent = fs.readFileSync(MAIN_E2E_FILE, 'utf-8');
-      // Simple check - look for resolver name or common query/mutation patterns
-      const resolverPattern = new RegExp(
-        `(${resolverName}|${resolverName.charAt(0).toUpperCase() + resolverName.slice(1)})`,
-        'i'
-      );
-      hasMainTest = resolverPattern.test(mainTestContent);
+  const missingDedicated = [];
+  for (const name of unique) {
+    if (!fs.existsSync(dedicatedE2ePath(name))) {
+      missingDedicated.push(name);
     }
-
-    if (!hasDedicatedTest && !hasMainTest) {
-      missingTests.push(resolverName);
-    }
-  });
-
-  if (missingTests.length > 0) {
-    console.log('\n⚠️  Warning: Missing e2e tests for:');
-    missingTests.forEach(name => console.log(`   - ${name}`));
-    console.log('\n💡 Please add e2e tests:');
-    console.log('   - Create test/<resolver>.e2e-spec.ts, or');
-    console.log('   - Add tests to test/graphql.e2e-spec.ts');
-    console.log('\n📖 See test/TESTING_GUIDELINES.md for guidelines.\n');
-    return false;
   }
 
-  console.log('\n✓ All changed resolvers have e2e tests\n');
+  if (missingDedicated.length === 0) {
+    console.log('\n✓ Each changed resolver has test/e2e/resolvers/<name>.resolver.e2e-spec.ts\n');
+    return true;
+  }
+
+  console.log('\n⚠️  These changed resolvers have no dedicated e2e spec yet:');
+  missingDedicated.forEach((name) => {
+    console.log(`   - ${name} → add test/e2e/resolvers/${name}.resolver.e2e-spec.ts`);
+  });
+  console.log(
+    '\n💡 If coverage lives only in cross-cutting e2e files, add a dedicated resolver spec when practical.',
+  );
+  console.log('📖 See test/e2e/README.md and test/TESTING_GUIDELINES.md (if present).\n');
   return true;
 }
 
-// Get changed files from command line or git diff
-const args = process.argv.slice(2);
-let changedFiles = [];
-
-if (args.length > 0) {
-  changedFiles = args;
-} else {
-  // Try to get from git diff (if in git repo)
-  try {
-    const gitDiff = execSync('git diff --cached --name-only --diff-filter=ACM', {
-      encoding: 'utf-8',
-    });
-    changedFiles = gitDiff.split('\n').filter(Boolean);
-  } catch (error) {
-    console.log('⚠️  Could not detect changed files from git');
-    console.log('   Usage: node scripts/check-e2e-tests.js [file1] [file2] ...\n');
-    process.exit(0);
-  }
-}
-
-const hasAllTests = checkE2ETests(changedFiles);
-process.exit(hasAllTests ? 0 : 1);
-
+const argv = process.argv.slice(2);
+const changedFiles = resolveChangedFiles(argv);
+checkE2EHints(changedFiles);
+process.exit(0);

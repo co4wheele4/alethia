@@ -2,113 +2,65 @@
 
 ## Overview
 
-Backend e2e tests are organized into a maintainable structure:
-- **Resolvers** - Resolver-focused GraphQL suites
-- **Cross-cutting** - Validation, error handling, pagination, and relationship behavior
+Backend e2e tests live under **`aletheia-backend/test/`** and are picked up by **`jest --config ./test/jest-e2e.json`**. Layout:
 
-## Current Structure (Verified)
+- **`test/e2e/resolvers/`** — Resolver-focused GraphQL suites
+- **`test/e2e/cross-cutting/`** — Validation, errors, pagination, workspace, claim flows
+- **`test/e2e/bundle/`**, **`test/e2e/db/`** — Bundle import and ADR-027 DB constraints
+- **`test/app.e2e-spec.ts`**, **`test/db-setup-verification.e2e-spec.ts`** — Smoke / DB safety
+
+Legacy **`ai-query.resolver.e2e-spec.ts`** was removed with the **2026-05-06** API and migration that dropped `AiQuery` / related tables.
+
+## Current structure (representative)
 
 ```
-test/
+aletheia-backend/test/
 ├── e2e/
 │   ├── resolvers/
 │   │   ├── app.resolver.e2e-spec.ts
 │   │   ├── auth.resolver.e2e-spec.ts
 │   │   ├── user.resolver.e2e-spec.ts
 │   │   ├── entity.resolver.e2e-spec.ts
-│   │   └── ai-query.resolver.e2e-spec.ts
+│   │   ├── html-crawl-ingestion.resolver.e2e-spec.ts
+│   │   └── review-assignment.resolver.e2e-spec.ts
 │   ├── cross-cutting/
 │   │   ├── error-cases.e2e-spec.ts
 │   │   ├── validation-edge-cases.e2e-spec.ts
 │   │   ├── pagination-edge-cases.e2e-spec.ts
 │   │   ├── partial-updates.e2e-spec.ts
-│   │   └── relationship-edge-cases.e2e-spec.ts
+│   │   ├── relationship-edge-cases.e2e-spec.ts
+│   │   ├── workspace-isolation-adr035.e2e-spec.ts
+│   │   └── create-claim-workspace.e2e-spec.ts
+│   ├── bundle/
+│   │   └── bundle-import-adr027.e2e-spec.ts
+│   ├── db/
+│   │   └── adr027-epistemic-constraints.e2e-spec.ts
 │   ├── README.md
 │   ├── TEST_ORGANIZATION.md
-│   ├── TEST_VERIFICATION_SUMMARY.md
-│   ├── MIGRATION_SUMMARY.md
-│   └── EXTRACTION_GUIDE.md
-├── helpers/
-│   ├── test-db.ts
-│   ├── graphql-request.ts
-│   └── test-setup.ts
+│   └── TEST_VERIFICATION_SUMMARY.md
+├── helpers/            # `test-setup.ts`, `test-db.ts`, `graphql-request.ts`
 ├── app.e2e-spec.ts
 └── db-setup-verification.e2e-spec.ts
 ```
 
-## Quick Start
+Run **`npx jest --config ./test/jest-e2e.json --listTests`** for the exact file list on your branch.
 
-### Adding a Test to a Resolver
+## Quick start
 
-1. Find the resolver file: `test/e2e/resolvers/{resolver-name}.resolver.e2e-spec.ts`
-2. Add your test in the appropriate `describe` block:
-   - `Queries` - for query operations
-   - `Mutations` - for mutation operations  
-   - `ResolveFields` - for field resolver tests
+### Adding a resolver-focused test
 
-### Adding a Cross-Cutting Test
+1. Add or edit `test/e2e/resolvers/<name>.resolver.e2e-spec.ts`
+2. Use `setupTestApp` / `teardownTestApp` from the path shown in existing resolver specs (imports vary by folder depth).
 
-1. Determine the category (error cases, validation, relationships, etc.)
-2. Add to the appropriate file in `test/e2e/cross-cutting/`
-
-### Running Tests
+### Running tests
 
 ```bash
-# Run all e2e tests
+cd aletheia-backend
 npm run test:e2e
-
-# Run specific resolver tests
 npm run test:e2e -- test/e2e/resolvers/user.resolver.e2e-spec.ts
-
-# Run cross-cutting tests
-npm run test:e2e -- test/e2e/cross-cutting/error-cases.e2e-spec.ts
 ```
 
-## Test File Template
+## Migration status
 
-```typescript
-import { setupTestApp, teardownTestApp, TestContext } from '../../helpers/test-setup';
-import { graphqlRequest } from '../../helpers/graphql-request';
-
-describe('ResolverName (e2e)', () => {
-  let context: TestContext;
-
-  beforeAll(async () => {
-    context = await setupTestApp();
-  });
-
-  afterAll(async () => {
-    await teardownTestApp(context);
-  });
-
-  describe('Queries', () => {
-    it('should do something', async () => {
-      const query = `query { ... }`;
-      const res = await graphqlRequest(context.app, query);
-      // assertions
-    });
-  });
-
-  describe('Mutations', () => {
-    it('should create something', async () => {
-      const mutation = `mutation { ... }`;
-      const res = await graphqlRequest(context.app, mutation, variables);
-      // assertions
-    });
-  });
-});
-```
-
-## Migration Status
-
-- ✅ **Migration complete**: Resolver and cross-cutting suites are organized under `test/e2e/`
-- ✅ **No monolithic file**: `graphql.e2e-spec.ts` is not part of this repo’s e2e suite
-
-## Benefits
-
-1. **Easy Navigation**: Find tests for a specific resolver quickly
-2. **Clear Organization**: Tests grouped by logical concern
-3. **Maintainability**: Smaller, focused test files
-4. **Extensibility**: Clear place to add new tests
-5. **Isolation**: Each test file has its own setup/teardown
-
+- **No monolithic `graphql.e2e-spec.ts`** in this suite.
+- **AI query e2e** removed **2026-05-06** together with legacy GraphQL/DB surfaces.

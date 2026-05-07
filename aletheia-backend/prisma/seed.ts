@@ -59,7 +59,7 @@ function getDatabaseName(): string {
 async function main() {
   const databaseName = getDatabaseName();
   console.log(`\n🌱 Starting seed process for database: ${databaseName}\n`);
-  
+
   // Safety check: Warn if attempting to seed production in non-production mode
   if (databaseName === 'devdb' && process.env.NODE_ENV !== 'production') {
     console.warn(
@@ -67,11 +67,9 @@ async function main() {
         `   This should only be done explicitly in production environments.\n` +
         `   If this is unintended, ensure DATABASE_URL points to the correct database.\n`
     );
-    // Uncomment the following line to add a hard stop (requires confirmation):
-    // throw new Error('Production database seeding requires explicit confirmation');
   }
 
-  // Clear existing data (dependency order — matches test/helpers/test-db.ts)
+  // Clear existing data (dependency order)
   console.log('Clearing existing data...');
   await prisma.reviewerResponse.deleteMany();
   await prisma.reviewAssignment.deleteMany();
@@ -81,29 +79,21 @@ async function main() {
   await prisma.claimEvidence.deleteMany();
   await prisma.claim.deleteMany();
   await prisma.evidence.deleteMany();
-  await prisma.aiQueryResult.deleteMany();
-  await prisma.aiQuery.deleteMany();
-  await prisma.embedding.deleteMany();
   await prisma.entityMention.deleteMany();
   await prisma.entityRelationship.deleteMany();
   await prisma.entity.deleteMany();
   await prisma.documentChunk.deleteMany();
   await prisma.document.deleteMany();
-  await prisma.lesson.deleteMany();
   await prisma.user.deleteMany();
   console.log('✓ Existing data cleared\n');
 
   // Track inserted rows by table
   const counts = {
     users: 0,
-    lessons: 0,
     documents: 0,
     documentChunks: 0,
-    embeddings: 0,
     entities: 0,
     entityMentions: 0,
-    aiQueries: 0,
-    aiQueryResults: 0,
   };
 
   // Insert users
@@ -115,13 +105,6 @@ async function main() {
   });
   counts.users++;
   console.log(`✓ Inserted ${counts.users} user(s)`);
-
-  // Insert lessons
-  const lesson = await prisma.lesson.create({
-    data: { title: 'Introduction to Aletheia', content: 'This lesson explains the purpose of the Aletheia project.', userId: alice.id },
-  });
-  counts.lessons++;
-  console.log(`✓ Inserted ${counts.lessons} lesson(s)`);
 
   // Insert documents
   const document = await prisma.document.create({
@@ -140,11 +123,6 @@ async function main() {
   });
   counts.documentChunks++;
   console.log(`✓ Inserted ${counts.documentChunks} document chunk(s)`);
-
-  // Insert embeddings
-  await prisma.embedding.create({ data: { chunkId: chunk.id, values: [0.1, 0.2, 0.3] } });
-  counts.embeddings++;
-  console.log(`✓ Inserted ${counts.embeddings} embedding(s)`);
 
   // Insert entities
   const entity = await prisma.entity.create({ data: { name: 'Test Entity', type: 'TestType' } });
@@ -226,7 +204,6 @@ async function main() {
   });
 
   // ADR-019/024: GraphQL `claim.evidence` prefers ClaimEvidenceLink → Evidence with chunk offsets.
-  // Legacy-only rows map to null locators; the review UI needs real spans for E2E.
   const verbatimSnippet = chunk.content.slice(20, 31);
   const reviewSnippetSha = evidenceContentSha256Hex(verbatimSnippet);
 
@@ -262,29 +239,15 @@ async function main() {
     data: { claimId: 'claim-review-reject', evidenceId: evidenceReject.id },
   });
 
-  // Insert AI queries
-  const query = await prisma.aiQuery.create({ data: { userId: alice.id, query: 'Explain chunk 0 in simple terms' } });
-  counts.aiQueries++;
-  console.log(`✓ Inserted ${counts.aiQueries} AI query/queries`);
-
-  // Insert AI query results
-  await prisma.aiQueryResult.create({ data: { queryId: query.id, answer: 'Chunk 0 introduces the purpose of the Aletheia project.' } });
-  counts.aiQueryResults++;
-  console.log(`✓ Inserted ${counts.aiQueryResults} AI query result(s)`);
-
   // Summary
   const totalRows = Object.values(counts).reduce((sum, count) => sum + count, 0);
   console.log(`\n✅ Seed completed successfully!`);
   console.log(`📊 Summary:`);
   console.log(`   - Users: ${counts.users}`);
-  console.log(`   - Lessons: ${counts.lessons}`);
   console.log(`   - Documents: ${counts.documents}`);
   console.log(`   - Document Chunks: ${counts.documentChunks}`);
-  console.log(`   - Embeddings: ${counts.embeddings}`);
   console.log(`   - Entities: ${counts.entities}`);
   console.log(`   - Entity Mentions: ${counts.entityMentions}`);
-  console.log(`   - AI Queries: ${counts.aiQueries}`);
-  console.log(`   - AI Query Results: ${counts.aiQueryResults}`);
   console.log(`   - Total rows inserted: ${totalRows}`);
   console.log(`🗄️  Database: ${databaseName}\n`);
 }

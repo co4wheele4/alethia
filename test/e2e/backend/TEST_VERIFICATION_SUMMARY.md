@@ -1,7 +1,7 @@
 # E2E Test Organization Verification Summary
 
-**Date**: January 14, 2026  
-**Status**: ✅ **Organized and Verified**
+**Date**: May 6, 2026  
+**Status**: ✅ **Organized and Verified** (rerun `npm run test:e2e:backend` after changes)
 
 ## Summary
 
@@ -17,7 +17,6 @@ Backend e2e tests are fully organized under `test/e2e/backend/` (resolvers + cro
 | `auth.resolver.e2e-spec.ts` | 5 | Auth flows (login/register/guards) |
 | `user.resolver.e2e-spec.ts` | 10 | User CRUD + resolve fields |
 | `entity.resolver.e2e-spec.ts` | 3 | Entity resolve fields |
-| `ai-query.resolver.e2e-spec.ts` | 4 | AI query flows + resolve fields |
 
 ### Cross-Cutting (`test/e2e/backend/cross-cutting/`)
 
@@ -25,13 +24,16 @@ Backend e2e tests are fully organized under `test/e2e/backend/` (resolvers + cro
 |------|-------|-------|
 | `error-cases.e2e-spec.ts` | 12 | Constraints, FK violations, not-found paths |
 | `validation-edge-cases.e2e-spec.ts` | 5 | Validation and boundary inputs |
-| `pagination-edge-cases.e2e-spec.ts` | 3 | Skip/take edge values |
+| `pagination-edge-cases.e2e-spec.ts` | 3 | `documents(limit, offset)` edge values |
 | `partial-updates.e2e-spec.ts` | 2 | Partial update behavior |
 | `relationship-edge-cases.e2e-spec.ts` | 2 | Cascade/dependency behavior |
 
 ## Verification Result
 
+`ai-query.resolver.e2e-spec.ts` was **removed** with legacy **`askAI` / AI-query** APIs (**2026-05-06**). Current totals:
+
 ```
-Test Suites: 10 passed, 10 total
-Tests:       49 passed, 49 total
+npm run test:e2e:backend
 ```
+
+(expect **9** resolver+cross-cutting suites under `test/e2e/backend/` plus integration specs per root `test/jest-e2e.json`).

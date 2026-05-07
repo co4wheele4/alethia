@@ -68,7 +68,6 @@ export const errorLinkHandler = (error: unknown) => {
         const message = graphQLError.message;
         const locations = graphQLError.locations;
         const path = graphQLError.path;
-        
         console.error(
           `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
         );

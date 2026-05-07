@@ -135,7 +135,7 @@ _See:_ ADR-036.
 
 ### Lesson
 
-A small **onboarding or walkthrough artifact** (title + content) associated with a user in demos or training—not epistemic evidence for claims.
+**Historical (removed 2026-05-06):** Previously a small onboarding-style record (title + content) in the database for demos—not epistemic evidence for claims. The **`lessons`** table and GraphQL surface were **dropped** (migration `20260506120000_remove_lesson_aiquery_embedding`); the term may still appear in old screenshots or audit PDFs.
 
 ### Lifecycle (claim lifecycle)
 
@@ -191,7 +191,7 @@ Anchored text (chunk + offsets / quoted span) that supports navigating from a **
 
 Artifacts for **human review workflows**: asking someone to look at a claim, assigning responsibility, recording acknowledgment or notes. These coordinate people; they do not replace evidence or adjudication records.
 
-_See:_ ADR-012, ADR-015, ADR-016.
+_See:_ ADR-014 (persisted review coordination), ADR-015, ADR-016.
 
 ---
 

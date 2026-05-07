@@ -11,7 +11,7 @@
     "build": "npm run build --workspaces",
     "build:backend": "npm run build --workspace=aletheia-backend",
     "build:frontend": "npm run build --workspace=aletheia-frontend",
-    "postinstall": "node scripts/install-git-hooks.js && npm run build --prefix tools/eslint-plugin-aletheia",
+    "postinstall": "node scripts/install-git-hooks.js && npm run build --prefix tools/eslint-plugin-aletheia && patch-package",
     "start": "node scripts/start-dev-auto.cjs",
     "start:dev": "node scripts/start-dev-auto.cjs",
     "start:backend": "npm run start:dev --workspace=aletheia-backend",
@@ -68,6 +68,7 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "jest": "^30.2.0",
+    "patch-package": "^8.0.1",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.4.6"
   },

@@ -1,6 +1,6 @@
 # E2E Test Organization
 
-**Last Updated**: January 14, 2026  
+**Last Updated**: May 6, 2026  
 **Status**: ✅ Migration complete (no monolithic `graphql.e2e-spec.ts`)
 
 This directory contains backend E2E tests organized by concern for maintainability.
@@ -13,8 +13,7 @@ test/e2e/backend/
 │   ├── app.resolver.e2e-spec.ts              # 3 tests
 │   ├── auth.resolver.e2e-spec.ts             # 5 tests
 │   ├── user.resolver.e2e-spec.ts             # 10 tests
-│   ├── entity.resolver.e2e-spec.ts           # 3 tests
-│   └── ai-query.resolver.e2e-spec.ts         # 4 tests
+│   └── entity.resolver.e2e-spec.ts           # 3 tests
 └── cross-cutting/
     ├── error-cases.e2e-spec.ts               # 12 tests
     ├── validation-edge-cases.e2e-spec.ts     # 5 tests
@@ -23,7 +22,7 @@ test/e2e/backend/
     └── relationship-edge-cases.e2e-spec.ts   # 2 tests
 ```
 
-**Totals (backend e2e)**: 10 test suites, 49 tests ✅
+**Totals (mirrored backend e2e under `test/e2e/backend/`)**: **9** resolver + cross-cutting suites (AI-query suite removed **2026-05-06**). Run `npm run test:e2e:backend` for current test counts.
 
 ## Running Tests
 

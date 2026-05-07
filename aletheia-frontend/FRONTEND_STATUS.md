@@ -54,45 +54,40 @@
 - **Testing (verified 2026-04-28)**: ✅ 1177 Vitest tests + 50 Playwright tests (default project); coverage — run `npm run test:cov`
 - **Build**: ✅ Compiles successfully
 
-## 🔍 Available Backend Capabilities (Not Yet Used)
+## 🔍 Governed backend surface (MVP)
 
-The backend provides extensive GraphQL API that the frontend can leverage:
+The shipped GraphQL contract focuses on **claims, evidence, adjudication, documents, deterministic search, review coordination, and integrity**—not on lessons, embeddings, or AI query logging (those were removed from backend schema and DB **2026-05-06**). See `aletheia-backend/src/schema.gql` and `docs/context/aletheia-core-context.md`.
 
-### Entities & Operations
-1. **Users** - CRUD operations (admin-only list, user updates)
-2. **Lessons** - Create, read, update, delete
-3. **Documents** - Document management with chunks
-4. **Document Chunks** - Chunk management with embeddings
-5. **Entities** - Entity extraction and management
-6. **Entity Relationships** - Relationship mapping
-7. **AI Queries** - Query history and results
-8. **Embeddings** - Vector embeddings for semantic search
+### Domains to integrate next (examples)
+1. **Users** — Auth profile, admin user list where applicable
+2. **Documents & chunks** — Ingestion-aligned document flows
+3. **Claims & evidence** — Core epistemic workflows per ADR-018/019
+4. **Search** — ADR-033 non-semantic `searchClaims` / `searchEvidence`
+5. **Reviews & assignments** — ADR-014/015 coordination surfaces (persisted review coordination and assignment)
 
-### GraphQL Operations Available
-- **Queries**: `users`, `lessons`, `documents`, `entities`, `aiQueries`, etc.
-- **Mutations**: Full CRUD for all entities
-- **Pagination**: `aiQueriesPaged` with skip/take
-- **Filtered Queries**: `lessonsByUser`, `documentsByUser`, etc.
+### GraphQL operations (illustrative; see schema snapshot)
+- **Queries**: `claims`, `documents`, `searchClaims`, `searchEvidence`, `entities`, `user`, `users` (admin), etc.
+- **Mutations**: `createClaim`, `createEvidence`, adjudication and review mutations as exposed in `schema.gql`
+- **List pagination**: `claims` / `documents` use **`limit` + `offset`** (not legacy `aiQueriesPaged`)
 
 ## 🎯 Recommended Next Steps
 
 ### High Priority
-1. **User Dashboard** - Main authenticated view
-2. **Lessons Management** - Create, view, edit lessons
-3. **Documents Management** - Upload and manage documents
-4. **User Profile** - View and update user information
+1. **User dashboard** — Authenticated home aligned with governed routes
+2. **Claims & evidence UX** — Create/link/view per ADR-019
+3. **Documents management** — Upload and manage documents
+4. **User profile** — View and update user information
 
 ### Medium Priority
-1. **AI Query Interface** - Interface for asking AI questions
-2. **Entity Explorer** - Browse entities and relationships
-3. **Search Functionality** - Search lessons, documents, entities
-4. **Responsive Design** - Mobile-friendly layouts
+1. **Entity explorer** — Browse entities and relationships (read-heavy)
+2. **Search** — Wire production UI to deterministic search only (ADR-033)
+3. **Responsive design** — Mobile-friendly layouts
 
 ### Low Priority
-1. **Advanced Features** - Entity relationship visualization
-2. **Analytics Dashboard** - Query statistics, usage metrics
-3. **Export Functionality** - Export documents, lessons
-4. **Theming** - Dark mode, user preferences
+1. **Advanced features** — Relationship visualization, bundle export UX
+2. **Analytics** — Operational metrics only (no inference-as-truth)
+3. **Export** — Documents / bundles per product scope
+4. **Theming** — Dark mode, user preferences
 
 ## 📁 Project Structure
 

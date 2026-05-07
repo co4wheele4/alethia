@@ -441,14 +441,6 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://
 """
 scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
-type Lesson {
-  content: String
-  createdAt: DateTime!
-  id: ID!
-  title: String!
-  user: User!
-}
-
 type Mutation {
   """Adjudicate a claim by transitioning lifecycle state (ADR-011)."""
   adjudicateClaim(claimId: ID!, decision: ClaimLifecycleState!, reviewerNote: String): Claim!
@@ -469,14 +461,12 @@ type Mutation {
   createEntityRelationship(data: CreateEntityRelationshipInput!): EntityRelationship!
   createEvidence(input: CreateEvidenceInput!): Evidence!
   createHtmlCrawlIngestionRun(input: CreateHtmlCrawlIngestionRunInput!): HtmlCrawlIngestionRun!
-  createLesson(content: String, title: String!, userId: String!): Lesson!
   createUser(data: CreateUserInput!): User!
   deleteChunk(id: String!): DocumentChunk!
   deleteDocument(id: String!): Document!
   deleteEntity(id: String!): Entity!
   deleteEntityMention(id: String!): EntityMention!
   deleteEntityRelationship(id: String!): EntityRelationship!
-  deleteLesson(id: String!): Lesson!
   deleteUser(id: String!): User!
 
   """ADR-031: Structural import (admin only)."""
@@ -500,7 +490,6 @@ type Mutation {
   updateEntity(data: UpdateEntityInput!): Entity!
   updateEntityMention(data: UpdateEntityMentionInput!): EntityMention!
   updateEntityRelationship(data: UpdateEntityRelationshipInput!): EntityRelationship!
-  updateLesson(content: String, id: String!, title: String): Lesson!
   updateUser(data: UpdateUserInput!): User!
 }
 
@@ -544,9 +533,6 @@ type Query {
   htmlCrawlIngestionRun(id: ID!): HtmlCrawlIngestionRun
   htmlCrawlIngestionRuns: [HtmlCrawlIngestionRun!]!
   ingestionHealthCheck: String!
-  lesson(id: String!): Lesson
-  lessons: [Lesson!]!
-  lessonsByUser(userId: String!): [Lesson!]!
 
   """
   Review requests created by the current user (coordination-only; does not change claim status).
@@ -739,6 +725,5 @@ type User {
   documents: [Document!]!
   email: String!
   id: ID!
-  lessons: [Lesson!]!
   name: String
 }

@@ -9,7 +9,6 @@ import {
 import { UseGuards, Scope, Injectable } from '@nestjs/common';
 import { User } from '@models/user.model';
 import { PrismaService } from '@prisma/prisma.service';
-import { Lesson } from '@models/lesson.model';
 import { Document } from '@models/document.model';
 import { CreateUserInput, UpdateUserInput } from '@inputs/user.input';
 import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
@@ -68,11 +67,6 @@ export class UserResolver {
   @Roles(Role.ADMIN)
   async deleteUser(@Args('id') id: string) {
     return await this.prisma.user.delete({ where: { id } });
-  }
-
-  @ResolveField(() => [Lesson])
-  async lessons(@Parent() user: User) {
-    return this.dataLoaders.getLessonsByUserLoader().load(user.id);
   }
 
   @ResolveField(() => [Document])

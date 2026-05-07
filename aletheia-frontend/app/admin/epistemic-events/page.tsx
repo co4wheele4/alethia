@@ -8,6 +8,7 @@ import { gql } from '@apollo/client';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 
 import { ContentSurface } from '../../components/layout';
+import { useAuth } from '../../features/auth/hooks/useAuth';
 
 const ADMIN_EPISTEMIC_EVENTS = gql`
   query AdminEpistemicEvents($filter: EpistemicEventFilterInput) {
@@ -31,10 +32,14 @@ type Row = {
 };
 
 export default function AdminEpistemicEventsPage() {
+  const { token, isInitialized, isAuthenticated } = useAuth();
+
   const { data, loading, error } = useQuery<{ adminEpistemicEvents: Row[] }>(
     ADMIN_EPISTEMIC_EVENTS,
     {
-      variables: { filter: {} },
+      // Do not issue this query until auth is initialized and we have a token.
+      // Otherwise, Playwright headed demos can capture expected auth-guard errors as console noise.
+      skip: !isInitialized || !isAuthenticated || !token,
     },
   );
   const rows = data?.adminEpistemicEvents ?? [];
@@ -43,6 +48,10 @@ export default function AdminEpistemicEventsPage() {
     <ContentSurface>
       <Stack spacing={2}>
         <Typography variant="h5">Epistemic events (audit)</Typography>
+        {!isInitialized ? <Typography>Initializing…</Typography> : null}
+        {isInitialized && !isAuthenticated ? (
+          <Alert severity="info">Admin audit is available after login.</Alert>
+        ) : null}
         {loading ? <Typography>Loading…</Typography> : null}
         {error ? <Alert severity="error">Unable to load events (admin role required).</Alert> : null}
         <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>

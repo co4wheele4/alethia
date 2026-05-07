@@ -63,19 +63,9 @@ query GetUser($userId: String!) {
     email
     name
     createdAt
-    lessons {
-      id
-      title
-      content
-    }
     documents {
       id
       title
-      createdAt
-    }
-    aiQueries {
-      id
-      query
       createdAt
     }
   }
@@ -89,7 +79,10 @@ query GetUser($userId: String!) {
 }
 ```
 
-### 3. Get User with Related Data (Requires JWT)
+### 3. Get User with Documents and Chunks (Requires JWT)
+
+Legacy **`lessons`** and **`aiQueries`** fields were removed from the API and database (**2026-05-06**). Traverse **documents → chunks** instead:
+
 ```graphql
 query GetUserWithRelations($userId: String!) {
   user(id: $userId) {
@@ -97,12 +90,6 @@ query GetUserWithRelations($userId: String!) {
     email
     name
     createdAt
-    lessons {
-      id
-      title
-      content
-      createdAt
-    }
     documents {
       id
       title
@@ -111,16 +98,6 @@ query GetUserWithRelations($userId: String!) {
         id
         chunkIndex
         content
-      }
-    }
-    aiQueries {
-      id
-      query
-      createdAt
-      results {
-        id
-        answer
-        score
       }
     }
   }

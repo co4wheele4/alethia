@@ -8,7 +8,6 @@ import { cleanDatabase, seedTestData } from './test-db';
 export interface TestData {
   admin: { id: string; email: string };
   user: { id: string; email: string };
-  lesson: { id: string; title: string };
   document: { id: string; title: string };
   chunk: { id: string; chunkIndex: number };
   entity: { id: string; name: string };

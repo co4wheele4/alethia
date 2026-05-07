@@ -27,23 +27,5 @@ describe('AppResolver (e2e)', () => {
         'Hello, Aletheia!',
       );
     });
-
-    it('should fetch lessons', async () => {
-      const query = `
-        query {
-          lessons {
-            id
-            title
-            content
-          }
-        }
-      `;
-      const res = await graphqlRequest(context.app, query);
-
-      expect(res.status).toBe(200);
-      expect(
-        (res.body?.data as { lessons?: unknown[] })?.lessons,
-      ).toBeInstanceOf(Array);
-    });
   });
 });

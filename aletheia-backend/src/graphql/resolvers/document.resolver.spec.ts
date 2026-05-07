@@ -21,7 +21,6 @@ describe('DocumentResolver', () => {
     email: 'test@example.com',
     name: 'Test User',
     createdAt: new Date(),
-    lessons: [],
     documents: [],
   };
 

@@ -111,7 +111,7 @@ The test seed inserts two **entity** rows, two **mentions** on chunk `k1`, one *
 
 ### What the test seed does **not** populate
 
-After **`db:seed:test` only**, you still have **no** lessons and **no** AI queries. Use **Questions** or **Analysis** only if you have other data (for example ingestion, the default `prisma/seed.ts`, or manual creation). Otherwise those screens may be empty.
+After **`db:seed:test` only**, you have the **fixed test rows** from `test-seed.lib.ts` (users, documents, claims, review scenarios, etc.)—not a full production catalog. Routes such as **`/analysis`** are **MVP-disabled** (no automated inference UI). Prefer **claims**, **evidence**, **documents**, and **search** flows for walkthroughs; use **`prisma/seed.ts`** or ingestion only when you need extra demo volume beyond the test seed.
 
 ---
 

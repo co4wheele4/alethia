@@ -1,9 +1,9 @@
 # E2E Test Summary
 
-**Last Updated**: January 14, 2026  
-**Status**: ✅ **All Tests Passing**  
-**Total Test Suites**: 12  
-**Total Tests**: 56  
+**Last Updated**: May 6, 2026  
+**Status:** Run `npm run test:e2e --workspace=aletheia-backend` (and root `npm run test:e2e` if you use `test/jest-e2e.json`) to confirm green on your branch.  
+**Layout:** Backend e2e specs live under `aletheia-backend/test/e2e/` (**15** `*.e2e-spec.ts` files as of this edit, including bundle import, ADR-027 DB, workspace isolation, HTML crawl, and review assignment). A smaller mirrored set lives under repo-root `test/e2e/` for cross-package runs.  
+**Legacy removal:** `ai-query.resolver.e2e-spec.ts` and GraphQL **`askAI` / lessons / embeddings** were removed with the **2026-05-06** schema and migration.  
 
 ## Test Results
 
@@ -19,7 +19,6 @@ All e2e tests are passing successfully. The errors visible in the NestJS logs ar
 | AuthResolver | `auth.resolver.e2e-spec.ts` | ✅ | 5 | Login/Register/guards |
 | UserResolver | `user.resolver.e2e-spec.ts` | ✅ | 10 | Full CRUD, ResolveFields |
 | EntityResolver | `entity.resolver.e2e-spec.ts` | ✅ | 3 | Queries, ResolveFields |
-| AiQueryResolver | `ai-query.resolver.e2e-spec.ts` | ✅ | 4 | Queries, Mutations, ResolveFields |
 
 ### ✅ Cross-Cutting Tests (`test/e2e/cross-cutting/`)
 
@@ -27,7 +26,7 @@ All e2e tests are passing successfully. The errors visible in the NestJS logs ar
 |-----------|--------|-------|----------|
 | `error-cases.e2e-spec.ts` | ✅ | 12 | Constraint violations, foreign key errors, unique constraints |
 | `validation-edge-cases.e2e-spec.ts` | ✅ | 5 | Empty/null inputs, long strings, array validation |
-| `pagination-edge-cases.e2e-spec.ts` | ✅ | 3 | Pagination with edge values |
+| `pagination-edge-cases.e2e-spec.ts` | ✅ | 3 | `documents(limit, offset)` pagination edge values |
 | `partial-updates.e2e-spec.ts` | ✅ | 2 | Update operations with partial data |
 | `relationship-edge-cases.e2e-spec.ts` | ✅ | 2 | Cascade deletion scenarios |
 
@@ -53,12 +52,11 @@ All e2e tests are passing successfully. The errors visible in the NestJS logs ar
 - ✅ Delete operations (cascade behavior)
 
 ### ResolveFields ✅
-- ✅ User relationships (lessons, documents, aiQueries)
+- ✅ User relationships (**documents**; lessons / aiQueries removed **2026-05-06**)
 - ✅ Entity relationships (mentions, outgoing/incoming relationships)
-- ✅ AI Query relationships (user, results)
 
 ### Edge Cases ✅
-- ✅ Pagination edge cases (skip=0, large values)
+- ✅ Pagination edge cases (`limit` / `offset` on `documents`, large values)
 - ✅ Validation edge cases (empty strings, null values, long strings)
 - ✅ Relationship edge cases (cascade deletion)
 
@@ -72,7 +70,7 @@ The following errors appearing in NestJS logs are **expected** and come from err
    - Duplicate document chunk tests
 
 2. **P2003 (Foreign Key Constraint Violations)**:
-   - Invalid userId in createLesson/createDocument tests
+   - Invalid userId in createDocument tests
    - Invalid documentId in createChunk tests
    - Invalid entityId in createEntityMention tests
    - Invalid relationships in createEntityRelationship tests

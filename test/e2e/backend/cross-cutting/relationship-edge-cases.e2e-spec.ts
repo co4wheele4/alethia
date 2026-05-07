@@ -18,8 +18,7 @@ describe('Relationship Edge Cases (e2e)', () => {
   });
 
   describe('Delete Cascade Tests', () => {
-    it('should handle deleting user with related lessons', async () => {
-      // Create a user with lessons
+    it('should handle creating and deleting a standalone user', async () => {
       const userRes = await graphqlRequest(
         context.app,
         `
@@ -36,23 +35,6 @@ describe('Relationship Edge Cases (e2e)', () => {
       const userId = (userRes.body?.data as { createUser?: { id?: string } })
         ?.createUser?.id;
 
-      // Create a lesson for this user
-      await graphqlRequest(
-        context.app,
-        `
-        mutation CreateLesson($title: String!, $userId: String!) {
-          createLesson(title: $title, userId: $userId) {
-            id
-          }
-        }
-      `,
-        {
-          title: 'Cascade Test Lesson',
-          userId,
-        },
-      );
-
-      // Delete the user
       const deleteRes = await graphqlRequest(
         context.app,
         `
@@ -62,13 +44,10 @@ describe('Relationship Edge Cases (e2e)', () => {
           }
         }
       `,
-        {
-          id: userId,
-        },
+        { id: userId },
       );
 
       expect(deleteRes.status).toBe(200);
-      // Should either delete user (and cascade delete lessons) or return error
       expect(
         (deleteRes.body?.data as { deleteUser?: unknown })?.deleteUser ||
           deleteRes.body?.errors,

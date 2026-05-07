@@ -45,7 +45,10 @@ const ADRS = {
     status: 'ACCEPTED',
     implementation: [
       'aletheia-frontend/src/graphql/fragments/documentCoreFields.fragment.ts',
+      'aletheia-frontend/src/graphql/fragments/documentEvidenceView.fragment.ts',
+      'aletheia-frontend/src/graphql/fragments/ClaimComparison.fragment.ts',
       'docs/adr/ADR-004-frontend-architecture-overview.md',
+      '.cursor/rules/aletheia-core-context.mdc',
     ],
     tests: ['aletheia-frontend/src/graphql/__tests__/graphql-contracts.test.ts'],
     enforcement: ['scripts/check-schema-snapshots.cjs'],
@@ -54,8 +57,14 @@ const ADRS = {
     title: 'GraphQL Contract & Data Guarantees',
     status: 'ACCEPTED',
     implementation: [
+      'src/schema.gql',
+      'docs/context/aletheia-core-context.md',
+      '.cursor/rules/aletheia-frontend-authoritative.mdc',
+      '.cursor/rules/aletheia-core-context.mdc',
       'aletheia-backend/src/schema.gql',
       'scripts/check-schema-snapshots.cjs',
+      'aletheia-frontend/src/test/msw/handlers/guards.handlers.ts',
+      'aletheia-frontend/app/services/apollo-client.ts',
       'docs/adr/ADR-005-graphql-contract-data-guarantees.md',
     ],
     tests: [
@@ -66,6 +75,7 @@ const ADRS = {
       'scripts/check-adr-governance.cjs',
       'scripts/check-schema-snapshots.cjs',
       '.cursor/rules/aletheia-frontend-authoritative.mdc',
+      '.cursor/rules/aletheia-core-context.mdc',
       'tests/adr/adrGovernanceCompliance.test.ts',
     ],
   },

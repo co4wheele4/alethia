@@ -150,27 +150,5 @@ describe('Full-Stack Authentication Flow (e2e)', () => {
       expect(res.body?.data?.hello).toBeDefined();
     });
 
-    it('should allow authenticated users to query lessons', async () => {
-      const lessonsQuery = `
-        query Lessons {
-          lessons {
-            id
-            title
-            content
-          }
-        }
-      `;
-
-      const res = await graphqlRequest(
-        context.app,
-        lessonsQuery,
-        {},
-        { authToken: context.auth.userToken },
-      );
-
-      expect(res.status).toBe(200);
-      expect(res.body?.data?.lessons).toBeDefined();
-      expect(Array.isArray(res.body?.data?.lessons)).toBe(true);
-    });
   });
 });

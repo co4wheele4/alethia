@@ -28,9 +28,6 @@ function verifyTestDatabase(): void {
 export async function cleanDatabase(prisma: PrismaClient) {
   verifyTestDatabase();
   // Delete in reverse order of dependencies
-  await prisma.aiQueryResult.deleteMany();
-  await prisma.aiQuery.deleteMany();
-  await prisma.embedding.deleteMany();
   await prisma.entityMention.deleteMany();
   await prisma.entityRelationship.deleteMany();
   await prisma.entity.deleteMany();
@@ -38,7 +35,6 @@ export async function cleanDatabase(prisma: PrismaClient) {
   await prisma.evidence.deleteMany();
   await prisma.documentChunk.deleteMany();
   await prisma.document.deleteMany();
-  await prisma.lesson.deleteMany();
   await prisma.user.deleteMany();
 }
 
@@ -59,14 +55,6 @@ export async function seedTestData(prisma: PrismaClient) {
       email: 'test@example.com',
       name: 'Test User',
       passwordHash,
-    },
-  });
-
-  const lesson = await prisma.lesson.create({
-    data: {
-      title: 'Test Lesson',
-      content: 'Test content',
-      userId: user.id,
     },
   });
 
@@ -92,5 +80,5 @@ export async function seedTestData(prisma: PrismaClient) {
     },
   });
 
-  return { admin, user, lesson, document, chunk, entity };
+  return { admin, user, document, chunk, entity };
 }

@@ -1,5 +1,4 @@
 export { UserResolver } from './user.resolver';
-export { LessonResolver } from './lesson.resolver';
 export { DocumentResolver } from './document.resolver';
 export { DocumentChunkResolver } from './document-chunk.resolver';
 export { EntityResolver } from './entity.resolver';

@@ -34,9 +34,6 @@ export const DEMO_IDS = {
     founder: 'd0000000-0000-4000-8000-000000000002',
     reviewer: 'd0000000-0000-4000-8000-000000000003',
   },
-  lessons: {
-    intro: 'd1000000-0000-4000-8000-000000000001',
-  },
   documents: {
     press: 'd2000000-0000-4000-8000-000000000001',
     filing: 'd2000000-0000-4000-8000-000000000002',
@@ -177,22 +174,6 @@ export async function runDemoSeed(prisma: PrismaClient): Promise<{
   const adminId = adminUser.id;
   const founderId = founderUser.id;
   const reviewerId = reviewerUser.id;
-
-  // ----- Lesson (simple onboarding artifact) -----
-  await prisma.lesson.createMany({
-    data: [
-      {
-        id: DEMO_IDS.lessons.intro,
-        userId: founderId,
-        title: 'Aletheia in 5 minutes',
-        content:
-          'This walkthrough shows how claims stay grounded in inspectable evidence, without confidence scores.\n\nYou will:\n- ingest sources\n- link evidence to claims\n- coordinate review\n- inspect entity mentions and relationships with offsets.',
-        createdAt: fixedTime(3),
-      },
-    ],
-    skipDuplicates: true,
-  });
-  counts.lessons = 1;
 
   // ----- Documents + Sources + Chunks -----
   const pressText =

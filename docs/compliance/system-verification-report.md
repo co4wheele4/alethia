@@ -1,6 +1,8 @@
 # Aletheia system verification report
 
 **Verification date:** 2026-04-19 (updated same day — `createClaim` + workspace scoping)  
+**Update (2026-05-06):** Legacy **`Lesson`**, **`Embedding`**, **`AiQuery`**, and **`AiQueryResult`** were removed from **Prisma and the database** (migration `20260506120000_remove_lesson_aiquery_embedding`). The GraphQL contract had already dropped embedding/AI surfaces per MVP remediation; chunk text/delete guards no longer mention embeddings. Compliance text below is aligned to that removal.
+
 **Scope:** Repository audit (Prisma schema, GraphQL `schema.gql`, resolvers, bundle/import, CI workflows, frontend truth surfaces, tests).  
 **Method:** Static inspection and targeted search; no assumption of correctness without code evidence.
 
@@ -62,8 +64,8 @@ The **production** `Search` page does not use `relevanceScore` or semantic ranki
 
 | Finding | Why it matters | Files / areas |
 |--------|----------------|----------------|
-| **Mutable document chunks vs immutable evidence** | **Mitigated (API):** `updateChunk` / `deleteChunk` reject when evidence, entity mentions, relationship-evidence anchors, or embeddings reference the chunk (`document-chunk.resolver.ts`). Operators must re-anchor or remove dependents before mutating chunk text. | `document-chunk.resolver.ts`; evidence create path `evidence.resolver.ts` |
-| **Legacy schema: vectors and internal scores** | `Embedding` model and `AiQueryResult.score` persist vectors/scores; **not** exposed in `schema.gql`. Risk if future code wires them to user-facing features without ADR. | `prisma/schema.prisma` |
+| **Mutable document chunks vs immutable evidence** | **Mitigated (API):** `updateChunk` / `deleteChunk` reject when evidence, entity mentions, or relationship-evidence anchors reference the chunk (`document-chunk.resolver.ts`). Operators must re-anchor or remove dependents before mutating chunk text. | `document-chunk.resolver.ts`; evidence create path `evidence.resolver.ts` |
+| **Legacy vectors / AI-query storage** | **Addressed (2026-05-06):** `Embedding`, `AiQuery`, `AiQueryResult`, and related tables were **dropped** from the database; models removed from Prisma. Any reintroduction of vector storage or AI-query logging is **POST_MVP** and requires ADR. | `aletheia-backend/prisma/migrations/20260506120000_remove_lesson_aiquery_embedding/` |
 | **DB enforcement vs app-only** | Strong for claims/evidence triggers (ADR-027); adjudication log precondition for terminal states is in DB. **Claim text** immutability is by absence of update API, not a DB CHECK. | `prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql` |
 
 ---
@@ -103,7 +105,7 @@ The **production** `Search` page does not use `relevanceScore` or semantic ranki
 ## 5. Missing functionality
 
 1. **Optional hardening:** forbid or warn on `DocumentChunk` content updates when `Evidence` or legacy anchors reference the chunk (would strengthen verbatim traceability). Not a CRITICAL epistemic API violation by itself.
-2. **Legacy DB models:** `Embedding` / internal scores remain in Prisma for historical rows; they are **not** exposed in `schema.gql`. Future exposure requires ADR review.
+2. ~~**Legacy DB models:** `Embedding` / internal scores in Prisma~~ **Resolved (2026-05-06):** tables removed; see §3 HIGH.
 
 ---
 
@@ -111,7 +113,7 @@ The **production** `Search` page does not use `relevanceScore` or semantic ranki
 
 1. **Policy or DB constraint** on `updateChunk` when evidence references a chunk (see §3 HIGH).
 2. **Remove or quarantine** `SearchResultExplanation` relevance-oriented UI **or** align copy strictly with mechanical match explanation (ADR-033/038) to avoid future drift.
-3. **Migrate or isolate** legacy `Embedding` rows if the goal is zero vector columns in the database — requires ADR if product-visible.
+3. ~~**Migrate or isolate** legacy `Embedding` rows~~ **Done:** migration `20260506120000_remove_lesson_aiquery_embedding` removed legacy tables; any new vector columns would require ADR.
 
 ---
 
@@ -121,7 +123,7 @@ The **production** `Search` page does not use `relevanceScore` or semantic ranki
 
 - **CRITICAL:** None identified in the exposed GraphQL contract and primary UI for inference, ranking, or semantic search as implemented today.
 - **Core functionality:** **Claim creation** is available to authenticated users via `createClaim`, with ADR-035 workspace visibility for drafts without evidence.
-- **HIGH:** Residual data-integrity risks (mutable chunks vs immutable evidence snippets; legacy DB columns) — tracked explicitly; not treated as ship-blocking for epistemic API correctness.
+- **HIGH:** Residual data-integrity risk (mutable chunks vs immutable evidence snippets) — tracked explicitly; not treated as ship-blocking for epistemic API correctness. Legacy vector/AI-query DB tables were removed **2026-05-06** (see §3 HIGH).
 - **Governance / CI:** **Present** — `mvp-release-gate` and `governance-bot` are the required mechanical gates (see `docs/compliance/mvp-branch-protection.md`).
 
 **Operator note:** Default-branch green runs of the two gates must still be confirmed in GitHub Actions for the exact release SHA; local verification does not replace CI (see `docs/compliance/final-mvp-release-readiness.md`).
@@ -132,4 +134,4 @@ The **production** `Search` page does not use `relevanceScore` or semantic ranki
 
 **“Impossible for the system to imply or determine truth without explicit human adjudication”** — **Supported in the main GraphQL and adjudication paths reviewed** (explicit adjudication, deterministic search, coordination-only reviews, bundle key rejection, DB triggers for evidence and terminal claim states).
 
-Residual risk lies in **data-entry gaps** (no public claim creation), **mutable chunks** relative to frozen evidence, and **legacy DB columns** not currently exposed — not in active ranking or confidence APIs.
+Residual risk lies mainly in **mutable chunks** relative to frozen evidence snippets — not in active ranking or confidence APIs. Legacy embedding/AI-query persistence was removed from the database **2026-05-06**.

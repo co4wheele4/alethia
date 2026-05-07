@@ -73,7 +73,7 @@ Full monorepo `npm test`, Playwright, and integration suites were **not** re-run
 
 - **ADR-035:** Full `workspaceId` propagation and RBAC matrix across all resolvers (ADR notes partial implementation).
 - **Schema codegen:** `npm run schema:generate` currently fails on a pre-existing `graphql-depth-limit` typing issue; resolve separately so generated `schema.gql` can be produced without manual edits.
-- **Embeddings / AI surfaces:** Present in schema for non-search paths; ensure they are never used for ranking, relevance, or ADR-033 search (ongoing hygiene).
+- **Embeddings / AI surfaces:** ~~Present in Prisma for non-search paths~~ **Superseded (2026-05-06):** legacy `Embedding` / `AiQuery` tables and GraphQL scaffolding were **removed** from the repository; MVP schema lint still forbids reintroducing embedding types in `schema.gql`. Historical note: this bullet described the tree as of **2026-04-10**.
 
 ## Artifacts delivered
 

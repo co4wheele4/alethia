@@ -1,44 +1,55 @@
 # E2E Test Organization Verification Summary
 
-**Date**: January 14, 2026  
-**Status**: ✅ **Organized and Verified**
+**Date**: May 6, 2026  
+**Status**: Organized — verify with `npm run test:e2e` from `aletheia-backend/`
 
 ## Summary
 
-Backend e2e tests are fully organized under `test/e2e/` (resolvers + cross-cutting). No monolithic `graphql.e2e-spec.ts` file is used.
+Backend e2e tests live under **`aletheia-backend/test/`**, primarily in **`test/e2e/`**, plus `test/app.e2e-spec.ts` and `test/db-setup-verification.e2e-spec.ts`. Jest loads them via **`./test/jest-e2e.json`**.
 
-## Current File Inventory (Verified)
+## Resolver-focused (`test/e2e/resolvers/`)
 
-### Resolver-Specific (`test/e2e/resolvers/`)
+| File | Notes |
+|------|-------|
+| `app.resolver.e2e-spec.ts` | App queries |
+| `auth.resolver.e2e-spec.ts` | Login / register / guards |
+| `user.resolver.e2e-spec.ts` | User CRUD + resolve fields |
+| `entity.resolver.e2e-spec.ts` | Entity resolve fields |
+| `html-crawl-ingestion.resolver.e2e-spec.ts` | HTML crawl ingestion |
+| `review-assignment.resolver.e2e-spec.ts` | Review assignments |
 
-| File | Tests | Notes |
-|------|-------|-------|
-| `app.resolver.e2e-spec.ts` | 3 | App resolver queries/mutations |
-| `auth.resolver.e2e-spec.ts` | 5 | Auth flows (login/register/guards) |
-| `user.resolver.e2e-spec.ts` | 10 | User CRUD + resolve fields |
-| `entity.resolver.e2e-spec.ts` | 3 | Entity resolve fields |
-| `ai-query.resolver.e2e-spec.ts` | 4 | AI query flows + resolve fields |
+**Removed:** `ai-query.resolver.e2e-spec.ts` (**2026-05-06**).
 
-### Cross-Cutting (`test/e2e/cross-cutting/`)
+## Cross-cutting (`test/e2e/cross-cutting/`)
 
-| File | Tests | Notes |
-|------|-------|-------|
-| `error-cases.e2e-spec.ts` | 12 | Constraints, FK violations, not-found paths |
-| `validation-edge-cases.e2e-spec.ts` | 5 | Validation and boundary inputs |
-| `pagination-edge-cases.e2e-spec.ts` | 3 | Skip/take edge values |
-| `partial-updates.e2e-spec.ts` | 2 | Partial update behavior |
-| `relationship-edge-cases.e2e-spec.ts` | 2 | Cascade/dependency behavior |
+| File | Notes |
+|------|-------|
+| `error-cases.e2e-spec.ts` | Constraints, FK violations, not-found |
+| `validation-edge-cases.e2e-spec.ts` | Validation boundaries |
+| `pagination-edge-cases.e2e-spec.ts` | `documents(limit, offset)` |
+| `partial-updates.e2e-spec.ts` | Partial updates |
+| `relationship-edge-cases.e2e-spec.ts` | Cascade behavior |
+| `workspace-isolation-adr035.e2e-spec.ts` | ADR-035 |
+| `create-claim-workspace.e2e-spec.ts` | Claim workspace |
 
-### General (`test/`)
+## Other (`test/`)
 
-| File | Tests | Notes |
-|------|-------|-------|
-| `app.e2e-spec.ts` | 1 | HTTP endpoint smoke test |
-| `db-setup-verification.e2e-spec.ts` | 6 | DB safety/setup verification |
+| File | Notes |
+|------|-------|
+| `app.e2e-spec.ts` | HTTP smoke |
+| `db-setup-verification.e2e-spec.ts` | DB safety / setup |
 
-## Verification Result
+## Bundle / DB (`test/e2e/`)
 
-```
-Test Suites: 12 passed, 12 total
-Tests:       56 passed, 56 total
+- `bundle/bundle-import-adr027.e2e-spec.ts`
+- `db/adr027-epistemic-constraints.e2e-spec.ts`
+
+## Verification
+
+Run:
+
+```bash
+cd aletheia-backend
+npx jest --config ./test/jest-e2e.json --listTests
+npm run test:e2e
 ```

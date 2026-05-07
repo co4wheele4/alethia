@@ -163,15 +163,12 @@ The GraphQL schema is auto-generated and available at `src/schema.gql`. You can 
 ### Main Resolvers
 
 - **UserResolver**: User management (CRUD operations)
-- **LessonResolver**: Lesson management
 - **DocumentResolver**: Document management
 - **DocumentChunkResolver**: Document chunk operations
 - **EntityResolver**: Entity management
 - **EntityMentionResolver**: Entity mention tracking
 - **EntityRelationshipResolver**: Entity relationship management
-- **EmbeddingResolver**: Embedding vector management
-- **AiQueryResolver**: AI query processing
-- **AiQueryResultResolver**: AI query results
+- **Claim / evidence / adjudication / search / review** resolvers: see `src/graphql/resolvers/` (governed MVP surface; no lessons, embeddings, or `askAI`)
 
 ### Example Queries
 
@@ -198,10 +195,6 @@ query {
   user(id: "user-id") {
     id
     email
-    lessons {
-      id
-      title
-    }
     documents {
       id
       title

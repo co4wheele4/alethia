@@ -64,47 +64,43 @@ describe('Partial Updates (e2e)', () => {
       ).toBeDefined();
     });
 
-    it('should handle update with empty strings', async () => {
-      // Create a lesson first
+    it('should handle update with empty string name', async () => {
       const createRes = await graphqlRequest(
         context.app,
         `
-        mutation CreateLesson($title: String!, $userId: String!) {
-          createLesson(title: $title, userId: $userId) {
+        mutation CreateUser($email: String!) {
+          createUser(data: { email: $email, name: "Original Name" }) {
             id
-            title
+            name
           }
         }
       `,
         {
-          title: 'Original Title',
-          userId: context.testData.user.id,
+          email: `empty-string-test-${Date.now()}@example.com`,
         },
       );
-      const lessonId = (
-        createRes.body?.data as { createLesson?: { id?: string } }
-      )?.createLesson?.id;
+      const userId = (createRes.body?.data as { createUser?: { id?: string } })
+        ?.createUser?.id;
 
-      // Try to update with empty string
       const updateRes = await graphqlRequest(
         context.app,
         `
-        mutation UpdateLesson($id: String!, $title: String) {
-          updateLesson(id: $id, title: $title) {
+        mutation UpdateUser($id: String!, $name: String) {
+          updateUser(data: { id: $id, name: $name }) {
             id
-            title
+            name
           }
         }
       `,
         {
-          id: lessonId,
-          title: '',
+          id: userId,
+          name: '',
         },
       );
 
       expect(updateRes.status).toBe(200);
       expect(
-        (updateRes.body?.data as { updateLesson?: unknown })?.updateLesson ||
+        (updateRes.body?.data as { updateUser?: unknown })?.updateUser ||
           updateRes.body?.errors,
       ).toBeDefined();
     });

@@ -53,7 +53,7 @@
 
 ## 8. Remaining gaps (honest)
 
-- **HIGH (non-CRITICAL):** Addressed in API — `updateChunk` / `deleteChunk` block when evidence, mentions, relationship-evidence, or embeddings reference the chunk; see `system-verification-report.md` §3 HIGH.
+- **HIGH (non-CRITICAL):** Addressed in API — `updateChunk` / `deleteChunk` block when evidence, mentions, or relationship-evidence reference the chunk; see `system-verification-report.md` §3 HIGH. (Embeddings were removed from the schema and DB **2026-05-06**.)
 - **MEDIUM:** Search list components use **deterministic** “match coverage” labeling; production search page remains non-semantic (see system verification report).
 - **Governance (2026-04-21):** GitHub ruleset **`master-protection`** lists **`mvp-release-gate`** and **`governance-bot`** as required contexts; both were **green** on **`903aa08`** (see readiness §2.1).
 
@@ -77,7 +77,7 @@
 **What still requires ADR review**
 
 - Any user-visible **judgment**, ranking, summarization, similarity, or automated conflict **conclusions**.
-- Exposing legacy embedding/score columns or adding semantic search.
+- Reintroducing vector / similarity storage or semantic search without ADR (legacy embedding tables were dropped **2026-05-06**).
 - Relaxing ingestion determinism (ADR-032) or evidence immutability expectations.
 
 ---

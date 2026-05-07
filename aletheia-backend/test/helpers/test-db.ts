@@ -61,14 +61,6 @@ export async function seedTestData(prisma: PrismaClient) {
     },
   });
 
-  const lesson = await prisma.lesson.create({
-    data: {
-      title: 'Test Lesson',
-      content: 'Test content',
-      userId: user.id,
-    },
-  });
-
   const document = await prisma.document.create({
     data: {
       title: 'Test Document',
@@ -91,5 +83,5 @@ export async function seedTestData(prisma: PrismaClient) {
     },
   });
 
-  return { admin, user, lesson, document, chunk, entity };
+  return { admin, user, document, chunk, entity };
 }

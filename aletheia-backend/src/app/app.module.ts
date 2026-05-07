@@ -19,7 +19,6 @@ import { AppService } from './app.service';
 
 import { AppResolver } from '../graphql/resolvers/app.resolver';
 import {
-  LessonResolver,
   DocumentResolver,
   DocumentChunkResolver,
   UserResolver,
@@ -82,9 +81,9 @@ import {
       formatError: formatGraphQLError,
       validationRules: [adr034DepthLimitRule, adr034QueryCostLimitRule()],
       sortSchema: true, // Sort schema for better readability
-      // Apollo Server 5 configuration - playground and introspection are still supported
-      // Note: In Apollo Server 5, these are still valid options in NestJS GraphQL module
-      playground: process.env.NODE_ENV !== 'production', // Enable in development only
+      // Dev UX: use Nest/Apollo GraphiQL landing page (not deprecated GraphQL Playground).
+      graphiql: process.env.NODE_ENV !== 'production',
+      playground: false,
       introspection: process.env.NODE_ENV !== 'production', // Enable in development only
       resolvers: { JSON: GraphQLJSON },
     }),
@@ -94,7 +93,6 @@ import {
     AppService,
     PrismaService,
     AppResolver,
-    LessonResolver,
     DocumentResolver,
     DocumentChunkResolver,
     UserResolver,

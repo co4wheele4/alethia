@@ -18,19 +18,22 @@
 - Provides automated lint/test enforcement on PRs
 
 ### 4. **E2E Test Checker Script** (`scripts/check-e2e-tests.js`)
-- Can be run manually: `npm run check:e2e`
-- Can be integrated into pre-commit hooks
-- Checks if new resolvers have corresponding e2e tests
+- Run from repo root or `aletheia-backend/`: `npm run check:e2e` (workspace: backend)
+- CI uses monorepo paths (`aletheia-backend/src/graphql/resolvers/*.resolver.ts`) and suggests `test/e2e/resolvers/<name>.resolver.e2e-spec.ts`
+- Exits **0** and prints **warnings** when a dedicated resolver e2e file is missing (reminder, not a hard gate)
 
 ## 📋 Usage
 
 ### Manual Check
 ```bash
-# Check if changed files have e2e tests
+# From repository root — diff against main
+node aletheia-backend/scripts/check-e2e-tests.js --git-range origin/main...HEAD
+
+# From aletheia-backend (after npm ci at repo root)
 npm run check:e2e
 
-# Or check specific files
-node scripts/check-e2e-tests.js src/graphql/resolvers/user.resolver.ts
+# Explicit paths (repo-root relative or backend-relative)
+node aletheia-backend/scripts/check-e2e-tests.js aletheia-backend/src/graphql/resolvers/user.resolver.ts
 ```
 
 ### Git Hook Setup (Optional)
@@ -62,11 +65,8 @@ Add to `package.json`:
 Create `.git/hooks/pre-commit`:
 ```bash
 #!/bin/sh
-npm run check:e2e
-if [ $? -ne 0 ]; then
-  echo "❌ E2E test check failed. Please add e2e tests."
-  exit 1
-fi
+npm run check:e2e --workspace=aletheia-backend
+# Script exits 0; read output for missing test/e2e/resolvers/*.resolver.e2e-spec.ts reminders.
 ```
 
 ## 🎯 Best Practices

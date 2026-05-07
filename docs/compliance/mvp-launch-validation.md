@@ -4,6 +4,8 @@
 **Validation date:** 2026-04-13  
 **Repository:** `c:\dev\alethia` (monorepo)
 
+> **Archival notice (2026-05-06):** §3 **CRITICAL** rows **C1–C3** describe the **pre–2026-04-13 remediation** API. GraphQL **`askAI`**, **embedding types**, and related resolvers were removed in **MVP remediation**; legacy **`Lesson` / `Embedding` / `AiQuery` Prisma tables** were dropped in migration **`20260506120000_remove_lesson_aiquery_embedding`**. Keep this file as a **time-stamped audit record**; for current behavior see **`docs/compliance/mvp-release-remediation-report.md`**, **`docs/compliance/system-verification-report.md`**, and **`aletheia-backend/src/schema.gql`**.
+
 ---
 
 ## 1. Summary
@@ -51,7 +53,7 @@
 | ID | Finding | Notes |
 | --- | --- | --- |
 | H1 | **Governance bot not in the same workflow as all unit/e2e checks** | `.github/workflows/test.yml` runs ADR checks, schema lint, snapshots, and tests. `.github/workflows/governance-bot.yml` runs separately. **Enforcement depends on GitHub branch protection** listing both workflows; otherwise merge bypass is possible. |
-| H2 | **User expectation — AI surfaces** | `AnalysisWorkspace` discloses limitations (no citations, scope not enforced). Still **HIGH** risk while `askAi` / `askAI` / extraction remain available without a single global “non-authoritative / not adjudication” banner on every route that surfaces them. |
+| H2 | **User expectation — AI surfaces** *(original audit)* | `AnalysisWorkspace` disclosures referred to routes that exposed non-authoritative tooling. **`askAI` / embedding GraphQL were removed 2026-04-13**; legacy AI-query/embedding **DB** tables **2026-05-06**. Remaining risk is **UX copy** on any MVP-disabled or ingestion-adjacent screens—verify per current routes, not this row alone. |
 
 ### MEDIUM
 
@@ -72,7 +74,7 @@
 | DB constraints | `aletheia-backend/prisma/migrations/20260409160000_adr027_epistemic_db_constraints/migration.sql` |
 | Search (ADR-033) | `aletheia-backend/src/graphql/resolvers/search.resolver.ts`, `aletheia-backend/src/common/search/prisma-string-filter.ts` |
 | Bundle import/export | `aletheia-backend/src/bundle/aletheia-bundle.service.ts`, `aletheia-backend/src/graphql/resolvers/aletheia-bundle.resolver.ts` |
-| Inference surfaces | `aletheia-backend/src/graphql/resolvers/app.resolver.ts`, `aletheia-backend/src/graphql/resolvers/ai-query.resolver.ts`, `aletheia-backend/src/ingestion/extraction.service.ts`, `aletheia-backend/src/openai/openai.service.ts` |
+| Inference surfaces *(historical paths; see archival notice)* | At audit time: `app.resolver.ts` (`askAI`), **`ai-query.resolver.ts` (removed)**, ingestion/OpenAI services. **Current tree:** no `askAI` / AI-query GraphQL; legacy AI-query DB tables dropped **2026-05-06**. Ingestion/OpenAI paths remain only where still present for bounded, non–truth-contract features—verify in-repo. |
 | CI | `.github/workflows/test.yml`, `.github/workflows/governance-bot.yml` |
 | Frontend epistemic UX | `aletheia-frontend/app/features/claims/**`, `claimReview/**`, `claimComparison/**`, `evidence/**`, `analysis/**`, `app/services/apollo-client.ts` |
 

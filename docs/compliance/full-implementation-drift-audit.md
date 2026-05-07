@@ -1,6 +1,7 @@
 # Full implementation drift audit (Aletheia)
 
-> **Note (2026-04-13):** Sections below that mention **GraphQL `Embedding`** / **`askAI`** describe an **older tree**. Current MVP remediation **removed** those surfaces; enforcement includes `aletheia-backend/scripts/schema-lint-mvp.cjs` and CI **`mvp-release-gate`**. Treat **§4 HIGH — Embedding** and **§7 item 1** as **historical** unless you are reading an old commit.
+> **Note (2026-04-13):** Sections below that mention **GraphQL `Embedding`** / **`askAI`** describe an **older tree**. Current MVP remediation **removed** those GraphQL surfaces; enforcement includes `aletheia-backend/scripts/schema-lint-mvp.cjs` and CI **`mvp-release-gate`**.  
+> **Note (2026-05-06):** Legacy **`Lesson`**, **`Embedding`**, **`AiQuery`**, and **`AiQueryResult`** were also removed from **Prisma and PostgreSQL** (`20260506120000_remove_lesson_aiquery_embedding`). Treat **§4 MEDIUM — `askAI`** and **§8 — residual Embedding/AI logging** as **historical** unless you are on a pre-removal commit.
 
 ## 1. Audit metadata
 
@@ -101,7 +102,7 @@ None verified for **claim lifecycle**, **evidence immutability**, **non-semantic
 
 | Item | Detail |
 | --- | --- |
-| **`askAI` mutation** | Persists OpenAI embedding API output into `AiQuery` / `AiQueryResult`. This is **not** claim/evidence truth, but it is stored semantic-ish text. Treat as coordination/audit surface; do not promote to adjudication. |
+| **`askAI` mutation** *(historical; removed before 2026-05-06 DB cleanup)* | Previously persisted OpenAI output into `AiQuery` / `AiQueryResult`. **Current tree:** mutation and models **removed**; tables dropped by migration `20260506120000_remove_lesson_aiquery_embedding`. |
 | **Developer docs** | *(Resolved 2026-04-19.)* `aletheia-frontend/UI_COMPONENT_MAPPING.md` now maps **shipped** routes and components only. |
 
 ### LOW
@@ -148,7 +149,7 @@ None verified for **claim lifecycle**, **evidence immutability**, **non-semantic
 
 - **Claim–evidence and adjudication paths** reviewed against ADR-018/011/023/027: **no drift detected** in the audited resolver and DB trigger behavior.
 - **Search path (ADR-033):** **no semantic ranking** detected; ordering is structural only.
-- **Residual drift risk:** **Embedding** GraphQL types and **AI** query logging remain **non-authoritative** surfaces; they must not feed lifecycle or evidence truth.
+- **Residual drift risk:** ~~Embedding GraphQL types and AI query logging~~ **Resolved (2026-05-06):** those GraphQL fields and persistence paths are **gone** from the codebase and database. Ongoing risk is only **reintroduction** without ADR (guarded by `schema-lint-mvp.cjs` for GraphQL tokens).
 
 ---
 
@@ -158,6 +159,6 @@ None verified for **claim lifecycle**, **evidence immutability**, **non-semantic
 | --- | --- |
 | Critical violations (lifecycle bypass, evidence update path, semantic search ranking, forbidden bundle keys) | **None verified** in audited code paths |
 | ACCEPTED ADR index enforcement | **Automated** via extended governance test |
-| **Decision** | **GO** — acceptable to merge from an epistemic-governance perspective, **provided** the **HIGH** items (embedding surface, ADR-035 depth) are accepted as tracked follow-ups and not mistaken for truth contract. |
+| **Decision** | **GO** — acceptable to merge from an epistemic-governance perspective, **provided** ADR-035 depth and chunk/evidence integrity items are accepted as tracked follow-ups and not mistaken for truth contract. *(Embedding GraphQL + DB tables removed 2026-05-06.)* |
 
-If organizational policy interprets **any** GraphQL embedding field as a hard fail regardless of search isolation, status becomes **NO-GO** until that API is removed or strictly gated by ADR revision.
+If organizational policy required **any** embedding vector in the user-facing API, that would still be **NO-GO** without ADR — today the forbidden patterns are enforced by `schema-lint-mvp.cjs` and the tables are absent.

@@ -9,3 +9,65 @@ alwaysApply: true
 - **`docs/context/aletheia-core-context.md`** is the canonical statement of project meaning for this repository (schema fidelity, evidence/provenance, confidence prohibition, ADR-025 agent role). Treat it as **binding** for all work: application code, tests, GraphQL schema and resolvers, UI, docs, CI, migrations, scripts, workflows, prompts, and automation.
 - Before schema, resolver, UI, ADR, CI, ingestion, search, or graph changes, read that file and align with it.
 - If requested work **conflicts** with the model in that document (or with binding ADRs), **stop** and say **`REQUIRES ADR`** — do not silently adapt or “approximate” the change.
+
+## Binding ADRs (non-negotiable)
+
+The following Architecture Decision Records are **binding contracts**, not guidance:
+
+- **ADR-004:** Frontend Architecture Overview
+- **ADR-005:** GraphQL Contract & Data Guarantees
+- **ADR-006:** Confidence Semantics
+- **ADR-007:** Claim Semantics vs Evidence Semantics
+- **ADR-025:** Agent Role Restrictions (mechanical automation only; no inferential or authoritative agent outputs)
+
+You MUST:
+
+- Read these ADRs before making changes that touch their scope
+- Treat them as compile-time constraints
+- Refuse to implement features that violate them
+- Surface violations explicitly rather than silently adapting
+
+If any task conflicts with an ADR or the canonical context doc: **say `REQUIRES ADR`** and stop — do not implement the conflicting part.
+
+## Enforcement rules
+
+### Claims
+
+- Claims are assertions, never facts
+- No confidence UI on claims (ADR-006)
+- Must be explicitly labeled “Claim” (ADR-007)
+
+### Evidence
+
+- Evidence must be inspectable and traceable
+- Offsets and provenance must be respected
+- No inferred confidence or weighting
+
+### GraphQL
+
+- Schema is the single source of truth (ADR-005)
+- No uncontracted fields in UI, fragments, mocks, or tests
+- Do **not** assume, mock, or add confidence (or confidence-like scoring) fields — they are excluded by contract (ADR-006, canonical context)
+
+### UI behavior
+
+- Disclosure over assertion
+- Navigation over summarization
+- User judgment is primary
+
+## Development rules
+
+- Prefer failing tests over silent assumptions
+- MSW mocks must fail on schema drift
+- GraphQL fragments must be schema-faithful
+- UI must block features when guarantees are missing
+
+## Output expectations
+
+For substantive changes, briefly:
+
+- Reference the ADR(s) or canonical sections the work satisfies
+- Note how binding constraints (especially confidence, claim vs evidence, ADR-025) are respected
+- Declare non-obvious assumptions explicitly
+
+If uncertain: ask before proceeding.

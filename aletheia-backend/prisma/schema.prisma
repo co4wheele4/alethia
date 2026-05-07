@@ -22,9 +22,7 @@ model User {
   role         String   @default("USER") @map("role")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  lessons        Lesson[]
   documents      Document[]
-  aiQueries      AiQuery[]
   reviewRequests ReviewRequest[]
   /**
    * Review assignment coordination artifacts (ADR-015).
@@ -50,24 +48,6 @@ model User {
   claimsCreated Claim[] @relation("ClaimCreatedBy")
 
   @@map("users")
-}
-
-////////////////////
-// LESSONS
-////////////////////
-model Lesson {
-  id        String   @id @default(uuid()) @map("id")
-  title     String   @map("title")
-  content   String?  @map("content")
-  userId    String   @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@unique([title, userId])
-  @@index([userId])
-  @@index([createdAt])
-  @@map("lessons")
 }
 
 ////////////////////
@@ -168,7 +148,6 @@ model DocumentChunk {
   content    String @map("content")
 
   document             Document                     @relation(fields: [documentId], references: [id])
-  embeddings           Embedding[]
   mentions             EntityMention[]
   relationshipEvidence EntityRelationshipEvidence[]
   aiSuggestions        AiExtractionSuggestion[]
@@ -177,20 +156,6 @@ model DocumentChunk {
   @@unique([documentId, chunkIndex])
   @@index([documentId])
   @@map("document_chunks")
-}
-
-////////////////////
-// EMBEDDINGS
-////////////////////
-model Embedding {
-  id      String  @id @default(uuid()) @map("id")
-  chunkId String  @map("chunk_id")
-  values  Float[] @map("values")
-
-  chunk DocumentChunk @relation(fields: [chunkId], references: [id])
-
-  @@index([chunkId])
-  @@map("embeddings")
 }
 
 ////////////////////
@@ -323,41 +288,6 @@ model EntityRelationshipEvidenceMention {
   @@id([evidenceId, mentionId])
   @@index([mentionId])
   @@map("entity_relationship_evidence_mentions")
-}
-
-////////////////////
-// AI QUERIES
-////////////////////
-model AiQuery {
-  id        String   @id @default(uuid()) @map("id")
-  userId    String   @map("user_id")
-  query     String   @map("query")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user    User            @relation(fields: [userId], references: [id])
-  results AiQueryResult[]
-
-  @@index([userId])
-  @@index([createdAt])
-  @@map("ai_queries")
-}
-
-////////////////////
-// AI QUERY RESULTS
-////////////////////
-model AiQueryResult {
-  id        String   @id @default(uuid()) @map("id")
-  queryId   String   @map("query_id")
-  answer    String   @map("answer")
-  /// Internal storage only; not exposed via GraphQL (ADR-022).
-  score     Float?   @default(0) @map("score")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  query AiQuery @relation(fields: [queryId], references: [id])
-
-  @@index([queryId])
-  @@index([createdAt])
-  @@map("ai_query_results")
 }
 
 ////////////////////

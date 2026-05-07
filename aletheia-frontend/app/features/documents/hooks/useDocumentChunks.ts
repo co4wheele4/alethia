@@ -91,35 +91,3 @@ export function useChunksByDocument(documentId: string | null) {
     refetch: query.refetch,
   };
 }
-
-/**
- * Deprecated: combines two queries (Document + Chunks) in one hook.
- * Prefer `useDocumentHeader` and `useChunksByDocument` in separate containers for strict query/component mapping.
- */
-export function useDocumentDetails(documentId: string | null) {
-  const docVars = useMemo(() => ({ id: documentId ?? '' }), [documentId]);
-  const chunksVars = useMemo(() => ({ documentId: documentId ?? '' }), [documentId]);
-
-  const documentQuery = useQuery<DocumentData, DocumentVars>(DOCUMENT_QUERY, {
-    variables: docVars,
-    skip: !documentId,
-    fetchPolicy: 'cache-and-network',
-  });
-
-  const chunksQuery = useQuery<ChunksByDocumentData, ChunksByDocumentVars>(CHUNKS_BY_DOCUMENT_QUERY, {
-    variables: chunksVars,
-    skip: !documentId,
-    fetchPolicy: 'cache-and-network',
-  });
-
-  return {
-    document: documentQuery.data?.document ?? null,
-    chunks: chunksQuery.data?.chunksByDocument ?? [],
-    loading: documentQuery.loading || chunksQuery.loading,
-    error: documentQuery.error ?? chunksQuery.error ?? null,
-    refetch: async () => {
-      await Promise.all([documentQuery.refetch(), chunksQuery.refetch()]);
-    },
-  };
-}
-

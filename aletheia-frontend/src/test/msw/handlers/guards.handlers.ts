@@ -20,14 +20,12 @@ const SCHEMA_MUTATION_FIELDS = new Set<string>([
   'createEntityMention',
   'createEntityRelationship',
   'createEvidence',
-  'createLesson',
   'createUser',
   'deleteChunk',
   'deleteDocument',
   'deleteEntity',
   'deleteEntityMention',
   'deleteEntityRelationship',
-  'deleteLesson',
   'deleteUser',
   'ingestDocument',
   'importBundle',
@@ -41,7 +39,6 @@ const SCHEMA_MUTATION_FIELDS = new Set<string>([
   'updateEntity',
   'updateEntityMention',
   'updateEntityRelationship',
-  'updateLesson',
   'updateUser',
 ]);
 

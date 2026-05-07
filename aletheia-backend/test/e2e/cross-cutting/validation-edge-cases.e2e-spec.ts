@@ -18,13 +18,12 @@ describe('Validation Edge Cases (e2e)', () => {
   });
 
   describe('Empty and Null Input Edge Cases', () => {
-    it('should handle empty string inputs appropriately', async () => {
-      // Test with empty title
+    it('should handle empty string title inputs appropriately', async () => {
       const res = await graphqlRequest(
         context.app,
         `
-        mutation CreateLesson($title: String!, $userId: String!) {
-          createLesson(title: $title, userId: $userId) {
+        mutation CreateDocument($title: String!, $userId: String!) {
+          createDocument(title: $title, userId: $userId) {
             id
             title
           }
@@ -34,38 +33,37 @@ describe('Validation Edge Cases (e2e)', () => {
           title: '',
           userId: context.testData.user.id,
         },
+        { authToken: context.auth.userToken },
       );
 
       expect(res.status).toBe(200);
-      // Should either create with empty title or return error
-      const data = res.body?.data as { createLesson?: unknown };
-      expect(data?.createLesson || res.body?.errors).toBeDefined();
+      const data = res.body?.data as { createDocument?: unknown };
+      expect(data?.createDocument || res.body?.errors).toBeDefined();
     });
 
     it('should handle very long string inputs', async () => {
-      const longString = 'A'.repeat(10000);
+      const longTitle = 'A'.repeat(10000);
 
       const res = await graphqlRequest(
         context.app,
         `
-        mutation CreateLesson($title: String!, $userId: String!, $content: String) {
-          createLesson(title: $title, userId: $userId, content: $content) {
+        mutation CreateDocument($title: String!, $userId: String!) {
+          createDocument(title: $title, userId: $userId) {
             id
             title
-            content
           }
         }
       `,
         {
-          title: 'Long Content Test',
+          title: longTitle,
           userId: context.testData.user.id,
-          content: longString,
         },
+        { authToken: context.auth.userToken },
       );
 
       expect(res.status).toBe(200);
-      const data = res.body?.data as { createLesson?: unknown };
-      expect(data?.createLesson || res.body?.errors).toBeDefined();
+      const data = res.body?.data as { createDocument?: unknown };
+      expect(data?.createDocument || res.body?.errors).toBeDefined();
     });
 
     it('should handle null optional parameters correctly', async () => {

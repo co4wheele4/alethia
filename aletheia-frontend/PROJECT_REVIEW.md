@@ -300,29 +300,22 @@ aletheia-frontend/
 
 ## 🎯 Feature Gap Analysis
 
-### Backend API Available (Not Yet Used)
+### Governed backend API (not yet fully used in UI)
 
-The backend provides extensive GraphQL operations that are not yet integrated:
+The **MVP GraphQL contract** centers on claims, evidence, adjudication, documents/chunks, deterministic search, review coordination, and bundles—see `aletheia-backend/src/schema.gql`. Legacy **lessons**, **embeddings**, **`askAI`**, and **AI query** fields were **removed** from schema and database (**2026-05-06**).
 
-#### Queries Available
+#### Queries (examples)
 - `users` (admin), `user(id)`
-- `lessons`, `lesson(id)`, `lessonsByUser(userId)`
-- `documents`, `document(id)`, `documentsByUser(userId)`
-- `entities`, `entity(id)`
-- `aiQueries`, `aiQuery(id)`, `aiQueriesByUser(userId)`, `aiQueriesPaged(skip, take)`
-- `documentChunks`, `chunksByDocument(documentId)`
-- `embeddings`, `embeddingsByChunk(chunkId)`
-- And more...
+- `documents`, `document(id)`, `documentChunks`, `chunksByDocument`, `chunk0ByDocument`
+- `claims`, `claim(id)`, `searchClaims`, `searchEvidence`
+- `entities`, `entity(id)`, review and integrity listings as in schema
 
-#### Mutations Available
-- Full CRUD for all entities
-- `createUser`, `updateUser`, `deleteUser`
-- `createLesson`, `updateLesson`, `deleteLesson`
+#### Mutations (examples)
+- `createUser`, `updateUser`, `deleteUser` (within policy)
 - `createDocument`, `updateDocument`, `deleteDocument`
-- `askAi` (AI query functionality)
-- And more...
+- `createClaim`, `createEvidence`, `linkEvidenceToClaim`, adjudication and review mutations per schema
 
-**Feature Coverage**: Still focused on authentication today (Hello + auth mutations). Most broader domain CRUD and exploration flows (Lessons/Documents/Entities/Evidence) remain to be integrated.
+**Feature coverage:** Authentication and several governed routes are in place; deeper integration of **claims/evidence/search/reviews** should follow `docs/context/aletheia-core-context.md` and ADRs—not the pre-2026 lesson/embedding scaffolding.
 
 ---
 
@@ -332,7 +325,7 @@ The backend provides extensive GraphQL operations that are not yet integrated:
 
 1. **Implement Core Features**
    - User dashboard (authenticated home page)
-   - Lessons management (CRUD interface)
+   - Claims & evidence flows (CRUD aligned with ADR-018/019)
    - Documents management (upload, view, edit)
    - Protected routes and redirects
 
@@ -377,9 +370,8 @@ The backend provides extensive GraphQL operations that are not yet integrated:
 
 1. **Advanced Features**
    - Entity relationship visualization
-   - AI query interface
-   - Search functionality
-   - Export features
+   - Deterministic search UX (ADR-033)
+   - Export features (bundles / documents per scope)
 
 2. **Performance**
    - Code splitting analysis
@@ -425,7 +417,7 @@ The **Aletheia Frontend** has a **solid foundation** with:
 - ✅ Zero security vulnerabilities
 
 However, broader **domain feature integration** is still in progress:
-- ⚠️ Limited use of backend domain APIs (Lessons/Documents/Entities/Evidence)
+- ⚠️ Limited use of backend domain APIs (claims/evidence/documents/entities/search)
 - ⚠️ Route protection/guards (decide per route and UX)
 - ⚠️ UX polish: global loading states, user-facing error handling/toasts, form validation
 
@@ -443,13 +435,12 @@ The project demonstrates strong engineering practices with comprehensive testing
    - Expand GraphQL integration
 
 2. **Short-term** (1-2 Sprints):
-   - Lessons management interface
+   - Claims & evidence management UX
    - Documents management interface
    - Form validation
 
 3. **Medium-term** (3-4 Sprints):
-   - Complete CRUD for all entities
-   - AI query interface
+   - Complete governed CRUD for in-scope entities (per schema + ADRs)
    - Entity explorer
    - Performance optimization
 

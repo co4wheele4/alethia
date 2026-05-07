@@ -307,8 +307,17 @@ async function openNavAndLogout(page: Page) {
 }
 
 async function openIngestDialog(page: Page) {
+  // Prefer deep-linking the ingest dialog for a smoother demo, but fall back to
+  // clicking the in-page trigger if the route no longer auto-opens.
   await page.goto('/documents?ingest=1');
-  await expect(page.getByRole('dialog', { name: 'Ingest documents' })).toBeVisible({ timeout: 25_000 });
+  const dialog = page.getByRole('dialog', { name: 'Ingest documents' });
+  await dialog
+    .waitFor({ state: 'visible', timeout: 8_000 })
+    .catch(async () => {
+      // If the URL param is ignored, open via the UI affordance.
+      await demoClick(page, () => page.getByRole('button', { name: /add sources/i }).click());
+      await expect(dialog).toBeVisible({ timeout: 25_000 });
+    });
   await expect(page.getByTestId('ingest-irreversible-control')).toBeVisible({ timeout: 25_000 });
 }
 

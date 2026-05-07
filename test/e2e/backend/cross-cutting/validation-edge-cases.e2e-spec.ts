@@ -18,13 +18,12 @@ describe('Validation Edge Cases (e2e)', () => {
   });
 
   describe('Empty and Null Input Edge Cases', () => {
-    it('should handle empty string inputs appropriately', async () => {
-      // Test with empty title
+    it('should handle empty string title inputs appropriately', async () => {
       const res = await graphqlRequest(
         context.app,
         `
-        mutation CreateLesson($title: String!, $userId: String!) {
-          createLesson(title: $title, userId: $userId) {
+        mutation CreateDocument($title: String!, $userId: String!) {
+          createDocument(title: $title, userId: $userId) {
             id
             title
           }
@@ -34,38 +33,37 @@ describe('Validation Edge Cases (e2e)', () => {
           title: '',
           userId: context.testData.user.id,
         },
+        { authToken: context.auth.userToken },
       );
 
       expect(res.status).toBe(200);
-      // Should either create with empty title or return error
-      const data = res.body?.data as { createLesson?: unknown };
-      expect(data?.createLesson || res.body?.errors).toBeDefined();
+      const data = res.body?.data as { createDocument?: unknown };
+      expect(data?.createDocument || res.body?.errors).toBeDefined();
     });
 
     it('should handle very long string inputs', async () => {
-      const longString = 'A'.repeat(10000);
+      const longTitle = 'A'.repeat(10000);
 
       const res = await graphqlRequest(
         context.app,
         `
-        mutation CreateLesson($title: String!, $userId: String!, $content: String) {
-          createLesson(title: $title, userId: $userId, content: $content) {
+        mutation CreateDocument($title: String!, $userId: String!) {
+          createDocument(title: $title, userId: $userId) {
             id
             title
-            content
           }
         }
       `,
         {
-          title: 'Long Content Test',
+          title: longTitle,
           userId: context.testData.user.id,
-          content: longString,
         },
+        { authToken: context.auth.userToken },
       );
 
       expect(res.status).toBe(200);
-      const data = res.body?.data as { createLesson?: unknown };
-      expect(data?.createLesson || res.body?.errors).toBeDefined();
+      const data = res.body?.data as { createDocument?: unknown };
+      expect(data?.createDocument || res.body?.errors).toBeDefined();
     });
 
     it('should handle null optional parameters correctly', async () => {
@@ -92,61 +90,6 @@ describe('Validation Edge Cases (e2e)', () => {
       };
       expect(data?.createUser).toBeDefined();
       expect(data?.createUser?.name).toBeNull();
-    });
-  });
-
-  describe('Embedding Array Edge Cases', () => {
-    it('should handle empty embedding array', async () => {
-      const res = await graphqlRequest(
-        context.app,
-        `
-        mutation CreateEmbedding($chunkId: String!, $values: [Float!]!) {
-          createEmbedding(chunkId: $chunkId, values: $values) {
-            id
-            values
-          }
-        }
-      `,
-        {
-          chunkId: context.testData.chunk.id,
-          values: [],
-        },
-      );
-
-      expect(res.status).toBe(200);
-      // Should either create with empty array or return validation error
-      const data = res.body?.data as { createEmbedding?: unknown };
-      expect(data?.createEmbedding || res.body?.errors).toBeDefined();
-    });
-
-    it('should handle very large embedding array', async () => {
-      // Create an array with 1536 values (typical embedding size)
-      const largeArray = Array.from({ length: 1536 }, () => Math.random());
-
-      const res = await graphqlRequest(
-        context.app,
-        `
-        mutation CreateEmbedding($chunkId: String!, $values: [Float!]!) {
-          createEmbedding(chunkId: $chunkId, values: $values) {
-            id
-            values
-          }
-        }
-      `,
-        {
-          chunkId: context.testData.chunk.id,
-          values: largeArray,
-        },
-      );
-
-      expect(res.status).toBe(200);
-      const data = res.body?.data as {
-        createEmbedding?: { id?: string; values?: number[] };
-      };
-      expect(data?.createEmbedding || res.body?.errors).toBeDefined();
-      if (data?.createEmbedding) {
-        expect(data.createEmbedding.values).toHaveLength(1536);
-      }
     });
   });
 });
