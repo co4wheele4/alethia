@@ -99,6 +99,38 @@ function countLocInDir(dir, exts) {
 }
 
 /**
+ * True when the command uses shell chaining (e.g. `npm run build && playwright test`).
+ * Without a shell, `spawn('npm', ['run', 'build', '&&', ...])` passes `&&` to npm as args (CI failure).
+ */
+function commandNeedsShell(command) {
+  return /\s&&\s|\s\|\|\s|;|\|/.test(command);
+}
+
+/**
+ * Spawn a test subprocess. Windows always uses cmd.exe; Unix uses sh -c for chained commands.
+ */
+function spawnTestProcess(command, cwd) {
+  const workdir = cwd || process.cwd();
+  const stdio = ['inherit', 'pipe', 'pipe'];
+
+  if (process.platform === 'win32') {
+    // On Windows, `.cmd` shims require `cmd.exe` (CreateProcess cannot execute them directly).
+    // We avoid Node's `shell: true` (DEP0190 warning) by spawning cmd.exe explicitly.
+    const comspec = process.env.ComSpec || 'cmd.exe';
+    return spawn(comspec, ['/d', '/s', '/c', command], { cwd: workdir, stdio });
+  }
+
+  if (commandNeedsShell(command)) {
+    return spawn('sh', ['-c', command], { cwd: workdir, stdio });
+  }
+
+  const parts = command.split(/\s+/);
+  const executable = parts[0];
+  const args = parts.slice(1);
+  return spawn(executable, args, { cwd: workdir, stdio });
+}
+
+/**
  * Run a test command and capture output
  */
 function runTest(name, command, cwd) {
@@ -111,27 +143,7 @@ function runTest(name, command, cwd) {
     let output = '';
     let errorOutput = '';
 
-    const isWindows = process.platform === 'win32';
-    const child = (() => {
-      if (isWindows) {
-        // On Windows, `.cmd` shims require `cmd.exe` (CreateProcess cannot execute them directly).
-        // We avoid Node's `shell: true` (DEP0190 warning) by spawning cmd.exe explicitly.
-        const comspec = process.env.ComSpec || 'cmd.exe';
-        return spawn(comspec, ['/d', '/s', '/c', command], {
-          cwd: cwd || process.cwd(),
-          stdio: ['inherit', 'pipe', 'pipe'],
-        });
-      }
-
-      // Non-Windows: run directly without a shell.
-      const parts = command.split(/\s+/);
-      const executable = parts[0];
-      const args = parts.slice(1);
-      return spawn(executable, args, {
-        cwd: cwd || process.cwd(),
-        stdio: ['inherit', 'pipe', 'pipe'],
-      });
-    })();
+    const child = spawnTestProcess(command, cwd);
 
     // Capture stdout
     child.stdout.on('data', (data) => {
@@ -501,4 +513,10 @@ if (require.main === module) {
   });
 }
 
-module.exports = { runTest, displaySummary, extractStats };
+module.exports = {
+  runTest,
+  displaySummary,
+  extractStats,
+  commandNeedsShell,
+  spawnTestProcess,
+};

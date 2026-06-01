@@ -120,4 +120,14 @@ describe('Guardrails', function () {
       });
     });
   });
+
+  describe('test-all-with-summary command spawn', function () {
+    const { commandNeedsShell } = require('../scripts/test-all-with-summary.js');
+
+    it('detects shell chaining for MVP frontend e2e (build && playwright)', function () {
+      expect(commandNeedsShell('npm run build && npx playwright test')).toBe(true);
+      expect(commandNeedsShell('npm run lint')).toBe(false);
+      expect(commandNeedsShell('npm run test:cov')).toBe(false);
+    });
+  });
 });
