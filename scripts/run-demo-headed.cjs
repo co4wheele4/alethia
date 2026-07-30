@@ -119,6 +119,9 @@ async function runHeadedDemo(opts) {
   }
 
   const childEnv = getChildEnvAfterSeed(seed);
+  if (String(childEnv.NODE_OPTIONS || '').includes('--use-system-ca')) {
+    console.log('[demo] NODE_OPTIONS includes --use-system-ca (OS trust store for HTTPS).');
+  }
 
   console.log('[demo] Starting backend + frontend for headed walkthrough…');
   const child = spawn(process.execPath, [path.join(root, 'scripts', 'start-dev-auto.cjs')], {

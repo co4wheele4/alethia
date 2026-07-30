@@ -15,20 +15,21 @@ test.describe('Claims: comparison (read-only)', () => {
     await page.route('**/graphql', setupGraphQLMocks);
   });
 
-  test('open from claim drawer → shows multiple claims with evidence → no adjudication → reload preserves state', async ({ page }) => {
+  test('select partners → compare → shows multiple claims with evidence → no adjudication → reload preserves state', async ({
+    page,
+  }) => {
     test.setTimeout(60_000);
     await login(page);
 
     await page.goto('/claims');
     await expect(page.getByRole('list', { name: 'claims-list' })).toBeVisible({ timeout: 20_000 });
 
-    // Open claim detail drawer (base claim selection happens here).
-    await page.getByText('Test Entity is mentioned in Getting Started.').click();
-    await expect(page.getByLabel('Claim detail drawer')).toBeVisible({ timeout: 20_000 });
-
-    // Navigate via the "Compare" affordance.
-    await page.getByRole('link', { name: /^compare$/i }).click();
-    await page.waitForURL(/\/claims\/compare\?base=/, { timeout: 20_000 });
+    // Explicit multi-select (ADR-010): first selected is base; others are partners.
+    // Compare is user-initiated from the claims list (not inferred from the detail drawer).
+    await page.getByRole('checkbox', { name: /select claim claim-1 for comparison/i }).check();
+    await page.getByRole('checkbox', { name: /select claim claim-2 for comparison/i }).check();
+    await page.getByRole('button', { name: /open claim comparison/i }).click();
+    await page.waitForURL(/\/claims\/compare\?base=claim-1/, { timeout: 20_000 });
 
     // Multiple claims should be visible (base + at least one related).
     await expect(page.getByText('Claim comparison').first()).toBeVisible({ timeout: 20_000 });
@@ -54,4 +55,3 @@ test.describe('Claims: comparison (read-only)', () => {
     await expect(page.getByText('Claim 2')).toBeVisible();
   });
 });
-

@@ -38,7 +38,7 @@ describe('ClaimComparisonView', () => {
     push.mockClear();
   });
 
-  it('renders base + related claims as independent columns with offset-grounded evidence and lifecycle badges', () => {
+  it('renders base + explicitly selected partner claims as independent columns with offset-grounded evidence and lifecycle badges', () => {
     vi.mocked(comparisonHook.useClaimsForComparison).mockReturnValue({
       claims: [
         {
@@ -127,7 +127,7 @@ describe('ClaimComparisonView', () => {
 
     render(
       <MockedProvider mocks={[]}>
-        <ClaimComparisonView baseClaimId="c1" />
+        <ClaimComparisonView baseClaimId="c1" withClaimIds={['c2']} />
       </MockedProvider>,
     );
 
@@ -158,6 +158,45 @@ describe('ClaimComparisonView', () => {
           status: 'DRAFT',
           createdAt: '2026-01-21T12:00:00.000Z',
           evidence: [comparisonEvidence('ev1')],
+          documents: [
+            {
+              __typename: 'Document',
+              id: 'doc_1',
+              title: 'Doc 1',
+              createdAt: '2026-01-20T10:15:00.000Z',
+              sourceType: 'URL',
+              sourceLabel: 'example.com',
+              chunks: [
+                {
+                  __typename: 'DocumentChunk',
+                  id: 'chunk_1_0',
+                  chunkIndex: 0,
+                  content: 'Aletheia is a truth-discovery system.',
+                  documentId: 'doc_1',
+                  mentions: [
+                    {
+                      __typename: 'EntityMention',
+                      id: 'm_1',
+                      entityId: 'e_1',
+                      chunkId: 'chunk_1_0',
+                      startOffset: 0,
+                      endOffset: 8,
+                      excerpt: 'Aletheia',
+                      entity: { __typename: 'Entity', id: 'e_1', name: 'Aletheia', type: 'System', mentionCount: 1 },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          __typename: 'Claim',
+          id: 'c2',
+          text: 'Claim two text',
+          status: 'REVIEWED',
+          createdAt: '2026-01-21T12:00:00.000Z',
+          evidence: [comparisonEvidence('ev2')],
           documents: [
             {
               __typename: 'Document',
@@ -221,7 +260,7 @@ describe('ClaimComparisonView', () => {
     ];
     render(
       <MockedProvider mocks={mocks}>
-        <ClaimComparisonView baseClaimId="c1" />
+        <ClaimComparisonView baseClaimId="c1" withClaimIds={['c2']} />
       </MockedProvider>
     );
 
@@ -236,6 +275,81 @@ describe('ClaimComparisonView', () => {
     await user.click(screen.getByRole('button', { name: /^request review$/i }));
     expect(push).toHaveBeenCalledTimes(1);
     expect(push).toHaveBeenCalledWith('/review-queue');
+  });
+
+  it('blocks comparison when partner claim IDs are not explicitly provided (ADR-010)', () => {
+    vi.mocked(comparisonHook.useClaimsForComparison).mockReturnValue({
+      claims: [
+        {
+          __typename: 'Claim',
+          id: 'c1',
+          text: 'Claim one text',
+          status: 'DRAFT',
+          createdAt: '2026-01-21T12:00:00.000Z',
+          evidence: [comparisonEvidence('ev1')],
+          documents: [
+            {
+              __typename: 'Document',
+              id: 'doc_1',
+              title: 'Doc 1',
+              createdAt: '2026-01-20T10:15:00.000Z',
+              sourceType: 'URL',
+              sourceLabel: 'example.com',
+              chunks: [
+                {
+                  __typename: 'DocumentChunk',
+                  id: 'chunk_1_0',
+                  chunkIndex: 0,
+                  content: 'Aletheia is a truth-discovery system.',
+                  documentId: 'doc_1',
+                  mentions: [],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          __typename: 'Claim',
+          id: 'c2',
+          text: 'Claim two text',
+          status: 'DRAFT',
+          createdAt: '2026-01-21T12:00:00.000Z',
+          evidence: [comparisonEvidence('ev2')],
+          documents: [
+            {
+              __typename: 'Document',
+              id: 'doc_1',
+              title: 'Doc 1',
+              createdAt: '2026-01-20T10:15:00.000Z',
+              sourceType: 'URL',
+              sourceLabel: 'example.com',
+              chunks: [
+                {
+                  __typename: 'DocumentChunk',
+                  id: 'chunk_1_0',
+                  chunkIndex: 0,
+                  content: 'Aletheia is a truth-discovery system.',
+                  documentId: 'doc_1',
+                  mentions: [],
+                },
+              ],
+            },
+          ],
+        },
+      ] as any,
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(
+      <MockedProvider mocks={[]}>
+        <ClaimComparisonView baseClaimId="c1" />
+      </MockedProvider>,
+    );
+
+    expect(screen.getByText(/requires explicitly selected partner claims/i)).toBeInTheDocument();
+    expect(screen.queryByText('Claim 2')).not.toBeInTheDocument();
   });
 });
 

@@ -84,13 +84,8 @@ export function ClaimDetailDrawer(props: { open: boolean; claim: Claim | null; o
               >
                 Open claim review
               </Button>
-              <Button
-                component={Link}
-                href={`/claims/compare?base=${encodeURIComponent(claim.id)}`}
-                variant="outlined"
-                size="small"
-              >
-                Compare
+              <Button component={Link} href="/claims" variant="outlined" size="small">
+                Select partners to compare
               </Button>
             </Stack>
 

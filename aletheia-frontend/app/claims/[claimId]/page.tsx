@@ -31,7 +31,7 @@ function ClaimReviewPageInner() {
   }
 
   const isReviewRequestFromComparison =
-    searchParams.get('reviewRequest') === '1' && searchParams.get('from') === 'compare';
+    searchParams?.get('reviewRequest') === '1' && searchParams?.get('from') === 'compare';
 
   return (
     <Box>

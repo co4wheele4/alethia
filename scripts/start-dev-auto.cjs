@@ -13,6 +13,7 @@
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 const { firstFreePort } = require(path.join(__dirname, 'dev-port-utils.cjs'));
+const { withSystemCa } = require(path.join(__dirname, 'demo-env.cjs'));
 
 function prefixStream(child, label) {
   const tag = `[${label}] `;
@@ -72,15 +73,17 @@ async function main() {
 
   const aletheiaFrontendUrl = `http://localhost:${frontendPort}`;
 
+  const processEnv = withSystemCa(process.env);
+
   const backendEnv = {
-    ...process.env,
+    ...processEnv,
     PORT: String(backendPort),
     ALLOWED_ORIGINS: allowedOrigins,
     ALETHEIA_FRONTEND_URL: aletheiaFrontendUrl,
   };
 
   const frontendEnv = {
-    ...process.env,
+    ...processEnv,
     PORT: String(frontendPort),
     NEXT_PUBLIC_GRAPHQL_URL: `http://127.0.0.1:${backendPort}/graphql`,
   };

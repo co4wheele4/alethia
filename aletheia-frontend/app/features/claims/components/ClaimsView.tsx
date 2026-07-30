@@ -26,8 +26,9 @@ export function ClaimsView(props: { userId: string | null; userRole?: string | n
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   const selectedClaim = useMemo(() => claims.find((c) => c.id === selectedClaimId) ?? null, [claims, selectedClaimId]);
 
-  const [comparisonBaseId, setComparisonBaseId] = useState<string | null>(null);
-  const canCompare = Boolean(comparisonBaseId);
+  /** Selection order: first id is base; remaining ids are explicit partners (ADR-010). */
+  const [comparisonClaimIds, setComparisonClaimIds] = useState<string[]>([]);
+  const canCompare = comparisonClaimIds.length >= 2;
 
   if (!userId) {
     return <Alert severity="info">Claims inspection is available after login.</Alert>;
@@ -94,7 +95,8 @@ export function ClaimsView(props: { userId: string | null; userRole?: string | n
             Comparison (user-initiated)
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-            Select a base claim to open a neutral side-by-side view of related claims derived strictly from schema fields (documents/entities).
+            Select two or more claims (first selected is the base; others are partners). Opens a neutral side-by-side
+            view of only those claims. Partners are never inferred from shared documents or evidence (ADR-010, ADR-021).
             No conflict, agreement, or confidence is inferred.
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
@@ -104,19 +106,21 @@ export function ClaimsView(props: { userId: string | null; userRole?: string | n
               disabled={!canCompare}
               onClick={() => {
                 if (!canCompare) return;
-                const base = encodeURIComponent(comparisonBaseId!);
-                router.push(`/claims/compare?base=${base}`);
+                const [baseId, ...partnerIds] = comparisonClaimIds;
+                const base = encodeURIComponent(baseId);
+                const withParams = partnerIds.map((id) => `with=${encodeURIComponent(id)}`).join('&');
+                router.push(`/claims/compare?base=${base}&${withParams}`);
               }}
               aria-label="Open claim comparison"
               sx={{ textTransform: 'none' }}
             >
-              Compare from base ({comparisonBaseId ? '1/1' : '0/1'})
+              Compare selected ({comparisonClaimIds.length}/2+)
             </Button>
             <Button
               size="small"
               variant="text"
-              disabled={!comparisonBaseId}
-              onClick={() => setComparisonBaseId(null)}
+              disabled={comparisonClaimIds.length === 0}
+              onClick={() => setComparisonClaimIds([])}
               sx={{ textTransform: 'none' }}
             >
               Clear
@@ -128,9 +132,11 @@ export function ClaimsView(props: { userId: string | null; userRole?: string | n
           claims={claims}
           selectedClaimId={selectedClaimId}
           onSelectClaim={setSelectedClaimId}
-          comparisonClaimIds={comparisonBaseId ? [comparisonBaseId] : []}
+          comparisonClaimIds={comparisonClaimIds}
           onToggleComparisonClaim={(claimId) => {
-            setComparisonBaseId((prev) => (prev === claimId ? null : claimId));
+            setComparisonClaimIds((prev) =>
+              prev.includes(claimId) ? prev.filter((id) => id !== claimId) : [...prev, claimId]
+            );
           }}
         />
       </ContentSurface>
@@ -148,4 +154,3 @@ export function ClaimsView(props: { userId: string | null; userRole?: string | n
     </Box>
   );
 }
-
