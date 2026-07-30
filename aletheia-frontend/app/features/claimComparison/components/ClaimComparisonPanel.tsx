@@ -27,7 +27,8 @@ export function ClaimComparisonPanel(props: {
           (ADR-010, ADR-038).
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-          {modeCaption ?? 'Related claims are derived client-side from schema fields only (shared document IDs and evidence-linked entity IDs).'}
+          {modeCaption ??
+            'Compared claims must be explicitly selected (base + with=…). Partners are never inferred from shared documents or evidence (ADR-010, ADR-021).'}
         </Typography>
       </Box>
       <Box sx={{ flex: 1 }} />

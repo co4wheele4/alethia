@@ -34,28 +34,49 @@ function parseDotenvFile(filePath) {
 }
 
 /**
+ * Ensure Node uses the OS trust store (corporate / locally installed root CAs).
+ * Avoids `unable to verify the first certificate` on HTTPS fetches (e.g. demo URL import).
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {NodeJS.ProcessEnv}
+ */
+function withSystemCa(env = process.env) {
+  const flag = '--use-system-ca';
+  const existing = String(env.NODE_OPTIONS || '').trim();
+  const parts = existing ? existing.split(/\s+/).filter(Boolean) : [];
+  if (parts.includes(flag)) {
+    return { ...env };
+  }
+  return {
+    ...env,
+    NODE_OPTIONS: parts.length ? `${parts.join(' ')} ${flag}` : flag,
+  };
+}
+
+/**
  * After seeding, align dev servers with `aletheia-backend/.env.test` so API hits the same DB as `db:seed:test`.
  * @param {boolean} seed
  * @returns {NodeJS.ProcessEnv}
  */
 function getChildEnvAfterSeed(seed) {
-  if (!seed) return process.env;
+  const base = withSystemCa(process.env);
+  if (!seed) return base;
   const envTestPath = path.join(root, 'aletheia-backend', '.env.test');
   const envTest = parseDotenvFile(envTestPath);
   if (envTest.DATABASE_URL) {
     console.log(
       '[demo] Dev servers use DATABASE_URL from aletheia-backend/.env.test (same database as db:seed:test).',
     );
-    return { ...process.env, DATABASE_URL: envTest.DATABASE_URL };
+    return { ...base, DATABASE_URL: envTest.DATABASE_URL };
   }
   console.warn(
     '[demo] aletheia-backend/.env.test has no DATABASE_URL; backend may use a different DB than the seed.',
   );
-  return process.env;
+  return base;
 }
 
 module.exports = {
   root,
   parseDotenvFile,
+  withSystemCa,
   getChildEnvAfterSeed,
 };
