@@ -1,0 +1,100 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aletheia-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aletheia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-aletheia}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aletheia}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aletheia-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: aletheia-backend/Dockerfile
+    container_name: aletheia-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-aletheia}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-aletheia}
+      NODE_ENV: development
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./aletheia-backend/src:/app/aletheia-backend/src
+      - ./aletheia-backend/prisma:/app/aletheia-backend/prisma
+      - ./aletheia-backend/node_modules:/app/aletheia-backend/node_modules
+      - ./node_modules:/app/node_modules
+    networks:
+      - aletheia-network
+    command: npm run start:dev --workspace=aletheia-backend
+    develop:
+      watch:
+        - action: sync
+          path: ./aletheia-backend/src
+          target: /app/aletheia-backend/src
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./aletheia-backend/package.json
+          target: /app/aletheia-backend/package.json
+
+  frontend:
+    build:
+      context: .
+      dockerfile: aletheia-frontend/Dockerfile
+    container_name: aletheia-frontend
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./aletheia-frontend/src:/app/aletheia-frontend/src
+      - ./aletheia-frontend/pages:/app/aletheia-frontend/pages
+      - ./aletheia-frontend/app:/app/aletheia-frontend/app
+      - ./aletheia-frontend/public:/app/aletheia-frontend/public
+      - ./aletheia-frontend/node_modules:/app/aletheia-frontend/node_modules
+      - ./node_modules:/app/node_modules
+    networks:
+      - aletheia-network
+    command: npm run start:dev --workspace=aletheia-frontend
+    develop:
+      watch:
+        - action: sync
+          path: ./aletheia-frontend/src
+          target: /app/aletheia-frontend/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./aletheia-frontend/app
+          target: /app/aletheia-frontend/app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./aletheia-frontend/package.json
+          target: /app/aletheia-frontend/package.json
+
+volumes:
+  postgres_data:
+
+networks:
+  aletheia-network:
+    driver: bridge

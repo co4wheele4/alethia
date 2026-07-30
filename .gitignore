@@ -39,6 +39,9 @@ Thumbs.db
 # Local agent / IDE tooling (may contain machine-specific paths)
 .claude/
 
+# Local AI engineering training materials
+docs/ai-training/
+
 # IDEs and editors
 .idea/
 .vscode/
