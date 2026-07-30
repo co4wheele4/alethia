@@ -71,10 +71,12 @@ test.describe('ADR-021: Claim–Evidence Graph', () => {
       timeout: 20_000,
     });
 
+    // Firefox can paint the SVG node layer after the heading; wait like sibling graph tests.
+    const nodeTimeout = 30_000;
     const claimNodes = page.getByTestId('graph-claim-node');
     const evidenceNodes = page.getByTestId('graph-evidence-node');
-    const total = (await claimNodes.count()) + (await evidenceNodes.count());
-    expect(total).toBeGreaterThanOrEqual(1);
+    await expect(claimNodes.first()).toBeVisible({ timeout: nodeTimeout });
+    await expect(evidenceNodes.first()).toBeVisible({ timeout: nodeTimeout });
 
     const highlighted = page.locator('[class*="highlight"], [class*="primary"], [data-highlighted="true"]');
     expect(await highlighted.count()).toBe(0);
