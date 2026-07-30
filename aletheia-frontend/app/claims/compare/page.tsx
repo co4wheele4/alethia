@@ -12,6 +12,7 @@ import { getUserIdFromToken, getUserRoleFromToken } from '../../features/auth/ut
 
 function parseWithClaimIds(params: ReturnType<typeof useSearchParams>) {
   // ADR-005: schema-faithful routing only; treat query params as opaque IDs (no inference).
+  if (!params) return [];
   const raw = params.getAll('with').flatMap((v) => String(v ?? '').split(','));
   const ids = raw.map((v) => v.trim()).filter(Boolean);
   return Array.from(new Set(ids));
@@ -30,11 +31,16 @@ function ClaimComparisonPageInner() {
     return <Alert severity="info">Claim comparison is available after login.</Alert>;
   }
 
-  const base = params.get('base') ?? '';
+  const base = params?.get('base') ?? '';
   const withClaimIds = parseWithClaimIds(params).filter((id) => id !== base);
 
   if (!base) {
-    return <Alert severity="info">Open claim comparison with /claims/compare?base=&lt;claimId&gt;.</Alert>;
+    return (
+      <Alert severity="info">
+        Open claim comparison with /claims/compare?base=&lt;claimId&gt;&amp;with=&lt;claimId&gt; (explicit partners
+        required; ADR-010).
+      </Alert>
+    );
   }
 
   return <ClaimComparisonView baseClaimId={base} withClaimIds={withClaimIds} userRole={userRole} />;

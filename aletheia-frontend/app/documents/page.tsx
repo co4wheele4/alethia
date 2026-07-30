@@ -26,11 +26,11 @@ function DocumentsPageInner() {
   const userId = getUserIdFromToken(stableToken);
   const userRole = getUserRoleFromToken(stableToken);
 
-  const initialIngestOpen = params.get('ingest') === '1';
-  const initialSelectedId = params.get('documentId');
-  const initialMentionId = params.get('mentionId');
+  const initialIngestOpen = params?.get('ingest') === '1';
+  const initialSelectedId = params?.get('documentId') ?? null;
+  const initialMentionId = params?.get('mentionId') ?? null;
   const initialChunkIndex = (() => {
-    const raw = params.get('chunk');
+    const raw = params?.get('chunk');
     if (!raw) return null;
     const n = Number(raw);
     return Number.isFinite(n) ? n : null;
