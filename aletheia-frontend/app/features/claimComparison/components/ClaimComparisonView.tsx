@@ -22,16 +22,6 @@ function fail(message: string): never {
   throw new Error(`[ClaimComparison] ${message}`);
 }
 
-function relatedClaimsFromSchema(args: { base: ClaimComparisonClaim; all: ClaimComparisonClaim[] }) {
-  const { base, all } = args;
-  const baseDocIds = new Set((base.documents ?? []).map((d) => d.id));
-
-  return all.filter(
-    (c) =>
-      c.id !== base.id && (c.documents ?? []).some((d) => baseDocIds.has(d.id))
-  );
-}
-
 function assertValidOffsets(args: { text: string; start: number; end: number; label: string }) {
   const { text, start, end, label } = args;
   if (!Number.isFinite(start) || !Number.isFinite(end)) fail(`${label} has non-numeric offsets`);
@@ -97,7 +87,8 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
   const base = useMemo(() => claims.find((c) => c.id === baseClaimId) ?? null, [claims, baseClaimId]);
   const reviewActivity = useReviewActivityForClaim(base?.id ?? null);
 
-  const explicitRelated = useMemo(() => {
+  // ADR-010 / ADR-021: comparison partners must be explicit (with=). No auto-derived relatedness.
+  const related = useMemo(() => {
     if (!withClaimIds.length) return [];
     const byId = new Map(claims.map((c) => [c.id, c] as const));
     const out: ClaimComparisonClaim[] = [];
@@ -114,24 +105,12 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
     return withClaimIds.filter((id) => !known.has(id));
   }, [claims, withClaimIds]);
 
-  const derivedRelated = useMemo(() => {
-    if (!base) return [];
-    return relatedClaimsFromSchema({
-      base,
-      all: claims,
-    }).sort((a, b) => a.id.localeCompare(b.id));
-  }, [base, claims]);
-
-  const related = useMemo(() => {
-    // ADR-010: comparison is user-initiated. If explicit `with=` is provided, prefer it (no implicit additions).
-    if (withClaimIds.length) return explicitRelated;
-    return derivedRelated;
-  }, [derivedRelated, explicitRelated, withClaimIds.length]);
-
   const comparedClaims = useMemo(() => (base ? [base, ...related] : []), [base, related]);
 
   const { evidenceByClaimId, contractError } = useMemo(() => {
-    if (!base) return { evidenceByClaimId: new Map<string, ClaimEvidenceListModel>(), contractError: null as Error | null };
+    if (!base || !withClaimIds.length) {
+      return { evidenceByClaimId: new Map<string, ClaimEvidenceListModel>(), contractError: null as Error | null };
+    }
 
     try {
       const m = new Map<string, ClaimEvidenceListModel>();
@@ -148,7 +127,7 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
     } catch (err) {
       return { evidenceByClaimId: new Map<string, ClaimEvidenceListModel>(), contractError: err instanceof Error ? err : new Error(String(err)) };
     }
-  }, [base, comparedClaims]);
+  }, [base, comparedClaims, withClaimIds.length]);
 
   if (error) {
     return <Alert severity="error">{error.message}</Alert>;
@@ -176,6 +155,16 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
     );
   }
 
+  if (!withClaimIds.length) {
+    return (
+      <Alert severity="info">
+        Comparison requires explicitly selected partner claims (ADR-010). Return to <Link href="/claims">Claims</Link>,
+        select a base claim plus at least one partner, then open comparison. Partners are never inferred from shared
+        documents or evidence.
+      </Alert>
+    );
+  }
+
   if (contractError) {
     return (
       <Alert severity="error">
@@ -191,11 +180,7 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
         requestReviewDisabled={!base}
         reviewActivityCount={reviewActivity.items.length}
         onOpenReviewActivity={() => setReviewActivityOpen(true)}
-        modeCaption={
-          withClaimIds.length
-            ? 'Compared claims were explicitly selected via URL query params (with=...). No additional claims are inferred or added.'
-            : 'Related claims are derived client-side from shared document IDs.'
-        }
+        modeCaption="Compared claims were explicitly selected via URL query params (with=...). No additional claims are inferred or added."
       />
 
       <RequestReviewDialog
@@ -206,7 +191,7 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
         error={requestReview.error}
         onConfirm={async (args) => {
           // ADR-009/010: comparison remains read-only.
-          // Review request is coordination-only and must not change claim status/truth (ADR-005/008/012).
+          // Review request is coordination-only and must not change claim status/truth (ADR-005/008/014).
           try {
             await requestReview.requestReview({
               claimId: base.id,
@@ -239,15 +224,16 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
         </DialogActions>
       </Dialog>
 
-      {!loading && withClaimIds.length && missingWithClaimIds.length ? (
+      {missingWithClaimIds.length ? (
         <Alert severity="warning" sx={{ mb: 2 }}>
           Some requested claims were not available in the current schema-backed dataset: {missingWithClaimIds.join(', ')}.
         </Alert>
       ) : null}
 
-      {!withClaimIds.length && related.length === 0 ? (
+      {related.length === 0 ? (
         <Alert severity="info" sx={{ mb: 2 }}>
-          No related claims were found based on shared documents/entities exposed by the current GraphQL schema.
+          None of the explicitly selected partner claims were available. Return to <Link href="/claims">Claims</Link> and
+          select different partners.
         </Alert>
       ) : null}
 
@@ -275,4 +261,3 @@ export function ClaimComparisonView(props: { baseClaimId: string; withClaimIds?:
     </Box>
   );
 }
-

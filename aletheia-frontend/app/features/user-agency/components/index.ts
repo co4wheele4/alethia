@@ -1,6 +1,8 @@
 /**
  * User Agency Components Index
  * Exports all components in the user-agency category
+ *
+ * ConflictResolver scaffold removed — ADR-009/010 (no conflict resolution UI).
  */
 
 export { OverrideToggle } from './OverrideToggle';
@@ -23,9 +25,6 @@ export type { ScenarioSwitcherProps, Scenario } from './ScenarioSwitcher';
 
 export { MissingDataAlert } from './MissingDataAlert';
 export type { MissingDataAlertProps } from './MissingDataAlert';
-
-export { ConflictResolver } from './ConflictResolver';
-export type { ConflictResolverProps, Conflict } from './ConflictResolver';
 
 export { UnknownsList } from './UnknownsList';
 export type { UnknownsListProps, UnknownItem } from './UnknownsList';

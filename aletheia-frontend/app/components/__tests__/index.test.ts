@@ -17,7 +17,8 @@ describe('components index', () => {
     expect(components).toHaveProperty('SemanticSearchBox'); // search
     expect(components).toHaveProperty('ServiceOwnershipBadge'); // supergraph
     expect(components).toHaveProperty('KnowledgeTreeView'); // truth-discovery
-    expect(components).toHaveProperty('ConflictResolver'); // user-agency
+    expect(components).toHaveProperty('UnknownsList'); // user-agency
+    expect(components).not.toHaveProperty('ConflictResolver');
     expect(components).toHaveProperty('LoginForm'); // ui
   });
 });
